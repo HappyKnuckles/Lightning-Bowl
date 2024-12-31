@@ -140,7 +140,7 @@ export class StatsPage implements OnInit, OnDestroy {
     overallSpareRate: 0,
     overallMissedRate: 0,
   };
-  statDefinitions = [
+  overallStatDefinitions = [
     { label: 'Games', key: 'totalGames', id: 'totalGames' },
     {
       label: 'Perfect games',
@@ -168,8 +168,6 @@ export class StatsPage implements OnInit, OnDestroy {
     { label: 'High game', key: 'highGame', id: 'highGame' },
     { label: 'Total pins', key: 'totalPins', id: 'totalPins' },
     { label: 'First ball average', key: 'averageFirstCount', id: 'averageFirstCount', prevKey: 'averageFirstCount' },
-    { label: 'Total strikes', key: 'totalStrikes', id: 'totalStrikes' },
-    { label: 'Strikes per game', key: 'averageStrikesPerGame', id: 'averageStrikesPerGame', prevKey: 'averageStrikesPerGame' },
     {
       label: 'Strike-percentage',
       key: 'strikePercentage',
@@ -178,8 +176,6 @@ export class StatsPage implements OnInit, OnDestroy {
       toolTip: 'This is the strike probability, calculated as the percentage of strikes you achieve out of a maximum of 12 per game.',
       prevKey: 'strikePercentage',
     },
-    { label: 'Total spares', key: 'totalSpares', id: 'totalSpares' },
-    { label: 'Spares per game', key: 'averageSparesPerGame', id: 'averageSparesPerGame', prevKey: 'averageSparesPerGame' },
     {
       label: 'Spare-percentage',
       key: 'overallSpareRate',
@@ -188,8 +184,6 @@ export class StatsPage implements OnInit, OnDestroy {
       toolTip: 'This is the probability of how likely you hit a spare if your first throw was not a strike.',
       prevKey: 'overallSpareRate',
     },
-    { label: 'Total opens', key: 'totalSparesMissed', id: 'totalSparesMissed' },
-    { label: 'Opens per game', key: 'averageOpensPerGame', id: 'averageOpensPerGame', prevKey: 'averageOpensPerGame' },
     {
       label: 'Open-percentage',
       key: 'overallMissedRate',
@@ -198,6 +192,16 @@ export class StatsPage implements OnInit, OnDestroy {
       toolTip: 'This is the probability of how likely you miss a spare if your first throw was not a strike.',
       prevKey: 'overallMissedRate',
     },
+  ];
+
+  throwStatDefinitions = [
+    { label: 'Total strikes', key: 'totalStrikes', id: 'totalStrikes' },
+    { label: 'Strikes per game', key: 'averageStrikesPerGame', id: 'averageStrikesPerGame', prevKey: 'averageStrikesPerGame' },
+    { label: 'Total spares', key: 'totalSpares', id: 'totalSpares' },
+    { label: 'Spares per game', key: 'averageSparesPerGame', id: 'averageSparesPerGame', prevKey: 'averageSparesPerGame' },
+    { label: 'Total opens', key: 'totalSparesMissed', id: 'totalSparesMissed' },
+    { label: 'Opens per game', key: 'averageOpensPerGame', id: 'averageOpensPerGame', prevKey: 'averageOpensPerGame' },
+
   ];
   sessionStatDefinitions = [
     { label: 'Games', key: 'totalGames', id: 'sessionTotalGames' },
