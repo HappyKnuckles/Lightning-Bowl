@@ -11,7 +11,7 @@ import {
   IonRefresher,
   IonText,
   IonButtons,
-  IonAccordionGroup,
+  IonAccordionGroup, IonRefresherContent
 } from '@ionic/angular/standalone';
 import { Filesystem } from '@capacitor/filesystem';
 import { merge, Subscription } from 'rxjs';
@@ -47,7 +47,7 @@ import { SortUtilsService } from 'src/app/services/sort-utils/sort-utils.service
   styleUrls: ['history.page.scss'],
   standalone: true,
   providers: [DatePipe, ModalController],
-  imports: [
+  imports: [IonRefresherContent,
     IonButtons,
     IonHeader,
     IonToolbar,
@@ -71,27 +71,25 @@ export class HistoryPage implements OnInit, OnDestroy {
   leagues: string[] = [];
   arrayBuffer: any;
   file!: File;
-  isLoading: boolean = false;
   activeFilterCount = this.filterService.activeFilterCount;
   private gameSubscriptions: Subscription = new Subscription();
   private filteredGamesSubscription!: Subscription;
-  private loadingSubscription: Subscription;
   private leagueSubscriptions: Subscription = new Subscription();
 
   constructor(
     private alertController: AlertController,
     private toastService: ToastService,
     private storageService: StorageService,
-    private loadingService: LoadingService,
+    public loadingService: LoadingService,
     private hapticService: HapticService,
     private modalCtrl: ModalController,
     private filterService: FilterService,
     private sortUtilsService: SortUtilsService,
     private excelService: ExcelService
   ) {
-    this.loadingSubscription = this.loadingService.isLoading$.subscribe((isLoading) => {
-      this.isLoading = isLoading;
-    });
+    // this.loadingSubscription = this.loadingService.isLoading$.subscribe((isLoading) => {
+    //   this.isLoading = isLoading;
+    // });
 
     addIcons({
       cloudUploadOutline,
@@ -144,7 +142,6 @@ export class HistoryPage implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.gameSubscriptions.unsubscribe();
     this.leagueSubscriptions.unsubscribe();
-    this.loadingSubscription.unsubscribe();
     this.filteredGamesSubscription.unsubscribe();
   }
 

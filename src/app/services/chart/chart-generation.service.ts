@@ -8,11 +8,12 @@ import Chart from 'chart.js/auto';
   providedIn: 'root',
 })
 export class ChartGenerationService {
-  constructor() {}
+  constructor() { }
 
   generateScoreChart(scoreChart: ElementRef, games: Game[], existingChartInstance: Chart | undefined, isReload?: boolean): Chart {
     const { gameLabels, overallAverages, differences, gamesPlayedDaily } = this.calculateScoreChartData(games);
     const ctx = scoreChart.nativeElement;
+    let chartInstance: Chart;
 
     if (isReload && existingChartInstance) {
       existingChartInstance.destroy();
@@ -26,7 +27,7 @@ export class ChartGenerationService {
       existingChartInstance.update();
       return existingChartInstance;
     } else {
-      return new Chart(ctx, {
+      chartInstance = new Chart(ctx, {
         type: 'line',
         data: {
           labels: gameLabels,
@@ -100,7 +101,7 @@ export class ChartGenerationService {
               },
               onClick: (e, legendItem) => {
                 const index = legendItem.datasetIndex!;
-                const ci = existingChartInstance;
+                const ci = chartInstance;
                 if (!ci) {
                   console.error('Chart instance is not defined.');
                   return;
@@ -121,6 +122,7 @@ export class ChartGenerationService {
           },
         },
       });
+      return chartInstance;
     }
   }
 
@@ -186,6 +188,45 @@ export class ChartGenerationService {
             },
           },
           plugins: {
+            tooltip: {
+              callbacks: {
+                title: function (context) {
+                  const value = context[0].raw;
+                  
+                  const matchingLabels = context[0].chart.data.labels!.filter((label, index) => {
+                    return context[0].chart.data.datasets.some((dataset) => dataset.data[index] === value && value === 0);
+                  });
+
+                  // Only modify the title if multiple labels match the same value
+                  if (matchingLabels.length > 1) {
+                    // Extract only the numbers from each label and join them
+                    const extractedNumbers = matchingLabels.map((label) => {
+                      // Use regex to extract the number part from the label (e.g., "1 Pin" -> "1")
+                      const match = (label as string).match(/\d+/);
+                      return match ? match[0] : ''; // Return the matched number or an empty string if no match
+                    });
+
+                    // Return the combined numbers as the title (e.g., "2, 3 Pins")
+                    return extractedNumbers.join(', ') + ' Pins';
+                  }
+
+                  // Default behavior: return the original label if only one match
+                  return context[0].label || '';
+                },
+                label: function (context) {
+                  // Create the base label with dataset name and value percentage
+                  let label = context.dataset.label || '';
+                  if (label) {
+                    label += ': ';
+                  }
+                  if (context.parsed.r !== null) {
+                    label += context.parsed.r + '%';
+                  }
+
+                  return label;
+                },
+              },
+            },
             title: {
               display: true,
               text: 'Converted vs Missed spares',

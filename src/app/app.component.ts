@@ -23,8 +23,6 @@ register();
   imports: [IonApp, NgIf, IonBackdrop, IonSpinner, IonRouterOutlet, ToastComponent],
 })
 export class AppComponent implements OnInit, OnDestroy {
-  isLoading = false;
-  private loadingSubscription: Subscription;
   private userNameSubscription: Subscription;
   commitMessage = '';
   username = '';
@@ -32,7 +30,7 @@ export class AppComponent implements OnInit, OnDestroy {
   constructor(
     private alertController: AlertController,
     private toastService: ToastService,
-    private loadingService: LoadingService,
+    public loadingService: LoadingService,
     private userService: UserService,
     private swUpdate: SwUpdate,
     private themeService: ThemeChangerService,
@@ -44,10 +42,6 @@ export class AppComponent implements OnInit, OnDestroy {
     this.initializeApp();
     const currentTheme = this.themeService.getCurrentTheme();
     this.themeService.applyTheme(currentTheme);
-
-    this.loadingSubscription = this.loadingService.isLoading$.subscribe((isLoading) => {
-      this.isLoading = isLoading;
-    });
     this.userNameSubscription = this.userService.getUsername().subscribe((username: string) => {
       this.username = username;
     });
@@ -63,7 +57,6 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.loadingSubscription.unsubscribe();
     this.userNameSubscription.unsubscribe();
   }
 

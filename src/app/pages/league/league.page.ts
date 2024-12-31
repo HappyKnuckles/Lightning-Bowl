@@ -194,9 +194,7 @@ export class LeaguePage implements OnInit, OnDestroy {
       prevKey: 'overallMissedRate',
     },
   ];
-  isLoading: boolean = false;
   private gameSubscriptions: Subscription = new Subscription();
-  private loadingSubscription: Subscription;
   private leagueSubscriptions: Subscription = new Subscription();
   private scoreChartInstances: { [key: string]: Chart } = {};
   private pinChartInstances: { [key: string]: Chart } = {};
@@ -223,13 +221,12 @@ export class LeaguePage implements OnInit, OnDestroy {
       documentTextOutline,
       medalOutline,
     });
-    this.loadingSubscription = this.loadingService.isLoading$.subscribe((isLoading) => {
-      this.isLoading = isLoading;
-    });
+    // this.loadingSubscription = this.loadingService.isLoading$.subscribe((isLoading) => {
+    //   this.isLoading = isLoading;
+    // });
   }
 
   ngOnDestroy(): void {
-    this.loadingSubscription.unsubscribe();
     this.leagueSubscriptions.unsubscribe();
   }
 

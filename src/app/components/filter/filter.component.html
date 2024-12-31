@@ -14,7 +14,7 @@
     <ion-item>
       <ion-input
         class="ion-text-center"
-        [(ngModel)]="filters.minScore"
+        [(ngModel)]="filters().minScore"
         name="minScore"
         clearOnEdit="true"
         inputmode="numeric"
@@ -24,7 +24,7 @@
         label="-"
         class="ion-text-center"
         style="width: 60%"
-        [(ngModel)]="filters.maxScore"
+        [(ngModel)]="filters().maxScore"
         name="maxScore"
         clearOnEdit="true"
         inputmode="numeric"></ion-input>
@@ -34,8 +34,8 @@
         name="timeRange"
         label="Time Range"
         (ionChange)="startDateChange($event)"
-        [(ngModel)]="filters.timeRange"
-        [value]="filters.timeRange">
+        [(ngModel)]="filters().timeRange"
+        [value]="filters().timeRange">
         <ion-select-option [value]="0">Today</ion-select-option>
         <ion-select-option [value]="1">Last week</ion-select-option>
         <ion-select-option [value]="2">Last month</ion-select-option>
@@ -65,13 +65,13 @@
               year: 'numeric'
             }
           }"
-          [(ngModel)]="filters.startDate"
+          [(ngModel)]="filters().startDate"
           name="startDate"
           [highlightedDates]="highlightedDates"
           (ionChange)="updateStart($event)"
           presentation="date"
           [min]="defaultFilters.startDate"
-          [max]="filters.endDate"></ion-datetime>
+          [max]="filters().endDate"></ion-datetime>
       </ng-template>
     </ion-modal>
     <ion-modal [keepContentsMounted]="true">
@@ -86,28 +86,28 @@
               year: 'numeric'
             }
           }"
-          [(ngModel)]="filters.endDate"
+          [(ngModel)]="filters().endDate"
           name="endDate"
           [highlightedDates]="highlightedDates"
           (ionChange)="updateEnd($event)"
           presentation="date"
-          [min]="filters.startDate"></ion-datetime>
+          [min]="filters().startDate"></ion-datetime>
       </ng-template>
     </ion-modal>
     <ion-item>
-      <ion-toggle [(ngModel)]="filters.excludePractice" name="isPractice">Exclude practice games</ion-toggle>
+      <ion-toggle [(ngModel)]="filters().excludePractice" name="isPractice">Exclude practice games</ion-toggle>
     </ion-item>
     <ion-item>
-      <ion-toggle [(ngModel)]="filters.isPerfect" name="isPerfect">Only perfect games</ion-toggle>
+      <ion-toggle [(ngModel)]="filters().isPerfect" name="isPerfect">Only perfect games</ion-toggle>
     </ion-item>
     <ion-item>
-      <ion-toggle [(ngModel)]="filters.isClean" name="isClean">Only clean games</ion-toggle>
+      <ion-toggle [(ngModel)]="filters().isClean" name="isClean">Only clean games</ion-toggle>
     </ion-item>
     <ion-item>
       <ion-select
         name="league"
-        [(ngModel)]="filters.league"
-        [value]="filters.league"
+        [(ngModel)]="filters().league"
+        [value]="filters().league"
         label="League"
         multiple="true"
         (ionChange)="handleSelect($event)">

@@ -1,6 +1,6 @@
 <ion-app>
-  <ion-backdrop *ngIf="isLoading" style="opacity: 0.3; z-index: 11"></ion-backdrop>
-  <ion-spinner *ngIf="isLoading" name="lines" color="primary" class="custom-loader"></ion-spinner>
+  <ion-backdrop *ngIf="loadingService.isLoading" style="opacity: 0.3; z-index: 11"></ion-backdrop>
+  <ion-spinner *ngIf="loadingService.isLoading" name="lines" color="primary" class="custom-loader"></ion-spinner>
 
   <ion-router-outlet></ion-router-outlet>
   <app-toast></app-toast>

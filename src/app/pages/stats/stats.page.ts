@@ -263,13 +263,11 @@ export class StatsPage implements OnInit, OnDestroy {
   gameHistory: Game[] = [];
   filteredGameHistory: Game[] = [];
   gameHistoryChanged: boolean = true;
-  isLoading: boolean = false;
   selectedSegment: string = 'Overall';
   segments: string[] = ['Overall', 'Spares', 'Throws', 'Sessions'];
   activeFilterCount = this.filterService.activeFilterCount;
   // Subscriptions
   private gameSubscriptions: Subscription = new Subscription();
-  private loadingSubscription: Subscription;
   private currentStatSubscription: Subscription;
   private sessionStatSubscription: Subscription;
   private filteredGamesSubscription!: Subscription;
@@ -294,7 +292,7 @@ export class StatsPage implements OnInit, OnDestroy {
   private scoreChartInstance: Chart | null = null;
 
   constructor(
-    private loadingService: LoadingService,
+    public loadingService: LoadingService,
     private statsService: GameStatsService,
     private toastService: ToastService,
     private storageService: StorageService,
@@ -304,10 +302,6 @@ export class StatsPage implements OnInit, OnDestroy {
     private sortUtilsService: SortUtilsService,
     private chartService: ChartGenerationService
   ) {
-    this.loadingSubscription = this.loadingService.isLoading$.subscribe((isLoading) => {
-      this.isLoading = isLoading;
-    });
-
     this.currentStatSubscription = this.statsService.currentStats$.subscribe((stats) => {
       this.stats = stats;
     });
@@ -345,7 +339,6 @@ export class StatsPage implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.loadingSubscription.unsubscribe();
     this.currentStatSubscription.unsubscribe();
     this.sessionStatSubscription.unsubscribe();
     this.filteredGamesSubscription.unsubscribe();

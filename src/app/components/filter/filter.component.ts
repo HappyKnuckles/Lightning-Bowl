@@ -22,11 +22,10 @@ import {
   IonList,
 } from '@ionic/angular/standalone';
 import { Subscription } from 'rxjs';
-import { Filter, TimeRange } from 'src/app/models/filter-model';
+import { TimeRange } from 'src/app/models/filter-model';
 import { Game } from 'src/app/models/game-model';
 import { FilterService } from 'src/app/services/filter/filter.service';
 import { SortUtilsService } from 'src/app/services/sort-utils/sort-utils.service';
-import { StorageService } from 'src/app/services/storage/storage.service';
 import { UtilsService } from 'src/app/services/utils/utils.service';
 
 @Component({
@@ -61,12 +60,12 @@ import { UtilsService } from 'src/app/services/utils/utils.service';
 export class FilterComponent implements OnInit, OnDestroy {
   @Input({ required: true }) games!: Game[];
   @Input() filteredGames!: Game[];
-  filters!: Filter;
+  filters = this.filterService.filters;
   defaultFilters = this.filterService.defaultFilters;
   highlightedDates: { date: string; textColor: string; backgroundColor: string }[] = [];
   leagues: string[] = [];
   private leagueSubscriptions: Subscription = new Subscription();
-  private filterSubscription: Subscription;
+  // private filterSubscription: Subscription;
 
   constructor(
     private modalCtrl: ModalController,
@@ -75,9 +74,7 @@ export class FilterComponent implements OnInit, OnDestroy {
     // private storageService: StorageService,
     private utilsService: UtilsService
   ) {
-    this.filterSubscription = this.filterService.filters$.subscribe((filters: Filter) => {
-      this.filters = filters;
-    });
+
     // this.leagueSubscriptions.add(
     //   merge(this.storageService.newLeagueAdded, this.storageService.leagueDeleted, this.storageService.leagueChanged).subscribe(() => {
     //     this.storageService.loadLeagues().then((leagues) => {
@@ -88,14 +85,13 @@ export class FilterComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.filterSubscription.unsubscribe();
     this.leagueSubscriptions.unsubscribe();
   }
 
   ngOnInit(): void {
-    if (!this.filterService.filters.startDate && !this.filterService.filters.endDate) {
-      this.filterService.filters.startDate = new Date(this.games[this.games.length - 1].date).toISOString() || Date.now().toString();
-      this.filterService.filters.endDate = new Date(this.games[0].date).toISOString() || Date.now().toString();
+    if (!this.filterService.filters().startDate && !this.filterService.filters().endDate) {
+      this.filterService.filters().startDate = new Date(this.games[this.games.length - 1].date).toISOString() || Date.now().toString();
+      this.filterService.filters().endDate = new Date(this.games[0].date).toISOString() || Date.now().toString();
     }
     // this.leagues = await this.storageService.loadLeagues();
     this.getHighlightedDates();
@@ -106,33 +102,33 @@ export class FilterComponent implements OnInit, OnDestroy {
     const now = new Date(Date.now());
     switch (event.detail.value) {
       case TimeRange.TODAY:
-        this.filters.startDate = new Date(now.setHours(0, 0, 0, 0)).toISOString();
+        this.filters().startDate = new Date(now.setHours(0, 0, 0, 0)).toISOString();
         break;
       case TimeRange.WEEK:
-        this.filters.startDate = new Date(now.setDate(now.getDate() - 7)).toISOString();
+        this.filters().startDate = new Date(now.setDate(now.getDate() - 7)).toISOString();
         break;
       case TimeRange.MONTH:
-        this.filters.startDate = new Date(now.setMonth(now.getMonth() - 1)).toISOString();
+        this.filters().startDate = new Date(now.setMonth(now.getMonth() - 1)).toISOString();
         break;
       case TimeRange.QUARTER:
-        this.filters.startDate = new Date(now.setMonth(now.getMonth() - 3)).toISOString();
+        this.filters().startDate = new Date(now.setMonth(now.getMonth() - 3)).toISOString();
         break;
       case TimeRange.HALF:
-        this.filters.startDate = new Date(now.setMonth(now.getMonth() - 6)).toISOString();
+        this.filters().startDate = new Date(now.setMonth(now.getMonth() - 6)).toISOString();
         break;
       case TimeRange.YEAR:
-        this.filters.startDate = new Date(now.setFullYear(now.getFullYear() - 1)).toISOString();
+        this.filters().startDate = new Date(now.setFullYear(now.getFullYear() - 1)).toISOString();
         break;
       case TimeRange.ALL:
       default:
-        this.filters.startDate = this.defaultFilters.startDate;
+        this.filters().startDate = this.defaultFilters.startDate;
         break;
     }
   }
 
   handleSelect(event: CustomEvent) {
     if (event.detail.value.includes('all')) {
-      this.filters.league = ['all'];
+      this.filters().league = ['all'];
     }
     // else if (event.detail.value.includes('')) {
     //   this.filters.league = [''];
@@ -140,7 +136,7 @@ export class FilterComponent implements OnInit, OnDestroy {
   }
 
   cancel() {
-    this.filterService.filters = localStorage.getItem('filter') ? JSON.parse(localStorage.getItem('filter')!) : this.filterService.filters;
+    this.filterService.filters.update(() => localStorage.getItem('filter') ? JSON.parse(localStorage.getItem('filter')!) : this.filterService.filters);
     return this.modalCtrl.dismiss(null, 'cancel');
   }
 
@@ -155,11 +151,11 @@ export class FilterComponent implements OnInit, OnDestroy {
   }
 
   updateStart(event: CustomEvent) {
-    this.filterService.filters.startDate = event.detail.value!;
+    this.filterService.filters().startDate = event.detail.value!;
   }
 
   updateEnd(event: CustomEvent) {
-    this.filterService.filters.endDate = event.detail.value!;
+    this.filterService.filters().endDate = event.detail.value!;
   }
 
   private getLeagues() {
