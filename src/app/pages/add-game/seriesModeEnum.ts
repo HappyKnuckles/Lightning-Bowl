@@ -4,5 +4,3 @@ export enum SeriesMode {
   Series4 = '4 Series',
   Series5 = '5 Series',
 }
-
-export enum Game {}

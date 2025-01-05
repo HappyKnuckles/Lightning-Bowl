@@ -10,7 +10,7 @@ export class LoadingService {
   get isLoading() {
     return this._isLoading();
   }
-  
+
   setLoading(isLoading: boolean): void {
     this._isLoading.set(isLoading);
   }

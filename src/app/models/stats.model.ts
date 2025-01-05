@@ -23,20 +23,43 @@ export interface Stats {
   spareRates: number[];
   overallSpareRate: number;
   overallMissedRate: number;
+  average3SeriesScore?: number;
+  high3Series?: number;
+  average4SeriesScore?: number;
+  high4Series?: number;
+  average5SeriesScore?: number;
+  high5Series?: number;
   [key: string]: any;
 }
 export interface SessionStats extends Stats {
   lowGame: number;
 }
+// TODO think of what these need
+export interface SeriesStats extends Stats {
+  seriesTotal: number;
+  seriesDate: string;
+}
+
+export interface OverallSeriesStats {
+  seriesCount: number;
+  averageSeriesScore: number;
+  averageSrtrikesPerSeries: number;
+  averageSparesPerSeries: number;
+  averageOpensPerSeries: number;
+  highSeries: number;
+  lowSeries: number;
+}
 export interface PrevStats {
   cleanGamePercentage: number;
-
   strikePercentage: number;
   sparePercentage: number;
   openPercentage: number;
   averageStrikesPerGame: number;
   averageSparesPerGame: number;
   averageOpensPerGame: number;
+  average3SeriesScore?: number;
+  average4SeriesScore?: number;
+  average5SeriesScore?: number;
   averageFirstCount: number;
   cleanGameCount: number;
   perfectGameCount: number;

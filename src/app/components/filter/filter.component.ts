@@ -22,8 +22,8 @@ import {
   IonList,
 } from '@ionic/angular/standalone';
 import { Subscription } from 'rxjs';
-import { TimeRange } from 'src/app/models/filter-model';
-import { Game } from 'src/app/models/game-model';
+import { TimeRange } from 'src/app/models/filter.model';
+import { Game } from 'src/app/models/game.model';
 import { FilterService } from 'src/app/services/filter/filter.service';
 import { SortUtilsService } from 'src/app/services/sort-utils/sort-utils.service';
 import { UtilsService } from 'src/app/services/utils/utils.service';
@@ -74,7 +74,6 @@ export class FilterComponent implements OnInit, OnDestroy {
     // private storageService: StorageService,
     private utilsService: UtilsService
   ) {
-
     // this.leagueSubscriptions.add(
     //   merge(this.storageService.newLeagueAdded, this.storageService.leagueDeleted, this.storageService.leagueChanged).subscribe(() => {
     //     this.storageService.loadLeagues().then((leagues) => {
@@ -98,7 +97,7 @@ export class FilterComponent implements OnInit, OnDestroy {
     this.getLeagues();
   }
 
-  startDateChange(event: CustomEvent) {
+  startDateChange(event: CustomEvent): void {
     const now = new Date(Date.now());
     switch (event.detail.value) {
       case TimeRange.TODAY:
@@ -126,7 +125,7 @@ export class FilterComponent implements OnInit, OnDestroy {
     }
   }
 
-  handleSelect(event: CustomEvent) {
+  handleSelect(event: CustomEvent): void {
     if (event.detail.value.includes('all')) {
       this.filters().league = ['all'];
     }
@@ -135,35 +134,37 @@ export class FilterComponent implements OnInit, OnDestroy {
     // }
   }
 
-  cancel() {
-    this.filterService.filters.update(() => localStorage.getItem('filter') ? JSON.parse(localStorage.getItem('filter')!) : this.filterService.filters);
+  cancel(): Promise<boolean> {
+    this.filterService.filters.update(() =>
+      localStorage.getItem('filter') ? JSON.parse(localStorage.getItem('filter')!) : this.filterService.filters
+    );
     return this.modalCtrl.dismiss(null, 'cancel');
   }
 
-  reset() {
+  reset(): void {
     this.filterService.resetFilters();
   }
 
-  confirm() {
+  confirm(): Promise<boolean> {
     this.filterService.filterGames(this.games);
     this.getHighlightedDates();
     return this.modalCtrl.dismiss('confirm');
   }
 
-  updateStart(event: CustomEvent) {
+  updateStart(event: CustomEvent): void {
     this.filterService.filters().startDate = event.detail.value!;
   }
 
-  updateEnd(event: CustomEvent) {
+  updateEnd(event: CustomEvent): void {
     this.filterService.filters().endDate = event.detail.value!;
   }
 
-  private getLeagues() {
+  private getLeagues(): void {
     const gamesByLeague = this.sortUtilsService.sortGamesByLeagues(this.games, false);
     this.leagues = Object.keys(gamesByLeague);
   }
 
-  private getHighlightedDates() {
+  private getHighlightedDates(): void {
     const textColor = '#000000';
     const rootStyles = getComputedStyle(document.documentElement);
     const backgroundColor = rootStyles.getPropertyValue('--ion-color-primary').trim();

@@ -30,8 +30,7 @@
           </ion-item-option>
         </ion-item-options>
 
-        <ion-item (click)="loadingService.setLoading(true)" [id]="league"
-          class="ion-activatable ripple-parent rectangle">
+        <ion-item (click)="loadingService.setLoading(true)" [id]="league" class="ion-activatable ripple-parent rectangle">
           <ion-label class="game-info">
             <div class="title">{{ league }}</div>
             <div class="score">Games: {{getGamesByLeague(league).length}}</div>
@@ -45,8 +44,7 @@
       </ion-item-sliding>
       } @else {
       <div class="sliding">
-        <ion-item (click)="loadingService.setLoading(true)" [id]="league"
-          class="ion-activatable ripple-parent rectangle">
+        <ion-item (click)="loadingService.setLoading(true)" [id]="league" class="ion-activatable ripple-parent rectangle">
           <ion-label class="game-info">
             <div class="title">{{ league }}</div>
             <div class="score">Games: {{getGamesByLeague(league).length}}</div>
@@ -62,7 +60,11 @@
     </ng-container>
   </ng-template>
 
-  <ion-modal *ngFor="let league of leagueKeys" [trigger]="league" #modal (didDismiss)="destroyCharts(league)"
+  <ion-modal
+    *ngFor="let league of leagueKeys"
+    [trigger]="league"
+    #modal
+    (didDismiss)="destroyCharts(league)"
     (didPresent)="loadingService.setLoading(false); generateCharts(0, league, true)">
     <ng-template>
       <ion-header [translucent]="true">
@@ -79,35 +81,46 @@
         </ion-segment>
       </ion-header>
       <ion-content>
-        <swiper-container [rewind]="true" [spaceBetween]="8" [modules]="swiperModules" [slidesPerView]="1" #swiper
-          (swiperslidechange)="onSlideChanged(league)" [autoHeight]="true"
+        <swiper-container
+          [rewind]="true"
+          [spaceBetween]="8"
+          [modules]="swiperModules"
+          [slidesPerView]="1"
+          #swiper
+          (swiperslidechange)="onSlideChanged(league)"
+          [autoHeight]="true"
           style="background: var(--ion-item-background)">
           <!-- Overall Segment -->
           <swiper-slide>
             <div class="tab">
-              <ng-container *ngFor="let stat of statDefinitions">
-                <app-stat-display [label]="stat.label" [currentStat]="statsByLeague[league][stat.key]"
-                  [prevStat]="stat.prevKey ? overallStats[stat.prevKey] : undefined" [toolTip]="stat.toolTip"
-                  [id]="stat.id" [isPercentage]="stat.isPercentage || false">
-                </app-stat-display>
-              </ng-container>
-              <canvas #scoreChart style="width: 300px; height: 400px"></canvas>
+              <app-stat-display
+                [statDefinitions]="statDefinitions"
+                [currentStats]="statsByLeague[league]"
+                [prevStats]="overallStats"></app-stat-display>
+              <div class="stat-container">
+                <canvas #scoreChart style="width: 300px; height: 400px"></canvas>
+              </div>
             </div>
           </swiper-slide>
 
           <!-- Spares Segment -->
           <swiper-slide>
             <div class="tab">
-              <app-spare-display [prevStats]="overallStats" [stats]="statsByLeague[league]"
-                id="league-spareStats"></app-spare-display>
-              <canvas #pinChart style="width: 300px; height: 300px"></canvas>
+              <app-spare-display [prevStats]="overallStats" [stats]="statsByLeague[league]" id="league-spareStats"></app-spare-display>
+              <div class="stat-container">
+                <canvas #pinChart style="width: 300px; height: 300px"></canvas>
+              </div>
             </div>
           </swiper-slide>
 
           <swiper-slide>
             <div class="tab">
-              <app-game [games]="getGamesByLeague(league)" [gameCount]="getGamesByLeague(league).length"
-                [isLeaguePage]="true" [leagues]="allLeagues" (resizeSwiperEvent)="resize()"></app-game>
+              <app-game
+                [games]="getGamesByLeague(league)"
+                [gameCount]="getGamesByLeague(league).length"
+                [isLeaguePage]="true"
+                [leagues]="allLeagues"
+                (resizeSwiperEvent)="resize()"></app-game>
             </div>
           </swiper-slide>
         </swiper-container>

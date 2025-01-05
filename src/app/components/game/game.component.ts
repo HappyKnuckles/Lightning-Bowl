@@ -36,7 +36,7 @@ import {
   documentTextOutline,
   medalOutline,
 } from 'ionicons/icons';
-import { Game } from 'src/app/models/game-model';
+import { Game } from 'src/app/models/game.model';
 import { GameUtilsService } from 'src/app/services/game-utils/game-utils.service';
 import { HapticService } from 'src/app/services/haptic/haptic.service';
 import { LoadingService } from 'src/app/services/loader/loading.service';
@@ -155,11 +155,11 @@ export class GameComponent implements OnChanges {
     }, 150);
   }
 
-  parseIntValue(value: any): any {
+  parseIntValue(value: any): number {
     return this.utilsService.parseIntValue(value);
   }
 
-  saveOriginalStateAndEnableEdit(game: Game) {
+  saveOriginalStateAndEnableEdit(game: Game): void {
     this.originalGameState[game.gameId] = JSON.parse(JSON.stringify(game));
     this.enableEdit(game, game.gameId);
   }
@@ -173,7 +173,7 @@ export class GameComponent implements OnChanges {
     }
   }
 
-  resizeSwiper(event: any) {
+  resizeSwiper(event: any): void {
     const openIds = event.detail.value;
     const gameLength = this.showingGames.length;
     const openIndices = this.showingGames.map((game, index) => (openIds.includes(game.gameId) ? index : -1)).filter((index) => index !== -1);

@@ -1,6 +1,6 @@
 .statGrid {
   text-align: center;
-  padding: 5px 10px 0 5px;
+  // padding: 5px 10px 0 5px;
 
   .statHeader {
     font-weight: bold;
@@ -16,15 +16,18 @@
   }
 
   .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+
     ion-text {
       position: relative;
-      display: block;
-      width: 80px;
-      margin: 0 auto;
+      // display: block;
+      // width: 80px;
+      // margin: 0 auto;
 
       .arrowIcon {
         position: absolute;
-        right: -18%;
+        // right: -18%;
         top: 2px;
       }
     }

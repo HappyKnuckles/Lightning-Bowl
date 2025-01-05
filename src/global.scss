@@ -34,6 +34,18 @@ swiper-container {
   height: auto;
 }
 
+.stat-container {
+  border: 1px solid #2b2828;
+  margin: 0 12px 12px;
+  border-radius: 7px;
+  background-color: #141414;
+  padding: 4px 0;
+}
+
+canvas {
+  margin: 0 8px;
+}
+
 .tab {
   padding: 8px 0 16px;
 }

@@ -5,7 +5,7 @@ import { isPlatform } from '@ionic/angular';
 import { ToastService } from 'src/app/services/toast/toast.service';
 import { HapticService } from 'src/app/services/haptic/haptic.service';
 import { ImpactStyle } from '@capacitor/haptics';
-import { Game } from 'src/app/models/game-model';
+import { Game } from 'src/app/models/game.model';
 import { StorageService } from 'src/app/services/storage/storage.service';
 
 @Injectable({

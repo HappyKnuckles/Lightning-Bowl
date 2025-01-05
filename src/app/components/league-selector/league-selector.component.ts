@@ -71,7 +71,7 @@ export class LeagueSelectorComponent implements OnInit, OnDestroy {
     this.leagueSubscriptions.unsubscribe();
   }
 
-  async ngOnInit() {
+  async ngOnInit(): Promise<void> {
     await this.getLeagues();
   }
 
@@ -121,7 +121,7 @@ export class LeagueSelectorComponent implements OnInit, OnDestroy {
     this.isModalOpen = false;
   }
 
-  private async openDeleteAlert() {
+  private async openDeleteAlert(): Promise<void> {
     await this.alertController
       .create({
         header: 'Delete League',
@@ -153,7 +153,7 @@ export class LeagueSelectorComponent implements OnInit, OnDestroy {
       });
   }
 
-  private async openAddAlert() {
+  private async openAddAlert(): Promise<void> {
     await this.alertController
       .create({
         header: 'Add League',

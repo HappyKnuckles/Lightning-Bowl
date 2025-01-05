@@ -11,7 +11,8 @@ import {
   IonRefresher,
   IonText,
   IonButtons,
-  IonAccordionGroup, IonRefresherContent
+  IonAccordionGroup,
+  IonRefresherContent,
 } from '@ionic/angular/standalone';
 import { Filesystem } from '@capacitor/filesystem';
 import { merge, Subscription } from 'rxjs';
@@ -31,7 +32,7 @@ import { ImpactStyle } from '@capacitor/haptics';
 import { HapticService } from 'src/app/services/haptic/haptic.service';
 import { LoadingService } from 'src/app/services/loader/loading.service';
 import { ToastService } from 'src/app/services/toast/toast.service';
-import { Game } from 'src/app/models/game-model';
+import { Game } from 'src/app/models/game.model';
 import { FilterComponent } from 'src/app/components/filter/filter.component';
 import { ModalController } from '@ionic/angular';
 import { FilterService } from 'src/app/services/filter/filter.service';
@@ -47,7 +48,8 @@ import { SortUtilsService } from 'src/app/services/sort-utils/sort-utils.service
   styleUrls: ['history.page.scss'],
   standalone: true,
   providers: [DatePipe, ModalController],
-  imports: [IonRefresherContent,
+  imports: [
+    IonRefresherContent,
     IonButtons,
     IonHeader,
     IonToolbar,
@@ -69,7 +71,6 @@ export class HistoryPage implements OnInit, OnDestroy {
   gameHistory: Game[] = [];
   filteredGameHistory: Game[] = [];
   leagues: string[] = [];
-  arrayBuffer: any;
   file!: File;
   activeFilterCount = this.filterService.activeFilterCount;
   private gameSubscriptions: Subscription = new Subscription();
@@ -116,7 +117,7 @@ export class HistoryPage implements OnInit, OnDestroy {
     }
   }
 
-  async getLeagues() {
+  async getLeagues(): Promise<void> {
     const savedLeagues = await this.storageService.loadLeagues();
     const leagueKeys = this.gameHistory.reduce((acc: string[], game: Game) => {
       if (game.league && !acc.includes(game.league)) {

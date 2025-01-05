@@ -56,7 +56,7 @@ export class TrackGridComponent implements OnInit {
     this.totalScoreChanged.emit(this.totalScore);
   }
 
-  onLeagueChanged(league: string) {
+  onLeagueChanged(league: string): void {
     this.selectedLeague = league;
     if (this.selectedLeague === '' || this.selectedLeague === 'New') {
       this.isPractice = true;

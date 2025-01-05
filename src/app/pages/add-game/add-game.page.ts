@@ -20,7 +20,7 @@ import {
   IonSegmentButton,
 } from '@ionic/angular/standalone';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
-import { Game } from 'src/app/models/game-model';
+import { Game } from 'src/app/models/game.model';
 import { addIcons } from 'ionicons';
 import { add, chevronDown, chevronUp, cameraOutline, documentTextOutline, medalOutline } from 'ionicons/icons';
 import { NgIf, NgFor } from '@angular/common';
@@ -42,6 +42,7 @@ import { StorageService } from 'src/app/services/storage/storage.service';
 import { SeriesMode } from './seriesModeEnum';
 import { GameUtilsService } from 'src/app/services/game-utils/game-utils.service';
 import { LeagueSelectorComponent } from 'src/app/components/league-selector/league-selector.component';
+import { text } from 'stream/consumers';
 
 defineCustomElements(window);
 
@@ -152,10 +153,10 @@ export class AddGamePage implements OnInit {
   }
 
   async handleImageUpload(): Promise<void> {
-    if (!this.allowedDeviceIds.includes(this.deviceId)) {
-      this.toastService.showToast('You are not allowed to use this feature yet.', 'bug', true);
-      return;
-    }
+    // if (!this.allowedDeviceIds.includes(this.deviceId)) {
+    //   this.toastService.showToast('You are not allowed to use this feature yet.', 'bug', true);
+    //   return;
+    // }
     try {
       if ((isPlatform('android') || isPlatform('ios')) && !isPlatform('mobileweb')) {
         const adWatched = await this.showAdAlert();
@@ -321,16 +322,6 @@ export class AddGamePage implements OnInit {
       this.selectedSegment = this.getSegmentValue(activeIndex);
     }
   }
-
-  private getSlideIndex(segment: string): number {
-    const index = this.segments.indexOf(segment);
-    return index !== -1 ? index : 0;
-  }
-
-  private getSegmentValue(index: number): string {
-    return this.segments[index] || 'Game 1';
-  }
-
   async presentActionSheet(): Promise<void> {
     const buttons = [];
     this.hapticService.vibrate(ImpactStyle.Medium, 200);
@@ -406,6 +397,37 @@ export class AddGamePage implements OnInit {
     await actionSheet.present();
   }
 
+  async presentWarningAlert() {
+    const alert = await this.alertController.create({
+      header: 'Warning!',
+      subHeader: 'Experimental Feature',
+      message: 'It only works in certain alleys and will probably NOT work in yours!',
+      buttons: [
+        {
+          text: 'Dismiss',
+          role: 'cancel',
+        },
+        {
+          text: 'OK',
+          role: 'confirm',
+        },
+      ],
+    });
+    await alert.present();
+    alert.onDidDismiss().then((data) => {
+      data.role === 'confirm' ? this.handleImageUpload() : null;
+    });
+  }
+
+  private getSlideIndex(segment: string): number {
+    const index = this.segments.indexOf(segment);
+    return index !== -1 ? index : 0;
+  }
+
+  private getSegmentValue(index: number): string {
+    return this.segments[index] || 'Game 1';
+  }
+
   private showAdAlert(): Promise<boolean> {
     return new Promise((resolve) => {
       this.alertController
@@ -437,7 +459,6 @@ export class AddGamePage implements OnInit {
     });
   }
 
-  // TODO outsource into service
   private parseBowlingScores(input: string): void {
     try {
       const { frames, frameScores, totalScore } = this.gameUtilsService.parseBowlingScores(input, this.username!);

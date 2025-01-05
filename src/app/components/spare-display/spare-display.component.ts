@@ -1,7 +1,7 @@
 import { CommonModule, NgIf, NgStyle } from '@angular/common';
 import { Component, CUSTOM_ELEMENTS_SCHEMA, Input } from '@angular/core';
 import { IonText, IonCol, IonRow, IonIcon, IonGrid } from '@ionic/angular/standalone';
-import { PrevStats, SessionStats, Stats } from 'src/app/models/stats-model';
+import { PrevStats, SessionStats, Stats } from 'src/app/models/stats.model';
 import { addIcons } from 'ionicons';
 import { arrowDown, arrowUp, informationCircleOutline } from 'ionicons/icons';
 import { UtilsService } from 'src/app/services/utils/utils.service';
@@ -16,7 +16,7 @@ import { UtilsService } from 'src/app/services/utils/utils.service';
 })
 export class SpareDisplayComponent {
   @Input({ required: true }) stats!: Stats | SessionStats;
-  @Input() prevStats?: PrevStats;
+  @Input() prevStats?: PrevStats | Stats;
   @Input() id?: string;
   constructor(private utilsService: UtilsService) {
     addIcons({ informationCircleOutline, arrowUp, arrowDown });

@@ -1,9 +1,9 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { FilterComponent } from './filter.component';
 import { ModalController } from '@ionic/angular';
-import { TimeRange } from 'src/app/models/filter-model';
+import { TimeRange } from 'src/app/models/filter.model';
 import { FilterService } from 'src/app/services/filter/filter.service';
-import { BehaviorSubject } from 'rxjs'; // Import BehaviorSubject to mock the observable
+import { BehaviorSubject } from 'rxjs';
 
 const mockFilters = {
   excludePractice: false,

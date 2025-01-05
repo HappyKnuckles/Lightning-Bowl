@@ -1,6 +1,6 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-button type="button" class="actionSheet" slot="start" fill="clear" (click)="handleImageUpload()">
+    <ion-button type="button" class="actionSheet" slot="start" fill="clear" (click)="presentWarningAlert()">
       <ion-icon slot="icon-only" name="camera-outline"></ion-icon>
     </ion-button>
     <input type="file" id="upload" class="ion-hide" accept="image/*" />

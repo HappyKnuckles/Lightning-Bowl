@@ -1,5 +1,5 @@
 import { EventEmitter, Injectable } from '@angular/core';
-import { Game } from 'src/app/models/game-model';
+import { Game } from 'src/app/models/game.model';
 import { Storage } from '@ionic/storage-angular';
 import { SortUtilsService } from '../sort-utils/sort-utils.service';
 

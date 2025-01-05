@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { IonicModule } from '@ionic/angular';
 import { StatDisplayComponent } from './stat-display.component';
 
 describe('StatDisplayComponent', () => {
@@ -7,16 +8,12 @@ describe('StatDisplayComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      imports: [StatDisplayComponent],
+      declarations: [],
+      imports: [IonicModule.forRoot()],
     }).compileComponents();
 
     fixture = TestBed.createComponent(StatDisplayComponent);
     component = fixture.componentInstance;
-
-    // Provide default input values
-    component.label = 'Test Stat';
-    component.currentStat = 100;
-
     fixture.detectChanges();
   }));
 

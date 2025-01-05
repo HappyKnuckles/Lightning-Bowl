@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Game } from 'src/app/models/game-model';
+import { Game } from 'src/app/models/game.model';
 import { BowlingCalculatorService } from '../bowling-calculator/bowling-calculator.service';
 
 @Injectable({

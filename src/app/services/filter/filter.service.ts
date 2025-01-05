@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
-import { Filter, TimeRange } from 'src/app/models/filter-model';
-import { Game } from 'src/app/models/game-model';
+import { Filter, TimeRange } from 'src/app/models/filter.model';
+import { Game } from 'src/app/models/game.model';
 import { BehaviorSubject } from 'rxjs';
 import { UtilsService } from '../utils/utils.service';
 

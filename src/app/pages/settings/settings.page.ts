@@ -83,7 +83,7 @@ export class SettingsPage implements OnInit {
     addIcons({ personCircleOutline, colorPaletteOutline, logoGithub, addOutline, mailOutline, chevronBack, sendOutline });
   }
 
-  ngOnInit() {
+  ngOnInit(): void {
     this.currentColor = this.themeService.getCurrentTheme();
 
     this.userService.getUsername().subscribe((username: string) => {
@@ -91,16 +91,16 @@ export class SettingsPage implements OnInit {
     });
   }
 
-  changeName() {
+  changeName(): void {
     this.userService.setUsername(this.username!);
   }
 
-  changeColor() {
+  changeColor(): void {
     this.themeService.saveColorTheme(this.currentColor!);
     this.toastService.showToast(`Changed theme to ${this.currentColor}.`, 'checkmark-outline');
   }
 
-  async submitFeedback(form: NgForm) {
+  async submitFeedback(form: NgForm): Promise<void> {
     if (form.valid) {
       const templateParams = {
         from_name: this.userEmail,

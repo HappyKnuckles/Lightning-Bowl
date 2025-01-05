@@ -16,7 +16,6 @@ import {
 } from '@ionic/angular/standalone';
 import { NgIf, NgFor, DecimalPipe, DatePipe } from '@angular/common';
 import { ImpactStyle } from '@capacitor/haptics';
-import { Game } from 'src/app/models/game-model';
 import { GameStatsService } from 'src/app/services/game-stats/game-stats.service';
 import { HapticService } from 'src/app/services/haptic/haptic.service';
 import { LoadingService } from 'src/app/services/loader/loading.service';
@@ -27,7 +26,7 @@ import { IonicSlides } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { calendarNumber, calendarNumberOutline, filterOutline } from 'ionicons/icons';
 import { StatDisplayComponent } from 'src/app/components/stat-display/stat-display.component';
-import { PrevStats, SessionStats, Stats } from 'src/app/models/stats-model';
+import { PrevStats } from 'src/app/models/stats.model';
 import { SpareDisplayComponent } from '../../components/spare-display/spare-display.component';
 import { StorageService } from 'src/app/services/storage/storage.service';
 import { FilterComponent } from 'src/app/components/filter/filter.component';
@@ -35,6 +34,8 @@ import { ModalController } from '@ionic/angular';
 import { FilterService } from 'src/app/services/filter/filter.service';
 import { SortUtilsService } from 'src/app/services/sort-utils/sort-utils.service';
 import { ChartGenerationService } from 'src/app/services/chart/chart-generation.service';
+import { overallStatDefinitions, seriesStatDefinitions, sessionStatDefinitions, throwStatDefinitions } from './stats.definitions';
+import { Game } from 'src/app/models/game.model';
 
 @Component({
   selector: 'app-stats',
@@ -84,183 +85,16 @@ export class StatsPage implements OnInit, OnDestroy {
     averageScore: 0,
     overallSpareRate: 0,
     overallMissedRate: 0,
+    average3SeriesScore: 0,
+    average4SeriesScore: 0,
+    average5SeriesScore: 0,
     spareRates: [] as number[],
   };
-  // Stats
-  stats: Stats = {
-    totalGames: 0,
-    totalPins: 0,
-    perfectGameCount: 0,
-    cleanGameCount: 0,
-    cleanGamePercentage: 0,
-    totalStrikes: 0,
-    totalSpares: 0,
-    totalSparesMissed: 0,
-    totalSparesConverted: 0,
-    pinCounts: Array(11).fill(0),
-    missedCounts: Array(11).fill(0),
-    averageStrikesPerGame: 0,
-    averageSparesPerGame: 0,
-    averageOpensPerGame: 0,
-    strikePercentage: 0,
-    sparePercentage: 0,
-    openPercentage: 0,
-    spareConversionPercentage: 0,
-    averageFirstCount: 0,
-    averageScore: 0,
-    highGame: 0,
-    spareRates: [],
-    overallSpareRate: 0,
-    overallMissedRate: 0,
-  };
-  sessionStats: SessionStats = {
-    totalGames: 0,
-    totalPins: 0,
-    perfectGameCount: 0,
-    cleanGameCount: 0,
-    cleanGamePercentage: 0,
-    totalStrikes: 0,
-    totalSpares: 0,
-    totalSparesMissed: 0,
-    totalSparesConverted: 0,
-    pinCounts: Array(11).fill(0),
-    missedCounts: Array(11).fill(0),
-    averageStrikesPerGame: 0,
-    averageSparesPerGame: 0,
-    averageOpensPerGame: 0,
-    strikePercentage: 0,
-    sparePercentage: 0,
-    openPercentage: 0,
-    spareConversionPercentage: 0,
-    averageFirstCount: 0,
-    averageScore: 0,
-    highGame: 0,
-    lowGame: 0,
-    spareRates: [],
-    overallSpareRate: 0,
-    overallMissedRate: 0,
-  };
-  overallStatDefinitions = [
-    { label: 'Games', key: 'totalGames', id: 'totalGames' },
-    {
-      label: 'Perfect games',
-      key: 'perfectGameCount',
-      id: 'perfectGameCount',
-      toolTip: 'A perfect game means every frame is filled with strikes.',
-      prevKey: 'perfectGameCount',
-    },
-    {
-      label: 'Clean games',
-      key: 'cleanGameCount',
-      id: 'cleanGameCount',
-      toolTip: 'A clean game means every frame is filled with either a strike or a spare.',
-      prevKey: 'cleanGameCount',
-    },
-    {
-      label: 'Clean game percentage',
-      key: 'cleanGamePercentage',
-      id: 'cleanGamePercentage',
-      isPercentage: true,
-      toolTip: 'The percentage of how many games were clean games.',
-      prevKey: 'cleanGamePercentage',
-    },
-    { label: 'Average', key: 'averageScore', id: 'averageScore', prevKey: 'averageScore' },
-    { label: 'High game', key: 'highGame', id: 'highGame' },
-    { label: 'Total pins', key: 'totalPins', id: 'totalPins' },
-    { label: 'First ball average', key: 'averageFirstCount', id: 'averageFirstCount', prevKey: 'averageFirstCount' },
-    {
-      label: 'Strike-percentage',
-      key: 'strikePercentage',
-      id: 'strikePercentage',
-      isPercentage: true,
-      toolTip: 'This is the strike probability, calculated as the percentage of strikes you achieve out of a maximum of 12 per game.',
-      prevKey: 'strikePercentage',
-    },
-    {
-      label: 'Spare-percentage',
-      key: 'overallSpareRate',
-      id: 'sparePercentage',
-      isPercentage: true,
-      toolTip: 'This is the probability of how likely you hit a spare if your first throw was not a strike.',
-      prevKey: 'overallSpareRate',
-    },
-    {
-      label: 'Open-percentage',
-      key: 'overallMissedRate',
-      id: 'openPercentage',
-      isPercentage: true,
-      toolTip: 'This is the probability of how likely you miss a spare if your first throw was not a strike.',
-      prevKey: 'overallMissedRate',
-    },
-  ];
 
-  throwStatDefinitions = [
-    { label: 'Total strikes', key: 'totalStrikes', id: 'totalStrikes' },
-    { label: 'Strikes per game', key: 'averageStrikesPerGame', id: 'averageStrikesPerGame', prevKey: 'averageStrikesPerGame' },
-    { label: 'Total spares', key: 'totalSpares', id: 'totalSpares' },
-    { label: 'Spares per game', key: 'averageSparesPerGame', id: 'averageSparesPerGame', prevKey: 'averageSparesPerGame' },
-    { label: 'Total opens', key: 'totalSparesMissed', id: 'totalSparesMissed' },
-    { label: 'Opens per game', key: 'averageOpensPerGame', id: 'averageOpensPerGame', prevKey: 'averageOpensPerGame' },
-
-  ];
-  sessionStatDefinitions = [
-    { label: 'Games', key: 'totalGames', id: 'sessionTotalGames' },
-    {
-      label: 'Perfect games',
-      key: 'perfectGameCount',
-      id: 'sessionPerfectGameCount',
-      toolTip: 'A perfect game means every frame is filled with strikes.',
-    },
-    {
-      label: 'Clean games',
-      key: 'cleanGameCount',
-      id: 'sessionCleanGameCount',
-      toolTip: 'A clean game means every frame is filled with either a strike or a spare.',
-    },
-    {
-      label: 'Clean game percentage',
-      key: 'cleanGamePercentage',
-      id: 'sessionCleanGamePercentage',
-      isPercentage: true,
-      toolTip: 'The percentage of how many games were clean games.',
-      prevKey: 'cleanGamePercentage',
-    },
-    { label: 'Average', key: 'averageScore', id: 'sessionAverage', prevKey: 'averageScore' },
-    { label: 'High game', key: 'highGame', id: 'sessionHighGame' },
-    { label: 'Low game', key: 'lowGame', id: 'sessionLowGame' },
-    { label: 'Total pins', key: 'totalPins', id: 'sessionTotalPins' },
-    { label: 'First ball average', key: 'averageFirstCount', id: 'sessionAverageFirstCount', prevKey: 'averageFirstCount' },
-    { label: 'Total strikes', key: 'totalStrikes', id: 'sessionTotalStrikes' },
-    { label: 'Strikes per game', key: 'averageStrikesPerGame', id: 'sessionAverageStrikesPerGame', prevKey: 'averageStrikesPerGame' },
-    {
-      label: 'Strike-percentage',
-      key: 'strikePercentage',
-      id: 'sessionStrikePercentage',
-      isPercentage: true,
-      toolTip: 'This shows your strike probability, calculated as the percentage of strikes you achieve out of a maximum of 12 per game.',
-      prevKey: 'strikePercentage',
-    },
-    { label: 'Total spares', key: 'totalSpares', id: 'sessionTotalSpares' },
-    { label: 'Spares per game', key: 'averageSparesPerGame', id: 'sessionAverageSparesPerGame', prevKey: 'averageSparesPerGame' },
-    {
-      label: 'Spare-percentage',
-      key: 'overallSpareRate',
-      id: 'sessionSparePercentage',
-      isPercentage: true,
-      toolTip: 'This is the probability of how likely you hit a spare if your first throw was not a strike.',
-      prevKey: 'overallSpareRate',
-    },
-    { label: 'Total opens', key: 'totalSparesMissed', id: 'sessionTotalSparesMissed' },
-    { label: 'Opens per game', key: 'averageOpensPerGame', id: 'sessionAverageOpensPerGame', prevKey: 'averageOpensPerGame' },
-    {
-      label: 'Open-percentage',
-      key: 'overallMissedRate',
-      id: 'sessionOpenPercentage',
-      isPercentage: true,
-      toolTip: 'This is the probability of how likely you miss a spare if your first throw was not a strike.',
-      prevKey: 'overallMissedRate',
-    },
-  ];
+  overallStatDefinitions = overallStatDefinitions;
+  seriesStatDefinitions = seriesStatDefinitions;
+  throwStatDefinitions = throwStatDefinitions;
+  sessionStatDefinitions = sessionStatDefinitions;
   selectedDate: number = 0;
   uniqueSortedDates: number[] = [];
   // Game Data
@@ -272,8 +106,6 @@ export class StatsPage implements OnInit, OnDestroy {
   activeFilterCount = this.filterService.activeFilterCount;
   // Subscriptions
   private gameSubscriptions: Subscription = new Subscription();
-  private currentStatSubscription: Subscription;
-  private sessionStatSubscription: Subscription;
   private filteredGamesSubscription!: Subscription;
 
   // Viewchilds and Instances
@@ -297,23 +129,15 @@ export class StatsPage implements OnInit, OnDestroy {
 
   constructor(
     public loadingService: LoadingService,
-    private statsService: GameStatsService,
+    public statsService: GameStatsService,
     private toastService: ToastService,
-    private storageService: StorageService,
+    public storageService: StorageService,
     private hapticService: HapticService,
     private modalCtrl: ModalController,
     private filterService: FilterService,
     private sortUtilsService: SortUtilsService,
     private chartService: ChartGenerationService
   ) {
-    this.currentStatSubscription = this.statsService.currentStats$.subscribe((stats) => {
-      this.stats = stats;
-    });
-
-    this.sessionStatSubscription = this.statsService.sessionStats$.subscribe((stats) => {
-      this.sessionStats = stats;
-    });
-
     addIcons({ filterOutline, calendarNumberOutline, calendarNumber });
   }
   async ngOnInit(): Promise<void> {
@@ -329,7 +153,7 @@ export class StatsPage implements OnInit, OnDestroy {
       this.loadingService.setLoading(false);
     }
   }
-  async openFilterModal() {
+  async openFilterModal(): Promise<void> {
     // TODO Think if using it like this so highlighted dates are only that match the current filter or not
     const modal = await this.modalCtrl.create({
       component: FilterComponent,
@@ -343,8 +167,8 @@ export class StatsPage implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.currentStatSubscription.unsubscribe();
-    this.sessionStatSubscription.unsubscribe();
+    // this.currentStatSubscription.unsubscribe();
+    // this.sessionStatSubscription.unsubscribe();
     this.filteredGamesSubscription.unsubscribe();
   }
 
@@ -368,7 +192,7 @@ export class StatsPage implements OnInit, OnDestroy {
     this.statsService.calculateStatsBasedOnDate(this.gameHistory, selectedDate);
   }
 
-  onSegmentChanged(event: any) {
+  onSegmentChanged(event: any): void {
     if (this.swiperInstance) {
       this.selectedSegment = event.detail.value;
       const activeIndex = this.getSlideIndex(this.selectedSegment);
@@ -377,7 +201,7 @@ export class StatsPage implements OnInit, OnDestroy {
     }
   }
 
-  onSlideChanged() {
+  onSlideChanged(): void {
     if (this.swiperInstance) {
       const activeIndex = this.swiperInstance.realIndex;
       this.selectedSegment = this.getSegmentValue(activeIndex);
@@ -412,7 +236,7 @@ export class StatsPage implements OnInit, OnDestroy {
     }
   }
 
-  private async loadGameHistory() {
+  private async loadGameHistory(): Promise<void> {
     try {
       this.gameHistory = await this.storageService.loadGameHistory();
       this.sortUtilsService.sortGameHistoryByDate(this.gameHistory, true);
@@ -422,7 +246,7 @@ export class StatsPage implements OnInit, OnDestroy {
     }
   }
 
-  private loadStats() {
+  private loadStats(): void {
     try {
       // TODO adjust so stats are not calculated twice (on startup and on init)
       // currently this is needed to get previous stats before the first game
@@ -457,8 +281,7 @@ export class StatsPage implements OnInit, OnDestroy {
       this.swiperInstance?.updateAutoHeight();
     }
   }
-
-  private processDates() {
+  private processDates(): void {
     const dateSet = new Set<number>();
 
     this.gameHistory.forEach((game) => {
@@ -513,7 +336,7 @@ export class StatsPage implements OnInit, OnDestroy {
       return;
     }
 
-    this.pinChartInstance = this.chartService.generatePinChart(this.pinChart, this.stats, this.pinChartInstance!, isReload);
+    this.pinChartInstance = this.chartService.generatePinChart(this.pinChart, this.statsService.currentStats(), this.pinChartInstance!, isReload);
   }
 
   private generateThrowChart(isReload?: boolean): void {
@@ -521,6 +344,11 @@ export class StatsPage implements OnInit, OnDestroy {
       return;
     }
 
-    this.throwChartInstance = this.chartService.generateThrowChart(this.throwChart, this.stats, this.throwChartInstance!, isReload);
+    this.throwChartInstance = this.chartService.generateThrowChart(
+      this.throwChart,
+      this.statsService.sessionStats(),
+      this.throwChartInstance!,
+      isReload
+    );
   }
 }

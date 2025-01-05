@@ -1,14 +1,14 @@
 import { ElementRef, Injectable } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
-import { Game } from 'src/app/models/game-model';
-import { Stats } from 'src/app/models/stats-model';
+import { Game } from 'src/app/models/game.model';
+import { Stats } from 'src/app/models/stats.model';
 import Chart from 'chart.js/auto';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ChartGenerationService {
-  constructor() { }
+  constructor() {}
 
   generateScoreChart(scoreChart: ElementRef, games: Game[], existingChartInstance: Chart | undefined, isReload?: boolean): Chart {
     const { gameLabels, overallAverages, differences, gamesPlayedDaily } = this.calculateScoreChartData(games);
@@ -192,7 +192,7 @@ export class ChartGenerationService {
               callbacks: {
                 title: function (context) {
                   const value = context[0].raw;
-                  
+
                   const matchingLabels = context[0].chart.data.labels!.filter((label, index) => {
                     return context[0].chart.data.datasets.some((dataset) => dataset.data[index] === value && value === 0);
                   });
