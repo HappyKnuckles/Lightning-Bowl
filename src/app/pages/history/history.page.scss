@@ -1,11 +1,3 @@
-.inputCol {
-  --ion-grid-column-padding: 0;
-
-  &:not(:nth-child(2)) {
-    margin: 0 3px !important;
-  }
-}
-
 ion-badge {
   --padding-end: 6px;
   --padding-start: 6px;
@@ -23,7 +15,7 @@ ion-grid {
   border-radius: 3px;
 }
 
-.actionSheet {
+.action-sheet {
   margin-right: 8px;
 
   ion-button {
@@ -63,58 +55,4 @@ ion-row {
   border-radius: 7px;
   z-index: 15555;
   font-size: 14px;
-}
-
-.sliding {
-  .note {
-    --inner-border-width: 0;
-  }
-
-  ion-item:not(.note, .league) {
-    --padding-start: 0;
-    --inner-padding-end: 0;
-  }
-
-  ion-accordion {
-    background-color: transparent;
-
-    .expansion-header {
-      margin-top: 8px;
-
-      .score {
-        font-size: 0.875rem;
-      }
-
-      .title {
-        font-weight: 600;
-        font-size: 1.1rem;
-      }
-
-      .game-info {
-        display: flex;
-        flex-direction: column;
-        margin-left: 20px;
-        padding: 4px 0;
-      }
-
-      ::ng-deep .ion-accordion-toggle-icon {
-        margin-right: 20px;
-        font-size: 22px;
-      }
-    }
-  }
-
-  .actionRow {
-    display: flex;
-    justify-content: space-between;
-    margin: 5px 8px 0;
-
-    ion-button {
-      min-width: 96px;
-      height: 32px;
-
-      // --background: var(--ion-color-dark);
-      // color: #fff;
-    }
-  }
 }

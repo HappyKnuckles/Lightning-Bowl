@@ -1,4 +1,4 @@
-.actionSheet {
+.action-sheet {
   ion-button {
     background: none;
 
@@ -12,14 +12,14 @@
 }
 
 ion-modal {
-  .inputCol {
+  .input-col {
     --ion-grid-column-padding: 0;
 
     &:not(:nth-child(2)) {
       margin: 0 3px !important;
     }
 
-    .frameScores {
+    .frame-scores {
       margin: 0 !important;
       padding: 0;
     }
@@ -42,7 +42,7 @@ ion-modal {
   }
 }
 
-ion-input:not(.frameScores) {
+ion-input:not(.frame-scores) {
   text-align: center;
   background-color: var(--ion-color-secondary);
   border-radius: 3px;
@@ -57,7 +57,7 @@ ion-grid {
   margin: 5px;
 }
 
-.buttonRow {
+.button-row {
   display: flex;
   justify-content: space-between;
   text-align: center;

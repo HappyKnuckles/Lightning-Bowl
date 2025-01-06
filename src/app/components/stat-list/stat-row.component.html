@@ -1,6 +1,6 @@
 <div class="stats">
   <ion-text [id]="id + '-tooltip'">{{ label }}: <ion-icon *ngIf="toolTip" name="information-circle-outline"></ion-icon> </ion-text>
-  <ion-popover *ngIf="toolTip" [trigger]="id + '-tooltip'" size="cover" class="tooltipPopover">
+  <ion-popover *ngIf="toolTip" [trigger]="id + '-tooltip'" size="cover" class="tooltip-popover">
     <ion-text class="tooltip">{{ toolTip }}</ion-text>
   </ion-popover>
   <ion-text class="value" [id]="id">
@@ -12,7 +12,7 @@
   </ion-text>
 
   @if (statDifference !== '0') {
-  <ion-popover class="diffPopover" [trigger]="id">
+  <ion-popover class="diff-popover" [trigger]="id">
     <ion-text [color]="getDiffColor(currentStat, prevStat)">
       {{ statDifference }}
     </ion-text>

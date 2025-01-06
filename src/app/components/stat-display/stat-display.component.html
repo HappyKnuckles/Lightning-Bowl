@@ -5,6 +5,7 @@
         [label]="stat.label"
         [currentStat]="currentStats[stat.key]"
         [prevStat]="stat.prevKey ? prevStats[stat.prevKey] : undefined"
+        [toolTip]="stat.toolTip"
         [id]="stat.id">
       </app-stat-row>
     </div>

@@ -46,8 +46,8 @@
                 <ion-col class="middle frame">{{ j + 1 }}</ion-col>
               </ion-row>
               <ion-row *ngIf="j !== 9">
-                <ion-col class="inputCol"></ion-col>
-                <ion-col class="inputCol">
+                <ion-col class="input-col"></ion-col>
+                <ion-col class="input-col">
                   <ion-input
                     readonly="true"
                     type="text"
@@ -55,7 +55,7 @@
                     [value]="frame.throws[0]?.value === 10 ? 'X' : frame.throws[0]?.value === 0 ? '–' : frame.throws[0]?.value">
                   </ion-input>
                 </ion-col>
-                <ion-col class="inputCol">
+                <ion-col class="input-col">
                   <ion-input
                     readonly="true"
                     type="text"
@@ -71,7 +71,7 @@
                 </ion-col>
               </ion-row>
               <ion-row *ngIf="j === 9">
-                <ion-col class="inputCol">
+                <ion-col class="input-col">
                   <ion-input
                     readonly="true"
                     type="text"
@@ -79,7 +79,7 @@
                     [value]="frame.throws[0]?.value === 10 ? 'X' : frame.throws[0]?.value === 0 ? '–' : frame.throws[0]?.value">
                   </ion-input>
                 </ion-col>
-                <ion-col class="inputCol">
+                <ion-col class="input-col">
                   <ion-input
                     readonly="true"
                     type="text"
@@ -95,7 +95,7 @@
                     ">
                   </ion-input>
                 </ion-col>
-                <ion-col class="inputCol" *ngIf="j === 9">
+                <ion-col class="input-col" *ngIf="j === 9">
                   <ion-input
                     readonly="true"
                     type="text"
@@ -135,8 +135,8 @@
                 <ion-col class="middle frame">{{ frameIndex + 1 }}</ion-col>
               </ion-row>
               <ion-row>
-                <ion-col class="inputCol" *ngIf="frameIndex !== 9"></ion-col>
-                <ion-col class="inputCol">
+                <ion-col class="input-col" *ngIf="frameIndex !== 9"></ion-col>
+                <ion-col class="input-col">
                   <ion-input
                     type="number"
                     clearOnEdit="true"
@@ -148,7 +148,7 @@
                       frame.throws[0] = frame.throws[0] || {}; frame.throws[0].value = parseIntValue($event.target.value); isGameValid(game)
                     "></ion-input>
                 </ion-col>
-                <ion-col class="inputCol" *ngIf="frameIndex !== 9">
+                <ion-col class="input-col" *ngIf="frameIndex !== 9">
                   <ion-input
                     type="number"
                     clearOnEdit="true"
@@ -160,7 +160,7 @@
                       frame.throws[1] = frame.throws[1] || {}; frame.throws[1].value = parseIntValue($event.target.value); isGameValid(game)
                     "></ion-input>
                 </ion-col>
-                <ion-col class="inputCol" *ngIf="frameIndex === 9">
+                <ion-col class="input-col" *ngIf="frameIndex === 9">
                   <ion-input
                     type="number"
                     clearOnEdit="true"
@@ -172,7 +172,7 @@
                       frame.throws[1] = frame.throws[1] || {}; frame.throws[1].value = parseIntValue($event.target.value); isGameValid(game)
                     "></ion-input>
                 </ion-col>
-                <ion-col class="inputCol" *ngIf="frameIndex === 9">
+                <ion-col class="input-col" *ngIf="frameIndex === 9">
                   <ion-input
                     type="number"
                     clearOnEdit="true"
@@ -199,7 +199,7 @@
               </ion-row>
             </ion-grid>
           </div>
-          <div class="actionRow">
+          <div class="action-row">
             <ion-button class="left-button" (click)="cancelEdit(game)">Cancel</ion-button>
             <ion-button class="right-button" (click)="saveEdit(game)">Save</ion-button>
           </div>

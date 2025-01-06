@@ -95,7 +95,7 @@ ion-app {
   padding: 8px;
 }
 
-.tooltipPopover {
+.tooltip-popover {
   --min-width: 200px;
   --max-width: fit-content;
 }
@@ -121,7 +121,7 @@ ion-item {
   color: white;
 }
 
-.diffPopover {
+.diff-popover {
   --background: #020a06;
   text-align: center;
   --min-width: 110px;
@@ -175,7 +175,7 @@ ion-toolbar {
   }
 }
 
-.nameInput {
+.name-input {
   background-color: white !important;
   color: black;
 }
@@ -226,7 +226,7 @@ body {
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
-.segmentLabel {
+.segment-label {
   font-size: clamp(0.875rem, 4vw, 1.063rem);
 }
 

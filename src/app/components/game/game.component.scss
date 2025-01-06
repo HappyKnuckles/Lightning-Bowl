@@ -1,4 +1,4 @@
-.inputCol {
+.input-col {
   --ion-grid-column-padding: 0;
 
   &:not(:nth-child(2)) {
@@ -10,16 +10,6 @@ ion-grid {
   background-color: var(--ion-color-quartiary);
   --ion-grid-padding: 0;
   border-radius: 3px;
-}
-
-.actionSheet {
-  margin-right: 8px;
-
-  ion-button {
-    background: none;
-    --background-activated: none;
-    position: relative;
-  }
 }
 
 ion-input {
@@ -82,7 +72,7 @@ ion-row {
     }
   }
 
-  .actionRow {
+  .action-row {
     display: flex;
     justify-content: space-between;
     margin: 5px 8px 0;

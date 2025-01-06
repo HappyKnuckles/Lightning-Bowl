@@ -1,12 +1,12 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-button type="button" class="actionSheet" slot="start" fill="clear" (click)="presentWarningAlert()">
+    <ion-button type="button" class="action-sheet" slot="start" fill="clear" (click)="presentWarningAlert()">
       <ion-icon slot="icon-only" name="camera-outline"></ion-icon>
     </ion-button>
     <input type="file" id="upload" class="ion-hide" accept="image/*" />
     <ion-title> Add Game </ion-title>
     <ion-buttons slot="end">
-      <ion-button class="actionSheet" (click)="presentActionSheet()" fill="clear">
+      <ion-button class="action-sheet" (click)="presentActionSheet()" fill="clear">
         {{selectedMode}}
         <ion-icon *ngIf="!sheetOpen" name="chevron-down" class="chevron"></ion-icon>
         <ion-icon *ngIf="sheetOpen" name="chevron-up" class="chevron"></ion-icon>
@@ -16,7 +16,7 @@
   @if(selectedMode !== 'Single'){
   <ion-segment [value]="selectedSegment" (ionChange)="onSegmentChanged($event)">
     <ion-segment-button *ngFor="let segment of segments" [value]="segment">
-      <ion-label class="segmentLabel">{{segment}}</ion-label>
+      <ion-label class="segment-label">{{segment}}</ion-label>
     </ion-segment-button>
   </ion-segment>
   }
@@ -56,7 +56,7 @@
             <ion-col class="middle count">Total: {{ totalScores[trackIndex] }}</ion-col>
             <ion-col class="middle count">Max: {{ maxScores[trackIndex] }}</ion-col>
           </ion-row>
-          <ion-row class="buttonRow">
+          <ion-row class="button-row">
             <ion-col>
               <ion-button (click)="clearFrames(j)">Clear Score</ion-button>
             </ion-col>
@@ -69,7 +69,7 @@
         <ion-col class="middle count">Total: {{ totalScores[i] }}</ion-col>
         <ion-col class="middle count">Max: {{ maxScores[i] }}</ion-col>
       </ion-row>
-      <ion-row class="buttonRow">
+      <ion-row class="button-row">
         <ion-col>
           <ion-button (click)="clearFrames()">Clear Score</ion-button>
         </ion-col>
@@ -84,7 +84,7 @@
         <ion-col class="middle count">Score Series: {{getSeriesCurrentScore(i)}}</ion-col>
         <ion-col class="middle count">Max Series: {{getSeriesMaxScore(i)}}</ion-col>
       </ion-row>
-      <ion-row class="buttonRow">
+      <ion-row class="button-row">
         <ion-col>
           <ion-button (click)="clearFrames()">Clear Scores</ion-button>
         </ion-col>
@@ -116,8 +116,8 @@
             <ion-col class="middle frame">{{frameIndex + 1}}</ion-col>
           </ion-row>
           <ion-row>
-            <ion-col class="inputCol" *ngIf="frameIndex !== 9"></ion-col>
-            <ion-col class="inputCol">
+            <ion-col class="input-col" *ngIf="frameIndex !== 9"></ion-col>
+            <ion-col class="input-col">
               <ion-input
                 type="text"
                 clearOnEdit="true"
@@ -127,7 +127,7 @@
                 [ngClass]="{'invalid-input': frame.isInvalid}"
                 (ionChange)="frame.throws[0] = frame.throws[0] || {}; frame.throws[0].value = $event.target.value; isGameValid(gameData)"></ion-input>
             </ion-col>
-            <ion-col class="inputCol" *ngIf="frameIndex !== 9">
+            <ion-col class="input-col" *ngIf="frameIndex !== 9">
               <ion-input
                 type="text"
                 clearOnEdit="true"
@@ -137,7 +137,7 @@
                 [ngClass]="{'invalid-input': frame.isInvalid}"
                 (ionChange)="frame.throws[1] = frame.throws[1] || {}; frame.throws[1].value = $event.target.value; isGameValid(gameData)"></ion-input>
             </ion-col>
-            <ion-col class="inputCol" *ngIf="frameIndex === 9">
+            <ion-col class="input-col" *ngIf="frameIndex === 9">
               <ion-input
                 type="text"
                 clearOnEdit="true"
@@ -147,7 +147,7 @@
                 [ngClass]="{'invalid-input': frame.isInvalid}"
                 (ionChange)="frame.throws[1] = frame.throws[1] || {}; frame.throws[1].value = $event.target.value; isGameValid(gameData)"></ion-input>
             </ion-col>
-            <ion-col class="inputCol" *ngIf="frameIndex === 9">
+            <ion-col class="input-col" *ngIf="frameIndex === 9">
               <ion-input
                 type="text"
                 clearOnEdit="true"
@@ -162,7 +162,7 @@
             <ion-col class="middle count">
               <ion-input
                 type="text"
-                class="frameScores"
+                class="frame-scores"
                 [value]="gameData.frameScores[frameIndex]"
                 inputmode="numeric"
                 clearOnEdit="true"

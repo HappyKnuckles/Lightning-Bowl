@@ -1,8 +1,8 @@
-.statGrid {
+.stat-grid {
   text-align: center;
   // padding: 5px 10px 0 5px;
 
-  .statHeader {
+  .stat-header {
     font-weight: bold;
 
     ion-text {
@@ -17,18 +17,23 @@
 
   .stats {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: 1fr 1fr 1fr 1.2fr;
 
-    ion-text {
-      position: relative;
-      // display: block;
-      // width: 80px;
-      // margin: 0 auto;
+    .spare-rates-content {
+      text-align: center;
 
-      .arrowIcon {
+      .stat-text {
+        position: relative;
+        width: 80px;
+        margin: 0 auto;
+        width: 80px;
+        display: block;
+      }
+
+      .arrow-icon {
         position: absolute;
-        // right: -18%;
-        top: 2px;
+        right: -15px;
+        top: 1px;
       }
     }
   }

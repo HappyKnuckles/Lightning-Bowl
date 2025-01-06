@@ -1,6 +1,6 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-button type="button" class="actionSheet" slot="start" fill="clear" (click)="addLeague()">
+    <ion-button type="button" class="action-sheet" slot="start" fill="clear" (click)="addLeague()">
       <ion-icon slot="icon-only" name="add-outline"></ion-icon>
     </ion-button>
     <ion-title> Leagues </ion-title>
@@ -76,7 +76,7 @@
         </ion-toolbar>
         <ion-segment [value]="selectedSegment" (ionChange)="onSegmentChanged(league, $event)">
           <ion-segment-button *ngFor="let segment of segments" [value]="segment">
-            <ion-label class="segmentLabel">{{segment}}</ion-label>
+            <ion-label class="segment-label">{{segment}}</ion-label>
           </ion-segment-button>
         </ion-segment>
       </ion-header>

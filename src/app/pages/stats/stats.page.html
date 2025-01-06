@@ -1,7 +1,7 @@
 <ion-header [translucent]="true" class="ion-text-center">
   <ion-toolbar>
     <ion-title> Stats </ion-title>
-    <ion-buttons slot="end" class="actionSheet">
+    <ion-buttons slot="end" class="action-sheet">
       <ion-button fill="clear" (click)="openFilterModal()" [disabled]="(gameHistory.length <= 0 && !loadingService.isLoading)">
         <ion-icon slot="icon-only" name="filter-outline"></ion-icon>
         <ion-text class="filter-indicator" *ngIf="activeFilterCount !== 0">{{activeFilterCount}}</ion-text>
@@ -13,7 +13,7 @@
     [value]="selectedSegment"
     (ionChange)="onSegmentChanged($event)">
     <ion-segment-button *ngFor="let segment of segments" [value]="segment">
-      <ion-label class="segmentLabel">{{segment}}</ion-label>
+      <ion-label class="segment-label">{{segment}}</ion-label>
     </ion-segment-button>
   </ion-segment>
 </ion-header>

@@ -42,7 +42,6 @@ import { StorageService } from 'src/app/services/storage/storage.service';
 import { SeriesMode } from './seriesModeEnum';
 import { GameUtilsService } from 'src/app/services/game-utils/game-utils.service';
 import { LeagueSelectorComponent } from 'src/app/components/league-selector/league-selector.component';
-import { text } from 'stream/consumers';
 
 defineCustomElements(window);
 
