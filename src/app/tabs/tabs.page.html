@@ -2,7 +2,7 @@
   <ion-tab-bar slot="bottom">
     <ion-tab-button tab="add" href="/tabs/add">
       <ion-icon aria-hidden="true" name="add"></ion-icon>
-      <ion-label>Add Game</ion-label>
+      <ion-label>New</ion-label>
     </ion-tab-button>
 
     <ion-tab-button tab="stats" href="/tabs/stats">
@@ -20,9 +20,26 @@
       <ion-label>Leagues</ion-label>
     </ion-tab-button>
 
-    <ion-tab-button tab="settings" href="/tabs/settings">
-      <ion-icon aria-hidden="true" name="settings"></ion-icon>
-      <ion-label>Settings</ion-label>
+    <ion-tab-button id="more">
+      <ion-icon name="ellipsis-horizontal"></ion-icon>
+      <ion-label>More</ion-label>
     </ion-tab-button>
   </ion-tab-bar>
 </ion-tabs>
+
+<ion-modal #modal trigger="more" [initialBreakpoint]="0.25" [breakpoints]="[0, 0.25, 0.5, 0.75]">
+  <ng-template>
+    <ion-content>
+      <ion-list>
+        <ion-item button (click)="navigateTo('/tabs/balls')">
+          <ion-icon name="bowling-ball-outline" slot="start"></ion-icon>
+          <ion-label>Balls</ion-label>
+        </ion-item>
+        <ion-item button (click)="navigateTo('/tabs/settings')">
+          <ion-icon name="settings" slot="start"></ion-icon>
+          <ion-label>Settings</ion-label>
+        </ion-item>
+      </ion-list>
+    </ion-content>
+  </ng-template>
+</ion-modal>

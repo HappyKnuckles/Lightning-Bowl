@@ -74,7 +74,14 @@ ion-input {
 }
 
 ion-header {
-  background-color: #080f08;
+
+  // background-color: #080f08;
+  ion-toolbar {
+    height: 50px !important;
+    display: flex;
+    flex: 1 1 0%;
+    align-items: center;
+  }
 
   ion-icon {
     font-size: 1.5rem !important;
@@ -137,13 +144,6 @@ ion-item {
       background: #252525;
     }
   }
-}
-
-ion-toolbar {
-  height: 50px !important;
-  display: flex;
-  flex: 1 1 0%;
-  align-items: center;
 }
 
 .grid-container {

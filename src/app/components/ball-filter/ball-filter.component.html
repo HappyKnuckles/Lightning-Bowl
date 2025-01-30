@@ -1,0 +1,42 @@
+<!-- <ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button color="medium" (click)="cancel()">Cancel</ion-button>
+    </ion-buttons>
+    <ion-title>Filter</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="reset()" [strong]="true">Reset</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+<ion-content>
+  <ion-list style="padding-top: 10px" lines="full">
+    <ion-item>
+      <ion-input class="ion-text-center"  name="minScore" clearOnEdit="true"
+        inputmode="numeric" label="Score range"></ion-input>
+       <ion-label class="ion-text-center" style="margin-inline-end: 8px">-</ion-label>
+      <ion-input label="-" class="ion-text-center" style="width: 60%" name="maxScore"
+        clearOnEdit="true" inputmode="numeric"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-toggle name="isPractice">Exclude practice games</ion-toggle>
+    </ion-item>
+    <ion-item>
+      <ion-toggle  name="isPerfect">Only perfect games</ion-toggle>
+    </ion-item>
+     <ion-item>
+      <ion-toggle [(ngModel)]="filters().isClean" name="isClean">Only clean games</ion-toggle>
+    </ion-item>
+     <ion-item>
+      <ion-select name="league" [(ngModel)]="filters().league" [value]="filters().league" label="League" multiple="true"
+        (ionChange)="handleSelect($event)">
+        <ion-select-option value="all">All</ion-select-option>
+        <ion-select-option value="">None</ion-select-option>
+        <ion-select-option *ngFor="let league of leagues" [value]="league">{{ league }}</ion-select-option>
+      </ion-select>
+    </ion-item> 
+  </ion-list>
+</ion-content>
+<ion-footer style="display: flex" class="ion-justify-content-center">
+  <ion-button class="confirmBtn" (click)="confirm()">Confirm</ion-button>
+</ion-footer> -->

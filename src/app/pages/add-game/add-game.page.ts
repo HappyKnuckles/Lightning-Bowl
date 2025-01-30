@@ -39,9 +39,15 @@ import { Device } from '@capacitor/device';
 import Swiper from 'swiper';
 import { IonicSlides } from '@ionic/angular';
 import { StorageService } from 'src/app/services/storage/storage.service';
-import { SeriesMode } from './seriesModeEnum';
 import { GameUtilsService } from 'src/app/services/game-utils/game-utils.service';
 import { LeagueSelectorComponent } from 'src/app/components/league-selector/league-selector.component';
+
+const enum SeriesMode {
+  Single = 'Single',
+  Series3 = '3 Series',
+  Series4 = '4 Series',
+  Series5 = '5 Series',
+}
 
 defineCustomElements(window);
 
@@ -119,7 +125,7 @@ export class AddGamePage implements OnInit {
     private alertController: AlertController,
     private toastService: ToastService,
     private bowlingService: BowlingCalculatorService,
-    private storageService: StorageService,
+    public storageService: StorageService,
     private transformGameService: GameDataTransformerService,
     private loadingService: LoadingService,
     private userService: UserService,
@@ -156,26 +162,36 @@ export class AddGamePage implements OnInit {
     //   this.toastService.showToast('You are not allowed to use this feature yet.', 'bug', true);
     //   return;
     // }
-    try {
-      if ((isPlatform('android') || isPlatform('ios')) && !isPlatform('mobileweb')) {
-        const adWatched = await this.showAdAlert();
-        if (!adWatched) {
-          this.toastService.showToast('You need to watch the ad to use this service.', 'bug', true);
-          return;
+    const alertData = localStorage.getItem('alert');
+    if (alertData) {
+      const { value, expiration } = JSON.parse(alertData);
+      if (value === 'true' && new Date().getTime() < expiration) {
+        try {
+          if ((isPlatform('android') || isPlatform('ios')) && !isPlatform('mobileweb')) {
+            const adWatched = await this.showAdAlert();
+            if (!adWatched) {
+              this.toastService.showToast('You need to watch the ad to use this service.', 'bug', true);
+              return;
+            }
+          }
+          const imageUrl: File | Blob | undefined = await this.takeOrChoosePicture();
+          if (imageUrl instanceof File) {
+            this.loadingService.setLoading(true);
+            const gameText = await this.imageProcessingService.performOCR(imageUrl);
+            this.parseBowlingScores(gameText!);
+          } else {
+            this.toastService.showToast('No image uploaded.', 'bug', true);
+          }
+        } catch (error) {
+          this.toastService.showToast(`Error uploading image: ${error}`, 'bug', true);
+        } finally {
+          this.loadingService.setLoading(false);
         }
-      }
-      const imageUrl: File | Blob | undefined = await this.takeOrChoosePicture();
-      if (imageUrl instanceof File) {
-        this.loadingService.setLoading(true);
-        const gameText = await this.imageProcessingService.performOCR(imageUrl);
-        this.parseBowlingScores(gameText!);
       } else {
-        this.toastService.showToast('No image uploaded.', 'bug', true);
+        this.presentWarningAlert();
       }
-    } catch (error) {
-      this.toastService.showToast(`Error uploading image: ${error}`, 'bug', true);
-    } finally {
-      this.loadingService.setLoading(false);
+    } else {
+      this.presentWarningAlert();
     }
   }
 
@@ -396,7 +412,9 @@ export class AddGamePage implements OnInit {
     await actionSheet.present();
   }
 
+  // TODO make this work on mobile, currently just works with web, file input not working after alert
   async presentWarningAlert() {
+    localStorage.removeItem('alert');
     const alert = await this.alertController.create({
       header: 'Warning!',
       subHeader: 'Experimental Feature',
@@ -415,6 +433,10 @@ export class AddGamePage implements OnInit {
     await alert.present();
     alert.onDidDismiss().then((data) => {
       data.role === 'confirm' ? this.handleImageUpload() : null;
+      const expirationDate = new Date();
+      expirationDate.setDate(expirationDate.getDate() + 7);
+      const alertData = { value: 'true', expiration: expirationDate.getTime() };
+      localStorage.setItem('alert', JSON.stringify(alertData));
     });
   }
 

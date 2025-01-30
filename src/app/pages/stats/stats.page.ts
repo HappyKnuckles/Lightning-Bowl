@@ -29,13 +29,13 @@ import { StatDisplayComponent } from 'src/app/components/stat-display/stat-displ
 import { PrevStats } from 'src/app/models/stats.model';
 import { SpareDisplayComponent } from '../../components/spare-display/spare-display.component';
 import { StorageService } from 'src/app/services/storage/storage.service';
-import { FilterComponent } from 'src/app/components/filter/filter.component';
 import { ModalController } from '@ionic/angular';
-import { FilterService } from 'src/app/services/filter/filter.service';
 import { SortUtilsService } from 'src/app/services/sort-utils/sort-utils.service';
 import { ChartGenerationService } from 'src/app/services/chart/chart-generation.service';
 import { overallStatDefinitions, seriesStatDefinitions, sessionStatDefinitions, throwStatDefinitions } from './stats.definitions';
 import { Game } from 'src/app/models/game.model';
+import { GameFilterService } from 'src/app/services/game-filter/game-filter.service';
+import { GameFilterComponent } from 'src/app/components/game-filter/game-filter.component';
 
 @Component({
   selector: 'app-stats',
@@ -103,7 +103,7 @@ export class StatsPage implements OnInit, OnDestroy {
   gameHistoryChanged: boolean = true;
   selectedSegment: string = 'Overall';
   segments: string[] = ['Overall', 'Spares', 'Throws', 'Sessions'];
-  activeFilterCount = this.filterService.activeFilterCount;
+  activeFilterCount = this.gameFilterService.activeFilterCount;
   // Subscriptions
   private gameSubscriptions: Subscription = new Subscription();
   private filteredGamesSubscription!: Subscription;
@@ -134,7 +134,7 @@ export class StatsPage implements OnInit, OnDestroy {
     public storageService: StorageService,
     private hapticService: HapticService,
     private modalCtrl: ModalController,
-    private filterService: FilterService,
+    private gameFilterService: GameFilterService,
     private sortUtilsService: SortUtilsService,
     private chartService: ChartGenerationService
   ) {
@@ -156,7 +156,7 @@ export class StatsPage implements OnInit, OnDestroy {
   async openFilterModal(): Promise<void> {
     // TODO Think if using it like this so highlighted dates are only that match the current filter or not
     const modal = await this.modalCtrl.create({
-      component: FilterComponent,
+      component: GameFilterComponent,
       componentProps: {
         games: this.gameHistory,
         filteredGames: this.filteredGameHistory,
@@ -240,7 +240,7 @@ export class StatsPage implements OnInit, OnDestroy {
     try {
       this.gameHistory = await this.storageService.loadGameHistory();
       this.sortUtilsService.sortGameHistoryByDate(this.gameHistory, true);
-      this.filterService.filterGames(this.gameHistory);
+      this.gameFilterService.filterGames(this.gameHistory);
     } catch (error) {
       this.toastService.showToast(`Error loading history: ${error}`, 'bug', true);
     }
@@ -313,9 +313,9 @@ export class StatsPage implements OnInit, OnDestroy {
       })
     );
 
-    this.filteredGamesSubscription = this.filterService.filteredGames$.subscribe((games) => {
+    this.filteredGamesSubscription = this.gameFilterService.filteredGames$.subscribe((games) => {
       this.filteredGameHistory = games;
-      this.activeFilterCount = this.filterService.activeFilterCount;
+      this.activeFilterCount = this.gameFilterService.activeFilterCount;
       this.gameHistoryChanged = true;
       this.calculateStats();
       this.generateCharts(undefined, true);

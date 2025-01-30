@@ -15,7 +15,8 @@ export class GameDataTransformerService {
     league?: string,
     isSeries?: boolean,
     seriesId?: string,
-    note?: string
+    note?: string,
+    balls?: string[]
   ): Game {
     try {
       const gameId = Date.now() + '_' + Math.random().toString(36).slice(2, 9); // Generate a unique gameId
@@ -44,6 +45,7 @@ export class GameDataTransformerService {
         league: league,
         isClean: isClean,
         isPerfect: isPerfect,
+        balls: balls,
       };
     } catch (error) {
       throw new Error(`Error transforming game data: ${error}`);

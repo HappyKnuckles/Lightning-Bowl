@@ -75,13 +75,20 @@
     <!-- TODO make this reset on save-->
     <app-league-selector [isAddPage]="true" (leagueChanged)="onLeagueChanged($event)" #leagueSelector></app-league-selector>
     <ion-item>
+      <ion-select [(ngModel)]="balls" multiple="true" name="balls" placeholder="None" label="Balls">
+        <ion-select-option *ngFor="let ball of storageService.arsenal()" [value]="ball.ball_name">
+          {{ball.ball_name}}
+        </ion-select-option>
+      </ion-select>
+    </ion-item>
+    <ion-item>
       <ion-textarea
         label="Note"
         type="text"
         [(ngModel)]="note"
         name="note"
         [autoGrow]="true"
-        placeholder="today knee pain, used Ion Pro Max"></ion-textarea>
+        placeholder="today knee pain, lanes dry af, i fucking suck today"></ion-textarea>
     </ion-item>
   </ion-list>
 </div>
