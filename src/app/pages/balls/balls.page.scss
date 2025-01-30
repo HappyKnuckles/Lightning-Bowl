@@ -1,0 +1,56 @@
+ion-header {
+  ion-button {
+    position: relative;
+
+    .powered-by {
+      font-size: 0.75rem;
+      color: gray;
+      position: absolute;
+      top: -5px;
+      text-align: center;
+    }
+  }
+}
+
+.ball-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin-top: 8px;
+
+  .info {
+    font-size: 1rem;
+    color: lightgray;
+  }
+
+  .title {
+    color: white;
+    font-size: 1.125rem;
+    font-weight: 600;
+  }
+}
+
+ion-card-title {
+  font-size: 1.375rem;
+}
+
+.action-sheet {
+  margin-right: 8px;
+
+  ion-button {
+    background: none;
+    --background-activated: none;
+    position: relative;
+  }
+}
+
+.filter-indicator {
+  position: absolute;
+  bottom: 12px;
+  left: 20px;
+  color: black;
+  background: var(--ion-color-primary);
+  padding: 1px;
+  border-radius: 7px;
+  z-index: 15555;
+  font-size: 14px;
+}

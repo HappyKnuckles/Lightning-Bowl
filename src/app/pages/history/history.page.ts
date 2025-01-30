@@ -33,14 +33,14 @@ import { HapticService } from 'src/app/services/haptic/haptic.service';
 import { LoadingService } from 'src/app/services/loader/loading.service';
 import { ToastService } from 'src/app/services/toast/toast.service';
 import { Game } from 'src/app/models/game.model';
-import { FilterComponent } from 'src/app/components/filter/filter.component';
 import { ModalController } from '@ionic/angular';
-import { FilterService } from 'src/app/services/filter/filter.service';
 import { StorageService } from 'src/app/services/storage/storage.service';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { GameComponent } from 'src/app/components/game/game.component';
 import { ExcelService } from 'src/app/services/excel/excel.service';
 import { SortUtilsService } from 'src/app/services/sort-utils/sort-utils.service';
+import { GameFilterService } from 'src/app/services/game-filter/game-filter.service';
+import { GameFilterComponent } from 'src/app/components/game-filter/game-filter.component';
 
 @Component({
   selector: 'app-history',
@@ -72,7 +72,7 @@ export class HistoryPage implements OnInit, OnDestroy {
   filteredGameHistory: Game[] = [];
   leagues: string[] = [];
   file!: File;
-  activeFilterCount = this.filterService.activeFilterCount;
+  activeFilterCount = this.gameFilterService.activeFilterCount;
   private gameSubscriptions: Subscription = new Subscription();
   private filteredGamesSubscription!: Subscription;
   private leagueSubscriptions: Subscription = new Subscription();
@@ -84,7 +84,7 @@ export class HistoryPage implements OnInit, OnDestroy {
     public loadingService: LoadingService,
     private hapticService: HapticService,
     private modalCtrl: ModalController,
-    private filterService: FilterService,
+    private gameFilterService: GameFilterService,
     private sortUtilsService: SortUtilsService,
     private excelService: ExcelService
   ) {
@@ -130,7 +130,7 @@ export class HistoryPage implements OnInit, OnDestroy {
 
   async openFilterModal() {
     const modal = await this.modalCtrl.create({
-      component: FilterComponent,
+      component: GameFilterComponent,
       componentProps: {
         games: this.gameHistory,
         filteredGames: this.filteredGameHistory,
@@ -191,7 +191,7 @@ export class HistoryPage implements OnInit, OnDestroy {
   async loadGameHistory(): Promise<void> {
     try {
       this.gameHistory = await this.storageService.loadGameHistory();
-      this.filterService.filterGames(this.gameHistory);
+      this.gameFilterService.filterGames(this.gameHistory);
     } catch (error) {
       this.toastService.showToast(`Error loading history! ${error}`, 'bug', true);
     }
@@ -210,17 +210,17 @@ export class HistoryPage implements OnInit, OnDestroy {
       })
     );
 
-    this.filteredGamesSubscription = this.filterService.filteredGames$.subscribe((games) => {
+    this.filteredGamesSubscription = this.gameFilterService.filteredGames$.subscribe((games) => {
       this.filteredGameHistory = games;
       this.sortUtilsService.sortGameHistoryByDate(this.filteredGameHistory);
-      this.activeFilterCount = this.filterService.activeFilterCount;
+      this.activeFilterCount = this.gameFilterService.activeFilterCount;
     });
 
-    this.leagueSubscriptions.add(
-      merge(this.storageService.newLeagueAdded, this.storageService.leagueDeleted, this.storageService.leagueChanged).subscribe(() => {
-        this.getLeagues();
-      })
-    );
+    // this.leagueSubscriptions.add(
+    //   merge(this.storageService.newLeagueAdded, this.storageService.leagueDeleted, this.storageService.leagueChanged).subscribe(() => {
+    //     this.getLeagues();
+    //   })
+    // );
   }
 
   private async showPermissionDeniedAlert(): Promise<void> {

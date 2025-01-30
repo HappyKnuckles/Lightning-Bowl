@@ -86,8 +86,7 @@ export class LeagueSelectorComponent implements OnInit, OnDestroy {
   }
 
   async saveLeague(): Promise<void> {
-    const key = 'league' + '_' + this.newLeague;
-    await this.storageService.addLeague(key, this.newLeague);
+    await this.storageService.addLeague(this.newLeague);
     this.selectedLeague = this.newLeague;
     this.leagueChanged.emit(this.selectedLeague);
     this.newLeague = '';
@@ -101,8 +100,7 @@ export class LeagueSelectorComponent implements OnInit, OnDestroy {
   }
 
   async editLeague(): Promise<void> {
-    const key = 'league' + '_' + this.newLeague;
-    await this.storageService.editLeague(key, this.newLeague, this.leagueToChange);
+    await this.storageService.editLeague(this.newLeague, this.leagueToChange);
     this.newLeague = '';
     this.leagueToChange = '';
     this.toastService.showToast('League edited sucessfully.', 'checkmark-outline');
@@ -115,7 +113,7 @@ export class LeagueSelectorComponent implements OnInit, OnDestroy {
 
   private async deleteLeague(): Promise<void> {
     for (const league of this.leaguesToDelete) {
-      await this.storageService.deleteLeague('league' + '_' + league);
+      await this.storageService.deleteLeague(league);
     }
     this.toastService.showToast('League deleted sucessfully.', 'checkmark-outline');
     this.isModalOpen = false;

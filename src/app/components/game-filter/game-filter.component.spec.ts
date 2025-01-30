@@ -1,9 +1,9 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-import { FilterComponent } from './filter.component';
 import { ModalController } from '@ionic/angular';
 import { TimeRange } from 'src/app/models/filter.model';
-import { FilterService } from 'src/app/services/filter/filter.service';
 import { BehaviorSubject } from 'rxjs';
+import { GameFilterComponent } from './game-filter.component';
+import { GameFilterService } from 'src/app/services/game-filter/game-filter.service';
 
 const mockFilters = {
   excludePractice: false,
@@ -23,13 +23,13 @@ const FilterServiceMock = {
   filters$: new BehaviorSubject(mockFilters),
 };
 
-describe('FilterComponent', () => {
-  let component: FilterComponent;
-  let fixture: ComponentFixture<FilterComponent>;
+describe('GameFilterComponent', () => {
+  let component: GameFilterComponent;
+  let fixture: ComponentFixture<GameFilterComponent>;
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      imports: [FilterComponent], // Corrected here
+      imports: [GameFilterComponent], // Corrected here
       providers: [
         {
           provide: ModalController,
@@ -37,11 +37,11 @@ describe('FilterComponent', () => {
             create: jasmine.createSpy('create').and.returnValue(Promise.resolve({ present: jasmine.createSpy('present') })),
           },
         },
-        { provide: FilterService, useValue: FilterServiceMock }, // Mocked FilterService with filters$
+        { provide: GameFilterService, useValue: FilterServiceMock }, // Mocked FilterService with filters$
       ],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(FilterComponent);
+    fixture = TestBed.createComponent(GameFilterComponent);
     component = fixture.componentInstance;
 
     component.games = [];

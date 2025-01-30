@@ -22,7 +22,7 @@ import {
   IonCol,
   IonInput,
   IonInfiniteScroll,
-  IonInfiniteScrollContent,
+  IonInfiniteScrollContent, IonText
 } from '@ionic/angular/standalone';
 import { toPng } from 'html-to-image';
 import { addIcons } from 'ionicons';
@@ -34,7 +34,7 @@ import {
   createOutline,
   shareOutline,
   documentTextOutline,
-  medalOutline,
+  medalOutline, bowlingBallOutline
 } from 'ionicons/icons';
 import { Game } from 'src/app/models/game.model';
 import { GameUtilsService } from 'src/app/services/game-utils/game-utils.service';
@@ -49,7 +49,7 @@ import { UtilsService } from 'src/app/services/utils/utils.service';
   templateUrl: './game.component.html',
   styleUrls: ['./game.component.scss'],
   providers: [DatePipe, ModalController],
-  imports: [
+  imports: [IonText,
     IonInfiniteScrollContent,
     IonInfiniteScroll,
     IonInput,
@@ -95,7 +95,7 @@ export class GameComponent implements OnChanges {
   constructor(
     private alertController: AlertController,
     private toastService: ToastService,
-    private storageService: StorageService,
+    public storageService: StorageService,
     private loadingService: LoadingService,
     private datePipe: DatePipe,
     private hapticService: HapticService,
@@ -103,16 +103,7 @@ export class GameComponent implements OnChanges {
     private gameUtilsService: GameUtilsService,
     private utilsService: UtilsService
   ) {
-    addIcons({
-      cloudUploadOutline,
-      cloudDownloadOutline,
-      filterOutline,
-      trashOutline,
-      createOutline,
-      shareOutline,
-      documentTextOutline,
-      medalOutline,
-    });
+    addIcons({ trashOutline, createOutline, shareOutline, documentTextOutline, medalOutline, bowlingBallOutline, cloudUploadOutline, cloudDownloadOutline, filterOutline, });
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -130,7 +121,7 @@ export class GameComponent implements OnChanges {
         {
           text: 'Cancel',
           role: 'cancel',
-          handler: () => {},
+          handler: () => { },
         },
         {
           text: 'Delete',

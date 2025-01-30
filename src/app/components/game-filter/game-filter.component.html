@@ -12,30 +12,15 @@
 <ion-content>
   <ion-list style="padding-top: 10px" lines="full">
     <ion-item>
-      <ion-input
-        class="ion-text-center"
-        [(ngModel)]="filters().minScore"
-        name="minScore"
-        clearOnEdit="true"
-        inputmode="numeric"
-        label="Score range"></ion-input>
+      <ion-input class="ion-text-center" [(ngModel)]="filters().minScore" name="minScore" clearOnEdit="true"
+        inputmode="numeric" label="Score range"></ion-input>
       <!-- <ion-label class="ion-text-center" style="margin-inline-end: 8px">-</ion-label> -->
-      <ion-input
-        label="-"
-        class="ion-text-center"
-        style="width: 60%"
-        [(ngModel)]="filters().maxScore"
-        name="maxScore"
-        clearOnEdit="true"
-        inputmode="numeric"></ion-input>
+      <ion-input label="-" class="ion-text-center" style="width: 60%" [(ngModel)]="filters().maxScore" name="maxScore"
+        clearOnEdit="true" inputmode="numeric"></ion-input>
     </ion-item>
     <ion-item>
-      <ion-select
-        name="timeRange"
-        label="Time Range"
-        (ionChange)="startDateChange($event)"
-        [(ngModel)]="filters().timeRange"
-        [value]="filters().timeRange">
+      <ion-select name="timeRange" label="Time Range" (ionChange)="startDateChange($event)"
+        [(ngModel)]="filters().timeRange" [value]="filters().timeRange">
         <ion-select-option [value]="0">Today</ion-select-option>
         <ion-select-option [value]="1">Last week</ion-select-option>
         <ion-select-option [value]="2">Last month</ion-select-option>
@@ -55,43 +40,27 @@
 
     <ion-modal [keepContentsMounted]="true">
       <ng-template>
-        <ion-datetime
-          id="datetime-min"
-          locale="de-DE"
-          [formatOptions]="{
+        <ion-datetime id="datetime-min" locale="de-DE" [formatOptions]="{
             date: {
               month: '2-digit',
               day: '2-digit',
               year: 'numeric'
             }
-          }"
-          [(ngModel)]="filters().startDate"
-          name="startDate"
-          [highlightedDates]="highlightedDates"
-          (ionChange)="updateStart($event)"
-          presentation="date"
-          [min]="defaultFilters.startDate"
+          }" [(ngModel)]="filters().startDate" name="startDate" [highlightedDates]="highlightedDates"
+          (ionChange)="updateStart($event)" presentation="date" [min]="defaultFilters.startDate"
           [max]="filters().endDate"></ion-datetime>
       </ng-template>
     </ion-modal>
     <ion-modal [keepContentsMounted]="true">
       <ng-template>
-        <ion-datetime
-          id="datetime-max"
-          locale="de-DE"
-          [formatOptions]="{
+        <ion-datetime id="datetime-max" locale="de-DE" [formatOptions]="{
             date: {
               month: '2-digit',
               day: '2-digit',
               year: 'numeric'
             }
-          }"
-          [(ngModel)]="filters().endDate"
-          name="endDate"
-          [highlightedDates]="highlightedDates"
-          (ionChange)="updateEnd($event)"
-          presentation="date"
-          [min]="filters().startDate"></ion-datetime>
+          }" [(ngModel)]="filters().endDate" name="endDate" [highlightedDates]="highlightedDates"
+          (ionChange)="updateEnd($event)" presentation="date" [min]="filters().startDate"></ion-datetime>
       </ng-template>
     </ion-modal>
     <ion-item>
@@ -104,16 +73,19 @@
       <ion-toggle [(ngModel)]="filters().isClean" name="isClean">Only clean games</ion-toggle>
     </ion-item>
     <ion-item>
-      <ion-select
-        name="league"
-        [(ngModel)]="filters().league"
-        [value]="filters().league"
-        label="League"
-        multiple="true"
-        (ionChange)="handleSelect($event)">
+      <ion-select name="league" [(ngModel)]="filters().balls" [value]="filters().balls" label="League"
+        multiple="true" (ionChange)="handleSelect($event)">
         <ion-select-option value="all">All</ion-select-option>
         <ion-select-option value="">None</ion-select-option>
         <ion-select-option *ngFor="let league of leagues" [value]="league">{{ league }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+    <ion-item>
+      <ion-select name="league" [(ngModel)]="filters().balls" [value]="filters().balls" label="Balls"
+        multiple="true">
+        <!-- <ion-select-option value="all">All</ion-select-option>
+        <ion-select-option value="">None</ion-select-option> -->
+        <ion-select-option *ngFor="let ball of storageService.arsenal()" [value]="ball.ball_name">{{ ball.ball_name }}</ion-select-option>
       </ion-select>
     </ion-item>
   </ion-list>

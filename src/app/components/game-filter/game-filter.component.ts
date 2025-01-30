@@ -24,14 +24,15 @@ import {
 import { Subscription } from 'rxjs';
 import { TimeRange } from 'src/app/models/filter.model';
 import { Game } from 'src/app/models/game.model';
-import { FilterService } from 'src/app/services/filter/filter.service';
+import { GameFilterService } from 'src/app/services/game-filter/game-filter.service';
 import { SortUtilsService } from 'src/app/services/sort-utils/sort-utils.service';
+import { StorageService } from 'src/app/services/storage/storage.service';
 import { UtilsService } from 'src/app/services/utils/utils.service';
 
 @Component({
-  selector: 'app-filter',
-  templateUrl: './filter.component.html',
-  styleUrls: ['./filter.component.scss'],
+  selector: 'app-game-filter',
+  templateUrl: './game-filter.component.html',
+  styleUrls: ['./game-filter.component.scss'],
   standalone: true,
   imports: [
     IonList,
@@ -57,7 +58,7 @@ import { UtilsService } from 'src/app/services/utils/utils.service';
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
-export class FilterComponent implements OnInit, OnDestroy {
+export class GameFilterComponent implements OnInit, OnDestroy {
   @Input({ required: true }) games!: Game[];
   @Input() filteredGames!: Game[];
   filters = this.filterService.filters;
@@ -69,9 +70,9 @@ export class FilterComponent implements OnInit, OnDestroy {
 
   constructor(
     private modalCtrl: ModalController,
-    private filterService: FilterService,
+    private filterService: GameFilterService,
     private sortUtilsService: SortUtilsService,
-    // private storageService: StorageService,
+    public storageService: StorageService,
     private utilsService: UtilsService
   ) {
     // this.leagueSubscriptions.add(
@@ -127,7 +128,7 @@ export class FilterComponent implements OnInit, OnDestroy {
 
   handleSelect(event: CustomEvent): void {
     if (event.detail.value.includes('all')) {
-      this.filters().league = ['all'];
+      this.filters().leagues = ['all'];
     }
     // else if (event.detail.value.includes('')) {
     //   this.filters.league = [''];

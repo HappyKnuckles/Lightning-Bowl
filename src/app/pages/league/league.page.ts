@@ -261,8 +261,7 @@ export class LeaguePage implements OnInit, OnDestroy {
   }
 
   async saveLeague(league: string): Promise<void> {
-    const key = 'league' + '_' + league;
-    await this.storageService.addLeague(key, league);
+    await this.storageService.addLeague(league);
     this.toastService.showToast('League saved sucessfully.', 'add');
   }
 
@@ -316,8 +315,7 @@ export class LeaguePage implements OnInit, OnDestroy {
         {
           text: 'Delete',
           handler: async () => {
-            const key = 'league' + '_' + league;
-            await this.storageService.deleteLeague(key);
+            await this.storageService.deleteLeague(league);
             this.toastService.showToast('League deleted sucessfully.', 'checkmark-outline');
           },
         },
@@ -348,8 +346,7 @@ export class LeaguePage implements OnInit, OnDestroy {
         {
           text: 'Edit',
           handler: async (data: { league: string }) => {
-            const key = 'league' + '_' + data.league;
-            await this.storageService.editLeague(key, data.league, league);
+            await this.storageService.editLeague(data.league, league);
             this.toastService.showToast('League edited sucessfully.', 'checkmark-outline');
           },
         },

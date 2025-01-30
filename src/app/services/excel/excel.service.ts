@@ -123,7 +123,8 @@ export class ExcelService {
         isPerfect: data[i]['17']?.trim().toLowerCase() === 'true',
         isSeries: data[i]['18']?.trim().toLowerCase() === 'true',
         seriesId: data[i]['19'],
-        note: data[i]['20'],
+        balls: data[i]['20']?.split(', '),
+        note: data[i]['21'],
       };
 
       gameData.push(game);
@@ -184,6 +185,7 @@ export class ExcelService {
     headerRow.push('Perfect');
     headerRow.push('Series');
     headerRow.push('Series ID');
+    headerRow.push('Balls');
     headerRow.push('Notes');
     gameData.push(headerRow);
 
@@ -225,6 +227,7 @@ export class ExcelService {
       rowData.push(game.isPerfect ? 'true' : 'false');
       rowData.push(game.isSeries ? 'true' : 'false');
       rowData.push(game.seriesId || '');
+      rowData.push(game.balls?.join(', ') || '');
       rowData.push(game.note || '');
       gameData.push(rowData);
     });

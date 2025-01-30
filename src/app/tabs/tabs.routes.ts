@@ -26,6 +26,10 @@ export const routes: Routes = [
         path: 'league',
         loadComponent: () => import('../pages/league/league.page').then((m) => m.LeaguePage),
       },
+        {
+        path: 'balls',
+        loadComponent: () => import('../pages/balls/balls.page').then((m) => m.BallsPage),
+      },
       {
         path: '',
         redirectTo: '/tabs/add',
