@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/restapi/:path*",
+      "destination": "https://www.bowwwl.com/restapi/:path*"
+    }
+  ]
+}
