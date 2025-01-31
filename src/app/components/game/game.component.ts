@@ -126,8 +126,7 @@ export class GameComponent implements OnChanges {
         {
           text: 'Delete',
           handler: async () => {
-            const key = 'game' + gameId;
-            await this.storageService.deleteGame(key);
+            await this.storageService.deleteGame(gameId);
             this.toastService.showToast('Game deleted sucessfully.', 'checkmark-outline');
           },
         },

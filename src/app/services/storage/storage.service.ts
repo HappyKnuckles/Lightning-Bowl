@@ -3,6 +3,7 @@ import { Game } from 'src/app/models/game.model';
 import { Storage } from '@ionic/storage-angular';
 import { SortUtilsService } from '../sort-utils/sort-utils.service';
 import { Ball } from 'src/app/models/ball.model';
+import { sign } from 'crypto';
 
 @Injectable({
   providedIn: 'root',
@@ -19,6 +20,7 @@ export class StorageService {
   get arsenal() {
     return this.#arsenal;
   }
+
   constructor(private storage: Storage, private sortUtilsService: SortUtilsService) {
     this.init();
   }
@@ -32,6 +34,7 @@ export class StorageService {
     const arsenal = await this.loadArsenal();
     this.arsenal.set(arsenal);
   }
+  
   async loadArsenal(): Promise<Ball[]> {
     const arsenal = await this.loadData<Ball>('arsenal');
     return arsenal.reverse();
@@ -100,7 +103,8 @@ export class StorageService {
     }
   }
 
-  async deleteGame(key: string): Promise<void> {
+  async deleteGame(gameId: string): Promise<void> {
+    const key = 'game' + gameId;
     await this.delete(key);
     this.gameDeleted.emit();
   }
@@ -117,28 +121,7 @@ export class StorageService {
 
   async loadGameHistory(): Promise<Game[]> {
     const gameHistory = await this.loadData<Game>('game');
-
-    // TODO remove this block after a while
-    let isRenewed = localStorage.getItem('isRenewedAgainAgain') || false;
-    if (!isRenewed) {
-      gameHistory.forEach((game) => {
-        game.isPerfect = game.totalScore === 300;
-        game.isSeries = game.seriesId !== undefined;
-        game.isClean = game.frames.every((frame: { throws: any[] }) => {
-          const frameTotal = frame.throws.reduce((sum: any, currentThrow: { value: any }) => sum + currentThrow.value, 0);
-          return frameTotal >= 10;
-        });
-        if (game.league === undefined || game.league === '') {
-          game.isPractice = true;
-        } else game.isPractice = false;
-      });
-
-      this.saveGamesToLocalStorage(gameHistory);
-      isRenewed = true;
-      localStorage.setItem('isRenewedAgainAgain', JSON.stringify(isRenewed));
-    }
     this.sortUtilsService.sortGameHistoryByDate(gameHistory);
-
     return gameHistory;
   }
 

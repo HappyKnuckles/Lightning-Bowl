@@ -6,7 +6,7 @@ import { BowlingCalculatorService } from '../bowling-calculator/bowling-calculat
   providedIn: 'root',
 })
 export class GameUtilsService {
-  constructor() {}
+  constructor() { }
 
   isGameValid(bowlingService?: BowlingCalculatorService, game?: Game): boolean {
     const frames = game ? game.frames : bowlingService!.frames;
@@ -125,10 +125,12 @@ export class GameUtilsService {
     }
 
     frameScores = frameScores.flat().sort((a, b) => a - b);
-
-    if (frameScores[9] === frameScores[10]) {
-      frameScores.splice(frameScores.length - 1, 1);
+    if (frameScores.length > 10) {
+      frameScores = frameScores.slice(0, 10);
     }
+    // if (frameScores[9] === frameScores[10]) {
+    //   frameScores.splice(frameScores.length - 1, 1);
+    // }
 
     throwValues = throwValues.filter((value) => value.trim() !== '');
     let prevValue: number | undefined;
@@ -153,15 +155,16 @@ export class GameUtilsService {
 
     const frames: any[] = [];
     let currentFrame: any[] = [];
-
+    
     throwValues.forEach((value) => {
+      const intValue = parseInt(value, 10);
       const isNinthFrame = frames.length === 9;
       if (frames.length < 10) {
-        currentFrame.push(value);
+        currentFrame.push(intValue);
         if ((currentFrame.length === 2 && !isNinthFrame) || (isNinthFrame && currentFrame.length === 3)) {
           frames.push([...currentFrame]);
           currentFrame = [];
-        } else if (value === '10' && !isNinthFrame) {
+        } else if (intValue === 10 && !isNinthFrame) {
           frames.push([...currentFrame]);
           currentFrame = [];
         }

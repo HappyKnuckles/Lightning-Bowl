@@ -483,7 +483,16 @@ export class AddGamePage implements OnInit {
   private parseBowlingScores(input: string): void {
     try {
       const { frames, frameScores, totalScore } = this.gameUtilsService.parseBowlingScores(input, this.username!);
-      this.gameData = this.transformGameService.transformGameData(frames, frameScores, totalScore, false);
+      this.gameData = this.transformGameService.transformGameData(frames,
+        frameScores,
+        totalScore,
+        false,
+        '',
+        false,
+        '',
+        '',
+        [],
+      );
 
       if (this.gameData.frames.length === 10 && this.gameData.frameScores.length === 10 && this.gameData.totalScore <= 300) {
         this.isModalOpen = true;
