@@ -2,9 +2,9 @@ import { Injectable } from '@angular/core';
 import { BallFilter } from 'src/app/models/filter.model';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
-export class BallFilterService {  
+export class BallFilterService {
   defaultFilters: BallFilter = {
     brand: ['all'],
     coverStock: ['all'],
@@ -17,8 +17,8 @@ export class BallFilterService {
     maxRg: 3,
     minDiff: 0,
     maxDiff: 0.1,
-    inArsenal: false
-  }
-  
-  constructor() { }
+    inArsenal: false,
+  };
+
+  constructor() {}
 }

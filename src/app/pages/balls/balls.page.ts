@@ -1,7 +1,25 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonContent, IonSearchbar, IonHeader, IonTitle, IonToolbar, IonCardTitle, IonImg, IonCardContent, IonCard, IonCardHeader, IonInfiniteScroll, IonInfiniteScrollContent, IonCardSubtitle, IonIcon, IonButtons, IonButton, IonText } from '@ionic/angular/standalone';
+import {
+  IonContent,
+  IonSearchbar,
+  IonHeader,
+  IonTitle,
+  IonToolbar,
+  IonCardTitle,
+  IonImg,
+  IonCardContent,
+  IonCard,
+  IonCardHeader,
+  IonInfiniteScroll,
+  IonInfiniteScrollContent,
+  IonCardSubtitle,
+  IonIcon,
+  IonButtons,
+  IonButton,
+  IonText,
+} from '@ionic/angular/standalone';
 import { Ball } from 'src/app/models/ball.model';
 import { addIcons } from 'ionicons';
 import { globeOutline, camera, addOutline, filterOutline } from 'ionicons/icons';
@@ -17,7 +35,27 @@ import { LoadingService } from 'src/app/services/loader/loading.service';
   styleUrls: ['./balls.page.scss'],
   standalone: true,
   providers: [ModalController],
-  imports: [IonText, IonButton, IonButtons, IonIcon, IonCardSubtitle, IonSearchbar, IonInfiniteScrollContent, IonInfiniteScroll, IonCardHeader, IonCard, IonCardContent, IonImg, IonCardTitle, IonContent, IonHeader, IonTitle, IonToolbar, CommonModule, FormsModule]
+  imports: [
+    IonText,
+    IonButton,
+    IonButtons,
+    IonIcon,
+    IonCardSubtitle,
+    IonSearchbar,
+    IonInfiniteScrollContent,
+    IonInfiniteScroll,
+    IonCardHeader,
+    IonCard,
+    IonCardContent,
+    IonImg,
+    IonCardTitle,
+    IonContent,
+    IonHeader,
+    IonTitle,
+    IonToolbar,
+    CommonModule,
+    FormsModule,
+  ],
 })
 export class BallsPage implements OnInit {
   balls: Ball[] = [];
@@ -27,9 +65,13 @@ export class BallsPage implements OnInit {
   currentPage = 1;
   hasMoreData = true;
   activeFilterCount = 0;
-  url = 'https://bowwwl.com/'
-  constructor(private modalCtrl: ModalController, public loadingService: LoadingService, private storageService: StorageService, private toastService: ToastService) {
-
+  url = 'https://bowwwl.com/';
+  constructor(
+    private modalCtrl: ModalController,
+    public loadingService: LoadingService,
+    private storageService: StorageService,
+    private toastService: ToastService
+  ) {
     addIcons({ filterOutline, globeOutline, addOutline, camera });
   }
 
@@ -53,7 +95,7 @@ export class BallsPage implements OnInit {
   }
 
   isInArsenal(ball: Ball): boolean {
-    return this.storageService.arsenal().some(b => b.ball_id === ball.ball_id);
+    return this.storageService.arsenal().some((b) => b.ball_id === ball.ball_id);
   }
 
   async saveBallToArsenal(ball: Ball) {
@@ -116,9 +158,7 @@ export class BallsPage implements OnInit {
     this.searchTerm = query;
     if (this.searchTerm !== '') {
       this.hasMoreData = false;
-      this.filteredBalls = this.allBalls.filter((ball) =>
-        ball.ball_name.toLowerCase().includes(query)
-      );
+      this.filteredBalls = this.allBalls.filter((ball) => ball.ball_name.toLowerCase().includes(query));
     } else {
       this.hasMoreData = true;
       this.filteredBalls = this.balls;

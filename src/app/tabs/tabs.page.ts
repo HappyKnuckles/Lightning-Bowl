@@ -1,25 +1,32 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component } from '@angular/core';
 import { addIcons } from 'ionicons';
 import { add, statsChartOutline, receipt, settings, medalOutline, bowlingBallOutline, ellipsisHorizontal } from 'ionicons/icons';
+import { BehaviorSubject } from 'rxjs';
+import { NavigationEnd, Router, RouterModule } from '@angular/router';
+import { filter } from 'rxjs/operators';
 import { IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel, IonContent, IonList, IonItem, IonModal } from '@ionic/angular/standalone';
-import { Router } from '@angular/router';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
   selector: 'app-tabs',
   templateUrl: 'tabs.page.html',
   styleUrls: ['tabs.page.scss'],
   standalone: true,
-  imports: [IonModal, IonItem, IonList, IonContent, IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel],
+  imports: [IonModal, RouterModule, AsyncPipe, IonItem, IonList, IonContent, IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel],
 })
 export class TabsPage {
-  @ViewChild(IonModal) modal!: IonModal;
+  activeMoreTab$ = new BehaviorSubject<boolean>(false);
+  readonly moreTabs = ['/tabs/balls', '/tabs/settings'];
 
   constructor(private router: Router) {
     addIcons({ add, statsChartOutline, receipt, medalOutline, ellipsisHorizontal, bowlingBallOutline, settings });
+
+    this.router.events.pipe(filter((event) => event instanceof NavigationEnd)).subscribe(() => {
+      this.activeMoreTab$.next(this.moreTabs.includes(this.router.url));
+    });
   }
 
-  navigateTo(path: string) {
-    this.modal.dismiss();
-    this.router.navigateByUrl(path);
+  isActive(path: string): boolean {
+    return this.router.url === path;
   }
 }

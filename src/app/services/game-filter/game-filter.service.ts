@@ -24,7 +24,7 @@ export class GameFilterService {
   activeFilterCount: number = 0;
   private filteredGamesSubject = new BehaviorSubject<Game[]>([]);
   filteredGames$ = this.filteredGamesSubject.asObservable();
-  #filters = signal<GameFilter>({...this.defaultFilters});
+  #filters = signal<GameFilter>({ ...this.defaultFilters });
   get filters() {
     return this.#filters;
   }
@@ -55,13 +55,21 @@ export class GameFilterService {
 
       let matchesBallFilter = true;
       if (!this.filters().balls.includes('all')) {
-        matchesBallFilter = this.filters().balls.some(ball => game.balls?.includes(ball));
+        matchesBallFilter = this.filters().balls.some((ball) => game.balls?.includes(ball));
       }
       if (this.filters().balls.includes('')) {
-        matchesBallFilter = game.balls?.length === 0 || game.balls === undefined || this.filters().balls.some(ball => game.balls?.includes(ball));
+        matchesBallFilter = game.balls?.length === 0 || game.balls === undefined || this.filters().balls.some((ball) => game.balls?.includes(ball));
       }
 
-      return isWithinDateRange && isWithinScoreRange && matchesPracticeFilter && matchesPerfectFilter && matchesCleanFilter && matchesLeagueFilter && matchesBallFilter;
+      return (
+        isWithinDateRange &&
+        isWithinScoreRange &&
+        matchesPracticeFilter &&
+        matchesPerfectFilter &&
+        matchesCleanFilter &&
+        matchesLeagueFilter &&
+        matchesBallFilter
+      );
     });
 
     this.filteredGamesSubject.next(filteredGames);
@@ -82,7 +90,7 @@ export class GameFilterService {
     const oneWeekLater = new Date(currentDate.setDate(currentDate.getDate() + 7));
     this.defaultFilters.endDate = oneWeekLater.toISOString();
     this.filters.update(() => this.loadInitialFilters());
-    this.filters.update(filters => ({ ...filters, endDate: this.defaultFilters.endDate }));
+    this.filters.update((filters) => ({ ...filters, endDate: this.defaultFilters.endDate }));
   }
 
   private updateActiveFilterCount(): void {

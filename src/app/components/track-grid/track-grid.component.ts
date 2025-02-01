@@ -3,7 +3,19 @@ import { BowlingCalculatorService } from 'src/app/services/bowling-calculator/bo
 import { ToastService } from 'src/app/services/toast/toast.service';
 import { GameDataTransformerService } from 'src/app/services/transform-game/transform-game-data.service';
 import { NgFor, NgIf } from '@angular/common';
-import { IonIcon, IonGrid, IonSelect, IonSelectOption, IonRow, IonCol, IonInput, IonItem, IonTextarea, IonCheckbox, IonList } from '@ionic/angular/standalone';
+import {
+  IonIcon,
+  IonGrid,
+  IonSelect,
+  IonSelectOption,
+  IonRow,
+  IonCol,
+  IonInput,
+  IonItem,
+  IonTextarea,
+  IonCheckbox,
+  IonList,
+} from '@ionic/angular/standalone';
 import { FormsModule } from '@angular/forms';
 import { HapticService } from 'src/app/services/haptic/haptic.service';
 import { ImpactStyle } from '@capacitor/haptics';
@@ -20,7 +32,24 @@ import { GameUtilsService } from 'src/app/services/game-utils/game-utils.service
   styleUrls: ['./track-grid.component.scss'],
   providers: [BowlingCalculatorService],
   standalone: true,
-  imports: [ IonIcon ,IonSelect, NgFor, IonSelectOption, IonList, IonCheckbox, IonItem, IonTextarea, IonGrid, IonRow, IonCol, IonInput, FormsModule, NgIf, NgFor, LeagueSelectorComponent],
+  imports: [
+    IonIcon,
+    IonSelect,
+    NgFor,
+    IonSelectOption,
+    IonList,
+    IonCheckbox,
+    IonItem,
+    IonTextarea,
+    IonGrid,
+    IonRow,
+    IonCol,
+    IonInput,
+    FormsModule,
+    NgIf,
+    NgFor,
+    LeagueSelectorComponent,
+  ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class TrackGridComponent implements OnInit {

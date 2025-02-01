@@ -6,7 +6,7 @@ import { BowlingCalculatorService } from '../bowling-calculator/bowling-calculat
   providedIn: 'root',
 })
 export class GameUtilsService {
-  constructor() { }
+  constructor() {}
 
   isGameValid(bowlingService?: BowlingCalculatorService, game?: Game): boolean {
     const frames = game ? game.frames : bowlingService!.frames;
@@ -155,7 +155,7 @@ export class GameUtilsService {
 
     const frames: any[] = [];
     let currentFrame: any[] = [];
-    
+
     throwValues.forEach((value) => {
       const intValue = parseInt(value, 10);
       const isNinthFrame = frames.length === 9;

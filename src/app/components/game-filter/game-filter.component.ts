@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, CUSTOM_ELEMENTS_SCHEMA, Input, OnDestroy, OnInit } from '@angular/core';
+import { Component, CUSTOM_ELEMENTS_SCHEMA, Input, OnInit } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ModalController } from '@ionic/angular';
 import {
@@ -21,7 +21,6 @@ import {
   IonSelect,
   IonList,
 } from '@ionic/angular/standalone';
-import { Subscription } from 'rxjs';
 import { TimeRange } from 'src/app/models/filter.model';
 import { Game } from 'src/app/models/game.model';
 import { GameFilterService } from 'src/app/services/game-filter/game-filter.service';
@@ -58,15 +57,13 @@ import { UtilsService } from 'src/app/services/utils/utils.service';
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
-export class GameFilterComponent implements OnInit, OnDestroy {
+export class GameFilterComponent implements OnInit {
   @Input({ required: true }) games!: Game[];
   @Input() filteredGames!: Game[];
   filters = this.filterService.filters;
   defaultFilters = this.filterService.defaultFilters;
   highlightedDates: { date: string; textColor: string; backgroundColor: string }[] = [];
   leagues: string[] = [];
-  private leagueSubscriptions: Subscription = new Subscription();
-  // private filterSubscription: Subscription;
 
   constructor(
     private modalCtrl: ModalController,
@@ -74,26 +71,13 @@ export class GameFilterComponent implements OnInit, OnDestroy {
     private sortUtilsService: SortUtilsService,
     public storageService: StorageService,
     private utilsService: UtilsService
-  ) {
-    // this.leagueSubscriptions.add(
-    //   merge(this.storageService.newLeagueAdded, this.storageService.leagueDeleted, this.storageService.leagueChanged).subscribe(() => {
-    //     this.storageService.loadLeagues().then((leagues) => {
-    //       this.leagues = leagues;
-    //     });
-    //   })
-    // );
-  }
-
-  ngOnDestroy(): void {
-    this.leagueSubscriptions.unsubscribe();
-  }
+  ) {}
 
   ngOnInit(): void {
     if (!this.filterService.filters().startDate && !this.filterService.filters().endDate) {
       this.filterService.filters().startDate = new Date(this.games[this.games.length - 1].date).toISOString() || Date.now().toString();
       this.filterService.filters().endDate = new Date(this.games[0].date).toISOString() || Date.now().toString();
     }
-    // this.leagues = await this.storageService.loadLeagues();
     this.getHighlightedDates();
     this.getLeagues();
   }

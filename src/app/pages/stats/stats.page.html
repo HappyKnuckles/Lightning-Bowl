@@ -2,16 +2,17 @@
   <ion-toolbar>
     <ion-title> Stats </ion-title>
     <ion-buttons slot="end" class="action-sheet">
-      <ion-button fill="clear" (click)="openFilterModal()"
-        [disabled]="(gameHistory.length <= 0 && !loadingService.isLoading)">
+      <ion-button fill="clear" (click)="openFilterModal()" [disabled]="(gameHistory.length <= 0 && !loadingService.isLoading)">
         <ion-icon slot="icon-only" name="filter-outline"></ion-icon>
         <ion-text class="filter-indicator" *ngIf="activeFilterCount !== 0">{{activeFilterCount}}</ion-text>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
   <ion-toolbar>
-    <ion-segment *ngIf="!((gameHistory.length <= 0 && !loadingService.isLoading) || filteredGameHistory.length <= 0)"
-      [value]="selectedSegment" (ionChange)="onSegmentChanged($event)">
+    <ion-segment
+      *ngIf="!((gameHistory.length <= 0 && !loadingService.isLoading) || filteredGameHistory.length <= 0)"
+      [value]="selectedSegment"
+      (ionChange)="onSegmentChanged($event)">
       <ion-segment-button *ngFor="let segment of segments" [value]="segment">
         <ion-label class="segment-label">{{segment}}</ion-label>
       </ion-segment-button>
@@ -24,24 +25,27 @@
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
   <!-- Show this message if there are no game history items and it's not loading -->
-  <ng-container
-    *ngIf="(gameHistory.length <= 0 || filteredGameHistory.length <= 0) && !loadingService.isLoading(); else content">
+  <ng-container *ngIf="(gameHistory.length <= 0 || filteredGameHistory.length <= 0) && !loadingService.isLoading(); else content">
     <ion-text class="no-game-text">
-      {{ gameHistory.length <= 0 && !loadingService.isLoading ? 'Start playing a few games to see your stats here!'
-        : 'No stats for this filter!' }} </ion-text>
+      {{ gameHistory.length <= 0 && !loadingService.isLoading ? 'Start playing a few games to see your stats here!' : 'No stats for this filter!' }}
+    </ion-text>
   </ng-container>
   <!-- Main content to display when there is game history or when loading is done -->
   <ng-template #content>
-    <swiper-container [spaceBetween]="8" [modules]="swiperModules" #swiper [slidesPerView]="1"
-      (swiperslidechange)="onSlideChanged()" [autoHeight]="true" style="background: var(--ion-item-background)">
+    <swiper-container
+      [spaceBetween]="8"
+      [modules]="swiperModules"
+      #swiper
+      [slidesPerView]="1"
+      (swiperslidechange)="onSlideChanged()"
+      [autoHeight]="true"
+      style="background: var(--ion-item-background)">
       <!-- Overall Segment -->
       <swiper-slide>
         <div class="tab">
-          <app-stat-display [statDefinitions]="overallStatDefinitions" [currentStats]="statsService.currentStats()"
-            [prevStats]="prevStats">
+          <app-stat-display [statDefinitions]="overallStatDefinitions" [currentStats]="statsService.currentStats()" [prevStats]="prevStats">
           </app-stat-display>
-          <app-stat-display [statDefinitions]="seriesStatDefinitions" [currentStats]="statsService.currentStats()"
-            [prevStats]="prevStats">
+          <app-stat-display [statDefinitions]="seriesStatDefinitions" [currentStats]="statsService.currentStats()" [prevStats]="prevStats">
           </app-stat-display>
           <div class="stat-container">
             <canvas #scoreChart class="score" style="width: 300px; height: 400px"></canvas>
@@ -52,8 +56,7 @@
       <!-- Spares Segment -->
       <swiper-slide>
         <div class="tab">
-          <app-spare-display [stats]="statsService.currentStats()" [prevStats]="prevStats"
-            id="spareStats"></app-spare-display>
+          <app-spare-display [stats]="statsService.currentStats()" [prevStats]="prevStats" id="spareStats"></app-spare-display>
           <div class="stat-container">
             <canvas #pinChart class="spares" style="width: 300px; height: 300px"></canvas>
           </div>
@@ -63,8 +66,7 @@
       <!-- Throws Segment -->
       <swiper-slide>
         <div class="tab">
-          <app-stat-display [statDefinitions]="throwStatDefinitions" [currentStats]="statsService.currentStats()"
-            [prevStats]="prevStats">
+          <app-stat-display [statDefinitions]="throwStatDefinitions" [currentStats]="statsService.currentStats()" [prevStats]="prevStats">
           </app-stat-display>
           <div class="stat-container">
             <canvas #throwChart class="throws" style="width: 300px; height: 300px"></canvas>
@@ -75,8 +77,12 @@
       <!-- Session Segment -->
       <swiper-slide>
         <ion-item class="date-picker" lines="none">
-          <ion-select label="Session date" toggleIcon="calendar-number-outline" expandedIcon="calendar-number"
-            [(ngModel)]="selectedDate" (ionChange)="onDateChange($event)">
+          <ion-select
+            label="Session date"
+            toggleIcon="calendar-number-outline"
+            expandedIcon="calendar-number"
+            [(ngModel)]="selectedDate"
+            (ionChange)="onDateChange($event)">
             <ion-select-option *ngFor="let unixDate of uniqueSortedDates" [value]="unixDate">
               {{ (unixDate | date:'dd.MM.yyyy') }}
             </ion-select-option>
@@ -85,14 +91,18 @@
         <swiper-container [nested]="true" [modules]="swiperModules" #swipernest>
           <swiper-slide>
             <div class="tab">
-              <app-stat-display [statDefinitions]="sessionStatDefinitions" [currentStats]="statsService.sessionStats()"
+              <app-stat-display
+                [statDefinitions]="sessionStatDefinitions"
+                [currentStats]="statsService.sessionStats()"
                 [prevStats]="statsService.currentStats()">
               </app-stat-display>
             </div>
           </swiper-slide>
           <swiper-slide>
             <div class="tab">
-              <app-spare-display [prevStats]="statsService.currentStats()" [stats]="statsService.sessionStats()"
+              <app-spare-display
+                [prevStats]="statsService.currentStats()"
+                [stats]="statsService.sessionStats()"
                 [id]="'sessionSpareStats'"></app-spare-display>
             </div>
           </swiper-slide>

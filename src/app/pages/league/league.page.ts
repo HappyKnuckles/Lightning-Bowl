@@ -103,14 +103,11 @@ export class LeaguePage implements OnInit, OnDestroy {
   selectedSegment: string = 'Overall';
   segments: string[] = ['Overall', 'Spares', 'Games'];
   statsValueChanged: boolean[] = [true, true];
-
-  // leagues: string[] = [];
   games: Game[] = [];
   isEditMode: { [key: string]: boolean } = {};
   gamesByLeague: { [key: string]: Game[] } = {};
   gamesByLeagueReverse: { [key: string]: Game[] } = {};
   leagueKeys: string[] = [];
-  allLeagues: string[] = [];
   statsByLeague: { [key: string]: Stats } = {};
   overallStats: Stats = {
     totalGames: 0,
@@ -166,9 +163,6 @@ export class LeaguePage implements OnInit, OnDestroy {
       documentTextOutline,
       medalOutline,
     });
-    // this.loadingSubscription = this.loadingService.isLoading$.subscribe((isLoading) => {
-    //   this.isLoading = isLoading;
-    // });
   }
 
   ngOnDestroy(): void {
@@ -180,10 +174,11 @@ export class LeaguePage implements OnInit, OnDestroy {
       this.loadingService.setLoading(true);
       await this.getGames();
       this.leagueKeys = this.getLeagueKeys();
-      await this.getLeagues();
+      // this.getLeagues();
       this.subscribeToDataEvents();
     } catch (error) {
-      this.toastService.showToast('Error loading leagues and games', 'error');
+      console.error(error);
+      this.toastService.showToast('Error loading leagues and games', 'bug');
     } finally {
       this.loadingService.setLoading(false);
     }
@@ -356,11 +351,6 @@ export class LeaguePage implements OnInit, OnDestroy {
     await alert.present();
   }
 
-  private async getLeagues(): Promise<void> {
-    const leagues = await this.storageService.loadLeagues();
-    this.allLeagues = [...new Set([...this.leagueKeys, ...leagues])].filter((league) => league !== 'Practice');
-  }
-
   private getLeagueKeys(): string[] {
     return Object.keys(this.gamesByLeague);
   }
@@ -424,16 +414,16 @@ export class LeaguePage implements OnInit, OnDestroy {
   }
 
   private subscribeToDataEvents(): void {
-    this.leagueSubscriptions.add(
-      merge(this.storageService.newLeagueAdded, this.storageService.leagueDeleted, this.storageService.leagueChanged).subscribe(() => {
-        // this.getLeagues().then(() => {
-        //   this.calculateStatsForLeagues();
-        // });
-        this.calculateStatsForLeagues();
-        this.leagueKeys = this.getLeagueKeys();
-        this.getLeagues();
-      })
-    );
+    // this.leagueSubscriptions.add(
+    //   merge(this.storageService.newLeagueAdded, this.storageService.leagueDeleted, this.storageService.leagueChanged).subscribe(() => {
+    //     // this.getLeagues().then(() => {
+    //     //   this.calculateStatsForLeagues();
+    //     // });
+    //     this.calculateStatsForLeagues();
+    //     this.leagueKeys = this.getLeagueKeys();
+    //     this.getLeagues();
+    //   })
+    // );
 
     this.gameSubscriptions.add(
       merge(
@@ -445,6 +435,7 @@ export class LeaguePage implements OnInit, OnDestroy {
         this.getGames()
           .then(() => {
             this.sortUtilsService.sortGameHistoryByDate(this.games);
+            this.leagueKeys = this.getLeagueKeys();
           })
           .catch((error: Error) => {
             console.error('Error loading game history:', error);

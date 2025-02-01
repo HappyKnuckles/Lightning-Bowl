@@ -1,5 +1,5 @@
 import { NgIf, NgFor, NgClass, DatePipe } from '@angular/common';
-import { Component, Input, Renderer2, ViewChild, OnChanges, SimpleChanges, EventEmitter, Output } from '@angular/core';
+import { Component, Input, Renderer2, ViewChild, OnChanges, SimpleChanges, EventEmitter, Output, computed } from '@angular/core';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { ImpactStyle } from '@capacitor/haptics';
@@ -22,7 +22,8 @@ import {
   IonCol,
   IonInput,
   IonInfiniteScroll,
-  IonInfiniteScrollContent, IonText
+  IonInfiniteScrollContent,
+  IonText,
 } from '@ionic/angular/standalone';
 import { toPng } from 'html-to-image';
 import { addIcons } from 'ionicons';
@@ -34,7 +35,8 @@ import {
   createOutline,
   shareOutline,
   documentTextOutline,
-  medalOutline, bowlingBallOutline
+  medalOutline,
+  bowlingBallOutline,
 } from 'ionicons/icons';
 import { Game } from 'src/app/models/game.model';
 import { GameUtilsService } from 'src/app/services/game-utils/game-utils.service';
@@ -49,7 +51,8 @@ import { UtilsService } from 'src/app/services/utils/utils.service';
   templateUrl: './game.component.html',
   styleUrls: ['./game.component.scss'],
   providers: [DatePipe, ModalController],
-  imports: [IonText,
+  imports: [
+    IonText,
     IonInfiniteScrollContent,
     IonInfiniteScroll,
     IonInput,
@@ -84,11 +87,22 @@ import { UtilsService } from 'src/app/services/utils/utils.service';
 })
 export class GameComponent implements OnChanges {
   @Input() games!: Game[];
-  @Input() leagues!: string[];
+  // @Input() leagues!: string[];
+
   @Input() isLeaguePage?: boolean = false;
   @Input() gameCount?: number;
   @Output() resizeSwiperEvent = new EventEmitter<any>();
   @ViewChild('accordionGroup') accordionGroup!: IonAccordionGroup;
+  leagues = computed(() => {
+    const savedLeagues = this.storageService.leagues();
+    const leagueKeys = this.games.reduce((acc: string[], game: Game) => {
+      if (game.league && !acc.includes(game.league)) {
+        acc.push(game.league);
+      }
+      return acc;
+    }, []);
+    return [...new Set([...leagueKeys, ...savedLeagues])];
+  });
   showingGames: Game[] = [];
   isEditMode: { [key: string]: boolean } = {};
   private originalGameState: { [key: string]: Game } = {};
@@ -103,7 +117,17 @@ export class GameComponent implements OnChanges {
     private gameUtilsService: GameUtilsService,
     private utilsService: UtilsService
   ) {
-    addIcons({ trashOutline, createOutline, shareOutline, documentTextOutline, medalOutline, bowlingBallOutline, cloudUploadOutline, cloudDownloadOutline, filterOutline, });
+    addIcons({
+      trashOutline,
+      createOutline,
+      shareOutline,
+      documentTextOutline,
+      medalOutline,
+      bowlingBallOutline,
+      cloudUploadOutline,
+      cloudDownloadOutline,
+      filterOutline,
+    });
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -121,7 +145,7 @@ export class GameComponent implements OnChanges {
         {
           text: 'Cancel',
           role: 'cancel',
-          handler: () => { },
+          handler: () => {},
         },
         {
           text: 'Delete',

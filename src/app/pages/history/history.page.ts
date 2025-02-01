@@ -70,7 +70,6 @@ export class HistoryPage implements OnInit, OnDestroy {
   @ViewChild('accordionGroup') accordionGroup!: IonAccordionGroup;
   gameHistory: Game[] = [];
   filteredGameHistory: Game[] = [];
-  leagues: string[] = [];
   file!: File;
   activeFilterCount = this.gameFilterService.activeFilterCount;
   private gameSubscriptions: Subscription = new Subscription();
@@ -91,7 +90,14 @@ export class HistoryPage implements OnInit, OnDestroy {
     // this.loadingSubscription = this.loadingService.isLoading$.subscribe((isLoading) => {
     //   this.isLoading = isLoading;
     // });
-
+    // effect(() => {
+    //   this.gameHistory = this.storageService.games();
+    //   console.log("called")
+    //   if (this.gameHistory) {
+    //     this.sortUtilsService.sortGameHistoryByDate(this.gameHistory);
+    //     this.gameFilterService.filterGames(this.gameHistory);
+    //   }
+    // });
     addIcons({
       cloudUploadOutline,
       cloudDownloadOutline,
@@ -108,24 +114,12 @@ export class HistoryPage implements OnInit, OnDestroy {
     try {
       this.loadingService.setLoading(true);
       await this.loadGameHistory();
-      await this.getLeagues();
       this.subscribeToDataEvents();
     } catch (error) {
       console.error(error);
     } finally {
       this.loadingService.setLoading(false);
     }
-  }
-
-  async getLeagues(): Promise<void> {
-    const savedLeagues = await this.storageService.loadLeagues();
-    const leagueKeys = this.gameHistory.reduce((acc: string[], game: Game) => {
-      if (game.league && !acc.includes(game.league)) {
-        acc.push(game.league);
-      }
-      return acc;
-    }, []);
-    this.leagues = [...new Set([...leagueKeys, ...savedLeagues])];
   }
 
   async openFilterModal() {
