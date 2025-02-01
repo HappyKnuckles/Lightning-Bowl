@@ -16,7 +16,7 @@
     <ion-text class="no-game-text"> No leagues saved</ion-text>
   </ng-container>
   <ng-template #content>
-    <ng-container *ngFor="let league of leagueKeys; let i = index;">
+    <ng-container *ngFor="let league of leagueKeys(); let i = index;">
       @if(league !== 'Practice'){
       <ion-item-sliding class="sliding" #slidingItem>
         <ion-item-options side="end" (ionSwipe)="deleteLeague(league); slidingItem.closeOpened();">
@@ -33,9 +33,9 @@
         <ion-item (click)="loadingService.setLoading(true)" [id]="league" class="ion-activatable ripple-parent rectangle">
           <ion-label class="game-info">
             <div class="title">{{ league }}</div>
-            <div class="score">Games: {{getGamesByLeague(league).length}}</div>
-            <div class="score">Avg: {{getStatsByLeague(league).averageScore | number: '1.1-2' }}</div>
-            <div class="score">High: {{getStatsByLeague(league).highGame}}</div>
+            <div class="score">Games: {{gamesByLeague()[league].length}}</div>
+            <div class="score">Avg: {{statsByLeague()[league].averageScore | number: '1.1-2' }}</div>
+            <div class="score">High: {{statsByLeague()[league].highGame}}</div>
           </ion-label>
           <ion-button fill="clear" slot="end" [disabled]="isEditMode[league]">
             <ion-icon name="chevron-forward" slot="icon-only"></ion-icon>
@@ -47,9 +47,9 @@
         <ion-item (click)="loadingService.setLoading(true)" [id]="league" class="ion-activatable ripple-parent rectangle">
           <ion-label class="game-info">
             <div class="title">{{ league }}</div>
-            <div class="score">Games: {{getGamesByLeague(league).length}}</div>
-            <div class="score">Avg: {{getStatsByLeague(league).averageScore | number: '1.1-2' }}</div>
-            <div class="score">High: {{getStatsByLeague(league).highGame}}</div>
+            <div class="score">Games: {{gamesByLeague()[league].length}}</div>
+            <div class="score">Avg: {{statsByLeague()[league].averageScore | number: '1.1-2' }}</div>
+            <div class="score">High: {{statsByLeague()[league].highGame}}</div>
           </ion-label>
           <ion-button fill="clear" slot="end" [disabled]="isEditMode[league]">
             <ion-icon name="chevron-forward" slot="icon-only"></ion-icon>
@@ -61,7 +61,7 @@
   </ng-template>
 
   <ion-modal
-    *ngFor="let league of leagueKeys"
+    *ngFor="let league of leagueKeys()"
     [trigger]="league"
     #modal
     (didDismiss)="destroyCharts(league)"
@@ -95,8 +95,8 @@
             <div class="tab">
               <app-stat-display
                 [statDefinitions]="statDefinitions"
-                [currentStats]="statsByLeague[league]"
-                [prevStats]="overallStats"></app-stat-display>
+                [currentStats]="statsByLeague()[league]"
+                [prevStats]="overallStats()"></app-stat-display>
               <div class="stat-container">
                 <canvas #scoreChart style="width: 300px; height: 400px"></canvas>
               </div>
@@ -106,7 +106,7 @@
           <!-- Spares Segment -->
           <swiper-slide>
             <div class="tab">
-              <app-spare-display [prevStats]="overallStats" [stats]="statsByLeague[league]" id="league-spareStats"></app-spare-display>
+              <app-spare-display [prevStats]="overallStats()" [stats]="statsByLeague()[league]" id="league-spareStats"></app-spare-display>
               <div class="stat-container">
                 <canvas #pinChart style="width: 300px; height: 300px"></canvas>
               </div>
@@ -116,8 +116,8 @@
           <swiper-slide>
             <div class="tab">
               <app-game
-                [games]="getGamesByLeague(league)"
-                [gameCount]="getGamesByLeague(league).length"
+                [games]="gamesByLeague()[league]"
+                [gameCount]="gamesByLeague()[league].length"
                 [isLeaguePage]="true"
                 (resizeSwiperEvent)="resize()"></app-game>
             </div>

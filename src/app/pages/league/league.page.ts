@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, CUSTOM_ELEMENTS_SCHEMA, ElementRef, ViewChild, ViewChildren, QueryList } from '@angular/core';
+import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA, ElementRef, ViewChild, ViewChildren, QueryList, computed, Signal } from '@angular/core';
 import { DecimalPipe, NgFor, NgIf } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import {
@@ -37,7 +37,6 @@ import { Game } from 'src/app/models/game.model';
 import { GameComponent } from '../../components/game/game.component';
 import { ToastService } from 'src/app/services/toast/toast.service';
 import { AlertController, IonicSlides } from '@ionic/angular';
-import { merge, Subscription } from 'rxjs';
 import { LoadingService } from 'src/app/services/loader/loading.service';
 import { Stats } from 'src/app/models/stats.model';
 import { GameStatsService } from 'src/app/services/game-stats/game-stats.service';
@@ -85,7 +84,7 @@ import { leagueStatDefinitions } from '../stats/stats.definitions';
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
-export class LeaguePage implements OnInit, OnDestroy {
+export class LeaguePage implements OnInit {
   swiperModules = [IonicSlides];
   @ViewChild('scoreChart', { static: false }) scoreChart?: ElementRef;
   @ViewChild('pinChart', { static: false }) pinChart?: ElementRef;
@@ -103,41 +102,39 @@ export class LeaguePage implements OnInit, OnDestroy {
   selectedSegment: string = 'Overall';
   segments: string[] = ['Overall', 'Spares', 'Games'];
   statsValueChanged: boolean[] = [true, true];
-  games: Game[] = [];
   isEditMode: { [key: string]: boolean } = {};
-  gamesByLeague: { [key: string]: Game[] } = {};
-  gamesByLeagueReverse: { [key: string]: Game[] } = {};
-  leagueKeys: string[] = [];
-  statsByLeague: { [key: string]: Stats } = {};
-  overallStats: Stats = {
-    totalGames: 0,
-    totalPins: 0,
-    perfectGameCount: 0,
-    cleanGameCount: 0,
-    cleanGamePercentage: 0,
-    totalStrikes: 0,
-    totalSpares: 0,
-    totalSparesMissed: 0,
-    totalSparesConverted: 0,
-    pinCounts: Array(11).fill(0),
-    missedCounts: Array(11).fill(0),
-    averageStrikesPerGame: 0,
-    averageSparesPerGame: 0,
-    averageOpensPerGame: 0,
-    strikePercentage: 0,
-    sparePercentage: 0,
-    openPercentage: 0,
-    spareConversionPercentage: 0,
-    averageFirstCount: 0,
-    averageScore: 0,
-    highGame: 0,
-    spareRates: [],
-    overallSpareRate: 0,
-    overallMissedRate: 0,
-  };
+  gamesByLeague: Signal<{ [key: string]: Game[] }> = computed(() => {
+    const games = this.storageService.games();
+    return this.sortUtilsService.sortGamesByLeagues(games, true);
+  });
+  leagueKeys: Signal<string[]> = computed(() => {
+    return Object.keys(this.gamesByLeague());
+  });
+  overallStats: Signal<Stats> = computed(() => {
+    const games = this.storageService.games();
+    return this.statService.calculateBowlingStats(games);
+  });
+  gamesByLeagueReverse: Signal<{ [key: string]: Game[] }> = computed(() => {
+    const gamesByLeague = this.gamesByLeague();
+    const gamesByLeagueReverse: { [key: string]: Game[] } = {};
+
+    Object.keys(gamesByLeague).forEach((league) => {
+      gamesByLeagueReverse[league] = this.sortUtilsService.sortGameHistoryByDate(gamesByLeague[league] || [], true);
+    });
+
+    return gamesByLeagueReverse;
+  });
+  statsByLeague: Signal<{ [key: string]: Stats }> = computed(() => {
+    const gamesByLeague = this.gamesByLeague();
+    const statsByLeague: { [key: string]: Stats } = {};
+
+    Object.keys(gamesByLeague).forEach((league) => {
+      statsByLeague[league] = this.statService.calculateBowlingStats(gamesByLeague[league] || []);
+    });
+
+    return statsByLeague;
+  });
   statDefinitions = leagueStatDefinitions;
-  private gameSubscriptions: Subscription = new Subscription();
-  private leagueSubscriptions: Subscription = new Subscription();
   private scoreChartInstances: { [key: string]: Chart } = {};
   private pinChartInstances: { [key: string]: Chart } = {};
   private swiperInstance: Swiper | undefined;
@@ -165,17 +162,9 @@ export class LeaguePage implements OnInit, OnDestroy {
     });
   }
 
-  ngOnDestroy(): void {
-    this.leagueSubscriptions.unsubscribe();
-  }
-
-  async ngOnInit(): Promise<void> {
+  ngOnInit(): void {
     try {
       this.loadingService.setLoading(true);
-      await this.getGames();
-      this.leagueKeys = this.getLeagueKeys();
-      // this.getLeagues();
-      this.subscribeToDataEvents();
     } catch (error) {
       console.error(error);
       this.toastService.showToast('Error loading leagues and games', 'bug');
@@ -188,7 +177,7 @@ export class LeaguePage implements OnInit, OnDestroy {
     try {
       this.hapticService.vibrate(ImpactStyle.Medium, 200);
       this.loadingService.setLoading(true);
-      await this.getGames();
+      await this.storageService.loadGameHistory();
     } catch (error) {
       console.error(error);
     } finally {
@@ -235,7 +224,7 @@ export class LeaguePage implements OnInit, OnDestroy {
   }
 
   generateCharts(index: number, league: string, isReload?: boolean): void {
-    if (this.games.length > 0 && (index === undefined || this.statsValueChanged[index])) {
+    if (this.storageService.games().length > 0 && (index === undefined || this.statsValueChanged[index])) {
       if (this.selectedSegment === 'Overall') {
         this.generateScoreChart(league, isReload);
       } else if (this.selectedSegment === 'Spares') {
@@ -261,11 +250,11 @@ export class LeaguePage implements OnInit, OnDestroy {
   }
 
   getGamesByLeague(league: string): any[] {
-    return this.gamesByLeague[league] || [];
+    return this.gamesByLeague()[league] || [];
   }
 
   getStatsByLeague(league: string): Stats {
-    return this.statsByLeague[league] || [];
+    return this.statsByLeague()[league] || [];
   }
 
   async addLeague() {
@@ -305,7 +294,7 @@ export class LeaguePage implements OnInit, OnDestroy {
         {
           text: 'Cancel',
           role: 'cancel',
-          handler: () => {},
+          handler: () => { },
         },
         {
           text: 'Delete',
@@ -351,14 +340,6 @@ export class LeaguePage implements OnInit, OnDestroy {
     await alert.present();
   }
 
-  private getLeagueKeys(): string[] {
-    return Object.keys(this.gamesByLeague);
-  }
-
-  private getOverallStats(): void {
-    this.overallStats = this.statService.calculateBowlingStats(this.games);
-  }
-
   private getSlideIndex(segment: string): number {
     const index = this.segments.indexOf(segment);
     return index !== -1 ? index : 0;
@@ -368,25 +349,6 @@ export class LeaguePage implements OnInit, OnDestroy {
     return this.segments[index] || 'Overall';
   }
 
-  private async getGames(): Promise<void> {
-    this.games = await this.storageService.loadGameHistory();
-    this.gamesByLeague = this.sortUtilsService.sortGamesByLeagues(this.games, true);
-
-    Object.keys(this.gamesByLeague).forEach((league) => {
-      this.gamesByLeagueReverse[league] = this.sortUtilsService.sortGameHistoryByDate(this.gamesByLeague[league], true);
-    });
-
-    this.getOverallStats();
-    this.calculateStatsForLeagues();
-  }
-
-  private calculateStatsForLeagues(): void {
-    this.getLeagueKeys().forEach((league) => {
-      const games = this.gamesByLeague[league] || [];
-      this.statsByLeague[league] = this.statService.calculateBowlingStats(games);
-    });
-  }
-
   private generateScoreChart(league: string, isReload?: boolean): void {
     if (!this.scoreChart) {
       return;
@@ -394,7 +356,7 @@ export class LeaguePage implements OnInit, OnDestroy {
 
     this.scoreChartInstances[league] = this.chartService.generateScoreChart(
       this.scoreChart,
-      this.gamesByLeagueReverse[league],
+      this.gamesByLeagueReverse()[league],
       this.scoreChartInstances[league]!,
       isReload
     );
@@ -407,40 +369,9 @@ export class LeaguePage implements OnInit, OnDestroy {
 
     this.pinChartInstances[league] = this.chartService.generatePinChart(
       this.pinChart,
-      this.statsByLeague[league],
+      this.statsByLeague()[league],
       this.pinChartInstances[league]!,
       isReload
-    );
-  }
-
-  private subscribeToDataEvents(): void {
-    // this.leagueSubscriptions.add(
-    //   merge(this.storageService.newLeagueAdded, this.storageService.leagueDeleted, this.storageService.leagueChanged).subscribe(() => {
-    //     // this.getLeagues().then(() => {
-    //     //   this.calculateStatsForLeagues();
-    //     // });
-    //     this.calculateStatsForLeagues();
-    //     this.leagueKeys = this.getLeagueKeys();
-    //     this.getLeagues();
-    //   })
-    // );
-
-    this.gameSubscriptions.add(
-      merge(
-        this.storageService.newGameAdded,
-        this.storageService.gameDeleted,
-        this.storageService.gameEditHistory,
-        this.storageService.gameEditLeague
-      ).subscribe(() => {
-        this.getGames()
-          .then(() => {
-            this.sortUtilsService.sortGameHistoryByDate(this.games);
-            this.leagueKeys = this.getLeagueKeys();
-          })
-          .catch((error: Error) => {
-            console.error('Error loading game history:', error);
-          });
-      })
     );
   }
 }
