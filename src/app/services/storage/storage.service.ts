@@ -9,10 +9,6 @@ import { signal } from '@angular/core';
   providedIn: 'root',
 })
 export class StorageService {
-  newGameAdded = new EventEmitter<void>();
-  gameDeleted = new EventEmitter<void>();
-  gameEditLeague = new EventEmitter<void>();
-  gameEditHistory = new EventEmitter<void>();
   #leagues = signal<string[]>([]);
   #games = signal<Game[]>([]);
   #arsenal = signal<Ball[]>([]);
@@ -94,10 +90,7 @@ export class StorageService {
       const key = 'game' + game.gameId;
       await this.save(key, game);
     }
-    this.games.set(gameData);
-    if (!isEdit) {
-      this.newGameAdded.emit();
-    }
+    this.games.update(() => [...this.games(), ...gameData]);
   }
 
   async saveGameToLocalStorage(gameData: Game, isEdit?: boolean): Promise<void> {
@@ -111,9 +104,6 @@ export class StorageService {
         return [gameData, ...games];
       }
     });
-    if (!isEdit) {
-      this.newGameAdded.emit();
-    }
   }
 
   async deleteGame(gameId: string): Promise<void> {
@@ -123,7 +113,6 @@ export class StorageService {
       const newGames = games.filter((g) => g.gameId !== key.replace('game', ''));
       return [...newGames];
     });
-    this.gameDeleted.emit();
   }
 
   async deleteAllData(): Promise<void> {
@@ -131,7 +120,6 @@ export class StorageService {
     this.games.set([]);
     this.arsenal.set([]);
     this.leagues.set([]);
-    this.gameDeleted.emit();
   }
 
   async loadLeagues(): Promise<string[]> {

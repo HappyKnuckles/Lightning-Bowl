@@ -233,7 +233,6 @@ export class GameComponent implements OnChanges {
         } else game.isPractice = false;
 
         await this.storageService.saveGameToLocalStorage(game, true);
-        this.isLeaguePage ? this.storageService.gameEditLeague.emit() : this.storageService.gameEditHistory.emit();
         this.toastService.showToast('Game edit saved sucessfully!', 'refresh-outline');
         this.enableEdit(game);
       }

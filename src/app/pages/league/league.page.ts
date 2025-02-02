@@ -140,7 +140,7 @@ export class LeaguePage implements OnInit {
   private swiperInstance: Swiper | undefined;
 
   constructor(
-    private storageService: StorageService,
+    public storageService: StorageService,
     private sortUtilsService: SortUtilsService,
     private hapticService: HapticService,
     private statService: GameStatsService,

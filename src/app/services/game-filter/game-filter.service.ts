@@ -76,7 +76,7 @@ export class GameFilterService {
         (!filters.isPerfect || game.isPerfect) &&
         (!filters.isClean || game.isClean) &&
         (filters.leagues.includes('all') || filters.leagues.includes(game.league || '')) &&
-        (filters.balls.includes('all') || filters.balls.some((ball) => game.balls?.includes(ball) || game.balls?.length === 0))
+        (filters.balls.includes('all') || filters.balls.includes(game.balls!.join(', ')))
       );
     });
     this.filteredGamesSubject.next(filter);

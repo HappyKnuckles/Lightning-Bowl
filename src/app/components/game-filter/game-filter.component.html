@@ -106,8 +106,8 @@
     <ion-item>
       <ion-select
         name="league"
-        [(ngModel)]="filterService.filters().balls"
-        [value]="filterService.filters().balls"
+        [(ngModel)]="filterService.filters().leagues"
+        [value]="filterService.filters().leagues"
         label="League"
         multiple="true"
         (ionChange)="handleSelect($event)">
@@ -117,7 +117,7 @@
       </ion-select>
     </ion-item>
     <ion-item>
-      <ion-select name="league" [(ngModel)]="filterService.filters().balls" [value]="filterService.filters().balls" label="Balls" multiple="true">
+      <ion-select name="balls" [(ngModel)]="filterService.filters().balls" [value]="filterService.filters().balls" label="Balls" multiple="true">
         <!-- <ion-select-option value="all">All</ion-select-option>
         <ion-select-option value="">None</ion-select-option> -->
         <ion-select-option *ngFor="let ball of storageService.arsenal()" [value]="ball.ball_name">{{ ball.ball_name }}</ion-select-option>

@@ -12,7 +12,7 @@ import { StorageService } from 'src/app/services/storage/storage.service';
   providedIn: 'root',
 })
 export class ExcelService {
-  constructor(private toastService: ToastService, private hapticService: HapticService, private storageService: StorageService) {}
+  constructor(private toastService: ToastService, private hapticService: HapticService, private storageService: StorageService) { }
 
   async exportToExcel(gameHistory: Game[]): Promise<boolean> {
     const gameData = this.getGameDataForExport(gameHistory);
@@ -123,7 +123,7 @@ export class ExcelService {
         isPerfect: data[i]['17']?.trim().toLowerCase() === 'true',
         isSeries: data[i]['18']?.trim().toLowerCase() === 'true',
         seriesId: data[i]['19'],
-        balls: data[i]['20']?.split(', '),
+        balls: data[i]['20']?.trim() ? data[i]['20'].split(', ') : [],
         note: data[i]['21'],
       };
 
@@ -227,7 +227,7 @@ export class ExcelService {
       rowData.push(game.isPerfect ? 'true' : 'false');
       rowData.push(game.isSeries ? 'true' : 'false');
       rowData.push(game.seriesId || '');
-      rowData.push(game.balls?.join(', ') || '');
+      rowData.push(game.balls?.join(', '));
       rowData.push(game.note || '');
       gameData.push(rowData);
     });
