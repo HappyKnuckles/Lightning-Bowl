@@ -65,7 +65,7 @@
                 @for (coverstockBall of coverstockBalls; track coverstockBall.ball_id) {
                 @if (ball.ball_id !== coverstockBall.ball_id) {
                 <ion-item>
-                  <ion-avatar>
+                  <ion-avatar slot="start">
                     <ion-img [src]="url + coverstockBall.thumbnail_image"></ion-img>
                   </ion-avatar>
                   <ion-label>
