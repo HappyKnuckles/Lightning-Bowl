@@ -36,19 +36,15 @@ export class StorageService {
   }
 
   private async loadInitialData() {
-    const leagues = await this.loadLeagues();
-    this.leagues.set(leagues);
-
-    const games = await this.loadGameHistory();
-    this.games.set(games);
-
-    const balls = await this.loadArsenal();
-    this.arsenal.set(balls);
-  }
-
-  async loadArsenal(): Promise<Ball[]> {
-    const arsenal = await this.loadData<Ball>('arsenal');
-    return arsenal.reverse();
+    await this.loadLeagues();
+    await this.loadGameHistory();
+    await this.loadArsenal();
+    if (this.games().length > 0) {
+      localStorage.getItem("first-game");
+      if (localStorage.getItem("first-game") === null) {
+        localStorage.setItem("first-game", this.games()[this.games().length - 1].date.toString());
+      }
+    }
   }
 
   async addArsenal(ball: Ball) {
@@ -80,6 +76,7 @@ export class StorageService {
     await this.deleteLeague('league' + '_' + oldLeague);
     await this.save(newKey, newLeague);
     this.leagues.update((leagues) => leagues.map((l) => (l === oldLeague ? newLeague : l)));
+
     const games = await this.loadData<Game>('game');
     const updatedGames = games.map((game) => {
       if (game.league === oldLeague) {
@@ -87,6 +84,7 @@ export class StorageService {
       }
       return game;
     });
+
     await this.saveGamesToLocalStorage(updatedGames);
     this.games.set(updatedGames);
   }
@@ -108,11 +106,10 @@ export class StorageService {
     this.games.update((games) => {
       const index = games.findIndex((g) => g.gameId === gameData.gameId);
       if (index !== -1) {
-        games[index] = gameData;
+        return games.map((g, i) => (i === index ? gameData : g));
       } else {
-        games.push(gameData);
+        return [gameData, ...games];
       }
-      return games;
     });
     if (!isEdit) {
       this.newGameAdded.emit();
@@ -122,7 +119,10 @@ export class StorageService {
   async deleteGame(gameId: string): Promise<void> {
     const key = 'game' + gameId;
     await this.delete(key);
-    this.games.update((games) => games.filter((g) => g.gameId !== key.replace('game', '')));
+    this.games.update((games) => {
+      const newGames = games.filter((g) => g.gameId !== key.replace('game', ''));
+      return [...newGames];
+    });
     this.gameDeleted.emit();
   }
 
@@ -136,12 +136,19 @@ export class StorageService {
 
   async loadLeagues(): Promise<string[]> {
     const leagues = await this.loadData<string>('league');
+    this.leagues.set(leagues.reverse());
     return leagues.reverse();
+  }
+
+  async loadArsenal(): Promise<void> {
+    const arsenal = await this.loadData<Ball>('arsenal');
+    this.arsenal.set(arsenal.reverse());
   }
 
   async loadGameHistory(): Promise<Game[]> {
     const gameHistory = await this.loadData<Game>('game');
     this.sortUtilsService.sortGameHistoryByDate(gameHistory);
+    this.games.set(gameHistory);
     return gameHistory;
   }
 

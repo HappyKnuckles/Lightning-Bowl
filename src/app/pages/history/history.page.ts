@@ -15,7 +15,7 @@ import {
   IonRefresherContent,
 } from '@ionic/angular/standalone';
 import { Filesystem } from '@capacitor/filesystem';
-import { merge, Subscription } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { addIcons } from 'ionicons';
 import {
   cloudUploadOutline,
@@ -32,7 +32,6 @@ import { ImpactStyle } from '@capacitor/haptics';
 import { HapticService } from 'src/app/services/haptic/haptic.service';
 import { LoadingService } from 'src/app/services/loader/loading.service';
 import { ToastService } from 'src/app/services/toast/toast.service';
-import { Game } from 'src/app/models/game.model';
 import { ModalController } from '@ionic/angular';
 import { StorageService } from 'src/app/services/storage/storage.service';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -68,10 +67,7 @@ import { GameFilterComponent } from 'src/app/components/game-filter/game-filter.
 })
 export class HistoryPage implements OnInit, OnDestroy {
   @ViewChild('accordionGroup') accordionGroup!: IonAccordionGroup;
-  gameHistory: Game[] = [];
-  filteredGameHistory: Game[] = [];
   file!: File;
-  activeFilterCount = this.gameFilterService.activeFilterCount;
   private gameSubscriptions: Subscription = new Subscription();
   private filteredGamesSubscription!: Subscription;
   private leagueSubscriptions: Subscription = new Subscription();
@@ -83,7 +79,7 @@ export class HistoryPage implements OnInit, OnDestroy {
     public loadingService: LoadingService,
     private hapticService: HapticService,
     private modalCtrl: ModalController,
-    private gameFilterService: GameFilterService,
+    public gameFilterService: GameFilterService,
     private sortUtilsService: SortUtilsService,
     private excelService: ExcelService
   ) {
@@ -110,11 +106,9 @@ export class HistoryPage implements OnInit, OnDestroy {
     });
   }
 
-  async ngOnInit(): Promise<void> {
+  ngOnInit(): void {
     try {
       this.loadingService.setLoading(true);
-      await this.loadGameHistory();
-      this.subscribeToDataEvents();
     } catch (error) {
       console.error(error);
     } finally {
@@ -126,8 +120,8 @@ export class HistoryPage implements OnInit, OnDestroy {
     const modal = await this.modalCtrl.create({
       component: GameFilterComponent,
       componentProps: {
-        games: this.gameHistory,
-        filteredGames: this.filteredGameHistory,
+        // games: this.gameHistory,
+        // filteredGames: this.filteredGameHistory,
       },
     });
 
@@ -144,7 +138,7 @@ export class HistoryPage implements OnInit, OnDestroy {
     try {
       this.hapticService.vibrate(ImpactStyle.Medium, 200);
       this.loadingService.setLoading(true);
-      await this.loadGameHistory();
+      await this.storageService.loadGameHistory();
     } catch (error) {
       console.error(error);
     } finally {
@@ -176,39 +170,39 @@ export class HistoryPage implements OnInit, OnDestroy {
   }
 
   async exportToExcel(): Promise<void> {
-    const gotPermission = await this.excelService.exportToExcel(this.gameHistory);
+    const gotPermission = await this.excelService.exportToExcel(this.storageService.games());
     if (!gotPermission) {
       this.showPermissionDeniedAlert();
     }
   }
 
-  async loadGameHistory(): Promise<void> {
-    try {
-      this.gameHistory = await this.storageService.loadGameHistory();
-      this.gameFilterService.filterGames(this.gameHistory);
-    } catch (error) {
-      this.toastService.showToast(`Error loading history! ${error}`, 'bug', true);
-    }
-  }
+  // async loadGameHistory(): Promise<void> {
+  //   try {
+  //     this.gameHistory = await this.storageService.loadGameHistory();
+  //     this.gameFilterService.filterGames(this.gameHistory);
+  //   } catch (error) {
+  //     this.toastService.showToast(`Error loading history! ${error}`, 'bug', true);
+  //   }
+  // }
 
   private subscribeToDataEvents(): void {
-    this.gameSubscriptions.add(
-      merge(this.storageService.newGameAdded, this.storageService.gameDeleted, this.storageService.gameEditLeague).subscribe(() => {
-        this.loadGameHistory()
-          .then(() => {
-            this.sortUtilsService.sortGameHistoryByDate(this.gameHistory);
-          })
-          .catch((error) => {
-            console.error('Error loading game history:', error);
-          });
-      })
-    );
+    // this.gameSubscriptions.add(
+    //   merge(this.storageService.newGameAdded, this.storageService.gameDeleted, this.storageService.gameEditLeague).subscribe(() => {
+    //     this.loadGameHistory()
+    //       .then(() => {
+    //         this.sortUtilsService.sortGameHistoryByDate(this.gameHistory);
+    //       })
+    //       .catch((error) => {
+    //         console.error('Error loading game history:', error);
+    //       });
+    //   })
+    // );
 
-    this.filteredGamesSubscription = this.gameFilterService.filteredGames$.subscribe((games) => {
-      this.filteredGameHistory = games;
-      this.sortUtilsService.sortGameHistoryByDate(this.filteredGameHistory);
-      this.activeFilterCount = this.gameFilterService.activeFilterCount;
-    });
+    // this.filteredGamesSubscription = this.gameFilterService.filteredGames$.subscribe((games) => {
+    //   this.filteredGameHistory = games;
+    //   this.sortUtilsService.sortGameHistoryByDate(this.filteredGameHistory);
+    //   this.activeFilterCount = this.gameFilterService.activeFilterCount;
+    // });
 
     // this.leagueSubscriptions.add(
     //   merge(this.storageService.newLeagueAdded, this.storageService.leagueDeleted, this.storageService.leagueChanged).subscribe(() => {

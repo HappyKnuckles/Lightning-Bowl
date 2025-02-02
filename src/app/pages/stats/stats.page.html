@@ -2,15 +2,15 @@
   <ion-toolbar>
     <ion-title> Stats </ion-title>
     <ion-buttons slot="end" class="action-sheet">
-      <ion-button fill="clear" (click)="openFilterModal()" [disabled]="(gameHistory.length <= 0 && !loadingService.isLoading)">
+      <ion-button fill="clear" (click)="openFilterModal()" [disabled]="(gameFilterService.filteredGames().length <= 0 && !loadingService.isLoading)">
         <ion-icon slot="icon-only" name="filter-outline"></ion-icon>
-        <ion-text class="filter-indicator" *ngIf="activeFilterCount !== 0">{{activeFilterCount}}</ion-text>
+        <ion-text class="filter-indicator" *ngIf="gameFilterService.activeFilterCount() !== 0">{{gameFilterService.activeFilterCount()}}</ion-text>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
   <ion-toolbar>
     <ion-segment
-      *ngIf="!((gameHistory.length <= 0 && !loadingService.isLoading) || filteredGameHistory.length <= 0)"
+      *ngIf="!((gameFilterService.filteredGames().length <= 0 && !loadingService.isLoading) || gameFilterService.filteredGames().length <= 0)"
       [value]="selectedSegment"
       (ionChange)="onSegmentChanged($event)">
       <ion-segment-button *ngFor="let segment of segments" [value]="segment">
@@ -25,9 +25,9 @@
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
   <!-- Show this message if there are no game history items and it's not loading -->
-  <ng-container *ngIf="(gameHistory.length <= 0 || filteredGameHistory.length <= 0) && !loadingService.isLoading(); else content">
+  <ng-container *ngIf="(gameFilterService.filteredGames().length <= 0 || gameFilterService.filteredGames().length <= 0) && !loadingService.isLoading(); else content">
     <ion-text class="no-game-text">
-      {{ gameHistory.length <= 0 && !loadingService.isLoading ? 'Start playing a few games to see your stats here!' : 'No stats for this filter!' }}
+      {{ gameFilterService.filteredGames().length <= 0 && !loadingService.isLoading ? 'Start playing a few games to see your stats here!' : 'No stats for this filter!' }}
     </ion-text>
   </ng-container>
   <!-- Main content to display when there is game history or when loading is done -->

@@ -12,7 +12,6 @@ import { ThemeChangerService } from './services/theme/theme-changer.service';
 import { HttpClient } from '@angular/common/http';
 import { GameStatsService } from './services/game-stats/game-stats.service';
 import { StorageService } from './services/storage/storage.service';
-import { GameFilterService } from './services/game-filter/game-filter.service';
 register();
 
 @Component({
@@ -37,7 +36,7 @@ export class AppComponent implements OnInit, OnDestroy {
     private http: HttpClient,
     private gameStatsService: GameStatsService,
     private storageService: StorageService,
-    private gameFilterService: GameFilterService
+    // private gameFilterService: GameFilterService
   ) {
     this.initializeApp();
     const currentTheme = this.themeService.getCurrentTheme();
@@ -47,11 +46,11 @@ export class AppComponent implements OnInit, OnDestroy {
     });
   }
 
-  async ngOnInit(): Promise<void> {
+  ngOnInit(): void {
     // Load stats here initially so prevstats are loaded before the first game
-    const gameHistory = await this.storageService.loadGameHistory();
-    this.gameFilterService.setDefaultFilters(gameHistory);
-    this.gameFilterService.filterGames(gameHistory);
+    const gameHistory = this.storageService.games();
+    // this.gameFilterService.setDefaultFilters();
+    // this.gameFilterService.filterGames();
     this.gameStatsService.calculateStats(gameHistory);
     this.greetUser();
   }

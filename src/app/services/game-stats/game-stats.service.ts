@@ -1,7 +1,8 @@
-import { Injectable, signal } from '@angular/core';
+import { computed, Injectable, Signal, signal } from '@angular/core';
 import { Game } from 'src/app/models/game.model';
 import { SessionStats, Stats } from 'src/app/models/stats.model';
 import { PrevStats } from 'src/app/models/stats.model';
+import { GameFilterService } from '../game-filter/game-filter.service';
 
 const MAX_FRAMES = 10;
 @Injectable({
@@ -31,38 +32,8 @@ export class GameStatsService {
   };
 
   // Stats
-  #currentStats = signal<Stats>({
-    totalGames: 0,
-    totalPins: 0,
-    perfectGameCount: 0,
-    cleanGameCount: 0,
-    cleanGamePercentage: 0,
-    totalStrikes: 0,
-    totalSpares: 0,
-    totalSparesMissed: 0,
-    totalSparesConverted: 0,
-    pinCounts: Array(11).fill(0),
-    missedCounts: Array(11).fill(0),
-    averageStrikesPerGame: 0,
-    averageSparesPerGame: 0,
-    averageOpensPerGame: 0,
-    strikePercentage: 0,
-    sparePercentage: 0,
-    openPercentage: 0,
-    spareConversionPercentage: 0,
-    averageFirstCount: 0,
-    averageScore: 0,
-    highGame: 0,
-    spareRates: [],
-    overallSpareRate: 0,
-    overallMissedRate: 0,
-    lowGame: 0,
-    average3SeriesScore: 0,
-    high3Series: 0,
-    average4SeriesScore: 0,
-    high4Series: 0,
-    average5SeriesScore: 0,
-    high5Series: 0,
+  #currentStats: Signal<Stats> = computed(() => {
+    return this.calculateBowlingStats(this.gameFilterService.filteredGames());
   });
 
   // Session Stats
@@ -102,7 +73,12 @@ export class GameStatsService {
     return this.#sessionStats;
   }
 
-  constructor() {}
+  // TODO adjust and implement it completely
+  seriesStats = {};
+
+  constructor(private gameFilterService: GameFilterService) {
+    this.calculateStats(this.gameFilterService.filteredGames());
+  }
 
   calculateStats(gameHistory: Game[]): void {
     const lastComparisonDate = localStorage.getItem('lastComparisonDate') ?? '0';
@@ -145,7 +121,7 @@ export class GameStatsService {
       }
     }
 
-    this.currentStats.update(() => this.calculateBowlingStats(gameHistory));
+    // this.currentStats.update(() => this.calculateBowlingStats(gameHistory));
 
     if (lastComparisonDate === '0') {
       if (this.currentStats().totalGames > 0) {
@@ -199,8 +175,7 @@ export class GameStatsService {
     this.sessionStats.update(() => this.calculateBowlingStats(filteredGames) as SessionStats);
   }
 
-  // TODO adjust and implement it completely
-  seriesStats = {};
+ 
   calculateSeriesStats(gameHistory: Game[]): {
     average3SeriesScore: number;
     high3Series: number;

@@ -44,7 +44,6 @@ describe('GameFilterComponent', () => {
     fixture = TestBed.createComponent(GameFilterComponent);
     component = fixture.componentInstance;
 
-    component.games = [];
     component.filteredGames = [];
     fixture.detectChanges();
 
