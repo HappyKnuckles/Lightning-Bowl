@@ -1,4 +1,4 @@
-import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA, ElementRef, ViewChild, ViewChildren, QueryList, computed, Signal } from '@angular/core';
+import { Component, CUSTOM_ELEMENTS_SCHEMA, ElementRef, ViewChild, ViewChildren, QueryList, computed, Signal } from '@angular/core';
 import { DecimalPipe, NgFor, NgIf } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import {
@@ -84,7 +84,7 @@ import { leagueStatDefinitions } from '../stats/stats.definitions';
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
-export class LeaguePage implements OnInit {
+export class LeaguePage {
   swiperModules = [IonicSlides];
   @ViewChild('scoreChart', { static: false }) scoreChart?: ElementRef;
   @ViewChild('pinChart', { static: false }) pinChart?: ElementRef;
@@ -162,27 +162,14 @@ export class LeaguePage implements OnInit {
     });
   }
 
-  ngOnInit(): void {
-    try {
-      this.loadingService.setLoading(true);
-    } catch (error) {
-      console.error(error);
-      this.toastService.showToast('Error loading leagues and games', 'bug');
-    } finally {
-      this.loadingService.setLoading(false);
-    }
-  }
-
   async handleRefresh(event: any): Promise<void> {
     try {
       this.hapticService.vibrate(ImpactStyle.Medium, 200);
-      this.loadingService.setLoading(true);
       await this.storageService.loadGameHistory();
     } catch (error) {
       console.error(error);
     } finally {
       event.target.complete();
-      this.loadingService.setLoading(false);
     }
   }
 
@@ -300,7 +287,7 @@ export class LeaguePage implements OnInit {
           text: 'Delete',
           handler: async () => {
             await this.storageService.deleteLeague(league);
-            this.toastService.showToast('League deleted sucessfully.', 'checkmark-outline');
+            this.toastService.showToast('League deleted sucessfully.', 'remove-outline');
           },
         },
       ],

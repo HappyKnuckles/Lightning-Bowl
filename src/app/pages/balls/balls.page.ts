@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, effect, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -28,6 +28,8 @@ import { BallFilterComponent } from 'src/app/components/ball-filter/ball-filter.
 import { StorageService } from 'src/app/services/storage/storage.service';
 import { ToastService } from 'src/app/services/toast/toast.service';
 import { LoadingService } from 'src/app/services/loader/loading.service';
+import Fuse from 'fuse.js';
+import { Subject } from 'rxjs';
 
 @Component({
   selector: 'app-balls',
@@ -60,12 +62,14 @@ import { LoadingService } from 'src/app/services/loader/loading.service';
 export class BallsPage implements OnInit {
   balls: Ball[] = [];
   filteredBalls: Ball[] = [];
-  allBalls: Ball[] = [];
   searchTerm: string = '';
   currentPage = 1;
   hasMoreData = true;
   activeFilterCount = 0;
   url = 'https://bowwwl.com/';
+  fuse!: Fuse<Ball>;
+  searchSubject: Subject<string> = new Subject();
+
   constructor(
     private modalCtrl: ModalController,
     public loadingService: LoadingService,
@@ -73,25 +77,62 @@ export class BallsPage implements OnInit {
     private toastService: ToastService
   ) {
     addIcons({ filterOutline, globeOutline, addOutline, camera });
+    this.searchSubject.pipe().subscribe((query) => {
+      this.performSearch(query);
+    });
+    effect(() => {
+      const options = {
+        keys: [
+          { name: 'ball_name', weight: 1 },
+          { name: 'brand_name', weight: 1 },
+          { name: 'core_name', weight: 0.7 },
+          { name: 'coverstock_name', weight: 0.7 },
+          { name: 'factory_finish', weight: 0.5 },
+        ],
+        threshold: 0.3,
+        ignoreLocation: false,
+        minMatchCharLength: 3,
+        includeMatches: true,
+        includeScore: true,
+        shouldSort: true,
+        useExtendedSearch: false,
+      };
+      this.fuse = new Fuse(this.storageService.allBalls(), options);
+    });
   }
 
   async ngOnInit() {
     this.loadingService.setLoading(true);
     try {
       await this.loadBalls();
-      await this.getAllBalls();
-      this.allBalls.sort((a, b) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime());
       this.filteredBalls.sort((a, b) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime());
     } catch (error) {
       console.error('Error loading balls:', error);
     } finally {
       this.loadingService.setLoading(false);
+      this.storageService.allBalls().sort((a, b) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime());
+    }
+  }
+
+  searchBalls(event: any) {
+    const query = event.target.value.toLowerCase();
+    this.searchTerm = query;
+    this.searchSubject.next(query);
+  }
+
+  performSearch(query: string) {
+    if (query !== '') {
+      this.hasMoreData = false;
+      this.filteredBalls = this.fuse.search(query).map(result => result.item);
+    } else {
+      this.hasMoreData = true;
+      this.filteredBalls = this.balls;
     }
   }
 
   async removeFromArsenal(ball: Ball) {
-    await this.storageService.deleteArsenal(ball);
-    this.toastService.showToast('Ball removed from Arsenal.', 'remove');
+    await this.storageService.removeFromArsenal(ball);
+    this.toastService.showToast('Ball removed from Arsenal.', 'remove-outline');
   }
 
   isInArsenal(ball: Ball): boolean {
@@ -99,34 +140,16 @@ export class BallsPage implements OnInit {
   }
 
   async saveBallToArsenal(ball: Ball) {
-    await this.storageService.addArsenal(ball);
+    await this.storageService.saveToArsenal(ball);
     this.toastService.showToast('Ball added to Arsenal.', 'add');
   }
 
   async openFilterModal() {
     const modal = await this.modalCtrl.create({
       component: BallFilterComponent,
-      componentProps: {
-        // games: this.gameHistory,
-        // filteredGames: this.filteredGameHistory,
-      },
     });
 
     return await modal.present();
-  }
-
-  async getAllBalls() {
-    try {
-      // console.log((await fetch(`restapi/brands`)).json());
-      // console.log((await fetch(`restapi/cores`)).json());
-      // console.log((await fetch(`restapi/coverstocks`)).json());
-
-      const response = await fetch(`restapi/balls?_format=json`);
-      const data = await response.json();
-      this.allBalls = data;
-    } catch (error) {
-      console.error('Error fetching balls:', error);
-    }
   }
 
   async loadBalls(event?: any) {
@@ -150,18 +173,6 @@ export class BallsPage implements OnInit {
       if (event) {
         event.target.complete();
       }
-    }
-  }
-
-  searchBalls(event: any) {
-    const query = event.target.value.toLowerCase();
-    this.searchTerm = query;
-    if (this.searchTerm !== '') {
-      this.hasMoreData = false;
-      this.filteredBalls = this.allBalls.filter((ball) => ball.ball_name.toLowerCase().includes(query));
-    } else {
-      this.hasMoreData = true;
-      this.filteredBalls = this.balls;
     }
   }
 }

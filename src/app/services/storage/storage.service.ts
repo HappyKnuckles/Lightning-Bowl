@@ -1,9 +1,10 @@
-import { EventEmitter, Injectable } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { Game } from 'src/app/models/game.model';
 import { Storage } from '@ionic/storage-angular';
 import { SortUtilsService } from '../sort-utils/sort-utils.service';
 import { Ball } from 'src/app/models/ball.model';
 import { signal } from '@angular/core';
+import { LoadingService } from '../loader/loading.service';
 
 @Injectable({
   providedIn: 'root',
@@ -12,6 +13,7 @@ export class StorageService {
   #leagues = signal<string[]>([]);
   #games = signal<Game[]>([]);
   #arsenal = signal<Ball[]>([]);
+  #allBalls = signal<Ball[]>([]);
   get leagues() {
     return this.#leagues;
   }
@@ -21,8 +23,11 @@ export class StorageService {
   get arsenal() {
     return this.#arsenal;
   }
+  get allBalls() {
+    return this.#allBalls;
+  }
 
-  constructor(private storage: Storage, private sortUtilsService: SortUtilsService) {
+  constructor(private storage: Storage, private sortUtilsService: SortUtilsService, private loadingService: LoadingService) {
     this.init();
   }
 
@@ -31,28 +36,36 @@ export class StorageService {
     await this.loadInitialData();
   }
 
-  private async loadInitialData() {
-    await this.loadLeagues();
-    await this.loadGameHistory();
-    await this.loadArsenal();
-    if (this.games().length > 0) {
-      localStorage.getItem("first-game");
-      if (localStorage.getItem("first-game") === null) {
-        localStorage.setItem("first-game", this.games()[this.games().length - 1].date.toString());
-      }
-    }
+  async loadArsenal(): Promise<void> {
+    const arsenal = await this.loadData<Ball>('arsenal');
+    this.arsenal.set(arsenal.reverse());
   }
 
-  async addArsenal(ball: Ball) {
+  async loadLeagues(): Promise<string[]> {
+    const leagues = await this.loadData<string>('league');
+    this.leagues.set(leagues.reverse());
+    return leagues.reverse();
+  }
+
+  async loadGameHistory(): Promise<Game[]> {
+    this.loadingService.setLoading(true);
+    const gameHistory = await this.loadData<Game>('game');
+    this.sortUtilsService.sortGameHistoryByDate(gameHistory);
+    this.games.set(gameHistory);
+    this.loadingService.setLoading(false);
+    return gameHistory;
+  }
+
+  async loadAllBalls(): Promise<void> {
+    const response = await fetch(`restapi/balls?_format=json`);
+    const data = await response.json();
+    this.allBalls.set(data);
+  }
+
+  async saveToArsenal(ball: Ball) {
     const key = 'arsenal' + '_' + ball.ball_id;
     await this.save(key, ball);
     this.arsenal.update((balls) => [...balls, ball]);
-  }
-
-  async deleteArsenal(ball: Ball) {
-    const key = 'arsenal' + '_' + ball.ball_id;
-    await this.delete(key);
-    this.arsenal.update((balls) => balls.filter((b) => b.ball_id !== ball.ball_id));
   }
 
   async addLeague(league: string) {
@@ -61,10 +74,46 @@ export class StorageService {
     this.leagues.update((leagues) => [...leagues, league]);
   }
 
+  async saveGamesToLocalStorage(gameData: Game[]): Promise<void> {
+    for (const game of gameData) {
+      const key = 'game' + game.gameId;
+      await this.save(key, game);
+    }
+    this.games.update(() => [...this.games(), ...gameData]);
+  }
+
+  async saveGameToLocalStorage(gameData: Game): Promise<void> {
+    const key = 'game' + gameData.gameId;
+    await this.save(key, gameData);
+    this.games.update((games) => {
+      const index = games.findIndex((g) => g.gameId === gameData.gameId);
+      if (index !== -1) {
+        return games.map((g, i) => (i === index ? gameData : g));
+      } else {
+        return [gameData, ...games];
+      }
+    });
+  }
+
+  async removeFromArsenal(ball: Ball) {
+    const key = 'arsenal' + '_' + ball.ball_id;
+    await this.delete(key);
+    this.arsenal.update((balls) => balls.filter((b) => b.ball_id !== ball.ball_id));
+  }
+
   async deleteLeague(league: string) {
     const key = 'league' + '_' + league;
     await this.storage.remove(key);
     this.leagues.update((leagues) => leagues.filter((l) => l !== key.replace('league_', '')));
+  }
+
+  async deleteGame(gameId: string): Promise<void> {
+    const key = 'game' + gameId;
+    await this.delete(key);
+    this.games.update((games) => {
+      const newGames = games.filter((g) => g.gameId !== key.replace('game', ''));
+      return [...newGames];
+    });
   }
 
   async editLeague(newLeague: string, oldLeague: string) {
@@ -85,61 +134,24 @@ export class StorageService {
     this.games.set(updatedGames);
   }
 
-  async saveGamesToLocalStorage(gameData: Game[], isEdit?: boolean): Promise<void> {
-    for (const game of gameData) {
-      const key = 'game' + game.gameId;
-      await this.save(key, game);
-    }
-    this.games.update(() => [...this.games(), ...gameData]);
-  }
-
-  async saveGameToLocalStorage(gameData: Game, isEdit?: boolean): Promise<void> {
-    const key = 'game' + gameData.gameId;
-    await this.save(key, gameData);
-    this.games.update((games) => {
-      const index = games.findIndex((g) => g.gameId === gameData.gameId);
-      if (index !== -1) {
-        return games.map((g, i) => (i === index ? gameData : g));
-      } else {
-        return [gameData, ...games];
-      }
-    });
-  }
-
-  async deleteGame(gameId: string): Promise<void> {
-    const key = 'game' + gameId;
-    await this.delete(key);
-    this.games.update((games) => {
-      const newGames = games.filter((g) => g.gameId !== key.replace('game', ''));
-      return [...newGames];
-    });
-  }
-
   async deleteAllData(): Promise<void> {
     await this.storage.clear();
     this.games.set([]);
     this.arsenal.set([]);
     this.leagues.set([]);
   }
-
-  async loadLeagues(): Promise<string[]> {
-    const leagues = await this.loadData<string>('league');
-    this.leagues.set(leagues.reverse());
-    return leagues.reverse();
+  private async loadInitialData() {
+    await this.loadLeagues();
+    await this.loadGameHistory();
+    await this.loadArsenal();
+    await this.loadAllBalls();
+    if (this.games().length > 0) {
+      localStorage.getItem("first-game");
+      if (localStorage.getItem("first-game") === null) {
+        localStorage.setItem("first-game", this.games()[this.games().length - 1].date.toString());
+      }
+    }
   }
-
-  async loadArsenal(): Promise<void> {
-    const arsenal = await this.loadData<Ball>('arsenal');
-    this.arsenal.set(arsenal.reverse());
-  }
-
-  async loadGameHistory(): Promise<Game[]> {
-    const gameHistory = await this.loadData<Game>('game');
-    this.sortUtilsService.sortGameHistoryByDate(gameHistory);
-    this.games.set(gameHistory);
-    return gameHistory;
-  }
-
   private async loadData<T>(prefix: string): Promise<T[]> {
     const data: T[] = [];
     await this.storage.forEach((value: T, key: string) => {

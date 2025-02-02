@@ -156,14 +156,12 @@ export class StatsPage implements OnInit, AfterViewInit {
   async handleRefresh(event: any): Promise<void> {
     try {
       this.hapticService.vibrate(ImpactStyle.Medium, 200);
-      this.loadingService.setLoading(true);
       await this.storageService.loadGameHistory();
       this.generateCharts(undefined, true);
     } catch (error) {
       console.error(error);
     } finally {
       event.target.complete();
-      this.loadingService.setLoading(false);
     }
   }
 

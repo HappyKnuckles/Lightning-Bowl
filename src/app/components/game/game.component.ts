@@ -151,7 +151,7 @@ export class GameComponent implements OnChanges {
           text: 'Delete',
           handler: async () => {
             await this.storageService.deleteGame(gameId);
-            this.toastService.showToast('Game deleted sucessfully.', 'checkmark-outline');
+            this.toastService.showToast('Game deleted sucessfully.', 'remove-outline');
           },
         },
       ],
@@ -232,7 +232,7 @@ export class GameComponent implements OnChanges {
           game.isPractice = true;
         } else game.isPractice = false;
 
-        await this.storageService.saveGameToLocalStorage(game, true);
+        await this.storageService.saveGameToLocalStorage(game);
         this.toastService.showToast('Game edit saved sucessfully!', 'refresh-outline');
         this.enableEdit(game);
       }

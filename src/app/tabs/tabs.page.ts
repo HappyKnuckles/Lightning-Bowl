@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { addIcons } from 'ionicons';
-import { add, statsChartOutline, receipt, settings, medalOutline, bowlingBallOutline, ellipsisHorizontal } from 'ionicons/icons';
+import { add, statsChartOutline, receipt, settings, medalOutline, bowlingBallOutline, ellipsisHorizontal, bagAddOutline } from 'ionicons/icons';
 import { BehaviorSubject } from 'rxjs';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { filter } from 'rxjs/operators';
@@ -16,10 +16,10 @@ import { AsyncPipe } from '@angular/common';
 })
 export class TabsPage {
   activeMoreTab$ = new BehaviorSubject<boolean>(false);
-  readonly moreTabs = ['/tabs/balls', '/tabs/settings'];
+  readonly moreTabs = ['/tabs/balls', '/tabs/settings', '/tabs/arsenal'];
 
   constructor(private router: Router) {
-    addIcons({ add, statsChartOutline, receipt, medalOutline, ellipsisHorizontal, bowlingBallOutline, settings });
+    addIcons({ add, statsChartOutline, receipt, medalOutline, ellipsisHorizontal, bowlingBallOutline, bagAddOutline, settings });
 
     this.router.events.pipe(filter((event) => event instanceof NavigationEnd)).subscribe(() => {
       this.activeMoreTab$.next(this.moreTabs.includes(this.router.url));

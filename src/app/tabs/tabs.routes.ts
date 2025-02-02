@@ -27,6 +27,10 @@ export const routes: Routes = [
         loadComponent: () => import('../pages/balls/balls.page').then((m) => m.BallsPage),
       },
       {
+        path: 'arsenal',
+        loadComponent: () => import('../pages/arsenal/arsenal.page').then((m) => m.ArsenalPage),
+      },
+      {
         path: 'settings',
         loadComponent: () => import('../pages/settings/settings.page').then((m) => m.SettingsPage),
       },
