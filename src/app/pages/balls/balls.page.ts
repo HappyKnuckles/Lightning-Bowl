@@ -105,7 +105,7 @@ export class BallsPage implements OnInit {
       }
     } catch (error) {
       console.error('Error fetching balls:', error);
-      this.toastService.showToast("Could not load balls", "bug", true);
+      this.toastService.showToast(`Error loading balls: ${error}`, "bug", true);
       if (event) {
         event.target.complete();
       }
