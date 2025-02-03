@@ -1,11 +1,11 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
     <ion-title>Arsenal</ion-title>
-    <!-- <ion-buttons slot="start">
+    <ion-buttons slot="start">
       <ion-button class="action-sheet" id="addBall">
         <ion-icon slot="icon-only" name="add"></ion-icon>
       </ion-button>
-    </ion-buttons> -->
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
@@ -58,6 +58,7 @@
             </ion-row>
           </ion-grid>
         </ion-card-content>
+
         <ion-modal [presentingElement]="presentingElement" [trigger]="ball.coverstock_name" #coverstock>
           <ng-template>
             <ion-content>
@@ -93,12 +94,12 @@
               <ion-col>{{ ball.core_name }}</ion-col>
             </ion-row>
             <ion-row>
-              <ion-col class="header">Diff:</ion-col>
-              <ion-col>{{ ball.core_diff }}</ion-col>
-            </ion-row>
-            <ion-row>
               <ion-col class="header">RG:</ion-col>
               <ion-col>{{ ball.core_rg }}</ion-col>
+            </ion-row>
+            <ion-row>
+              <ion-col class="header">Diff:</ion-col>
+              <ion-col>{{ ball.core_diff }}</ion-col>
             </ion-row>
             <ion-row *ngIf="ball.core_int_diff">
               <ion-col class="header">Int. Diff:</ion-col>
@@ -110,6 +111,7 @@
             </ion-row>
           </ion-grid>
         </ion-card-content>
+
         <ion-modal [presentingElement]="presentingElement" [trigger]="ball.core_name" #core>
           <ng-template>
             <ion-content forceOverscroll="true">
@@ -131,8 +133,14 @@
             </ion-content>
           </ng-template>
         </ion-modal>
-
       </ion-card>
     </ion-content>
+  </ng-template>
+</ion-modal>
+
+<ion-modal [presentingElement]="presentingElement" trigger="addBall">
+  <ng-template>
+    <app-ball-combo-box [balls]="ballsWithoutArsenal()" (ballSelected)="saveBallToArsenal($event)">
+    </app-ball-combo-box>
   </ng-template>
 </ion-modal>
