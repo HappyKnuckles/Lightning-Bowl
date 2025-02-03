@@ -67,7 +67,6 @@ export class BallsPage implements OnInit {
   currentPage = 0;
   hasMoreData = true;
   activeFilterCount = 0;
-  url = 'https://bowwwl.com/';
   fuse = computed(() => {
     const options = {
       keys: [
@@ -94,7 +93,7 @@ export class BallsPage implements OnInit {
   constructor(
     private modalCtrl: ModalController,
     public loadingService: LoadingService,
-    private storageService: StorageService,
+    public storageService: StorageService,
     private toastService: ToastService,
     private http: HttpClient
   ) {
@@ -122,16 +121,6 @@ export class BallsPage implements OnInit {
     const query = event.target.value.toLowerCase();
     this.searchTerm = query;
     this.searchSubject.next(query);
-  }
-
-  performSearch(query: string): void {
-    if (query !== '') {
-      this.hasMoreData = false;
-      this.filteredBalls = this.fuse().search(query).map(result => result.item);
-    } else {
-      this.hasMoreData = true;
-      this.filteredBalls = this.balls;
-    }
   }
 
   async removeFromArsenal(ball: Ball): Promise<void> {
@@ -174,6 +163,18 @@ export class BallsPage implements OnInit {
       if (event) {
         event.target.complete();
       }
+    }
+  }
+
+  private performSearch(query: string): void {
+    if (query !== '') {
+      this.hasMoreData = false;
+      this.filteredBalls = this.fuse()
+        .search(query)
+        .map((result) => result.item);
+    } else {
+      this.hasMoreData = true;
+      this.filteredBalls = this.balls;
     }
   }
 }

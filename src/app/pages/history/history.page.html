@@ -27,9 +27,11 @@
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
   <!-- Show this message if there are no game history items and it's not loading -->
-  <ng-container *ngIf="(gameFilterService.filteredGames().length <= 0 || gameFilterService.filteredGames().length <= 0) && !loadingService.isLoading(); else content">
+  <ng-container
+    *ngIf="(gameFilterService.filteredGames().length <= 0 || gameFilterService.filteredGames().length <= 0) && !loadingService.isLoading(); else content">
     <ion-text class="no-game-text">
-      {{ gameFilterService.filteredGames().length <= 0 && !loadingService.isLoading ? 'Start playing a few games to see your history here!' : 'No Games for this filter!' }}
+      {{ gameFilterService.filteredGames().length <= 0 && !loadingService.isLoading ? 'Start playing a few games to see your history here!' : 'No
+      Games for this filter!' }}
     </ion-text>
   </ng-container>
   <!-- Main content to display when there is game history or when loading is done -->

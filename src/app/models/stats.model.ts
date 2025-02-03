@@ -57,9 +57,6 @@ export interface PrevStats {
   averageStrikesPerGame: number;
   averageSparesPerGame: number;
   averageOpensPerGame: number;
-  average3SeriesScore?: number;
-  average4SeriesScore?: number;
-  average5SeriesScore?: number;
   averageFirstCount: number;
   cleanGameCount: number;
   perfectGameCount: number;
@@ -67,5 +64,10 @@ export interface PrevStats {
   overallSpareRate: number;
   overallMissedRate: number;
   spareRates: number[];
+  average3SeriesScore?: number;
+  high3Series?: number;
+  average4SeriesScore?: number;
+  high4Series?: number;
+  average5SeriesScore?: number;
   [key: string]: any;
 }

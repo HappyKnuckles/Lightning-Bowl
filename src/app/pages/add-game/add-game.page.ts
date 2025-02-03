@@ -435,7 +435,7 @@ export class AddGamePage implements OnInit {
       const expirationDate = new Date();
       expirationDate.setDate(expirationDate.getDate() + 7);
       const alertData = { value: 'true', expiration: expirationDate.getTime() };
-      localStorage.setItem('alert', JSON.stringify(alertData));      
+      localStorage.setItem('alert', JSON.stringify(alertData));
       data.role === 'confirm' ? this.handleImageUpload() : null;
     });
   }

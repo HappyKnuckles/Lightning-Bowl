@@ -37,7 +37,7 @@ export class ToastComponent implements OnDestroy {
       refreshOutline,
       reloadOutline,
       shareSocialOutline,
-      removeOutline
+      removeOutline,
     });
   }
 

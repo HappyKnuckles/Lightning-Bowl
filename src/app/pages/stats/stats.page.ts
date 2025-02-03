@@ -1,4 +1,4 @@
-import { Component, CUSTOM_ELEMENTS_SCHEMA, ElementRef, OnInit, ViewChild, AfterViewInit, effect } from '@angular/core';
+import { Component, CUSTOM_ELEMENTS_SCHEMA, ElementRef, OnInit, ViewChild, AfterViewInit, effect, computed, Signal, signal } from '@angular/core';
 import Chart from 'chart.js/auto';
 import {
   IonHeader,
@@ -24,7 +24,7 @@ import { IonicSlides } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { calendarNumber, calendarNumberOutline, filterOutline } from 'ionicons/icons';
 import { StatDisplayComponent } from 'src/app/components/stat-display/stat-display.component';
-import { PrevStats } from 'src/app/models/stats.model';
+import { PrevStats, SessionStats } from 'src/app/models/stats.model';
 import { SpareDisplayComponent } from '../../components/spare-display/spare-display.component';
 import { StorageService } from 'src/app/services/storage/storage.service';
 import { ModalController } from '@ionic/angular';
@@ -33,6 +33,7 @@ import { ChartGenerationService } from 'src/app/services/chart/chart-generation.
 import { overallStatDefinitions, seriesStatDefinitions, sessionStatDefinitions, throwStatDefinitions } from './stats.definitions';
 import { GameFilterService } from 'src/app/services/game-filter/game-filter.service';
 import { GameFilterComponent } from 'src/app/components/game-filter/game-filter.component';
+import { UtilsService } from 'src/app/services/utils/utils.service';
 
 @Component({
   selector: 'app-stats',
@@ -87,11 +88,29 @@ export class StatsPage implements OnInit, AfterViewInit {
   seriesStatDefinitions = seriesStatDefinitions;
   throwStatDefinitions = throwStatDefinitions;
   sessionStatDefinitions = sessionStatDefinitions;
-  selectedDate: number = 0;
-  uniqueSortedDates: number[] = [];
+  uniqueSortedDates: Signal<number[]> = computed(() => {
+    const dateSet = new Set<number>();
+
+    this.storageService.games().forEach((game) => {
+      const date = new Date(game.date);
+      date.setHours(0, 0, 0, 0);
+      dateSet.add(date.getTime());
+    });
+
+    return Array.from(dateSet).sort((a, b) => b - a);
+  });
+  _selectedDate = signal<number | null>(null);
+  selectedDate = computed(() => {
+    return this._selectedDate() !== null ? this._selectedDate()! : this.uniqueSortedDates()[0];
+  });
+  sessionStats: Signal<SessionStats> = computed(() => {
+    const selDate = this.selectedDate();
+    const filteredGames = this.storageService.games().filter((game) => this.utilsService.isSameDay(game.date, selDate));
+
+    return this.statsService.calculateBowlingStats(filteredGames) as SessionStats;
+  });
   selectedSegment: string = 'Overall';
   segments: string[] = ['Overall', 'Spares', 'Throws', 'Sessions'];
-
   // Viewchilds and Instances
   @ViewChild('scoreChart', { static: false }) scoreChart?: ElementRef;
   @ViewChild('pinChart', { static: false }) pinChart?: ElementRef;
@@ -119,6 +138,7 @@ export class StatsPage implements OnInit, AfterViewInit {
     private modalCtrl: ModalController,
     public gameFilterService: GameFilterService,
     private sortUtilsService: SortUtilsService,
+    private utilsService: UtilsService,
     private chartService: ChartGenerationService
   ) {
     addIcons({ filterOutline, calendarNumberOutline, calendarNumber });
@@ -127,10 +147,11 @@ export class StatsPage implements OnInit, AfterViewInit {
       this.generateCharts();
     });
   }
+
   ngOnInit(): void {
     try {
       this.loadingService.setLoading(true);
-      this.processDates();
+      // this.processDates();
     } catch (error) {
       console.error(error);
     } finally {
@@ -146,8 +167,7 @@ export class StatsPage implements OnInit, AfterViewInit {
     // TODO Think if using it like this so highlighted dates are only that match the current filter or not
     const modal = await this.modalCtrl.create({
       component: GameFilterComponent,
-      componentProps: {
-      },
+      componentProps: {},
     });
 
     return await modal.present();
@@ -163,11 +183,6 @@ export class StatsPage implements OnInit, AfterViewInit {
     } finally {
       event.target.complete();
     }
-  }
-
-  onDateChange(event: any): void {
-    const selectedDate = event.target.value;
-    this.statsService.calculateStatsBasedOnDate(this.storageService.games(), selectedDate);
   }
 
   onSegmentChanged(event: any): void {
@@ -198,7 +213,7 @@ export class StatsPage implements OnInit, AfterViewInit {
 
   // TODO if filtergamedlength was 0, the charts dont load until restart
   private generateCharts(index?: number, isReload?: boolean): void {
-    if (this.storageService.games().length > 0 ) {
+    if (this.storageService.games().length > 0) {
       if (this.selectedSegment === 'Overall') {
         this.generateScoreChart(isReload);
       } else if (this.selectedSegment === 'Spares') {
@@ -206,7 +221,6 @@ export class StatsPage implements OnInit, AfterViewInit {
       } else if (this.selectedSegment === 'Throws') {
         this.generateThrowChart(isReload);
       }
-
 
       this.swiperInstance?.updateAutoHeight();
     }
@@ -216,7 +230,12 @@ export class StatsPage implements OnInit, AfterViewInit {
     if (!this.scoreChart) {
       return;
     }
-    this.scoreChartInstance = this.chartService.generateScoreChart(this.scoreChart, this.sortUtilsService.sortGameHistoryByDate(this.gameFilterService.filteredGames(), true), this.scoreChartInstance!, isReload);
+    this.scoreChartInstance = this.chartService.generateScoreChart(
+      this.scoreChart,
+      this.sortUtilsService.sortGameHistoryByDate(this.gameFilterService.filteredGames(), true),
+      this.scoreChartInstance!,
+      isReload
+    );
   }
 
   private generatePinChart(isReload?: boolean): void {
@@ -238,24 +257,5 @@ export class StatsPage implements OnInit, AfterViewInit {
       this.throwChartInstance!,
       isReload
     );
-  }
-
-  private processDates(): void {
-    const dateSet = new Set<number>();
-
-    this.storageService.games().forEach((game) => {
-      // Add only the date part (ignoring time) to the Set
-      const date = new Date(game.date);
-      // Set the time to midnight to ensure we only consider the date
-      date.setHours(0, 0, 0, 0);
-      dateSet.add(date.getTime()); // Store the Unix timestamp
-    });
-
-    // Convert the Set to an Array and sort it
-    this.uniqueSortedDates = Array.from(dateSet).sort((a, b) => b - a);
-    this.selectedDate = this.uniqueSortedDates[0];
-    const prevStats = localStorage.getItem('prevStats');
-    this.prevStats = prevStats ? JSON.parse(prevStats) : this.statsService.prevStats;
-    this.statsService.calculateStatsBasedOnDate(this.storageService.games(), this.selectedDate);
   }
 }

@@ -69,14 +69,14 @@ export class GameFilterComponent implements OnInit {
     private sortUtilsService: SortUtilsService,
     public storageService: StorageService,
     private utilsService: UtilsService
-  ) { }
+  ) {}
 
   ngOnInit(): void {
     if (!this.filterService.filters().startDate && !this.filterService.filters().endDate) {
-      this.filterService.filters.update(filters => ({
+      this.filterService.filters.update((filters) => ({
         ...filters,
         startDate: new Date(this.storageService.games()[this.storageService.games().length - 1].date).toISOString() || Date.now().toString(),
-        endDate: new Date(this.storageService.games()[0].date).toISOString() || Date.now().toString()
+        endDate: new Date(this.storageService.games()[0].date).toISOString() || Date.now().toString(),
       }));
     }
     this.getHighlightedDates();
@@ -110,12 +110,12 @@ export class GameFilterComponent implements OnInit {
         newStartDate = this.defaultFilters.startDate!;
         break;
     }
-    this.filterService.filters.update(filters => ({ ...filters, startDate: newStartDate }));
+    this.filterService.filters.update((filters) => ({ ...filters, startDate: newStartDate }));
   }
 
   handleSelect(event: CustomEvent): void {
     if (event.detail.value.includes('all')) {
-      this.filterService.filters.update(filters => ({ ...filters, leagues: ['all'] }));
+      this.filterService.filters.update((filters) => ({ ...filters, leagues: ['all'] }));
     }
   }
 
@@ -131,18 +131,18 @@ export class GameFilterComponent implements OnInit {
   }
 
   confirm(): Promise<boolean> {
-    this.filterService.filters.update(filters => ({ ...filters }));
+    this.filterService.filters.update((filters) => ({ ...filters }));
     // this.filterService.filterGames(this.storageService.games());
     this.getHighlightedDates();
     return this.modalCtrl.dismiss('confirm');
   }
 
   updateStart(event: CustomEvent): void {
-    this.filterService.filters.update(filters => ({ ...filters, startDate: event.detail.value! }));
+    this.filterService.filters.update((filters) => ({ ...filters, startDate: event.detail.value! }));
   }
 
   updateEnd(event: CustomEvent): void {
-    this.filterService.filters.update(filters => ({ ...filters, endDate: event.detail.value! }));
+    this.filterService.filters.update((filters) => ({ ...filters, endDate: event.detail.value! }));
   }
 
   private getLeagues(): void {

@@ -3,20 +3,24 @@
     <ion-searchbar (ionInput)="searchBalls($event)" placeholder="Search for a ball"></ion-searchbar>
   </ion-toolbar>
 </ion-header>
-<ion-content [fullscreen]="true">
+<ion-content [fullscreen]="true" role="feed">
   <ion-list>
-    @for (ball of filteredBalls; track ball.ball_id) {
-    <ion-item>
+    @for (ball of displayedBalls; track ball.ball_id) {
+    <ion-item role="article">
       <ion-avatar slot="start">
-        <ion-img [src]="url + ball.thumbnail_image"></ion-img>
+        <ion-img [src]="storageService.url + ball.thumbnail_image"></ion-img>
       </ion-avatar>
       <ion-checkbox [value]="ball" [checked]="isChecked(ball)" (ionChange)="checkboxChange($event)">
         <ion-label>
-          <p>{{ ball.brand_name }} ({{ball.release_date}})</p>
+          <p>{{ ball.brand_name }} ({{ ball.release_date }})</p>
           <h2>{{ ball.ball_name }}</h2>
         </ion-label>
       </ion-checkbox>
     </ion-item>
     }
   </ion-list>
+
+  <ion-infinite-scroll threshold="30px" (ionInfinite)="loadData($event)" #infiniteScroll>
+    <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Loading more balls..."> </ion-infinite-scroll-content>
+  </ion-infinite-scroll>
 </ion-content>

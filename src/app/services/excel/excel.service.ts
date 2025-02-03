@@ -12,7 +12,7 @@ import { StorageService } from 'src/app/services/storage/storage.service';
   providedIn: 'root',
 })
 export class ExcelService {
-  constructor(private toastService: ToastService, private hapticService: HapticService, private storageService: StorageService) { }
+  constructor(private toastService: ToastService, private hapticService: HapticService, private storageService: StorageService) {}
 
   async exportToExcel(gameHistory: Game[]): Promise<boolean> {
     const gameData = this.getGameDataForExport(gameHistory);

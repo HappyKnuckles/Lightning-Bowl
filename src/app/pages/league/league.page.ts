@@ -86,6 +86,7 @@ import { leagueStatDefinitions } from '../stats/stats.definitions';
 })
 export class LeaguePage {
   swiperModules = [IonicSlides];
+  @ViewChildren('modal') modals!: QueryList<IonModal>;
   @ViewChild('scoreChart', { static: false }) scoreChart?: ElementRef;
   @ViewChild('pinChart', { static: false }) pinChart?: ElementRef;
   @ViewChild('swiper')
@@ -98,7 +99,6 @@ export class LeaguePage {
       this.swiperInstance = swiperRef?.nativeElement.swiper;
     }, 0);
   }
-  @ViewChildren('modal') modals!: QueryList<IonModal>;
   selectedSegment: string = 'Overall';
   segments: string[] = ['Overall', 'Spares', 'Games'];
   statsValueChanged: boolean[] = [true, true];
@@ -281,7 +281,7 @@ export class LeaguePage {
         {
           text: 'Cancel',
           role: 'cancel',
-          handler: () => { },
+          handler: () => {},
         },
         {
           text: 'Delete',

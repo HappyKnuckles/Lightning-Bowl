@@ -10,18 +10,24 @@
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-list>
-    <ion-item *ngFor="let ball of storageService.arsenal()" button [detail]="false" [id]="ball.ball_id">
-      <ion-thumbnail slot="start">
-        <ion-img [src]="url + ball.thumbnail_image"></ion-img>
-      </ion-thumbnail>
-      <ion-label>
-        <p>{{ ball.brand_name }} ({{ ball.release_date }})</p>
-        <h1>{{ ball.ball_name }}</h1>
-      </ion-label>
-      <ion-button slot="end" (click)="removeFromArsenal(ball)">Remove</ion-button>
-    </ion-item>
-  </ion-list>
+  <ng-container *ngIf="storageService.arsenal().length <= 0; else content">
+    <ion-text class="no-game-text"> You have no balls in your arsenal. Add a ball to get started! </ion-text>
+  </ng-container>
+
+  <ng-template #content>
+    <ion-list #content>
+      <ion-item *ngFor="let ball of storageService.arsenal()" button [detail]="false" [id]="ball.ball_id">
+        <ion-thumbnail slot="start">
+          <ion-img [src]="storageService.url + ball.thumbnail_image"></ion-img>
+        </ion-thumbnail>
+        <ion-label>
+          <p>{{ ball.brand_name }} ({{ ball.release_date }})</p>
+          <h1>{{ ball.ball_name }}</h1>
+        </ion-label>
+        <ion-button slot="end" (click)="removeFromArsenal(ball)">Remove</ion-button>
+      </ion-item>
+    </ion-list>
+  </ng-template>
 </ion-content>
 
 <ion-modal *ngFor="let ball of storageService.arsenal()" [trigger]="ball.ball_id" #modal>
@@ -29,7 +35,7 @@
     <ion-header [translucent]="true">
       <ion-toolbar>
         <ion-buttons slot="start" style="padding: 4px">
-          <ion-button (click)="cancel(ball.ball_id)">
+          <ion-button (click)="modal.dismiss()">
             <ion-icon name="chevron-back" slot="icon-only"></ion-icon>
           </ion-button>
         </ion-buttons>
@@ -37,9 +43,9 @@
       </ion-toolbar>
     </ion-header>
     <ion-content [fullscreen]="true">
-      <ion-card button (click)="getSameCoverstockBalls(ball)" [id]="ball.coverstock_name">
+      <ion-card button (click)="getSameCoverstockBalls(ball)">
         <ion-card-header>
-          <ion-img [src]="url + ball.thumbnail_image" style="height: 15vh"></ion-img>
+          <ion-img [src]="storageService.url + ball.thumbnail_image" style="height: 15vh"></ion-img>
           <ion-card-title>Coverstock</ion-card-title>
         </ion-card-header>
         <ion-card-content class="card-content">
@@ -59,32 +65,30 @@
           </ion-grid>
         </ion-card-content>
 
-        <ion-modal [presentingElement]="presentingElement" [trigger]="ball.coverstock_name" #coverstock>
+        <ion-modal [presentingElement]="presentingElement" #coverstock>
           <ng-template>
             <ion-content>
               <ion-list>
-                @for (coverstockBall of coverstockBalls; track coverstockBall.ball_id) {
-                @if (ball.ball_id !== coverstockBall.ball_id) {
+                @for (coverstockBall of coverstockBalls; track coverstockBall.ball_id) { @if (ball.ball_id !== coverstockBall.ball_id) {
                 <ion-item>
                   <ion-avatar slot="start">
-                    <ion-img [src]="url + coverstockBall.thumbnail_image"></ion-img>
+                    <ion-img [src]="storageService.url + coverstockBall.thumbnail_image"></ion-img>
                   </ion-avatar>
                   <ion-label>
                     <p>{{ coverstockBall.brand_name }} ({{coverstockBall.release_date}})</p>
                     <h2>{{ coverstockBall.ball_name }}</h2>
                   </ion-label>
                 </ion-item>
-                }
-                }
+                } }
               </ion-list>
             </ion-content>
           </ng-template>
         </ion-modal>
       </ion-card>
 
-      <ion-card button (click)="getSameCoreBalls(ball)" [id]="ball.core_name">
+      <ion-card button (click)="getSameCoreBalls(ball)">
         <ion-card-header>
-          <ion-img [src]="url + ball.core_image" style="height: 15vh"></ion-img>
+          <ion-img [src]="storageService.url + ball.core_image" style="height: 15vh"></ion-img>
           <ion-card-title>Core</ion-card-title>
         </ion-card-header>
         <ion-card-content class="card-content">
@@ -112,23 +116,21 @@
           </ion-grid>
         </ion-card-content>
 
-        <ion-modal [presentingElement]="presentingElement" [trigger]="ball.core_name" #core>
+        <ion-modal [presentingElement]="presentingElement" #core>
           <ng-template>
             <ion-content forceOverscroll="true">
               <ion-list>
-                @for (coreBall of coreBalls; track coreBall.ball_id) {
-                @if (ball.ball_id !== coreBall.ball_id) {
+                @for (coreBall of coreBalls; track coreBall.ball_id) { @if (ball.ball_id !== coreBall.ball_id) {
                 <ion-item>
                   <ion-avatar slot="start">
-                    <ion-img [src]="url + coreBall.thumbnail_image"></ion-img>
+                    <ion-img [src]="storageService.url + coreBall.thumbnail_image"></ion-img>
                   </ion-avatar>
                   <ion-label>
                     <p>{{ coreBall.brand_name }} ({{coreBall.release_date}})</p>
                     <h2>{{ coreBall.ball_name }}</h2>
                   </ion-label>
                 </ion-item>
-                }
-                }
+                } }
               </ion-list>
             </ion-content>
           </ng-template>
@@ -140,7 +142,6 @@
 
 <ion-modal [presentingElement]="presentingElement" trigger="addBall">
   <ng-template>
-    <app-ball-combo-box [balls]="ballsWithoutArsenal()" (ballSelected)="saveBallToArsenal($event)">
-    </app-ball-combo-box>
+    <app-ball-combo-box [balls]="ballsWithoutArsenal()" (selectedBallsChange)="saveBallToArsenal($event)"> </app-ball-combo-box>
   </ng-template>
 </ion-modal>

@@ -18,6 +18,30 @@ export class UtilsService {
     return formatDate(date1) === formatDate(date2);
   }
 
+  isSameDay(timestamp1: number, timestamp2: number): boolean {
+    const date1 = new Date(timestamp1);
+    const date2 = new Date(timestamp2);
+
+    return date1.getDate() === date2.getDate() && date1.getMonth() === date2.getMonth() && date1.getFullYear() === date2.getFullYear();
+  }
+
+  isDayBefore(timestamp1: number, timestamp2: number): boolean {
+    const date1 = new Date(timestamp1);
+    const date2 = new Date(timestamp2);
+
+    if (date1.getFullYear() < date2.getFullYear()) {
+      return true;
+    } else if (date1.getFullYear() === date2.getFullYear()) {
+      if (date1.getMonth() < date2.getMonth()) {
+        return true;
+      } else if (date1.getMonth() === date2.getMonth()) {
+        return date1.getDate() < date2.getDate();
+      }
+    }
+
+    return false;
+  }
+
   areArraysEqual(arr1: any[], arr2: any[]): boolean {
     if (arr1.length !== arr2.length) {
       return false;

@@ -66,7 +66,6 @@ import { GameFilterComponent } from 'src/app/components/game-filter/game-filter.
 export class HistoryPage {
   @ViewChild('accordionGroup') accordionGroup!: IonAccordionGroup;
   file!: File;
-
   constructor(
     private alertController: AlertController,
     private toastService: ToastService,

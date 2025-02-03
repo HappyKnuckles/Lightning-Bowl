@@ -231,7 +231,7 @@ export class GameComponent implements OnChanges {
         if (game.league === undefined || game.league === '') {
           game.isPractice = true;
         } else game.isPractice = false;
-
+        game.totalScore = game.frameScores[9];
         await this.storageService.saveGameToLocalStorage(game);
         this.toastService.showToast('Game edit saved sucessfully!', 'refresh-outline');
         this.enableEdit(game);
@@ -240,6 +240,7 @@ export class GameComponent implements OnChanges {
       this.toastService.showToast(`Error saving game to localstorage: ${error}`, 'bug', true);
     }
   }
+
   isGameValid(game: Game): boolean {
     return this.gameUtilsService.isGameValid(undefined, game);
   }

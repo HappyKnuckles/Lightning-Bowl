@@ -1,29 +1,68 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, ViewChild, OnDestroy } from '@angular/core';
 import Fuse from 'fuse.js';
 import { Ball } from 'src/app/models/ball.model';
-import { IonContent, IonSearchbar, IonList, IonItem, IonAvatar, IonImg, IonLabel, IonHeader, IonToolbar, IonCheckbox } from "@ionic/angular/standalone";
-import { ModalController } from '@ionic/angular';
+import {
+  IonContent,
+  IonSearchbar,
+  IonList,
+  IonItem,
+  IonAvatar,
+  IonImg,
+  IonLabel,
+  IonHeader,
+  IonToolbar,
+  IonCheckbox,
+  IonInfiniteScroll,
+  IonInfiniteScrollContent,
+} from '@ionic/angular/standalone';
+import { InfiniteScrollCustomEvent, ModalController } from '@ionic/angular';
+import { StorageService } from 'src/app/services/storage/storage.service';
 
 @Component({
   selector: 'app-ball-combo-box',
   templateUrl: './ball-combo-box.component.html',
   styleUrls: ['./ball-combo-box.component.scss'],
   standalone: true,
-  imports: [IonCheckbox, IonToolbar, IonHeader, IonLabel, IonImg, IonAvatar, IonItem, IonList, IonSearchbar, IonContent, IonContent, IonSearchbar, IonLabel, IonImg, IonAvatar, IonItem, IonList]
+  imports: [
+    IonInfiniteScrollContent,
+    IonInfiniteScroll,
+    IonCheckbox,
+    IonToolbar,
+    IonHeader,
+    IonLabel,
+    IonImg,
+    IonAvatar,
+    IonItem,
+    IonList,
+    IonSearchbar,
+    IonContent,
+    IonContent,
+    IonSearchbar,
+    IonLabel,
+    IonImg,
+    IonAvatar,
+    IonItem,
+    IonList,
+  ],
 })
-export class BallComboBoxComponent implements OnInit {
-  url = 'https://bowwwl.com/';
-  // TODO infinite scroll or else too slow
+export class BallComboBoxComponent implements OnInit, OnDestroy {
   @Input() balls: Ball[] = [];
   @Output() selectedBallsChange = new EventEmitter<Ball[]>();
-  
   filteredBalls: Ball[] = [];
+  displayedBalls: Ball[] = [];
   fuse!: Fuse<Ball>;
   selectedBalls: Ball[] = [];
-  constructor(private modalCtrl: ModalController) { }
+  @ViewChild('infiniteScroll') infiniteScroll!: IonInfiniteScroll;
+  private batchSize = 100;
+  private loadedCount = 0;
+
+  constructor(public storageService: StorageService) {}
 
   ngOnInit(): void {
-    this.filteredBalls = this.balls;
+    this.filteredBalls = [...this.balls];
+    this.displayedBalls = this.filteredBalls.slice(0, this.batchSize);
+    this.loadedCount = this.batchSize;
+
     const options = {
       keys: [
         { name: 'ball_name', weight: 1 },
@@ -62,14 +101,29 @@ export class BallComboBoxComponent implements OnInit {
     const searchTerm = event.target.value.toLowerCase();
     if (searchTerm && searchTerm.trim() !== '') {
       const result = this.fuse.search(searchTerm);
-      this.filteredBalls = result.map(res => res.item);
+      this.filteredBalls = result.map((res) => res.item);
     } else {
-      this.filteredBalls = this.balls;
+      this.filteredBalls = [...this.balls];
+      this.infiniteScroll.disabled = false;
     }
+
+    this.loadedCount = this.batchSize;
+    this.displayedBalls = this.filteredBalls.slice(0, this.batchSize);
   }
 
-  // does not work yet TODO
-  ionViewWillLeave() {
-    this.selectedBallsChange.emit(this.selectedBalls);
+  loadData(event: InfiniteScrollCustomEvent): void {
+    setTimeout(() => {
+      if (this.loadedCount < this.filteredBalls.length) {
+        this.displayedBalls = this.filteredBalls.slice(0, this.loadedCount + this.batchSize);
+        this.loadedCount += this.batchSize;
+      }
+      event.target.complete();
+    }, 50);
+  }
+
+  ngOnDestroy(): void {
+    if (this.selectedBalls.length > 0) {
+      this.selectedBallsChange.emit(this.selectedBalls);
+    }
   }
 }

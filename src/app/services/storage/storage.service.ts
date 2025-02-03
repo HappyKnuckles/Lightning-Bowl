@@ -10,6 +10,7 @@ import { LoadingService } from '../loader/loading.service';
   providedIn: 'root',
 })
 export class StorageService {
+  url = 'https://bowwwl.com/';
   #leagues = signal<string[]>([]);
   #games = signal<Game[]>([]);
   #arsenal = signal<Ball[]>([]);
@@ -140,15 +141,16 @@ export class StorageService {
     this.arsenal.set([]);
     this.leagues.set([]);
   }
+
   private async loadInitialData() {
     await this.loadLeagues();
     await this.loadGameHistory();
     await this.loadArsenal();
     await this.loadAllBalls();
     if (this.games().length > 0) {
-      localStorage.getItem("first-game");
-      if (localStorage.getItem("first-game") === null) {
-        localStorage.setItem("first-game", this.games()[this.games().length - 1].date.toString());
+      localStorage.getItem('first-game');
+      if (localStorage.getItem('first-game') === null) {
+        localStorage.setItem('first-game', this.games()[this.games().length - 1].date.toString());
       }
     }
   }

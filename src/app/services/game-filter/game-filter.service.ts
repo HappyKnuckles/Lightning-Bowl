@@ -45,7 +45,7 @@ export class GameFilterService {
     const games = this.storageService.games();
     const filters = this.filters();
     return this.filterGames(games, filters);
-  }); 
+  });
   get filteredGames() {
     return this.#filteredGames;
   }
@@ -102,7 +102,6 @@ export class GameFilterService {
 
     this.filters.set(this.loadInitialFilters());
   }
-
 
   private loadInitialFilters(): GameFilter {
     localStorage.removeItem('filter');
