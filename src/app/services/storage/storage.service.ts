@@ -80,7 +80,18 @@ export class StorageService {
       const key = 'game' + game.gameId;
       await this.save(key, game);
     }
-    this.games.update(() => [...this.games(), ...gameData]);
+    this.games.update((games) => {
+      const updatedGames = [...games];
+      for (const game of gameData) {
+        const index = updatedGames.findIndex((g) => g.gameId === game.gameId);
+        if (index !== -1) {
+          updatedGames[index] = game;
+        } else {
+          updatedGames.unshift(game);
+        }
+      }
+      return updatedGames;
+    });
   }
 
   async saveGameToLocalStorage(gameData: Game): Promise<void> {
