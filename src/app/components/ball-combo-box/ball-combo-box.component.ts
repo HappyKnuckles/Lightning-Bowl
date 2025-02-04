@@ -15,7 +15,7 @@ import {
   IonInfiniteScroll,
   IonInfiniteScrollContent,
 } from '@ionic/angular/standalone';
-import { InfiniteScrollCustomEvent, ModalController } from '@ionic/angular';
+import { InfiniteScrollCustomEvent } from '@ionic/angular';
 import { StorageService } from 'src/app/services/storage/storage.service';
 
 @Component({
@@ -47,12 +47,13 @@ import { StorageService } from 'src/app/services/storage/storage.service';
 })
 export class BallComboBoxComponent implements OnInit, OnDestroy {
   @Input() balls: Ball[] = [];
-  @Output() selectedBallsChange = new EventEmitter<Ball[]>();
+  @Output() selectedBallsChange = new EventEmitter<Ball[]>(); 
+  @ViewChild('infiniteScroll') infiniteScroll!: IonInfiniteScroll;
+  @ViewChild(IonContent, { static: false }) content!: IonContent;
   filteredBalls: Ball[] = [];
   displayedBalls: Ball[] = [];
   fuse!: Fuse<Ball>;
   selectedBalls: Ball[] = [];
-  @ViewChild('infiniteScroll') infiniteScroll!: IonInfiniteScroll;
   private batchSize = 100;
   private loadedCount = 0;
 
@@ -109,6 +110,9 @@ export class BallComboBoxComponent implements OnInit, OnDestroy {
 
     this.loadedCount = this.batchSize;
     this.displayedBalls = this.filteredBalls.slice(0, this.batchSize);
+
+    // Scroll to top after search
+    this.content.scrollToTop(300);
   }
 
   loadData(event: InfiniteScrollCustomEvent): void {

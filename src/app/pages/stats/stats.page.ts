@@ -232,7 +232,7 @@ export class StatsPage implements OnInit, AfterViewInit {
     }
     this.scoreChartInstance = this.chartService.generateScoreChart(
       this.scoreChart,
-      this.sortUtilsService.sortGameHistoryByDate(this.gameFilterService.filteredGames(), true),
+      this.sortUtilsService.sortGameHistoryByDate([...this.gameFilterService.filteredGames()], true),
       this.scoreChartInstance!,
       isReload
     );

@@ -22,3 +22,17 @@ ion-thumbnail {
   margin-top: 8px;
   margin-bottom: 8px;
 }
+
+ion-header {
+  ion-button {
+    position: relative;
+
+    .powered-by {
+      font-size: 0.75rem;
+      color: gray;
+      position: absolute;
+      top: -5px;
+      text-align: center;
+    }
+  }
+}

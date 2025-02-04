@@ -1,4 +1,4 @@
-import { Component, computed, OnInit, Signal } from '@angular/core';
+import { Component, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -84,12 +84,9 @@ export class BallsPage implements OnInit {
       shouldSort: true,
       useExtendedSearch: false,
     };
-    return new Fuse(this.sortedBalls(), options);
+    return new Fuse(this.storageService.allBalls(), options);
   });
   searchSubject: Subject<string> = new Subject();
-  sortedBalls: Signal<Ball[]> = computed(() => {
-    return this.storageService.allBalls().sort((a, b) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime());
-  });
   constructor(
     private modalCtrl: ModalController,
     public loadingService: LoadingService,

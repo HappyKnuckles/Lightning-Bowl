@@ -29,6 +29,10 @@ ion-header {
   }
 }
 
+ion-card:first-child {
+  margin-top: 0;
+}
+
 ion-card-title {
   font-size: 1.375rem;
 }

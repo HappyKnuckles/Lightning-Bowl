@@ -51,7 +51,7 @@ export class StorageService {
   async loadGameHistory(): Promise<Game[]> {
     this.loadingService.setLoading(true);
     const gameHistory = await this.loadData<Game>('game');
-    this.sortUtilsService.sortGameHistoryByDate(gameHistory);
+    this.sortUtilsService.sortGameHistoryByDate(gameHistory, false);
     this.games.set(gameHistory);
     this.loadingService.setLoading(false);
     return gameHistory;
@@ -60,7 +60,8 @@ export class StorageService {
   async loadAllBalls(): Promise<void> {
     const response = await fetch(`restapi/balls?_format=json`);
     const data = await response.json();
-    this.allBalls.set(data);
+    const sortedBalls: Ball[] = data.sort((a: { release_date: string | number | Date; }, b: { release_date: string | number | Date; }) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime());
+    this.allBalls.set(sortedBalls);
   }
 
   async saveToArsenal(ball: Ball) {
