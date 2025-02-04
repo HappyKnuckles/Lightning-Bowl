@@ -1,5 +1,5 @@
 import { CommonModule, NgIf, NgStyle } from '@angular/common';
-import { Component, CUSTOM_ELEMENTS_SCHEMA, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, effect, Input } from '@angular/core';
 import { IonText, IonCol, IonRow, IonIcon, IonGrid } from '@ionic/angular/standalone';
 import { PrevStats, SessionStats, Stats } from 'src/app/models/stats.model';
 import { addIcons } from 'ionicons';
@@ -13,6 +13,7 @@ import { UtilsService } from 'src/app/services/utils/utils.service';
   standalone: true,
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   imports: [IonText, IonCol, IonRow, IonIcon, IonGrid, NgIf, NgStyle, CommonModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SpareDisplayComponent {
   @Input({ required: true }) stats!: Stats | SessionStats;
@@ -25,6 +26,7 @@ export class SpareDisplayComponent {
   calculateStatDifference(currentValue: number, previousValue: number): string {
     return this.utilsService.calculateStatDifference(currentValue, previousValue);
   }
+
   getArrowIcon(currentValue: number, previousValue: number): string {
     return this.utilsService.getArrowIcon(currentValue, previousValue);
   }

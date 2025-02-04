@@ -4,6 +4,7 @@ import { SessionStats, Stats } from 'src/app/models/stats.model';
 import { PrevStats } from 'src/app/models/stats.model';
 import { GameFilterService } from '../game-filter/game-filter.service';
 import { UtilsService } from '../utils/utils.service';
+import { StorageService } from '../storage/storage.service';
 
 const MAX_FRAMES = 10;
 @Injectable({
@@ -41,10 +42,13 @@ export class GameStatsService {
   get currentStats() {
     return this.#currentStats;
   }
+  overallStats: Signal<Stats> = computed(() => {
+    return this.calculateBowlingStats(this.storageService.games());
+  });
   // TODO adjust and implement it completely
   seriesStats = {};
-  constructor(private gameFilterService: GameFilterService, private utilsService: UtilsService) {
-    this.calculateStats(this.gameFilterService.filteredGames());
+  constructor(private gameFilterService: GameFilterService, private utilsService: UtilsService, private storageService: StorageService) {
+    // this.calculateStats(this.gameFilterService.filteredGames());
   }
 
   calculateStats(gameHistory: Game[]): void {
@@ -64,26 +68,26 @@ export class GameStatsService {
       ) {
         // Save previous stats
         this.prevStats = {
-          strikePercentage: this.currentStats().strikePercentage,
-          sparePercentage: this.currentStats().sparePercentage,
-          openPercentage: this.currentStats().openPercentage,
-          cleanGamePercentage: this.currentStats().cleanGamePercentage,
-          averageStrikesPerGame: this.currentStats().averageStrikesPerGame,
-          averageSparesPerGame: this.currentStats().averageSparesPerGame,
-          averageOpensPerGame: this.currentStats().averageOpensPerGame,
-          averageFirstCount: this.currentStats().averageFirstCount,
-          cleanGameCount: this.currentStats().cleanGameCount,
-          perfectGameCount: this.currentStats().perfectGameCount,
-          averageScore: this.currentStats().averageScore,
-          overallSpareRate: this.currentStats().overallSpareRate,
-          spareRates: this.currentStats().spareRates,
-          overallMissedRate: this.currentStats().overallMissedRate,
-          average3SeriesScore: this.currentStats().average3SeriesScore!,
-          average4SeriesScore: this.currentStats().average4SeriesScore!,
-          average5SeriesScore: this.currentStats().average5SeriesScore!,
-          high3Series: this.currentStats().high3Series!,
-          high4Series: this.currentStats().high4Series!,
-          high5Series: this.currentStats().high5Series!,
+          strikePercentage: this.overallStats().strikePercentage,
+          sparePercentage: this.overallStats().sparePercentage,
+          openPercentage: this.overallStats().openPercentage,
+          cleanGamePercentage: this.overallStats().cleanGamePercentage,
+          averageStrikesPerGame: this.overallStats().averageStrikesPerGame,
+          averageSparesPerGame: this.overallStats().averageSparesPerGame,
+          averageOpensPerGame: this.overallStats().averageOpensPerGame,
+          averageFirstCount: this.overallStats().averageFirstCount,
+          cleanGameCount: this.overallStats().cleanGameCount,
+          perfectGameCount: this.overallStats().perfectGameCount,
+          averageScore: this.overallStats().averageScore,
+          overallSpareRate: this.overallStats().overallSpareRate,
+          spareRates: this.overallStats().spareRates,
+          overallMissedRate: this.overallStats().overallMissedRate,
+          average3SeriesScore: this.overallStats().average3SeriesScore!,
+          average4SeriesScore: this.overallStats().average4SeriesScore!,
+          average5SeriesScore: this.overallStats().average5SeriesScore!,
+          high3Series: this.overallStats().high3Series!,
+          high4Series: this.overallStats().high4Series!,
+          high5Series: this.overallStats().high5Series!,
         };
 
         localStorage.setItem('prevStats', JSON.stringify(this.prevStats));
@@ -94,28 +98,28 @@ export class GameStatsService {
     // this.currentStats.update(() => this.calculateBowlingStats(gameHistory));
 
     if (lastComparisonDate === '0') {
-      if (this.currentStats().totalGames > 0) {
+      if (this.overallStats().totalGames > 0) {
         this.prevStats = {
-          strikePercentage: this.currentStats().strikePercentage,
-          sparePercentage: this.currentStats().sparePercentage,
-          openPercentage: this.currentStats().openPercentage,
-          cleanGamePercentage: this.currentStats().cleanGamePercentage,
-          averageStrikesPerGame: this.currentStats().averageStrikesPerGame,
-          averageSparesPerGame: this.currentStats().averageSparesPerGame,
-          averageOpensPerGame: this.currentStats().averageOpensPerGame,
-          averageFirstCount: this.currentStats().averageFirstCount,
-          cleanGameCount: this.currentStats().cleanGameCount,
-          perfectGameCount: this.currentStats().perfectGameCount,
-          averageScore: this.currentStats().averageScore,
-          overallSpareRate: this.currentStats().overallSpareRate,
-          spareRates: this.currentStats().spareRates,
-          overallMissedRate: this.currentStats().overallMissedRate,
-          average3SeriesScore: this.currentStats().average3SeriesScore!,
-          average4SeriesScore: this.currentStats().average4SeriesScore!,
-          average5SeriesScore: this.currentStats().average5SeriesScore!,
-          high3Series: this.currentStats().high3Series!,
-          high4Series: this.currentStats().high4Series!,
-          high5Series: this.currentStats().high5Series!,
+          strikePercentage: this.overallStats().strikePercentage,
+          sparePercentage: this.overallStats().sparePercentage,
+          openPercentage: this.overallStats().openPercentage,
+          cleanGamePercentage: this.overallStats().cleanGamePercentage,
+          averageStrikesPerGame: this.overallStats().averageStrikesPerGame,
+          averageSparesPerGame: this.overallStats().averageSparesPerGame,
+          averageOpensPerGame: this.overallStats().averageOpensPerGame,
+          averageFirstCount: this.overallStats().averageFirstCount,
+          cleanGameCount: this.overallStats().cleanGameCount,
+          perfectGameCount: this.overallStats().perfectGameCount,
+          averageScore: this.overallStats().averageScore,
+          overallSpareRate: this.overallStats().overallSpareRate,
+          spareRates: this.overallStats().spareRates,
+          overallMissedRate: this.overallStats().overallMissedRate,
+          average3SeriesScore: this.overallStats().average3SeriesScore!,
+          average4SeriesScore: this.overallStats().average4SeriesScore!,
+          average5SeriesScore: this.overallStats().average5SeriesScore!,
+          high3Series: this.overallStats().high3Series!,
+          high4Series: this.overallStats().high4Series!,
+          high5Series: this.overallStats().high5Series!,
         };
       } else {
         this.prevStats = {

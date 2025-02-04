@@ -46,9 +46,9 @@ export class AppComponent implements OnInit, OnDestroy {
     });
   }
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     // Load stats here initially so prevstats are loaded before the first game
-    const gameHistory = this.storageService.games();
+    const gameHistory = await this.storageService.loadGameHistory();
     // this.gameFilterService.setDefaultFilters();
     // this.gameFilterService.filterGames();
     this.gameStatsService.calculateStats(gameHistory);
