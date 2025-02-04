@@ -1,4 +1,4 @@
-import { Component, CUSTOM_ELEMENTS_SCHEMA, ElementRef, OnInit, ViewChild, AfterViewInit, effect, computed, Signal, signal } from '@angular/core';
+import { Component, CUSTOM_ELEMENTS_SCHEMA, ElementRef, OnInit, ViewChild, AfterViewInit, effect, computed, Signal, signal, ChangeDetectionStrategy } from '@angular/core';
 import Chart from 'chart.js/auto';
 import {
   IonHeader,
@@ -61,29 +61,12 @@ import { UtilsService } from 'src/app/services/utils/utils.service';
     StatDisplayComponent,
     SpareDisplayComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StatsPage implements OnInit, AfterViewInit {
   swiperModules = [IonicSlides];
   // Previous Stats
-  prevStats: PrevStats = {
-    strikePercentage: 0,
-    sparePercentage: 0,
-    openPercentage: 0,
-    cleanGamePercentage: 0,
-    averageStrikesPerGame: 0,
-    averageSparesPerGame: 0,
-    averageOpensPerGame: 0,
-    averageFirstCount: 0,
-    cleanGameCount: 0,
-    perfectGameCount: 0,
-    averageScore: 0,
-    overallSpareRate: 0,
-    overallMissedRate: 0,
-    average3SeriesScore: 0,
-    average4SeriesScore: 0,
-    average5SeriesScore: 0,
-    spareRates: [] as number[],
-  };
+  prevStats: PrevStats = localStorage.getItem('prevStats') ? JSON.parse(localStorage.getItem('prevStats')!) : {};
   overallStatDefinitions = overallStatDefinitions;
   seriesStatDefinitions = seriesStatDefinitions;
   throwStatDefinitions = throwStatDefinitions;

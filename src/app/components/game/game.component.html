@@ -1,4 +1,4 @@
-<ion-accordion-group color="dark" multiple="true" #accordionGroup (ionChange)="resizeSwiper($event)">
+<ion-accordion-group color="dark" multiple="true" #accordionGroup (ionChange)="resizeSwiper($event); hideContent($event)">
   <!-- <ion-button (click)="deleteAll()"> Alles löschen</ion-button> -->
   @for (game of showingGames; track game.gameId) {
   <ion-item-sliding class="sliding" #slidingItem>
@@ -33,7 +33,7 @@
             <!-- <div class="score">{{game.date | date}}</div> -->
           </div>
         </ion-item>
-        <div slot="content">
+        <div slot="content" *ngIf="isDelayedOpen(game.gameId)">
           @if(!isEditMode[game.gameId]) { @if (game.balls && game.balls.length > 0) {
           <ion-item class="arsenal" [lines]="game.note ? '' : 'none'">
             <ion-icon name="bowling-ball-outline" slot="start"></ion-icon>

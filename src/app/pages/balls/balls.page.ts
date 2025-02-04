@@ -122,7 +122,7 @@ export class BallsPage implements OnInit {
 
   async removeFromArsenal(ball: Ball): Promise<void> {
     await this.storageService.removeFromArsenal(ball);
-    this.toastService.showToast('Ball removed from Arsenal.', 'remove-outline');
+    this.toastService.showToast('Ball removed from Arsenal.', 'checkmark-outline');
   }
 
   isInArsenal(ball: Ball): boolean {

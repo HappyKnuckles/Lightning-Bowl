@@ -87,8 +87,6 @@ import { UtilsService } from 'src/app/services/utils/utils.service';
 })
 export class GameComponent implements OnChanges {
   @Input() games!: Game[];
-  // @Input() leagues!: string[];
-
   @Input() isLeaguePage?: boolean = false;
   @Input() gameCount?: number;
   @Output() resizeSwiperEvent = new EventEmitter<any>();
@@ -105,6 +103,8 @@ export class GameComponent implements OnChanges {
   });
   showingGames: Game[] = [];
   isEditMode: { [key: string]: boolean } = {};
+  private closeTimers: { [gameId: string]: any } = {};
+  public delayedCloseMap: { [gameId: string]: boolean } = {};
   private originalGameState: { [key: string]: Game } = {};
   constructor(
     private alertController: AlertController,
@@ -145,7 +145,7 @@ export class GameComponent implements OnChanges {
         {
           text: 'Cancel',
           role: 'cancel',
-          handler: () => {},
+          handler: () => { },
         },
         {
           text: 'Delete',
@@ -187,7 +187,7 @@ export class GameComponent implements OnChanges {
     }
   }
 
-  resizeSwiper(event: any): void {
+  resizeSwiper(event: CustomEvent): void {
     const openIds = event.detail.value;
     const gameLength = this.showingGames.length;
     const openIndices = this.showingGames.map((game, index) => (openIds.includes(game.gameId) ? index : -1)).filter((index) => index !== -1);
@@ -197,6 +197,36 @@ export class GameComponent implements OnChanges {
     if (shouldEmit || event.detail.value.length === 0) {
       this.resizeSwiperEvent.emit();
     }
+  }
+
+  // Hides the accordion content so it renders faster
+  hideContent(event: CustomEvent) {
+    const openGameIds: string[] = event.detail.value || [];
+
+    openGameIds.forEach((gameId) => {
+      if (this.closeTimers[gameId]) {
+        clearTimeout(this.closeTimers[gameId]);
+        delete this.closeTimers[gameId];
+      }
+      this.delayedCloseMap[gameId] = true;
+    });
+
+    Object.keys(this.delayedCloseMap).forEach((gameId) => {
+      if (!openGameIds.includes(gameId)) {
+        if (!this.closeTimers[gameId]) {
+          this.closeTimers[gameId] = setTimeout(() => {
+            if (!(this.accordionGroup?.value || []).includes(gameId)) {
+              this.delayedCloseMap[gameId] = false;
+            }
+            delete this.closeTimers[gameId];
+          }, 500);
+        }
+      }
+    });
+  }
+
+  isDelayedOpen(gameId: string): boolean {
+    return this.delayedCloseMap[gameId];
   }
 
   openExpansionPanel(accordionId: string): void {
