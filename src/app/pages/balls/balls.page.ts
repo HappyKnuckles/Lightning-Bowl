@@ -18,7 +18,7 @@ import {
   IonIcon,
   IonButtons,
   IonButton,
-  IonText, IonModal, IonRippleEffect, IonItem, IonList
+  IonText, IonModal, IonRippleEffect, IonList
 } from '@ionic/angular/standalone';
 import { Ball } from 'src/app/models/ball.model';
 import { addIcons } from 'ionicons';
@@ -39,7 +39,7 @@ import { BallListComponent } from 'src/app/components/ball-list/ball-list.compon
   styleUrls: ['./balls.page.scss'],
   standalone: true,
   providers: [ModalController],
-  imports: [IonList, IonItem, IonRippleEffect, IonModal,
+  imports: [IonList, IonRippleEffect, IonModal,
     IonText,
     IonButton,
     IonButtons,
@@ -59,12 +59,12 @@ import { BallListComponent } from 'src/app/components/ball-list/ball-list.compon
     IonToolbar,
     CommonModule,
     FormsModule,
-    BallListComponent
-  ],
+    BallListComponent],
 })
 export class BallsPage implements OnInit {
   @ViewChild('core', { static: false }) coreModal!: IonModal;
   @ViewChild('coverstock', { static: false }) coverstockModal!: IonModal;
+  @ViewChild(IonContent, { static: false }) content!: IonContent;
   coverstockBalls: Ball[] = [];
   coreBalls: Ball[] = [];
   balls: Ball[] = [];
@@ -176,7 +176,6 @@ export class BallsPage implements OnInit {
 
       if (this.coreBalls.length > 0) {
         this.loadingService.setLoading(true);
-
         this.coreModal.present();
       }
     } catch (error) {
@@ -214,5 +213,6 @@ export class BallsPage implements OnInit {
       this.hasMoreData = true;
       this.filteredBalls = this.balls;
     }
+    this.content.scrollToTop(300);
   }
 }
