@@ -22,7 +22,6 @@ import {
   IonCardContent,
   IonCard,
   IonCardTitle,
-  IonAvatar,
   IonText,
 } from '@ionic/angular/standalone';
 import { StorageService } from 'src/app/services/storage/storage.service';
@@ -34,6 +33,8 @@ import { ModalController } from '@ionic/angular';
 import { firstValueFrom } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { BallComboBoxComponent } from 'src/app/components/ball-combo-box/ball-combo-box.component';
+import { BallListComponent } from 'src/app/components/ball-list/ball-list.component';
+import { LoadingService } from 'src/app/services/loader/loading.service';
 
 @Component({
   selector: 'app-arsenal',
@@ -43,8 +44,6 @@ import { BallComboBoxComponent } from 'src/app/components/ball-combo-box/ball-co
   providers: [ModalController],
   imports: [
     IonText,
-    BallComboBoxComponent,
-    IonAvatar,
     IonThumbnail,
     IonCardTitle,
     IonCard,
@@ -68,6 +67,7 @@ import { BallComboBoxComponent } from 'src/app/components/ball-combo-box/ball-co
     CommonModule,
     FormsModule,
     BallComboBoxComponent,
+    BallListComponent
   ],
 })
 export class ArsenalPage implements OnInit {
@@ -79,7 +79,7 @@ export class ArsenalPage implements OnInit {
   ballsWithoutArsenal: Signal<Ball[]> = computed(() =>
     this.storageService.allBalls().filter((ball) => !this.storageService.arsenal().some((arsenalBall) => arsenalBall.ball_id === ball.ball_id))
   );
-  constructor(public storageService: StorageService, public toastService: ToastService, public modalCtrl: ModalController, private http: HttpClient) {
+  constructor(public storageService: StorageService, private loadingService: LoadingService, public toastService: ToastService, public modalCtrl: ModalController, private http: HttpClient) {
     addIcons({ add, chevronBack });
   }
 
@@ -89,7 +89,7 @@ export class ArsenalPage implements OnInit {
 
   removeFromArsenal(ball: Ball): void {
     this.storageService.removeFromArsenal(ball);
-    this.toastService.showToast('Ball removed from arsenal', 'remove-outline');
+    this.toastService.showToast('Ball removed from arsenal', 'checkmark-outline');
   }
 
   saveBallToArsenal(ball: Ball[]): void {
@@ -101,20 +101,37 @@ export class ArsenalPage implements OnInit {
   }
 
   async getSameCoreBalls(ball: Ball): Promise<void> {
-    const response = await firstValueFrom(this.http.get<Ball[]>(`restapi/balls/v2?core=${ball.core_name}`));
-    this.coreBalls = response;
+    try {
+      const response = await firstValueFrom(this.http.get<Ball[]>(`restapi/balls/v2?core=${ball.core_name}`));
+      this.coreBalls = response.filter(coreBall => coreBall.ball_id !== ball.ball_id);
 
-    if (this.coreBalls.length > 1 && !this.coreBalls.includes(ball)) {
-      this.coreModal.present();
+      if (this.coreBalls.length > 0) {
+        this.loadingService.setLoading(true);
+
+        this.coreModal.present();
+      }
+    } catch (error) {
+      console.error('Error fetching core balls:', error);
+      this.toastService.showToast(`Error fetching balls for core ${ball.core_name}: ${error}`, 'bug', true);
+    } finally {
+      this.loadingService.setLoading(false);
     }
   }
 
   async getSameCoverstockBalls(ball: Ball): Promise<void> {
-    const response = await firstValueFrom(this.http.get<Ball[]>(`restapi/balls/v2?coverstock=${ball.coverstock_name}`));
-    this.coverstockBalls = response;
+    try {
+      const response = await firstValueFrom(this.http.get<Ball[]>(`restapi/balls/v2?coverstock=${ball.coverstock_name}`));
+      this.coverstockBalls = response.filter(coverstockBall => coverstockBall.ball_id !== ball.ball_id);
 
-    if (this.coverstockBalls.length > 1 && !this.coreBalls.includes(ball)) {
-      this.coverstockModal.present();
+      if (this.coverstockBalls.length > 0) {
+        this.loadingService.setLoading(true);
+        await this.coverstockModal.present();
+      }
+    } catch (error) {
+      console.error('Error fetching coverstock balls:', error);
+      this.toastService.showToast(`Error fetching balls for coverstock ${ball.coverstock_name}: ${error}`, 'bug', true);
+    } finally {
+      this.loadingService.setLoading(false);
     }
   }
 }

@@ -1,4 +1,4 @@
-import { Component, computed, OnInit } from '@angular/core';
+import { Component, computed, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -18,7 +18,7 @@ import {
   IonIcon,
   IonButtons,
   IonButton,
-  IonText,
+  IonText, IonModal, IonRippleEffect, IonItem, IonList
 } from '@ionic/angular/standalone';
 import { Ball } from 'src/app/models/ball.model';
 import { addIcons } from 'ionicons';
@@ -31,6 +31,7 @@ import { LoadingService } from 'src/app/services/loader/loading.service';
 import Fuse from 'fuse.js';
 import { firstValueFrom, Subject } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
+import { BallListComponent } from 'src/app/components/ball-list/ball-list.component';
 
 @Component({
   selector: 'app-balls',
@@ -38,7 +39,7 @@ import { HttpClient } from '@angular/common/http';
   styleUrls: ['./balls.page.scss'],
   standalone: true,
   providers: [ModalController],
-  imports: [
+  imports: [IonList, IonItem, IonRippleEffect, IonModal,
     IonText,
     IonButton,
     IonButtons,
@@ -58,9 +59,14 @@ import { HttpClient } from '@angular/common/http';
     IonToolbar,
     CommonModule,
     FormsModule,
+    BallListComponent
   ],
 })
 export class BallsPage implements OnInit {
+  @ViewChild('core', { static: false }) coreModal!: IonModal;
+  @ViewChild('coverstock', { static: false }) coverstockModal!: IonModal;
+  coverstockBalls: Ball[] = [];
+  coreBalls: Ball[] = [];
   balls: Ball[] = [];
   filteredBalls: Ball[] = [];
   searchTerm: string = '';
@@ -160,6 +166,41 @@ export class BallsPage implements OnInit {
       if (event) {
         event.target.complete();
       }
+    }
+  }
+
+  async getSameCoreBalls(ball: Ball): Promise<void> {
+    try {
+      const response = await firstValueFrom(this.http.get<Ball[]>(`restapi/balls/v2?core=${ball.core_name}`));
+      this.coreBalls = response.filter(coreBall => coreBall.ball_id !== ball.ball_id);
+
+      if (this.coreBalls.length > 0) {
+        this.loadingService.setLoading(true);
+
+        this.coreModal.present();
+      }
+    } catch (error) {
+      console.error('Error fetching core balls:', error);
+      this.toastService.showToast(`Error fetching balls for core ${ball.core_name}: ${error}`, 'bug', true);
+    } finally {
+      this.loadingService.setLoading(false);
+    }
+  }
+
+  async getSameCoverstockBalls(ball: Ball): Promise<void> {
+    try {
+      const response = await firstValueFrom(this.http.get<Ball[]>(`restapi/balls/v2?coverstock=${ball.coverstock_name}`));
+      this.coverstockBalls = response.filter(coverstockBall => coverstockBall.ball_id !== ball.ball_id);
+
+      if (this.coverstockBalls.length > 0) {
+        this.loadingService.setLoading(true);
+        await this.coverstockModal.present();
+      }
+    } catch (error) {
+      console.error('Error fetching coverstock balls:', error);
+      this.toastService.showToast(`Error fetching balls for coverstock ${ball.coverstock_name}: ${error}`, 'bug', true);
+    } finally {
+      this.loadingService.setLoading(false);
     }
   }
 

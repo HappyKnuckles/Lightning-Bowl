@@ -13,7 +13,7 @@ import {
   IonToolbar,
   IonCheckbox,
   IonInfiniteScroll,
-  IonInfiniteScrollContent,
+  IonInfiniteScrollContent, IonTitle
 } from '@ionic/angular/standalone';
 import { InfiniteScrollCustomEvent } from '@ionic/angular';
 import { StorageService } from 'src/app/services/storage/storage.service';
@@ -23,7 +23,7 @@ import { StorageService } from 'src/app/services/storage/storage.service';
   templateUrl: './ball-combo-box.component.html',
   styleUrls: ['./ball-combo-box.component.scss'],
   standalone: true,
-  imports: [
+  imports: [IonTitle,
     IonInfiniteScrollContent,
     IonInfiniteScroll,
     IonCheckbox,
@@ -47,7 +47,7 @@ import { StorageService } from 'src/app/services/storage/storage.service';
 })
 export class BallComboBoxComponent implements OnInit, OnDestroy {
   @Input() balls: Ball[] = [];
-  @Output() selectedBallsChange = new EventEmitter<Ball[]>(); 
+  @Output() selectedBallsChange = new EventEmitter<Ball[]>();
   @ViewChild('infiniteScroll') infiniteScroll!: IonInfiniteScroll;
   @ViewChild(IonContent, { static: false }) content!: IonContent;
   filteredBalls: Ball[] = [];
@@ -57,7 +57,7 @@ export class BallComboBoxComponent implements OnInit, OnDestroy {
   private batchSize = 100;
   private loadedCount = 0;
 
-  constructor(public storageService: StorageService) {}
+  constructor(public storageService: StorageService) { }
 
   ngOnInit(): void {
     this.filteredBalls = [...this.balls];

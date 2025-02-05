@@ -1,6 +1,10 @@
-<ion-header>
+<ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-searchbar (ionInput)="searchBalls($event)" placeholder="Search for a ball" debounce="300" showCancelButton="focus"></ion-searchbar>
+    <ion-title>New Ball</ion-title>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-searchbar (ionInput)="searchBalls($event)" placeholder="Search for a ball" debounce="300"
+      showCancelButton="focus"></ion-searchbar>
   </ion-toolbar>
 </ion-header>
 <ion-content [fullscreen]="true" role="feed">
@@ -20,7 +24,9 @@
     }
   </ion-list>
 
-  <ion-infinite-scroll threshold="90%" (ionInfinite)="loadData($event)" #infiniteScroll [disabled]="displayedBalls.length <= 0">
-    <ion-infinite-scroll-content loadingSpinner="crescent" loadingText="Loading more balls..."> </ion-infinite-scroll-content>
+  <ion-infinite-scroll threshold="90%" (ionInfinite)="loadData($event)" #infiniteScroll
+    [disabled]="displayedBalls.length <= 0">
+    <ion-infinite-scroll-content loadingSpinner="crescent" loadingText="Loading more balls...">
+    </ion-infinite-scroll-content>
   </ion-infinite-scroll>
 </ion-content>

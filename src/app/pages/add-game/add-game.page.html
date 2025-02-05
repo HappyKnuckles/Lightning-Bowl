@@ -51,11 +51,11 @@
   <ion-content [fullscreen]="true" *ngIf="mode">
     <swiper-container [modules]="swiperModules" #swiper [slidesPerView]="1" (swiperslidechange)="onSlideChanged()" [autoheight]="true">
       <swiper-slide *ngFor="let trackIndex of trackIndexes[i]; let j = index">
-        <app-track-grid
+        <app-game-grid
           (maxScoreChanged)="onMaxScoreChanged($event, trackIndex)"
           (totalScoreChanged)="onTotalScoreChange($event, trackIndex)"
           (leagueChanged)="onLeagueChange($event)"
-          (isPracticeChanged)="onIsPracticeChange($event)"></app-track-grid>
+          (isPracticeChanged)="onIsPracticeChange($event)"></app-game-grid>
         <ion-grid *ngIf="i !== 0">
           <ion-row>
             <ion-col class="middle count">Total: {{ totalScores[trackIndex] }}</ion-col>

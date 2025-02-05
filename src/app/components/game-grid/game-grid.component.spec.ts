@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-import { TrackGridComponent } from './track-grid.component';
+import { GameGridComponent } from './game-grid.component';
 import { StorageService } from 'src/app/services/storage/storage.service';
 import { of } from 'rxjs';
 const mockStorageService = {
@@ -15,16 +15,16 @@ const mockStorageService = {
   leagueChanged: of(null),
 };
 describe('TrackGridComponent', () => {
-  let component: TrackGridComponent;
-  let fixture: ComponentFixture<TrackGridComponent>;
+  let component: GameGridComponent;
+  let fixture: ComponentFixture<GameGridComponent>;
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      imports: [TrackGridComponent],
+      imports: [GameGridComponent],
       providers: [{ provide: StorageService, useValue: mockStorageService }],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(TrackGridComponent);
+    fixture = TestBed.createComponent(GameGridComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   }));

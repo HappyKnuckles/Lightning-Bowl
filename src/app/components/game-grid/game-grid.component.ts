@@ -4,7 +4,6 @@ import { ToastService } from 'src/app/services/toast/toast.service';
 import { GameDataTransformerService } from 'src/app/services/transform-game/transform-game-data.service';
 import { NgFor, NgIf } from '@angular/common';
 import {
-  IonIcon,
   IonGrid,
   IonSelect,
   IonSelectOption,
@@ -19,21 +18,18 @@ import {
 import { FormsModule } from '@angular/forms';
 import { HapticService } from 'src/app/services/haptic/haptic.service';
 import { ImpactStyle } from '@capacitor/haptics';
-import { addIcons } from 'ionicons';
-import { documentTextOutline } from 'ionicons/icons';
 import { StorageService } from 'src/app/services/storage/storage.service';
 import { LeagueSelectorComponent } from '../league-selector/league-selector.component';
 import { UtilsService } from 'src/app/services/utils/utils.service';
 import { GameUtilsService } from 'src/app/services/game-utils/game-utils.service';
 
 @Component({
-  selector: 'app-track-grid',
-  templateUrl: './track-grid.component.html',
-  styleUrls: ['./track-grid.component.scss'],
+  selector: 'app-game-grid',
+  templateUrl: './game-grid.component.html',
+  styleUrls: ['./game-grid.component.scss'],
   providers: [BowlingCalculatorService],
   standalone: true,
   imports: [
-    IonIcon,
     IonSelect,
     NgFor,
     IonSelectOption,
@@ -48,11 +44,11 @@ import { GameUtilsService } from 'src/app/services/game-utils/game-utils.service
     FormsModule,
     NgIf,
     NgFor,
-    LeagueSelectorComponent,
-  ],
+    LeagueSelectorComponent
+],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
-export class TrackGridComponent implements OnInit {
+export class GameGridComponent implements OnInit {
   @Output() maxScoreChanged = new EventEmitter<number>();
   @Output() totalScoreChanged = new EventEmitter<number>();
   @Output() leagueChanged = new EventEmitter<string>();
@@ -77,7 +73,6 @@ export class TrackGridComponent implements OnInit {
     private gameUtilsService: GameUtilsService,
     private utilsService: UtilsService
   ) {
-    addIcons({ documentTextOutline });
   }
 
   ngOnInit(): void {

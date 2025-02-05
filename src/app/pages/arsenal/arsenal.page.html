@@ -72,26 +72,6 @@
           </ion-grid>
         </ion-card-content>
 
-        <ion-modal [presentingElement]="presentingElement" #coverstock>
-          <ng-template>
-            <ion-content>
-              <ion-list>
-                @for (coverstockBall of coverstockBalls; track coverstockBall.ball_id) { @if (ball.ball_id !==
-                coverstockBall.ball_id) {
-                <ion-item>
-                  <ion-avatar slot="start">
-                    <ion-img [src]="storageService.url + coverstockBall.thumbnail_image"></ion-img>
-                  </ion-avatar>
-                  <ion-label>
-                    <p>{{ coverstockBall.brand_name }} ({{coverstockBall.release_date}})</p>
-                    <h2>{{ coverstockBall.ball_name }}</h2>
-                  </ion-label>
-                </ion-item>
-                } }
-              </ion-list>
-            </ion-content>
-          </ng-template>
-        </ion-modal>
       </ion-card>
 
       <ion-card button (click)="getSameCoreBalls(ball)">
@@ -124,27 +104,20 @@
           </ion-grid>
         </ion-card-content>
 
-        <ion-modal [presentingElement]="presentingElement" #core>
-          <ng-template>
-            <ion-content forceOverscroll="true">
-              <ion-list>
-                @for (coreBall of coreBalls; track coreBall.ball_id) { @if (ball.ball_id !== coreBall.ball_id) {
-                <ion-item>
-                  <ion-avatar slot="start">
-                    <ion-img [src]="storageService.url + coreBall.thumbnail_image"></ion-img>
-                  </ion-avatar>
-                  <ion-label>
-                    <p>{{ coreBall.brand_name }} ({{coreBall.release_date}})</p>
-                    <h2>{{ coreBall.ball_name }}</h2>
-                  </ion-label>
-                </ion-item>
-                } }
-              </ion-list>
-            </ion-content>
-          </ng-template>
-        </ion-modal>
       </ion-card>
     </ion-content>
+  </ng-template>
+</ion-modal>
+
+<ion-modal [initialBreakpoint]="0.25" [breakpoints]="[0, 0.25, 0.5, 0.75]" #coverstock>
+  <ng-template>
+    <app-ball-list [balls]="coverstockBalls" [isCoverstock]="true"></app-ball-list>
+  </ng-template>
+</ion-modal>
+
+<ion-modal [initialBreakpoint]="0.25" [breakpoints]="[0, 0.25, 0.5, 0.75]" #core>
+  <ng-template>
+    <app-ball-list [balls]="coreBalls" [isCoverstock]="false"></app-ball-list>
   </ng-template>
 </ion-modal>
 

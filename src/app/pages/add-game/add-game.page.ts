@@ -25,7 +25,6 @@ import { addIcons } from 'ionicons';
 import { add, chevronDown, chevronUp, cameraOutline, documentTextOutline, medalOutline } from 'ionicons/icons';
 import { NgIf, NgFor } from '@angular/common';
 import { ImpactStyle } from '@capacitor/haptics';
-import { TrackGridComponent } from 'src/app/components/track-grid/track-grid.component';
 import { AdService } from 'src/app/services/ad/ad.service';
 import { BowlingCalculatorService } from 'src/app/services/bowling-calculator/bowling-calculator.service';
 import { HapticService } from 'src/app/services/haptic/haptic.service';
@@ -41,6 +40,7 @@ import { IonicSlides } from '@ionic/angular';
 import { StorageService } from 'src/app/services/storage/storage.service';
 import { GameUtilsService } from 'src/app/services/game-utils/game-utils.service';
 import { LeagueSelectorComponent } from 'src/app/components/league-selector/league-selector.component';
+import { GameGridComponent } from 'src/app/components/game-grid/game-grid.component';
 
 const enum SeriesMode {
   Single = 'Single',
@@ -74,7 +74,7 @@ defineCustomElements(window);
     IonSegment,
     NgIf,
     NgFor,
-    TrackGridComponent,
+    GameGridComponent,
     LeagueSelectorComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
@@ -96,7 +96,7 @@ export class AddGamePage implements OnInit {
   gameData!: Game;
   deviceId: string = '';
   leagues: string[] = [];
-  @ViewChildren(TrackGridComponent) trackGrids!: QueryList<TrackGridComponent>;
+  @ViewChildren(GameGridComponent) gameGrids!: QueryList<GameGridComponent>;
   @ViewChild(IonModal) modal!: IonModal;
   @ViewChild('swiper')
   set swiper(swiperRef: ElementRef) {
@@ -200,7 +200,7 @@ export class AddGamePage implements OnInit {
   }
 
   onLeagueChange(league: string): void {
-    this.trackGrids.forEach((trackGrid: TrackGridComponent) => {
+    this.gameGrids.forEach((trackGrid: GameGridComponent) => {
       trackGrid.leagueSelector.selectedLeague = league;
       trackGrid.selectedLeague = league;
       if (league === '' || league === 'New') {
@@ -216,7 +216,7 @@ export class AddGamePage implements OnInit {
   }
 
   onIsPracticeChange(isPractice: boolean): void {
-    this.trackGrids.forEach((trackGrid: TrackGridComponent) => {
+    this.gameGrids.forEach((trackGrid: GameGridComponent) => {
       trackGrid.isPractice = isPractice;
     });
   }
@@ -246,12 +246,12 @@ export class AddGamePage implements OnInit {
   }
 
   clearFrames(index?: number): void {
-    if (index !== undefined && index >= 0 && index < this.trackGrids.length) {
+    if (index !== undefined && index >= 0 && index < this.gameGrids.length) {
       // Clear frames for the specified index
-      this.trackGrids.toArray()[index].clearFrames(false);
+      this.gameGrids.toArray()[index].clearFrames(false);
     } else {
       // Clear frames for all components
-      this.trackGrids.forEach((trackGrid: TrackGridComponent) => {
+      this.gameGrids.forEach((trackGrid: GameGridComponent) => {
         trackGrid.clearFrames(false);
       });
     }
@@ -266,7 +266,7 @@ export class AddGamePage implements OnInit {
       this.seriesId = this.generateUniqueSeriesId();
     }
 
-    this.trackGrids.forEach((trackGrid: TrackGridComponent) => {
+    this.gameGrids.forEach((trackGrid: GameGridComponent) => {
       if (!trackGrid.isGameValid()) {
         allGamesValid = false;
         this.hapticService.vibrate(ImpactStyle.Heavy, 300);
@@ -277,7 +277,7 @@ export class AddGamePage implements OnInit {
     if (allGamesValid) {
       try {
         let perfectGame = false;
-        this.trackGrids.forEach((trackGrid: TrackGridComponent) => {
+        this.gameGrids.forEach((trackGrid: GameGridComponent) => {
           if (trackGrid.totalScore === 300) {
             perfectGame = true;
           }

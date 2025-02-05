@@ -132,7 +132,7 @@ export class GameComponent implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['games'] && this.games) {
-      this.showingGames = this.games.slice(0, 15);
+      this.showingGames = this.games.slice(0, 25);
     }
   }
 
@@ -161,7 +161,7 @@ export class GameComponent implements OnChanges {
   }
 
   loadMoreGames(event: any): void {
-    const nextPage = this.showingGames.length + 15;
+    const nextPage = this.showingGames.length + 25;
     setTimeout(() => {
       (event as InfiniteScrollCustomEvent).target.complete();
       this.showingGames = this.games.slice(0, nextPage);
