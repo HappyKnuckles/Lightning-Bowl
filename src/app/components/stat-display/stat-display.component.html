@@ -6,7 +6,8 @@
         [currentStat]="currentStats[stat.key]"
         [prevStat]="stat.prevKey ? prevStats[stat.prevKey] : undefined"
         [toolTip]="stat.toolTip"
-        [id]="stat.id">
+        [id]="stat.id"
+        [isPercentage]="stat.isPercentage">
       </app-stat-row>
     </div>
   </ng-container>
