@@ -148,7 +148,7 @@ export class BallsPage implements OnInit {
 
   async removeFromArsenal(ball: Ball): Promise<void> {
     await this.storageService.removeFromArsenal(ball);
-    this.toastService.showToast('Ball removed from Arsenal.', 'checkmark-outline');
+    this.toastService.showToast(`${ball.ball_name} removed from Arsenal.`, 'checkmark-outline');
   }
 
   isInArsenal(ball: Ball): boolean {
@@ -157,7 +157,7 @@ export class BallsPage implements OnInit {
 
   async saveBallToArsenal(ball: Ball): Promise<void> {
     await this.storageService.saveBallToArsenal(ball);
-    this.toastService.showToast('Ball added to Arsenal.', 'add');
+    this.toastService.showToast(`${ball.ball_name} added to Arsenal.`, 'add');
   }
 
   async openFilterModal(): Promise<void> {

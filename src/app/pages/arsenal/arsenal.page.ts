@@ -87,7 +87,7 @@ export class ArsenalPage implements OnInit {
 
   removeFromArsenal(ball: Ball): void {
     this.storageService.removeFromArsenal(ball);
-    this.toastService.showToast('Ball removed from arsenal', 'checkmark-outline');
+    this.toastService.showToast(`Ball removed from arsenal: ${ball.ball_name}`, 'checkmark-outline');
   }
 
   saveBallToArsenal(ball: Ball[]): void {
