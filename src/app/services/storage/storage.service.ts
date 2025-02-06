@@ -10,7 +10,7 @@ import { LoadingService } from '../loader/loading.service';
   providedIn: 'root',
 })
 export class StorageService {
-  url = 'https://bowwwl.com/';
+  url = 'https://bowwwl.com';
   #leagues = signal<string[]>([]);
   #games = signal<Game[]>([]);
   #arsenal = signal<Ball[]>([]);
@@ -64,10 +64,18 @@ export class StorageService {
     this.allBalls.set(sortedBalls);
   }
 
-  async saveToArsenal(ball: Ball) {
+  async saveBallToArsenal(ball: Ball) {
     const key = 'arsenal' + '_' + ball.ball_id;
     await this.save(key, ball);
     this.arsenal.update((balls) => [...balls, ball]);
+  }
+
+  async saveBallsToArsenal(balls: Ball[]) {
+    for (const ball of balls) {
+      const key = 'arsenal' + '_' + ball.ball_id;
+      await this.save(key, ball);
+    }
+    this.arsenal.update(() => [...balls]);
   }
 
   async addLeague(league: string) {

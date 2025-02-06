@@ -36,3 +36,7 @@ ion-header {
     }
   }
 }
+
+ion-img::part(image) {
+  border-radius: 50%;
+}

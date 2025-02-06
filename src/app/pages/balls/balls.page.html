@@ -22,6 +22,9 @@
 </ion-header>
 
 <ion-content [fullscreen]="true" role="feed">
+  <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
   <ng-container *ngIf="(filteredBalls.length <= 0) && !loadingService.isLoading(); else content">
     <ion-text class="no-game-text"> No balls found. </ion-text>
   </ng-container>
@@ -36,7 +39,8 @@
         </ion-card-subtitle>
       </ion-card-header>
       <ion-card-content>
-        <ion-img [src]="storageService.url + ball.thumbnail_image" style="height: 15vh" [alt]="'Image for' + ' ' + ball.ball_name"></ion-img>
+        <ion-img [src]="storageService.url + ball.thumbnail_image" style="height: 15vh"
+          [alt]="'Image for' + ' ' + ball.ball_name"></ion-img>
         <div class="ball-info">
           <ion-list lines="none" (click)="getSameCoreBalls(ball)" class="ion-activatable ion-ripple-parent list">
             <h2 class="title">Core:</h2>

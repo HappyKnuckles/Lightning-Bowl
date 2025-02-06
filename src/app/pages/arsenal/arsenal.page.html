@@ -21,6 +21,7 @@
     <ion-text class="no-game-text"> You have no balls in your arsenal. Add a ball to get started! </ion-text>
   </ng-container>
 
+  <!-- TODO mabye implement reodering to enable people having their fav balls on top-->
   <ng-template #content>
     <ion-list #content>
       <ion-item *ngFor="let ball of storageService.arsenal()" button [detail]="false" [id]="ball.ball_id">
@@ -76,7 +77,8 @@
 
       <ion-card button (click)="getSameCoreBalls(ball)">
         <ion-card-header>
-          <ion-img [src]="storageService.url + ball.core_image" style="height: 15vh"></ion-img>
+          <ion-img [src]="storageService.url + ball.core_image"
+            style="height: 15vh; width: 15vh; margin: 0 auto;"></ion-img>
           <ion-card-title>Core</ion-card-title>
         </ion-card-header>
         <ion-card-content class="card-content">

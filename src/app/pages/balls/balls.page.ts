@@ -18,7 +18,7 @@ import {
   IonIcon,
   IonButtons,
   IonButton,
-  IonText, IonModal, IonRippleEffect, IonList
+  IonText, IonModal, IonRippleEffect, IonList, IonRefresherContent, IonRefresher
 } from '@ionic/angular/standalone';
 import { Ball } from 'src/app/models/ball.model';
 import { addIcons } from 'ionicons';
@@ -32,6 +32,8 @@ import Fuse from 'fuse.js';
 import { firstValueFrom, Subject } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { BallListComponent } from 'src/app/components/ball-list/ball-list.component';
+import { HapticService } from 'src/app/services/haptic/haptic.service';
+import { ImpactStyle } from '@capacitor/haptics';
 
 @Component({
   selector: 'app-balls',
@@ -39,7 +41,7 @@ import { BallListComponent } from 'src/app/components/ball-list/ball-list.compon
   styleUrls: ['./balls.page.scss'],
   standalone: true,
   providers: [ModalController],
-  imports: [IonList, IonRippleEffect, IonModal,
+  imports: [IonRefresher, IonRefresherContent, IonList, IonRippleEffect, IonModal,
     IonText,
     IonButton,
     IonButtons,
@@ -98,7 +100,8 @@ export class BallsPage implements OnInit {
     public loadingService: LoadingService,
     public storageService: StorageService,
     private toastService: ToastService,
-    private http: HttpClient
+    private http: HttpClient,
+    private hapticService: HapticService
   ) {
     addIcons({ filterOutline, globeOutline, addOutline, camera });
     this.searchSubject.pipe().subscribe((query) => {
@@ -120,6 +123,23 @@ export class BallsPage implements OnInit {
     }
   }
 
+  async handleRefresh(event: any): Promise<void> {
+    try {
+      this.hapticService.vibrate(ImpactStyle.Medium, 200);
+      this.loadingService.setLoading(true);
+      this.currentPage = 0;
+      this.hasMoreData = true;
+      await this.loadBalls();
+      await this.storageService.loadAllBalls();
+      await this.storageService.loadArsenal();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      event.target.complete();
+      this.loadingService.setLoading(false);
+    }
+  }
+
   searchBalls(event: any): void {
     const query = event.target.value.toLowerCase();
     this.searchTerm = query;
@@ -136,7 +156,7 @@ export class BallsPage implements OnInit {
   }
 
   async saveBallToArsenal(ball: Ball): Promise<void> {
-    await this.storageService.saveToArsenal(ball);
+    await this.storageService.saveBallToArsenal(ball);
     this.toastService.showToast('Ball added to Arsenal.', 'add');
   }
 

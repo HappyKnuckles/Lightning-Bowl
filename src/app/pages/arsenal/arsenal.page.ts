@@ -22,8 +22,7 @@ import {
   IonCardContent,
   IonCard,
   IonCardTitle,
-  IonText,
-} from '@ionic/angular/standalone';
+  IonText} from '@ionic/angular/standalone';
 import { StorageService } from 'src/app/services/storage/storage.service';
 import { Ball } from 'src/app/models/ball.model';
 import { ToastService } from 'src/app/services/toast/toast.service';
@@ -67,8 +66,7 @@ import { LoadingService } from 'src/app/services/loader/loading.service';
     CommonModule,
     FormsModule,
     BallComboBoxComponent,
-    BallListComponent
-  ],
+    BallListComponent],
 })
 export class ArsenalPage implements OnInit {
   @ViewChild('core', { static: false }) coreModal!: IonModal;
@@ -94,7 +92,7 @@ export class ArsenalPage implements OnInit {
 
   saveBallToArsenal(ball: Ball[]): void {
     ball.forEach((ball) => {
-      this.storageService.saveToArsenal(ball);
+      this.storageService.saveBallToArsenal(ball);
     });
     const ball_names = ball.map((ball) => ball.ball_name).join(', ');
     this.toastService.showToast(`Balls added to arsenal: ${ball_names}`, 'checkmark-outline');

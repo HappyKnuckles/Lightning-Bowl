@@ -1,15 +1,15 @@
 import { Injectable } from '@angular/core';
 import { Game } from 'src/app/models/game.model';
-import { BowlingCalculatorService } from '../bowling-calculator/bowling-calculator.service';
+import { GameScoreCalculatorService } from '../game-score-calculator/game-score-calculator.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class GameUtilsService {
-  constructor() {}
+  constructor() { }
 
-  isGameValid(bowlingService?: BowlingCalculatorService, game?: Game): boolean {
-    const frames = game ? game.frames : bowlingService!.frames;
+  isGameValid(gameScoreCalculatorService?: GameScoreCalculatorService, game?: Game): boolean {
+    const frames = game ? game.frames : gameScoreCalculatorService!.frames;
     let isValid = true;
     frames.forEach((frame: any, index: number) => {
       const throws = Array.isArray(frame) ? frame : frame.throws.map((t: { value: any }) => t.value);
@@ -47,19 +47,19 @@ export class GameUtilsService {
     return isValid;
   }
 
-  parseInputValue(inputValue: string, frameIndex: number, inputIndex: number, bowlingService: BowlingCalculatorService): number {
+  parseInputValue(inputValue: string, frameIndex: number, inputIndex: number, gameScoreCalculatorService: GameScoreCalculatorService): number {
     if (frameIndex < 9) {
       // Frames 1-9
       if (inputValue === 'X' || inputValue === 'x') {
         return 10; // Strike
       } else if (inputValue === '/') {
-        const firstThrow = bowlingService.frames[frameIndex][0] || 0;
+        const firstThrow = gameScoreCalculatorService.frames[frameIndex][0] || 0;
         return 10 - firstThrow; // Spare
       }
     } else {
       // 10th Frame
-      const firstThrow = bowlingService.frames[frameIndex][0] || 0;
-      const secondThrow = bowlingService.frames[frameIndex][1] || 0;
+      const firstThrow = gameScoreCalculatorService.frames[frameIndex][0] || 0;
+      const secondThrow = gameScoreCalculatorService.frames[frameIndex][1] || 0;
 
       switch (inputIndex) {
         case 0: // First throw of 10th frame
@@ -180,25 +180,25 @@ export class GameUtilsService {
     return { frames, frameScores, totalScore };
   }
 
-  isValidFrameScore(inputValue: number, frameIndex: number, inputIndex: number, bowlingService: BowlingCalculatorService): boolean {
+  isValidFrameScore(inputValue: number, frameIndex: number, inputIndex: number, gameScoreCalculatorService: GameScoreCalculatorService): boolean {
     if (inputIndex === 1) {
-      if (bowlingService.frames[frameIndex][0] === undefined) {
+      if (gameScoreCalculatorService.frames[frameIndex][0] === undefined) {
         return false;
       }
     }
 
     if (frameIndex < 9) {
       // Regular frames (1-9)
-      const firstThrow = bowlingService.frames[frameIndex][0] || 0;
-      const secondThrow = inputIndex === 1 ? inputValue : bowlingService.frames[frameIndex][1] || 0;
+      const firstThrow = gameScoreCalculatorService.frames[frameIndex][0] || 0;
+      const secondThrow = inputIndex === 1 ? inputValue : gameScoreCalculatorService.frames[frameIndex][1] || 0;
       if (inputIndex === 0 && secondThrow !== undefined) {
         return inputValue + secondThrow <= 10;
       }
       return firstThrow + secondThrow <= 10;
     } else {
       // 10th frame
-      const firstThrow = bowlingService.frames[frameIndex][0] || 0;
-      const secondThrow = bowlingService.frames[frameIndex][1] || 0;
+      const firstThrow = gameScoreCalculatorService.frames[frameIndex][0] || 0;
+      const secondThrow = gameScoreCalculatorService.frames[frameIndex][1] || 0;
       switch (inputIndex) {
         case 0:
           return inputValue <= 10;

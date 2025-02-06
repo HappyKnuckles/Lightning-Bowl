@@ -26,12 +26,10 @@ import { add, chevronDown, chevronUp, cameraOutline, documentTextOutline, medalO
 import { NgIf, NgFor } from '@angular/common';
 import { ImpactStyle } from '@capacitor/haptics';
 import { AdService } from 'src/app/services/ad/ad.service';
-import { BowlingCalculatorService } from 'src/app/services/bowling-calculator/bowling-calculator.service';
 import { HapticService } from 'src/app/services/haptic/haptic.service';
 import { ImageProcesserService } from 'src/app/services/image-processer/image-processer.service';
 import { LoadingService } from 'src/app/services/loader/loading.service';
 import { ToastService } from 'src/app/services/toast/toast.service';
-import { GameDataTransformerService } from 'src/app/services/transform-game/transform-game-data.service';
 import { UserService } from 'src/app/services/user/user.service';
 import { defineCustomElements } from '@teamhive/lottie-player/loader';
 import { Device } from '@capacitor/device';
@@ -41,6 +39,8 @@ import { StorageService } from 'src/app/services/storage/storage.service';
 import { GameUtilsService } from 'src/app/services/game-utils/game-utils.service';
 import { LeagueSelectorComponent } from 'src/app/components/league-selector/league-selector.component';
 import { GameGridComponent } from 'src/app/components/game-grid/game-grid.component';
+import { GameScoreCalculatorService } from 'src/app/services/game-score-calculator/game-score-calculator.service';
+import { GameDataTransformerService } from 'src/app/services/game-transform/game-data-transform.service';
 
 const enum SeriesMode {
   Single = 'Single',
@@ -124,7 +124,7 @@ export class AddGamePage implements OnInit {
     private imageProcessingService: ImageProcesserService,
     private alertController: AlertController,
     private toastService: ToastService,
-    private bowlingService: BowlingCalculatorService,
+    private gameScoreCalculatorService: GameScoreCalculatorService,
     public storageService: StorageService,
     private transformGameService: GameDataTransformerService,
     private loadingService: LoadingService,
@@ -316,11 +316,11 @@ export class AddGamePage implements OnInit {
   }
 
   getSeriesMaxScore(index: number): number {
-    return this.bowlingService.getSeriesMaxScore(index, this.maxScores);
+    return this.gameScoreCalculatorService.getSeriesMaxScore(index, this.maxScores);
   }
 
   getSeriesCurrentScore(index: number): number {
-    return this.bowlingService.getSeriesCurrentScore(index, this.totalScores);
+    return this.gameScoreCalculatorService.getSeriesCurrentScore(index, this.totalScores);
   }
 
   onSegmentChanged(event: any) {
