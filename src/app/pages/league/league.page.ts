@@ -86,6 +86,7 @@ import { leagueStatDefinitions } from '../stats/stats.definitions';
 })
 export class LeaguePage {
   swiperModules = [IonicSlides];
+  @ViewChild('modalContent') content!: IonContent;
   @ViewChildren('modal') modals!: QueryList<IonModal>;
   @ViewChild('scoreChart', { static: false }) scoreChart?: ElementRef;
   @ViewChild('pinChart', { static: false }) pinChart?: ElementRef;
@@ -195,6 +196,7 @@ export class LeaguePage {
       this.swiperInstance.slideTo(activeIndex);
       this.generateCharts(activeIndex, league);
     }
+    this.content.scrollToTop(300);
   }
 
   onSlideChanged(league: string): void {
@@ -208,6 +210,7 @@ export class LeaguePage {
         this.swiperInstance.params.followFinger = true;
       }
     }
+    this.content.scrollToTop(300);
   }
 
   generateCharts(index: number, league: string, isReload?: boolean): void {
@@ -281,7 +284,7 @@ export class LeaguePage {
         {
           text: 'Cancel',
           role: 'cancel',
-          handler: () => {},
+          handler: () => { },
         },
         {
           text: 'Delete',

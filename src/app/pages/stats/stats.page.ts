@@ -64,6 +64,7 @@ import { UtilsService } from 'src/app/services/utils/utils.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StatsPage implements OnInit, AfterViewInit {
+  @ViewChild(IonContent) content!: IonContent;
   swiperModules = [IonicSlides];
   // Previous Stats
   prevStats: PrevStats = localStorage.getItem('prevStats') ? JSON.parse(localStorage.getItem('prevStats')!) : {};
@@ -175,6 +176,7 @@ export class StatsPage implements OnInit, AfterViewInit {
       this.swiperInstance.slideTo(activeIndex);
       this.generateCharts(activeIndex);
     }
+    this.content.scrollToTop(300);
   }
 
   onSlideChanged(): void {
@@ -183,6 +185,7 @@ export class StatsPage implements OnInit, AfterViewInit {
       this.selectedSegment = this.getSegmentValue(activeIndex);
       this.generateCharts(activeIndex);
     }
+    this.content.scrollToTop(300);
   }
 
   private getSlideIndex(segment: string): number {

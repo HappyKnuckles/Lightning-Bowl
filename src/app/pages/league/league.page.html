@@ -79,13 +79,15 @@
         </ion-buttons>
         <ion-title>{{league}}</ion-title>
       </ion-toolbar>
-      <ion-segment [value]="selectedSegment" (ionChange)="onSegmentChanged(league, $event)">
-        <ion-segment-button *ngFor="let segment of segments" [value]="segment">
-          <ion-label class="segment-label">{{segment}}</ion-label>
-        </ion-segment-button>
-      </ion-segment>
+      <ion-toolbar>
+        <ion-segment [value]="selectedSegment" (ionChange)="onSegmentChanged(league, $event)">
+          <ion-segment-button *ngFor="let segment of segments" [value]="segment">
+            <ion-label class="segment-label">{{segment}}</ion-label>
+          </ion-segment-button>
+        </ion-segment>
+      </ion-toolbar>
     </ion-header>
-    <ion-content>
+    <ion-content #modalContent>
       <swiper-container [rewind]="true" [spaceBetween]="8" [modules]="swiperModules" [slidesPerView]="1" #swiper
         (swiperslidechange)="onSlideChanged(league)" [autoHeight]="true" style="background: var(--ion-item-background)">
         <!-- Overall Segment -->
