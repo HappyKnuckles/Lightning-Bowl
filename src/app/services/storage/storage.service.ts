@@ -67,7 +67,13 @@ export class StorageService {
   async saveBallToArsenal(ball: Ball) {
     const key = 'arsenal' + '_' + ball.ball_id;
     await this.save(key, ball);
-    this.arsenal.update((balls) => [...balls, ball]);
+    this.arsenal.update((balls) => {
+      const uniqueBalls = new Set(balls.map(b => b.ball_name));
+      if (!uniqueBalls.has(ball.ball_name)) {
+        return [...balls, ball];
+      }
+      return balls;
+    });
   }
 
   async saveBallsToArsenal(balls: Ball[]) {
