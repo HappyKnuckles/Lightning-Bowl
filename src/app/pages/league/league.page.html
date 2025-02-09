@@ -34,32 +34,24 @@
           </ion-item-option>
         </ion-item-options>
 
-        <ion-item (click)="loadingService.setLoading(true)" [id]="league"
-          class="ion-activatable ripple-parent rectangle">
+        <ion-item (click)="loadingService.setLoading(true)" button [id]="league">
           <ion-label class="game-info">
             <div class="title">{{ league }}</div>
             <div class="score">Games: {{gamesByLeague()[league].length}}</div>
             <div class="score">Avg: {{statsByLeague()[league].averageScore | number: '1.1-2' }}</div>
             <div class="score">High: {{statsByLeague()[league].highGame}}</div>
           </ion-label>
-          <ion-button fill="clear" slot="end" [disabled]="isEditMode[league]">
-            <ion-icon name="chevron-forward" slot="icon-only"></ion-icon>
-          </ion-button>
         </ion-item>
       </ion-item-sliding>
       } @else {
       <div class="sliding">
-        <ion-item (click)="loadingService.setLoading(true)" [id]="league"
-          class="ion-activatable ripple-parent rectangle">
+        <ion-item (click)="loadingService.setLoading(true)" button [id]="league">
           <ion-label class="game-info">
             <div class="title">{{ league }}</div>
             <div class="score">Games: {{gamesByLeague()[league].length}}</div>
             <div class="score">Avg: {{statsByLeague()[league].averageScore | number: '1.1-2' }}</div>
             <div class="score">High: {{statsByLeague()[league].highGame}}</div>
           </ion-label>
-          <ion-button fill="clear" slot="end" [disabled]="isEditMode[league]">
-            <ion-icon name="chevron-forward" slot="icon-only"></ion-icon>
-          </ion-button>
         </ion-item>
       </div>
       }

@@ -22,13 +22,13 @@ import {
   IonCardContent,
   IonCard,
   IonCardTitle,
-  IonText
+  IonText, IonItemSliding, IonItemOption, IonItemOptions
 } from '@ionic/angular/standalone';
 import { StorageService } from 'src/app/services/storage/storage.service';
 import { Ball } from 'src/app/models/ball.model';
 import { ToastService } from 'src/app/services/toast/toast.service';
 import { addIcons } from 'ionicons';
-import { chevronBack, add, openOutline } from 'ionicons/icons';
+import { chevronBack, add, openOutline, trashOutline } from 'ionicons/icons';
 import { ModalController } from '@ionic/angular';
 import { firstValueFrom } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
@@ -42,7 +42,7 @@ import { LoadingService } from 'src/app/services/loader/loading.service';
   styleUrls: ['./arsenal.page.scss'],
   standalone: true,
   providers: [ModalController],
-  imports: [
+  imports: [IonItemOptions, IonItemOption, IonItemSliding,
     IonText,
     IonThumbnail,
     IonCardTitle,
@@ -79,7 +79,7 @@ export class ArsenalPage implements OnInit {
     this.storageService.allBalls().filter((ball) => !this.storageService.arsenal().some((arsenalBall) => arsenalBall.ball_id === ball.ball_id))
   );
   constructor(public storageService: StorageService, private loadingService: LoadingService, public toastService: ToastService, public modalCtrl: ModalController, private http: HttpClient) {
-    addIcons({ add, chevronBack, openOutline });
+    addIcons({ add, trashOutline, chevronBack, openOutline });
   }
 
   ngOnInit() {

@@ -37,6 +37,13 @@ ion-header {
   }
 }
 
+.sliding {
+  .title {
+    font-weight: 600;
+    font-size: 1.1rem;
+  }
+}
+
 ion-img::part(image) {
   border-radius: 50%;
 }
