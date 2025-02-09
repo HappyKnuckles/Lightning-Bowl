@@ -22,7 +22,7 @@ import {
 } from '@ionic/angular/standalone';
 import { Ball } from 'src/app/models/ball.model';
 import { addIcons } from 'ionicons';
-import { globeOutline, camera, addOutline, filterOutline } from 'ionicons/icons';
+import { globeOutline, camera, addOutline, filterOutline, openOutline } from 'ionicons/icons';
 import { InfiniteScrollCustomEvent, ModalController } from '@ionic/angular';
 import { BallFilterComponent } from 'src/app/components/ball-filter/ball-filter.component';
 import { StorageService } from 'src/app/services/storage/storage.service';
@@ -103,7 +103,7 @@ export class BallsPage implements OnInit {
     private http: HttpClient,
     private hapticService: HapticService
   ) {
-    addIcons({ filterOutline, globeOutline, addOutline, camera });
+    addIcons({ globeOutline, openOutline, filterOutline, addOutline, camera });
     this.searchSubject.pipe().subscribe((query) => {
       this.performSearch(query);
     });

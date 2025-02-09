@@ -25,7 +25,7 @@
   </ion-list>
 
   <ion-infinite-scroll threshold="90%" (ionInfinite)="loadData($event)" #infiniteScroll
-    [disabled]="displayedBalls.length <= 0">
+    >
     <ion-infinite-scroll-content loadingSpinner="crescent" loadingText="Loading more balls...">
     </ion-infinite-scroll-content>
   </ion-infinite-scroll>

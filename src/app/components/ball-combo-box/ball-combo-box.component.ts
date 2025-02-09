@@ -55,7 +55,7 @@ export class BallComboBoxComponent implements OnInit, OnDestroy {
   fuse!: Fuse<Ball>;
   selectedBalls: Ball[] = [];
   private batchSize = 100;
-  private loadedCount = 0;
+  public loadedCount = 0;
 
   constructor(public storageService: StorageService) { }
 
@@ -105,13 +105,13 @@ export class BallComboBoxComponent implements OnInit, OnDestroy {
       this.filteredBalls = result.map((res) => res.item);
     } else {
       this.filteredBalls = [...this.balls];
-      this.infiniteScroll.disabled = false;
     }
 
     this.loadedCount = this.batchSize;
     this.displayedBalls = this.filteredBalls.slice(0, this.batchSize);
 
-    // Scroll to top after search
+    this.infiniteScroll.disabled = this.loadedCount >= this.filteredBalls.length;
+
     this.content.scrollToTop(300);
   }
 
@@ -122,6 +122,10 @@ export class BallComboBoxComponent implements OnInit, OnDestroy {
         this.loadedCount += this.batchSize;
       }
       event.target.complete();
+
+      if (this.loadedCount >= this.filteredBalls.length) {
+        event.target.disabled = true;
+      }
     }, 50);
   }
 

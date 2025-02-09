@@ -43,7 +43,9 @@
           [alt]="'Image for' + ' ' + ball.ball_name"></ion-img>
         <div class="ball-info">
           <ion-list lines="none" (click)="getSameCoreBalls(ball)" class="ion-activatable ion-ripple-parent list">
-            <h2 class="title">Core:</h2>
+            <div class="core">
+              <h2 class="title">Core:</h2><ion-icon name="open-outline"></ion-icon>
+            </div>
             <p class="info">{{ ball.core_name }}</p>
             <p class="info">RG: {{ ball.core_rg }}</p>
             <p class="info">Diff: {{ ball.core_diff }}</p>
@@ -52,7 +54,9 @@
             <ion-ripple-effect></ion-ripple-effect>
           </ion-list>
           <ion-list lines="none" (click)="getSameCoverstockBalls(ball)" class="ion-activatable ion-ripple-parent list">
-            <h2 class="title">Coverstock:</h2>
+            <div class="coverstock">
+              <h2 class="title">Coverstock:</h2><ion-icon name="open-outline"></ion-icon>
+            </div>
             <p class="info">{{ ball.coverstock_type }}</p>
             <p class="info">{{ ball.coverstock_name }}</p>
             <p class="info">{{ ball.factory_finish }}</p>

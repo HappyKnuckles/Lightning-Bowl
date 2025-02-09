@@ -22,12 +22,13 @@ import {
   IonCardContent,
   IonCard,
   IonCardTitle,
-  IonText} from '@ionic/angular/standalone';
+  IonText
+} from '@ionic/angular/standalone';
 import { StorageService } from 'src/app/services/storage/storage.service';
 import { Ball } from 'src/app/models/ball.model';
 import { ToastService } from 'src/app/services/toast/toast.service';
 import { addIcons } from 'ionicons';
-import { chevronBack, add } from 'ionicons/icons';
+import { chevronBack, add, openOutline } from 'ionicons/icons';
 import { ModalController } from '@ionic/angular';
 import { firstValueFrom } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
@@ -78,7 +79,7 @@ export class ArsenalPage implements OnInit {
     this.storageService.allBalls().filter((ball) => !this.storageService.arsenal().some((arsenalBall) => arsenalBall.ball_id === ball.ball_id))
   );
   constructor(public storageService: StorageService, private loadingService: LoadingService, public toastService: ToastService, public modalCtrl: ModalController, private http: HttpClient) {
-    addIcons({ add, chevronBack });
+    addIcons({ add, chevronBack, openOutline });
   }
 
   ngOnInit() {
@@ -105,7 +106,6 @@ export class ArsenalPage implements OnInit {
 
       if (this.coreBalls.length > 0) {
         this.loadingService.setLoading(true);
-
         this.coreModal.present();
       }
     } catch (error) {

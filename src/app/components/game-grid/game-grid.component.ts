@@ -157,6 +157,7 @@ export class GameGridComponent implements OnInit {
       this.note = '';
       this.selectedLeague = '';
       this.leagueSelector.selectedLeague = '';
+      this.balls = [];
     }
     this.frames = this.gameScoreCalculatorService.frames;
     this.frameScores = this.gameScoreCalculatorService.frameScores;
