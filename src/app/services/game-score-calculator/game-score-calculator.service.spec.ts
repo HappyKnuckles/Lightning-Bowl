@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 
-import { BowlingCalculatorService } from './bowling-calculator.service';
+import { GameScoreCalculatorService } from './game-score-calculator.service';
 
 describe('BowlingCalculatorService', () => {
-  let service: BowlingCalculatorService;
+  let service: GameScoreCalculatorService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(BowlingCalculatorService);
+    service = TestBed.inject(GameScoreCalculatorService);
   });
 
   it('should be created', () => {

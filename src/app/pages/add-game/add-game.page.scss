@@ -1,13 +1,17 @@
-.action-sheet {
-  ion-button {
-    background: none;
+ion-buttons {
+  padding: 4px;
 
-    --background-activated: none;
-  }
+  .action-sheet {
+    ion-button {
+      background: none;
 
-  .chevron {
-    margin-left: 5px;
-    font-size: 15px !important;
+      --background-activated: none;
+    }
+
+    .chevron {
+      margin-left: 5px;
+      font-size: 15px !important;
+    }
   }
 }
 

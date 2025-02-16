@@ -1,5 +1,5 @@
 import { NgIf, NgFor, NgClass, DatePipe } from '@angular/common';
-import { Component, Input, Renderer2, ViewChild, OnChanges, SimpleChanges, EventEmitter, Output } from '@angular/core';
+import { Component, Input, Renderer2, ViewChild, OnChanges, SimpleChanges, EventEmitter, Output, computed } from '@angular/core';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { ImpactStyle } from '@capacitor/haptics';
@@ -22,7 +22,8 @@ import {
   IonCol,
   IonInput,
   IonInfiniteScroll,
-  IonInfiniteScrollContent, IonText
+  IonInfiniteScrollContent,
+  IonText,
 } from '@ionic/angular/standalone';
 import { toPng } from 'html-to-image';
 import { addIcons } from 'ionicons';
@@ -34,7 +35,8 @@ import {
   createOutline,
   shareOutline,
   documentTextOutline,
-  medalOutline, bowlingBallOutline
+  medalOutline,
+  bowlingBallOutline,
 } from 'ionicons/icons';
 import { Game } from 'src/app/models/game.model';
 import { GameUtilsService } from 'src/app/services/game-utils/game-utils.service';
@@ -49,7 +51,8 @@ import { UtilsService } from 'src/app/services/utils/utils.service';
   templateUrl: './game.component.html',
   styleUrls: ['./game.component.scss'],
   providers: [DatePipe, ModalController],
-  imports: [IonText,
+  imports: [
+    IonText,
     IonInfiniteScrollContent,
     IonInfiniteScroll,
     IonInput,
@@ -84,13 +87,24 @@ import { UtilsService } from 'src/app/services/utils/utils.service';
 })
 export class GameComponent implements OnChanges {
   @Input() games!: Game[];
-  @Input() leagues!: string[];
   @Input() isLeaguePage?: boolean = false;
   @Input() gameCount?: number;
   @Output() resizeSwiperEvent = new EventEmitter<any>();
   @ViewChild('accordionGroup') accordionGroup!: IonAccordionGroup;
+  leagues = computed(() => {
+    const savedLeagues = this.storageService.leagues();
+    const leagueKeys = this.games.reduce((acc: string[], game: Game) => {
+      if (game.league && !acc.includes(game.league)) {
+        acc.push(game.league);
+      }
+      return acc;
+    }, []);
+    return [...new Set([...leagueKeys, ...savedLeagues])];
+  });
   showingGames: Game[] = [];
   isEditMode: { [key: string]: boolean } = {};
+  private closeTimers: { [gameId: string]: any } = {};
+  public delayedCloseMap: { [gameId: string]: boolean } = {};
   private originalGameState: { [key: string]: Game } = {};
   constructor(
     private alertController: AlertController,
@@ -103,12 +117,22 @@ export class GameComponent implements OnChanges {
     private gameUtilsService: GameUtilsService,
     private utilsService: UtilsService
   ) {
-    addIcons({ trashOutline, createOutline, shareOutline, documentTextOutline, medalOutline, bowlingBallOutline, cloudUploadOutline, cloudDownloadOutline, filterOutline, });
+    addIcons({
+      trashOutline,
+      createOutline,
+      shareOutline,
+      documentTextOutline,
+      medalOutline,
+      bowlingBallOutline,
+      cloudUploadOutline,
+      cloudDownloadOutline,
+      filterOutline,
+    });
   }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['games'] && this.games) {
-      this.showingGames = this.games.slice(0, 15);
+      this.showingGames = this.games.slice(0, 25);
     }
   }
 
@@ -127,7 +151,7 @@ export class GameComponent implements OnChanges {
           text: 'Delete',
           handler: async () => {
             await this.storageService.deleteGame(gameId);
-            this.toastService.showToast('Game deleted sucessfully.', 'checkmark-outline');
+            this.toastService.showToast('Game deleted sucessfully.', 'remove-outline');
           },
         },
       ],
@@ -137,7 +161,7 @@ export class GameComponent implements OnChanges {
   }
 
   loadMoreGames(event: any): void {
-    const nextPage = this.showingGames.length + 15;
+    const nextPage = this.showingGames.length + 25;
     setTimeout(() => {
       (event as InfiniteScrollCustomEvent).target.complete();
       this.showingGames = this.games.slice(0, nextPage);
@@ -159,11 +183,12 @@ export class GameComponent implements OnChanges {
     this.hapticService.vibrate(ImpactStyle.Light, 100);
 
     if (accordionId) {
-      this.openExpansionPanel(accordionId);
+      this.openExpansionPanel(accordionId);    
+      this.delayedCloseMap[game.gameId] = true;
     }
   }
 
-  resizeSwiper(event: any): void {
+  resizeSwiper(event: CustomEvent): void {
     const openIds = event.detail.value;
     const gameLength = this.showingGames.length;
     const openIndices = this.showingGames.map((game, index) => (openIds.includes(game.gameId) ? index : -1)).filter((index) => index !== -1);
@@ -173,6 +198,36 @@ export class GameComponent implements OnChanges {
     if (shouldEmit || event.detail.value.length === 0) {
       this.resizeSwiperEvent.emit();
     }
+  }
+
+  // Hides the accordion content so it renders faster
+  hideContent(event: CustomEvent) {
+    const openGameIds: string[] = event.detail.value || [];
+
+    openGameIds.forEach((gameId) => {
+      if (this.closeTimers[gameId]) {
+        clearTimeout(this.closeTimers[gameId]);
+        delete this.closeTimers[gameId];
+      }
+      this.delayedCloseMap[gameId] = true;
+    });
+
+    Object.keys(this.delayedCloseMap).forEach((gameId) => {
+      if (!openGameIds.includes(gameId)) {
+        if (!this.closeTimers[gameId]) {
+          this.closeTimers[gameId] = setTimeout(() => {
+            if (!(this.accordionGroup?.value || []).includes(gameId)) {
+              this.delayedCloseMap[gameId] = false;
+            }
+            delete this.closeTimers[gameId];
+          }, 500);
+        }
+      }
+    });
+  }
+
+  isDelayedOpen(gameId: string): boolean {
+    return this.delayedCloseMap[gameId];
   }
 
   openExpansionPanel(accordionId: string): void {
@@ -207,9 +262,8 @@ export class GameComponent implements OnChanges {
         if (game.league === undefined || game.league === '') {
           game.isPractice = true;
         } else game.isPractice = false;
-
-        await this.storageService.saveGameToLocalStorage(game, true);
-        this.isLeaguePage ? this.storageService.gameEditLeague.emit() : this.storageService.gameEditHistory.emit();
+        game.totalScore = game.frameScores[9];
+        await this.storageService.saveGameToLocalStorage(game);
         this.toastService.showToast('Game edit saved sucessfully!', 'refresh-outline');
         this.enableEdit(game);
       }
@@ -217,6 +271,7 @@ export class GameComponent implements OnChanges {
       this.toastService.showToast(`Error saving game to localstorage: ${error}`, 'bug', true);
     }
   }
+
   isGameValid(game: Game): boolean {
     return this.gameUtilsService.isGameValid(undefined, game);
   }

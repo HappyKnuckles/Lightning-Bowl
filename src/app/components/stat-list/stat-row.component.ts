@@ -1,5 +1,5 @@
 import { NgIf } from '@angular/common';
-import { Component, CUSTOM_ELEMENTS_SCHEMA, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { IonText, IonIcon } from '@ionic/angular/standalone';
 import { ConditionalNumberPipe } from '../../pipes/number-pipe/conditional-number.pipe';
 import { addIcons } from 'ionicons';
@@ -13,6 +13,7 @@ import { UtilsService } from 'src/app/services/utils/utils.service';
   standalone: true,
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   imports: [NgIf, IonText, IonIcon, ConditionalNumberPipe],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StatRowComponent implements OnChanges {
   @Input({ required: true }) label!: string;

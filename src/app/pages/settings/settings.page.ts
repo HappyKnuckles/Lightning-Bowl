@@ -25,7 +25,7 @@ import { colorPaletteOutline, logoGithub, personCircleOutline, sendOutline, addO
 import { NgClass, NgFor } from '@angular/common';
 import { ToastService } from 'src/app/services/toast/toast.service';
 import { UserService } from 'src/app/services/user/user.service';
-import { ThemeChangerService } from 'src/app/services/theme/theme-changer.service';
+import { ThemeChangerService } from 'src/app/services/theme-changer/theme-changer.service';
 import { environment } from 'src/environments/environment';
 import emailjs from '@emailjs/browser';
 import { LoadingService } from 'src/app/services/loader/loading.service';

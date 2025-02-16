@@ -11,7 +11,7 @@ export interface GameFilter {
   endDate?: string;
 }
 
-export interface BallFilter{
+export interface BallFilter {
   brand: string[];
   coverStock: string[];
   market: string;

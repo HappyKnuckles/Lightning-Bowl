@@ -1,8 +1,10 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-button type="button" class="action-sheet" slot="start" fill="clear" (click)="handleImageUpload()">
-      <ion-icon slot="icon-only" name="camera-outline"></ion-icon>
-    </ion-button>
+    <ion-buttons slot="start">
+      <ion-button type="button" class="action-sheet" slot="start" fill="clear" (click)="handleImageUpload()">
+        <ion-icon slot="icon-only" name="camera-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
     <input type="file" id="upload" class="ion-hide" accept="image/*" />
     <ion-title> Add Game </ion-title>
     <ion-buttons slot="end">
@@ -25,11 +27,12 @@
   }
 </ion-header>
 
-<ion-alert [isOpen]="isAlertOpen" header="Error" message="You didn't fill all inputs" [buttons]="alertButton"
-  (didDismiss)="setAlertOpen()">
+<ion-alert [isOpen]="isAlertOpen" header="Error" message="You didn't fill all inputs" [buttons]="alertButton" (didDismiss)="setAlertOpen()">
 </ion-alert>
 
-<div *ngIf="is300" style="
+<div
+  *ngIf="is300"
+  style="
     position: absolute;
     background-color: rgba(0, 0, 0, 0.5);
     width: 100%;
@@ -41,18 +44,18 @@
     align-items: center;
     z-index: 500;
   ">
-  <lottie-player slot="end" autoplay loop
-    src="https://lottie.host/7b3bdd2a-221b-463e-9f59-d95964639389/duMcnXopMJ.json"></lottie-player>
+  <lottie-player slot="end" autoplay loop src="https://lottie.host/7b3bdd2a-221b-463e-9f59-d95964639389/duMcnXopMJ.json"></lottie-player>
 </div>
 
 <ng-container *ngFor="let mode of seriesMode; let i = index;">
   <ion-content [fullscreen]="true" *ngIf="mode">
-    <swiper-container [modules]="swiperModules" #swiper [slidesPerView]="1" (swiperslidechange)="onSlideChanged()"
-      [autoheight]="true">
+    <swiper-container [modules]="swiperModules" #swiper [slidesPerView]="1" (swiperslidechange)="onSlideChanged()" [autoheight]="true">
       <swiper-slide *ngFor="let trackIndex of trackIndexes[i]; let j = index">
-        <app-track-grid (maxScoreChanged)="onMaxScoreChanged($event, trackIndex)"
-          (totalScoreChanged)="onTotalScoreChange($event, trackIndex)" (leagueChanged)="onLeagueChange($event)"
-          (isPracticeChanged)="onIsPracticeChange($event)"></app-track-grid>
+        <app-game-grid
+          (maxScoreChanged)="onMaxScoreChanged($event, trackIndex)"
+          (totalScoreChanged)="onTotalScoreChange($event, trackIndex)"
+          (leagueChanged)="onLeagueChange($event)"
+          (isPracticeChanged)="onIsPracticeChange($event)"></app-game-grid>
         <ion-grid *ngIf="i !== 0">
           <ion-row>
             <ion-col class="middle count">Total: {{ totalScores[trackIndex] }}</ion-col>
@@ -98,7 +101,6 @@
   </ion-content>
 </ng-container>
 
-
 <ion-modal [isOpen]="isModalOpen" (didDismiss)="isModalOpen = false">
   <ng-template>
     <ion-header>
@@ -122,30 +124,55 @@
           <ion-row>
             <ion-col class="input-col" *ngIf="frameIndex !== 9"></ion-col>
             <ion-col class="input-col">
-              <ion-input type="text" clearOnEdit="true" [value]="frame.throws[0]?.value" inputmode="numeric"
-                debounce="300" [ngClass]="{'invalid-input': frame.isInvalid}"
+              <ion-input
+                type="text"
+                clearOnEdit="true"
+                [value]="frame.throws[0]?.value"
+                inputmode="numeric"
+                debounce="300"
+                [ngClass]="{'invalid-input': frame.isInvalid}"
                 (ionChange)="frame.throws[0] = frame.throws[0] || {}; frame.throws[0].value = $event.target.value; isGameValid(gameData)"></ion-input>
             </ion-col>
             <ion-col class="input-col" *ngIf="frameIndex !== 9">
-              <ion-input type="text" clearOnEdit="true" [value]="frame.throws[1]?.value" inputmode="numeric"
-                debounce="300" [ngClass]="{'invalid-input': frame.isInvalid}"
+              <ion-input
+                type="text"
+                clearOnEdit="true"
+                [value]="frame.throws[1]?.value"
+                inputmode="numeric"
+                debounce="300"
+                [ngClass]="{'invalid-input': frame.isInvalid}"
                 (ionChange)="frame.throws[1] = frame.throws[1] || {}; frame.throws[1].value = $event.target.value; isGameValid(gameData)"></ion-input>
             </ion-col>
             <ion-col class="input-col" *ngIf="frameIndex === 9">
-              <ion-input type="text" clearOnEdit="true" [value]="frame.throws[1]?.value" inputmode="numeric"
-                debounce="300" [ngClass]="{'invalid-input': frame.isInvalid}"
+              <ion-input
+                type="text"
+                clearOnEdit="true"
+                [value]="frame.throws[1]?.value"
+                inputmode="numeric"
+                debounce="300"
+                [ngClass]="{'invalid-input': frame.isInvalid}"
                 (ionChange)="frame.throws[1] = frame.throws[1] || {}; frame.throws[1].value = $event.target.value; isGameValid(gameData)"></ion-input>
             </ion-col>
             <ion-col class="input-col" *ngIf="frameIndex === 9">
-              <ion-input type="text" clearOnEdit="true" [value]="frame.throws[2]?.value" inputmode="numeric"
-                debounce="300" [ngClass]="{'invalid-input': frame.isInvalid}"
+              <ion-input
+                type="text"
+                clearOnEdit="true"
+                [value]="frame.throws[2]?.value"
+                inputmode="numeric"
+                debounce="300"
+                [ngClass]="{'invalid-input': frame.isInvalid}"
                 (ionChange)="frame.throws[2] = frame.throws[2] || {}; frame.throws[2].value = $event.target.value; isGameValid(gameData)"></ion-input>
             </ion-col>
           </ion-row>
           <ion-row>
             <ion-col class="middle count">
-              <ion-input type="text" class="frame-scores" [value]="gameData.frameScores[frameIndex]" inputmode="numeric"
-                clearOnEdit="true" (ionChange)="updateFrameScore($event.target.value, frameIndex)">
+              <ion-input
+                type="text"
+                class="frame-scores"
+                [value]="gameData.frameScores[frameIndex]"
+                inputmode="numeric"
+                clearOnEdit="true"
+                (ionChange)="updateFrameScore($event.target.value, frameIndex)">
               </ion-input>
             </ion-col>
           </ion-row>
@@ -153,8 +180,7 @@
       </div>
       <ion-list lines="full" style="border-radius: 7px">
         <ion-item>
-          <ion-checkbox (ionChange)="gameData.isPractice = $event.target.checked"
-            name="isPractice">Practice</ion-checkbox>
+          <ion-checkbox (ionChange)="gameData.isPractice = $event.target.checked" name="isPractice">Practice</ion-checkbox>
         </ion-item>
         <!-- <ion-item class="league">
           <ion-select name="league" (ionChange)="gameData.league = $event.target.value" label="League/Tournament"
@@ -166,14 +192,17 @@
         <app-league-selector [isAddPage]="true" #leagueSelector></app-league-selector>
         <ion-item>
           <ion-select [(ngModel)]="gameData.balls" multiple="true" name="balls" placeholder="None" label="Balls">
-            <ion-select-option *ngFor="let ball of storageService.arsenal()" [value]="ball.ball_name">
-              {{ball.ball_name}}
-            </ion-select-option>
+            <ion-select-option *ngFor="let ball of storageService.arsenal()" [value]="ball.ball_name"> {{ball.ball_name}} </ion-select-option>
           </ion-select>
         </ion-item>
         <ion-item>
-          <ion-textarea type="text" label="Note" (ionChange)="gameData.note = $event.target.value || ''" name="note"
-            [autoGrow]="true" placeholder="today knee pain, lanes dry af"></ion-textarea>
+          <ion-textarea
+            type="text"
+            label="Note"
+            (ionChange)="gameData.note = $event.target.value || ''"
+            name="note"
+            [autoGrow]="true"
+            placeholder="today knee pain, lanes dry af"></ion-textarea>
         </ion-item>
       </ion-list>
     </ion-content>

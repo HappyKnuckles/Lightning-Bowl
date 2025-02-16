@@ -31,7 +31,7 @@ swiper-container {
   --swiper-pagination-progressbar-bg-color: rgba(var(--ion-text-color-rgb, 0, 0, 0), 0.25);
   --swiper-scrollbar-bg-color: rgba(var(--ion-text-color-rgb, 0, 0, 0), 0.1);
   --swiper-scrollbar-drag-bg-color: rgba(var(--ion-text-color-rgb, 0, 0, 0), 0.5);
-  height: auto;
+  // height: auto;
 }
 
 .stat-container {
@@ -66,6 +66,7 @@ ion-input {
   height: 100%;
   align-items: center;
   margin: 0 auto;
+  text-align: center;
 }
 
 .alert-input {
@@ -74,7 +75,6 @@ ion-input {
 }
 
 ion-header {
-
   // background-color: #080f08;
   ion-toolbar {
     height: 50px !important;

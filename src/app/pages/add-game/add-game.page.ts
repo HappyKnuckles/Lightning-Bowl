@@ -25,14 +25,11 @@ import { addIcons } from 'ionicons';
 import { add, chevronDown, chevronUp, cameraOutline, documentTextOutline, medalOutline } from 'ionicons/icons';
 import { NgIf, NgFor } from '@angular/common';
 import { ImpactStyle } from '@capacitor/haptics';
-import { TrackGridComponent } from 'src/app/components/track-grid/track-grid.component';
 import { AdService } from 'src/app/services/ad/ad.service';
-import { BowlingCalculatorService } from 'src/app/services/bowling-calculator/bowling-calculator.service';
 import { HapticService } from 'src/app/services/haptic/haptic.service';
 import { ImageProcesserService } from 'src/app/services/image-processer/image-processer.service';
 import { LoadingService } from 'src/app/services/loader/loading.service';
 import { ToastService } from 'src/app/services/toast/toast.service';
-import { GameDataTransformerService } from 'src/app/services/transform-game/transform-game-data.service';
 import { UserService } from 'src/app/services/user/user.service';
 import { defineCustomElements } from '@teamhive/lottie-player/loader';
 import { Device } from '@capacitor/device';
@@ -41,6 +38,9 @@ import { IonicSlides } from '@ionic/angular';
 import { StorageService } from 'src/app/services/storage/storage.service';
 import { GameUtilsService } from 'src/app/services/game-utils/game-utils.service';
 import { LeagueSelectorComponent } from 'src/app/components/league-selector/league-selector.component';
+import { GameGridComponent } from 'src/app/components/game-grid/game-grid.component';
+import { GameScoreCalculatorService } from 'src/app/services/game-score-calculator/game-score-calculator.service';
+import { GameDataTransformerService } from 'src/app/services/game-transform/game-data-transform.service';
 
 const enum SeriesMode {
   Single = 'Single',
@@ -74,7 +74,7 @@ defineCustomElements(window);
     IonSegment,
     NgIf,
     NgFor,
-    TrackGridComponent,
+    GameGridComponent,
     LeagueSelectorComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
@@ -96,7 +96,7 @@ export class AddGamePage implements OnInit {
   gameData!: Game;
   deviceId: string = '';
   leagues: string[] = [];
-  @ViewChildren(TrackGridComponent) trackGrids!: QueryList<TrackGridComponent>;
+  @ViewChildren(GameGridComponent) gameGrids!: QueryList<GameGridComponent>;
   @ViewChild(IonModal) modal!: IonModal;
   @ViewChild('swiper')
   set swiper(swiperRef: ElementRef) {
@@ -124,7 +124,7 @@ export class AddGamePage implements OnInit {
     private imageProcessingService: ImageProcesserService,
     private alertController: AlertController,
     private toastService: ToastService,
-    private bowlingService: BowlingCalculatorService,
+    private gameScoreCalculatorService: GameScoreCalculatorService,
     public storageService: StorageService,
     private transformGameService: GameDataTransformerService,
     private loadingService: LoadingService,
@@ -200,7 +200,7 @@ export class AddGamePage implements OnInit {
   }
 
   onLeagueChange(league: string): void {
-    this.trackGrids.forEach((trackGrid: TrackGridComponent) => {
+    this.gameGrids.forEach((trackGrid: GameGridComponent) => {
       trackGrid.leagueSelector.selectedLeague = league;
       trackGrid.selectedLeague = league;
       if (league === '' || league === 'New') {
@@ -216,7 +216,7 @@ export class AddGamePage implements OnInit {
   }
 
   onIsPracticeChange(isPractice: boolean): void {
-    this.trackGrids.forEach((trackGrid: TrackGridComponent) => {
+    this.gameGrids.forEach((trackGrid: GameGridComponent) => {
       trackGrid.isPractice = isPractice;
     });
   }
@@ -246,12 +246,12 @@ export class AddGamePage implements OnInit {
   }
 
   clearFrames(index?: number): void {
-    if (index !== undefined && index >= 0 && index < this.trackGrids.length) {
+    if (index !== undefined && index >= 0 && index < this.gameGrids.length) {
       // Clear frames for the specified index
-      this.trackGrids.toArray()[index].clearFrames(false);
+      this.gameGrids.toArray()[index].clearFrames(false);
     } else {
       // Clear frames for all components
-      this.trackGrids.forEach((trackGrid: TrackGridComponent) => {
+      this.gameGrids.forEach((trackGrid: GameGridComponent) => {
         trackGrid.clearFrames(false);
       });
     }
@@ -266,7 +266,7 @@ export class AddGamePage implements OnInit {
       this.seriesId = this.generateUniqueSeriesId();
     }
 
-    this.trackGrids.forEach((trackGrid: TrackGridComponent) => {
+    this.gameGrids.forEach((trackGrid: GameGridComponent) => {
       if (!trackGrid.isGameValid()) {
         allGamesValid = false;
         this.hapticService.vibrate(ImpactStyle.Heavy, 300);
@@ -277,7 +277,7 @@ export class AddGamePage implements OnInit {
     if (allGamesValid) {
       try {
         let perfectGame = false;
-        this.trackGrids.forEach((trackGrid: TrackGridComponent) => {
+        this.gameGrids.forEach((trackGrid: GameGridComponent) => {
           if (trackGrid.totalScore === 300) {
             perfectGame = true;
           }
@@ -316,11 +316,11 @@ export class AddGamePage implements OnInit {
   }
 
   getSeriesMaxScore(index: number): number {
-    return this.bowlingService.getSeriesMaxScore(index, this.maxScores);
+    return this.gameScoreCalculatorService.getSeriesMaxScore(index, this.maxScores);
   }
 
   getSeriesCurrentScore(index: number): number {
-    return this.bowlingService.getSeriesCurrentScore(index, this.totalScores);
+    return this.gameScoreCalculatorService.getSeriesCurrentScore(index, this.totalScores);
   }
 
   onSegmentChanged(event: any) {
@@ -412,7 +412,6 @@ export class AddGamePage implements OnInit {
     await actionSheet.present();
   }
 
-  // TODO make this work on mobile, currently just works with web, file input not working after alert
   async presentWarningAlert() {
     localStorage.removeItem('alert');
     const alert = await this.alertController.create({
@@ -432,11 +431,11 @@ export class AddGamePage implements OnInit {
     });
     await alert.present();
     alert.onDidDismiss().then((data) => {
-      data.role === 'confirm' ? this.handleImageUpload() : null;
       const expirationDate = new Date();
       expirationDate.setDate(expirationDate.getDate() + 7);
       const alertData = { value: 'true', expiration: expirationDate.getTime() };
       localStorage.setItem('alert', JSON.stringify(alertData));
+      data.role === 'confirm' ? this.handleImageUpload() : null;
     });
   }
 
@@ -483,16 +482,7 @@ export class AddGamePage implements OnInit {
   private parseBowlingScores(input: string): void {
     try {
       const { frames, frameScores, totalScore } = this.gameUtilsService.parseBowlingScores(input, this.username!);
-      this.gameData = this.transformGameService.transformGameData(frames,
-        frameScores,
-        totalScore,
-        false,
-        '',
-        false,
-        '',
-        '',
-        [],
-      );
+      this.gameData = this.transformGameService.transformGameData(frames, frameScores, totalScore, false, '', false, '', '', []);
 
       if (this.gameData.frames.length === 10 && this.gameData.frameScores.length === 10 && this.gameData.totalScore <= 300) {
         this.isModalOpen = true;

@@ -1,0 +1,49 @@
+.action-sheet {
+  margin-right: 8px;
+
+  ion-button {
+    background: none;
+    --background-activated: none;
+    position: relative;
+  }
+}
+
+.card-content {
+  color: white;
+
+  .header {
+    font-size: 1.125rem;
+    font-weight: 600;
+  }
+}
+
+ion-thumbnail {
+  --size: 80px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+ion-header {
+  ion-button {
+    position: relative;
+
+    .powered-by {
+      font-size: 0.75rem;
+      color: gray;
+      position: absolute;
+      top: -5px;
+      text-align: center;
+    }
+  }
+}
+
+.sliding {
+  .title {
+    font-weight: 600;
+    font-size: 1.1rem;
+  }
+}
+
+ion-img::part(image) {
+  border-radius: 50%;
+}

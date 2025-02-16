@@ -1,29 +1,54 @@
 import { Component, OnInit, EventEmitter, Output, QueryList, ViewChildren, ViewChild, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
-import { BowlingCalculatorService } from 'src/app/services/bowling-calculator/bowling-calculator.service';
 import { ToastService } from 'src/app/services/toast/toast.service';
-import { GameDataTransformerService } from 'src/app/services/transform-game/transform-game-data.service';
 import { NgFor, NgIf } from '@angular/common';
-import { IonIcon, IonGrid, IonSelect, IonSelectOption, IonRow, IonCol, IonInput, IonItem, IonTextarea, IonCheckbox, IonList } from '@ionic/angular/standalone';
+import {
+  IonGrid,
+  IonSelect,
+  IonSelectOption,
+  IonRow,
+  IonCol,
+  IonInput,
+  IonItem,
+  IonTextarea,
+  IonCheckbox,
+  IonList,
+} from '@ionic/angular/standalone';
 import { FormsModule } from '@angular/forms';
 import { HapticService } from 'src/app/services/haptic/haptic.service';
 import { ImpactStyle } from '@capacitor/haptics';
-import { addIcons } from 'ionicons';
-import { documentTextOutline } from 'ionicons/icons';
 import { StorageService } from 'src/app/services/storage/storage.service';
 import { LeagueSelectorComponent } from '../league-selector/league-selector.component';
 import { UtilsService } from 'src/app/services/utils/utils.service';
 import { GameUtilsService } from 'src/app/services/game-utils/game-utils.service';
+import { GameScoreCalculatorService } from 'src/app/services/game-score-calculator/game-score-calculator.service';
+import { GameDataTransformerService } from 'src/app/services/game-transform/game-data-transform.service';
 
 @Component({
-  selector: 'app-track-grid',
-  templateUrl: './track-grid.component.html',
-  styleUrls: ['./track-grid.component.scss'],
-  providers: [BowlingCalculatorService],
+  selector: 'app-game-grid',
+  templateUrl: './game-grid.component.html',
+  styleUrls: ['./game-grid.component.scss'],
+  providers: [GameScoreCalculatorService],
   standalone: true,
-  imports: [ IonIcon ,IonSelect, NgFor, IonSelectOption, IonList, IonCheckbox, IonItem, IonTextarea, IonGrid, IonRow, IonCol, IonInput, FormsModule, NgIf, NgFor, LeagueSelectorComponent],
+  imports: [
+    IonSelect,
+    NgFor,
+    IonSelectOption,
+    IonList,
+    IonCheckbox,
+    IonItem,
+    IonTextarea,
+    IonGrid,
+    IonRow,
+    IonCol,
+    IonInput,
+    FormsModule,
+    NgIf,
+    NgFor,
+    LeagueSelectorComponent
+  ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
-export class TrackGridComponent implements OnInit {
+export class GameGridComponent implements OnInit {
   @Output() maxScoreChanged = new EventEmitter<number>();
   @Output() totalScoreChanged = new EventEmitter<number>();
   @Output() leagueChanged = new EventEmitter<string>();
@@ -37,10 +62,10 @@ export class TrackGridComponent implements OnInit {
   balls: string[] = [];
   selectedLeague = '';
   isPractice: boolean = true;
-  frames = this.bowlingService.frames;
-  frameScores = this.bowlingService.frameScores;
+  frames = this.gameScoreCalculatorService.frames;
+  frameScores = this.gameScoreCalculatorService.frameScores;
   constructor(
-    private bowlingService: BowlingCalculatorService,
+    private gameScoreCalculatorService: GameScoreCalculatorService,
     public storageService: StorageService,
     private transformGameService: GameDataTransformerService,
     private toastService: ToastService,
@@ -48,12 +73,11 @@ export class TrackGridComponent implements OnInit {
     private gameUtilsService: GameUtilsService,
     private utilsService: UtilsService
   ) {
-    addIcons({ documentTextOutline });
   }
 
   ngOnInit(): void {
-    this.maxScore = this.bowlingService.maxScore;
-    this.totalScore = this.bowlingService.totalScore;
+    this.maxScore = this.gameScoreCalculatorService.maxScore;
+    this.totalScore = this.gameScoreCalculatorService.totalScore;
     this.maxScoreChanged.emit(this.maxScore);
     this.totalScoreChanged.emit(this.totalScore);
   }
@@ -85,7 +109,7 @@ export class TrackGridComponent implements OnInit {
       return;
     }
 
-    this.bowlingService.frames[frameIndex][inputIndex] = parsedValue;
+    this.gameScoreCalculatorService.frames[frameIndex][inputIndex] = parsedValue;
     this.updateScores();
     this.focusNextInput(frameIndex, inputIndex);
   }
@@ -97,9 +121,9 @@ export class TrackGridComponent implements OnInit {
         return;
       }
       const gameData = this.transformGameService.transformGameData(
-        this.bowlingService.frames,
-        this.bowlingService.frameScores,
-        this.bowlingService.totalScore,
+        this.gameScoreCalculatorService.frames,
+        this.gameScoreCalculatorService.frameScores,
+        this.gameScoreCalculatorService.totalScore,
         this.isPractice,
         this.selectedLeague,
         isSeries,
@@ -117,7 +141,7 @@ export class TrackGridComponent implements OnInit {
   }
 
   isGameValid(): boolean {
-    return this.gameUtilsService.isGameValid(this.bowlingService);
+    return this.gameUtilsService.isGameValid(this.gameScoreCalculatorService);
   }
 
   isNumber(value: any): boolean {
@@ -125,7 +149,7 @@ export class TrackGridComponent implements OnInit {
   }
 
   clearFrames(isSave: boolean): void {
-    this.bowlingService.clearRolls();
+    this.gameScoreCalculatorService.clearRolls();
     this.inputs.forEach((input) => {
       input.value = '';
     });
@@ -133,17 +157,18 @@ export class TrackGridComponent implements OnInit {
       this.note = '';
       this.selectedLeague = '';
       this.leagueSelector.selectedLeague = '';
+      this.balls = [];
     }
-    this.frames = this.bowlingService.frames;
-    this.frameScores = this.bowlingService.frameScores;
-    this.maxScore = this.bowlingService.maxScore;
-    this.totalScore = this.bowlingService.totalScore;
+    this.frames = this.gameScoreCalculatorService.frames;
+    this.frameScores = this.gameScoreCalculatorService.frameScores;
+    this.maxScore = this.gameScoreCalculatorService.maxScore;
+    this.totalScore = this.gameScoreCalculatorService.totalScore;
     this.maxScoreChanged.emit(this.maxScore);
     this.totalScoreChanged.emit(this.totalScore);
   }
 
   private parseInputValue(inputValue: string, frameIndex: number, inputIndex: number): number {
-    return this.gameUtilsService.parseInputValue(inputValue, frameIndex, inputIndex, this.bowlingService);
+    return this.gameUtilsService.parseInputValue(inputValue, frameIndex, inputIndex, this.gameScoreCalculatorService);
   }
 
   private isValidNumber0to10(value: number): boolean {
@@ -151,7 +176,7 @@ export class TrackGridComponent implements OnInit {
   }
 
   private isValidFrameScore(inputValue: number, frameIndex: number, inputIndex: number): boolean {
-    return this.gameUtilsService.isValidFrameScore(inputValue, frameIndex, inputIndex, this.bowlingService);
+    return this.gameUtilsService.isValidFrameScore(inputValue, frameIndex, inputIndex, this.gameScoreCalculatorService);
   }
 
   private handleInvalidInput(event: any): void {
@@ -160,8 +185,8 @@ export class TrackGridComponent implements OnInit {
   }
 
   private updateScores(): void {
-    this.totalScore = this.bowlingService.calculateScore();
-    this.maxScore = this.bowlingService.calculateMaxScore();
+    this.totalScore = this.gameScoreCalculatorService.calculateScore();
+    this.maxScore = this.gameScoreCalculatorService.calculateMaxScore();
     this.maxScoreChanged.emit(this.maxScore);
     this.totalScoreChanged.emit(this.totalScore);
   }

@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import {
   AlertController,
   IonHeader,
@@ -15,7 +15,6 @@ import {
   IonRefresherContent,
 } from '@ionic/angular/standalone';
 import { Filesystem } from '@capacitor/filesystem';
-import { merge, Subscription } from 'rxjs';
 import { addIcons } from 'ionicons';
 import {
   cloudUploadOutline,
@@ -32,13 +31,11 @@ import { ImpactStyle } from '@capacitor/haptics';
 import { HapticService } from 'src/app/services/haptic/haptic.service';
 import { LoadingService } from 'src/app/services/loader/loading.service';
 import { ToastService } from 'src/app/services/toast/toast.service';
-import { Game } from 'src/app/models/game.model';
 import { ModalController } from '@ionic/angular';
 import { StorageService } from 'src/app/services/storage/storage.service';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { GameComponent } from 'src/app/components/game/game.component';
 import { ExcelService } from 'src/app/services/excel/excel.service';
-import { SortUtilsService } from 'src/app/services/sort-utils/sort-utils.service';
 import { GameFilterService } from 'src/app/services/game-filter/game-filter.service';
 import { GameFilterComponent } from 'src/app/components/game-filter/game-filter.component';
 
@@ -66,32 +63,19 @@ import { GameFilterComponent } from 'src/app/components/game-filter/game-filter.
     GameComponent,
   ],
 })
-export class HistoryPage implements OnInit, OnDestroy {
+export class HistoryPage {
   @ViewChild('accordionGroup') accordionGroup!: IonAccordionGroup;
-  gameHistory: Game[] = [];
-  filteredGameHistory: Game[] = [];
-  leagues: string[] = [];
   file!: File;
-  activeFilterCount = this.gameFilterService.activeFilterCount;
-  private gameSubscriptions: Subscription = new Subscription();
-  private filteredGamesSubscription!: Subscription;
-  private leagueSubscriptions: Subscription = new Subscription();
-
   constructor(
     private alertController: AlertController,
     private toastService: ToastService,
-    private storageService: StorageService,
+    public storageService: StorageService,
     public loadingService: LoadingService,
     private hapticService: HapticService,
     private modalCtrl: ModalController,
-    private gameFilterService: GameFilterService,
-    private sortUtilsService: SortUtilsService,
+    public gameFilterService: GameFilterService,
     private excelService: ExcelService
   ) {
-    // this.loadingSubscription = this.loadingService.isLoading$.subscribe((isLoading) => {
-    //   this.isLoading = isLoading;
-    // });
-
     addIcons({
       cloudUploadOutline,
       cloudDownloadOutline,
@@ -104,58 +88,22 @@ export class HistoryPage implements OnInit, OnDestroy {
     });
   }
 
-  async ngOnInit(): Promise<void> {
-    try {
-      this.loadingService.setLoading(true);
-      await this.loadGameHistory();
-      await this.getLeagues();
-      this.subscribeToDataEvents();
-    } catch (error) {
-      console.error(error);
-    } finally {
-      this.loadingService.setLoading(false);
-    }
-  }
-
-  async getLeagues(): Promise<void> {
-    const savedLeagues = await this.storageService.loadLeagues();
-    const leagueKeys = this.gameHistory.reduce((acc: string[], game: Game) => {
-      if (game.league && !acc.includes(game.league)) {
-        acc.push(game.league);
-      }
-      return acc;
-    }, []);
-    this.leagues = [...new Set([...leagueKeys, ...savedLeagues])];
-  }
-
   async openFilterModal() {
     const modal = await this.modalCtrl.create({
       component: GameFilterComponent,
-      componentProps: {
-        games: this.gameHistory,
-        filteredGames: this.filteredGameHistory,
-      },
     });
 
     return await modal.present();
   }
 
-  ngOnDestroy(): void {
-    this.gameSubscriptions.unsubscribe();
-    this.leagueSubscriptions.unsubscribe();
-    this.filteredGamesSubscription.unsubscribe();
-  }
-
   async handleRefresh(event: any): Promise<void> {
     try {
       this.hapticService.vibrate(ImpactStyle.Medium, 200);
-      this.loadingService.setLoading(true);
-      await this.loadGameHistory();
+      await this.storageService.loadGameHistory();
     } catch (error) {
       console.error(error);
     } finally {
       event.target.complete();
-      this.loadingService.setLoading(false);
     }
   }
 
@@ -182,45 +130,10 @@ export class HistoryPage implements OnInit, OnDestroy {
   }
 
   async exportToExcel(): Promise<void> {
-    const gotPermission = await this.excelService.exportToExcel(this.gameHistory);
+    const gotPermission = await this.excelService.exportToExcel(this.storageService.games());
     if (!gotPermission) {
       this.showPermissionDeniedAlert();
     }
-  }
-
-  async loadGameHistory(): Promise<void> {
-    try {
-      this.gameHistory = await this.storageService.loadGameHistory();
-      this.gameFilterService.filterGames(this.gameHistory);
-    } catch (error) {
-      this.toastService.showToast(`Error loading history! ${error}`, 'bug', true);
-    }
-  }
-
-  private subscribeToDataEvents(): void {
-    this.gameSubscriptions.add(
-      merge(this.storageService.newGameAdded, this.storageService.gameDeleted, this.storageService.gameEditLeague).subscribe(() => {
-        this.loadGameHistory()
-          .then(() => {
-            this.sortUtilsService.sortGameHistoryByDate(this.gameHistory);
-          })
-          .catch((error) => {
-            console.error('Error loading game history:', error);
-          });
-      })
-    );
-
-    this.filteredGamesSubscription = this.gameFilterService.filteredGames$.subscribe((games) => {
-      this.filteredGameHistory = games;
-      this.sortUtilsService.sortGameHistoryByDate(this.filteredGameHistory);
-      this.activeFilterCount = this.gameFilterService.activeFilterCount;
-    });
-
-    // this.leagueSubscriptions.add(
-    //   merge(this.storageService.newLeagueAdded, this.storageService.leagueDeleted, this.storageService.leagueChanged).subscribe(() => {
-    //     this.getLeagues();
-    //   })
-    // );
   }
 
   private async showPermissionDeniedAlert(): Promise<void> {

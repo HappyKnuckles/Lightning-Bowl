@@ -1,5 +1,5 @@
 import { NgFor, NgIf } from '@angular/common';
-import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { AlertController, SelectChangeEventDetail } from '@ionic/angular';
 import {
@@ -19,7 +19,6 @@ import {
 import { IonSelectCustomEvent } from '@ionic/core';
 import { addIcons } from 'ionicons';
 import { addOutline, medalOutline, createOutline } from 'ionicons/icons';
-import { merge, Subscription } from 'rxjs';
 import { StorageService } from 'src/app/services/storage/storage.service';
 import { ToastService } from 'src/app/services/toast/toast.service';
 
@@ -47,32 +46,22 @@ import { ToastService } from 'src/app/services/toast/toast.service';
   ],
   standalone: true,
 })
-export class LeagueSelectorComponent implements OnInit, OnDestroy {
+export class LeagueSelectorComponent {
   @Input() isAddPage: boolean = false;
   @Output() leagueChanged = new EventEmitter<string>();
-  leagues: string[] = [];
   selectedLeague: string = '';
   newLeague: string = '';
   leaguesToDelete: string[] = [];
   leagueToChange: string = '';
-  private leagueSubscriptions: Subscription = new Subscription();
   isModalOpen: boolean = false;
 
-  constructor(private storageService: StorageService, private toastService: ToastService, private alertController: AlertController) {
-    this.leagueSubscriptions.add(
-      merge(this.storageService.newLeagueAdded, this.storageService.leagueDeleted, this.storageService.leagueChanged).subscribe(() => {
-        this.getLeagues();
-      })
-    );
+  constructor(public storageService: StorageService, private toastService: ToastService, private alertController: AlertController) {
+    // this.leagueSubscriptions.add(
+    //   merge(this.storageService.newLeagueAdded, this.storageService.leagueDeleted, this.storageService.leagueChanged).subscribe(() => {
+    //     this.getLeagues();
+    //   })
+    // );
     addIcons({ medalOutline, addOutline, createOutline });
-  }
-
-  ngOnDestroy(): void {
-    this.leagueSubscriptions.unsubscribe();
-  }
-
-  async ngOnInit(): Promise<void> {
-    await this.getLeagues();
   }
 
   async onLeagueChange(event: IonSelectCustomEvent<SelectChangeEventDetail>): Promise<void> {
@@ -107,10 +96,6 @@ export class LeagueSelectorComponent implements OnInit, OnDestroy {
     this.isModalOpen = false;
   }
 
-  private async getLeagues(): Promise<void> {
-    this.leagues = await this.storageService.loadLeagues();
-  }
-
   private async deleteLeague(): Promise<void> {
     for (const league of this.leaguesToDelete) {
       await this.storageService.deleteLeague(league);
@@ -124,7 +109,7 @@ export class LeagueSelectorComponent implements OnInit, OnDestroy {
       .create({
         header: 'Delete League',
         message: 'Select the leagues to delete',
-        inputs: this.leagues.map((league) => {
+        inputs: this.storageService.leagues().map((league) => {
           return {
             name: league,
             type: 'checkbox',

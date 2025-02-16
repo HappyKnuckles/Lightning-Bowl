@@ -77,7 +77,7 @@
     <ion-item>
       <ion-select [(ngModel)]="balls" multiple="true" name="balls" placeholder="None" label="Balls">
         <ion-select-option *ngFor="let ball of storageService.arsenal()" [value]="ball.ball_name">
-          {{ball.ball_name}}
+          {{ ball.ball_name }}
         </ion-select-option>
       </ion-select>
     </ion-item>

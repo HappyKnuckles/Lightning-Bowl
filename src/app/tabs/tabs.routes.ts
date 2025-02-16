@@ -19,16 +19,20 @@ export const routes: Routes = [
         loadComponent: () => import('../pages/history/history.page').then((m) => m.HistoryPage),
       },
       {
-        path: 'settings',
-        loadComponent: () => import('../pages/settings/settings.page').then((m) => m.SettingsPage),
-      },
-      {
         path: 'league',
         loadComponent: () => import('../pages/league/league.page').then((m) => m.LeaguePage),
       },
       {
         path: 'balls',
         loadComponent: () => import('../pages/balls/balls.page').then((m) => m.BallsPage),
+      },
+      {
+        path: 'arsenal',
+        loadComponent: () => import('../pages/arsenal/arsenal.page').then((m) => m.ArsenalPage),
+      },
+      {
+        path: 'settings',
+        loadComponent: () => import('../pages/settings/settings.page').then((m) => m.SettingsPage),
       },
       {
         path: '',

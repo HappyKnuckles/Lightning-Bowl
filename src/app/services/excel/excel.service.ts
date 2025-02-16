@@ -12,7 +12,7 @@ import { StorageService } from 'src/app/services/storage/storage.service';
   providedIn: 'root',
 })
 export class ExcelService {
-  constructor(private toastService: ToastService, private hapticService: HapticService, private storageService: StorageService) {}
+  constructor(private toastService: ToastService, private hapticService: HapticService, private storageService: StorageService) { }
 
   async exportToExcel(gameHistory: Game[]): Promise<boolean> {
     const gameData = this.getGameDataForExport(gameHistory);
@@ -87,6 +87,8 @@ export class ExcelService {
 
   async transformData(data: any[]): Promise<void> {
     const gameData = [];
+    const leagueMap = new Set<string>();
+    const ballMap = new Set<string>();
 
     for (let i = 1; i < data.length; i++) {
       const frames = [];
@@ -123,12 +125,34 @@ export class ExcelService {
         isPerfect: data[i]['17']?.trim().toLowerCase() === 'true',
         isSeries: data[i]['18']?.trim().toLowerCase() === 'true',
         seriesId: data[i]['19'],
-        balls: data[i]['20']?.split(', '),
+        balls: data[i]['20']?.trim() ? data[i]['20'].split(', ') : [],
         note: data[i]['21'],
       };
 
+      if (game.league !== undefined) {
+        leagueMap.add(game.league);
+      }
+
+      if (game.balls) {
+        for (const ball of game.balls) {
+          ballMap.add(ball);
+        }
+      }
+
       gameData.push(game);
     }
+
+    for (const league of leagueMap.values()) {
+      await this.storageService.addLeague(league);
+    }
+
+    for (const ball of ballMap.values()) {
+      const ballToAdd = this.storageService.allBalls().find((b) => b.ball_name === ball);
+      if (ballToAdd !== undefined) {
+        await this.storageService.saveBallToArsenal(ballToAdd);
+      }
+    }
+
     await this.storageService.saveGamesToLocalStorage(gameData);
   }
 
@@ -227,7 +251,7 @@ export class ExcelService {
       rowData.push(game.isPerfect ? 'true' : 'false');
       rowData.push(game.isSeries ? 'true' : 'false');
       rowData.push(game.seriesId || '');
-      rowData.push(game.balls?.join(', ') || '');
+      rowData.push(game.balls?.join(', '));
       rowData.push(game.note || '');
       gameData.push(rowData);
     });

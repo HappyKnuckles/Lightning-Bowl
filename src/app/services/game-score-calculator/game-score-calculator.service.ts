@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 @Injectable({
   providedIn: 'root',
 })
-export class BowlingCalculatorService {
+export class GameScoreCalculatorService {
   frameScores: number[] = [];
   frames: number[][] = [[]];
   totalScore: number = 0;
