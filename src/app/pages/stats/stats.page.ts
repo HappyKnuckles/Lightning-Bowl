@@ -128,7 +128,11 @@ export class StatsPage implements OnInit, AfterViewInit {
     addIcons({ filterOutline, calendarNumberOutline, calendarNumber });
     effect(() => {
       this.gameFilterService.filteredGames();
-      this.generateCharts();
+      if(this.gameFilterService.filteredGames().length > 0) {
+      setTimeout(() => {
+        this.generateCharts();
+      }, 0);
+      }
     });
   }
 
@@ -161,7 +165,7 @@ export class StatsPage implements OnInit, AfterViewInit {
     try {
       this.hapticService.vibrate(ImpactStyle.Medium, 200);
       await this.storageService.loadGameHistory();
-      this.generateCharts(undefined, true);
+      this.generateCharts(true);
     } catch (error) {
       console.error(error);
     } finally {
@@ -174,7 +178,7 @@ export class StatsPage implements OnInit, AfterViewInit {
       this.selectedSegment = event.detail.value;
       const activeIndex = this.getSlideIndex(this.selectedSegment);
       this.swiperInstance.slideTo(activeIndex);
-      this.generateCharts(activeIndex);
+      this.generateCharts();
     }
     this.content.scrollToTop(300);
   }
@@ -183,7 +187,7 @@ export class StatsPage implements OnInit, AfterViewInit {
     if (this.swiperInstance) {
       const activeIndex = this.swiperInstance.realIndex;
       this.selectedSegment = this.getSegmentValue(activeIndex);
-      this.generateCharts(activeIndex);
+      this.generateCharts();
     }
     this.content.scrollToTop(300);
   }
@@ -198,8 +202,8 @@ export class StatsPage implements OnInit, AfterViewInit {
   }
 
   // TODO if filtergamedlength was 0, the charts dont load until restart
-  private generateCharts(index?: number, isReload?: boolean): void {
-    if (this.storageService.games().length > 0) {
+  private generateCharts(isReload?: boolean): void {
+    if (this.gameFilterService.filteredGames().length > 0) {
       if (this.selectedSegment === 'Overall') {
         this.generateScoreChart(isReload);
       } else if (this.selectedSegment === 'Spares') {
@@ -213,9 +217,12 @@ export class StatsPage implements OnInit, AfterViewInit {
   }
 
   private generateScoreChart(isReload?: boolean): void {
+    console.log("called")
     if (!this.scoreChart) {
+      console.log('No score chart');
       return;
     }
+    
     this.scoreChartInstance = this.chartService.generateScoreChart(
       this.scoreChart,
       this.sortUtilsService.sortGameHistoryByDate([...this.gameFilterService.filteredGames()], true),

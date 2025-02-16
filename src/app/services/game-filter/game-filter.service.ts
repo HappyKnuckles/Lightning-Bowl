@@ -1,7 +1,6 @@
 import { computed, Injectable, Signal, signal } from '@angular/core';
 import { GameFilter, TimeRange } from 'src/app/models/filter.model';
 import { Game } from 'src/app/models/game.model';
-import { BehaviorSubject } from 'rxjs';
 import { UtilsService } from '../utils/utils.service';
 import { StorageService } from '../storage/storage.service';
 
@@ -39,8 +38,6 @@ export class GameFilterService {
       return count;
     }, 0);
   });
-  private filteredGamesSubject = new BehaviorSubject<Game[]>([]);
-  filteredGames$ = this.filteredGamesSubject.asObservable();
   #filteredGames = computed(() => {
     const games = this.storageService.games();
     const filters = this.filters();
@@ -59,8 +56,6 @@ export class GameFilterService {
   }
 
   filterGames(games: Game[], filters: GameFilter): Game[] {
-    localStorage.setItem('game-filter', JSON.stringify(this.filters()));
-
     const filter = games.filter((game) => {
       const formatDate = (date: string) => date.split('T')[0];
       const gameDate = formatDate(new Date(game.date).toISOString());
@@ -79,9 +74,12 @@ export class GameFilterService {
         (filters.balls.includes('all') || filters.balls.includes(game.balls!.join(', ')))
       );
     });
-    this.filteredGamesSubject.next(filter);
     return filter;
     // this.filteredGames.update(() => [...filteredGames]);
+  }
+
+  saveFilters(): void {
+    localStorage.setItem('game-filter', JSON.stringify(this.filters()));
   }
 
   resetFilters(): void {

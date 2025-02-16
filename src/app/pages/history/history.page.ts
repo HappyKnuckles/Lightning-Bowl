@@ -69,7 +69,7 @@ export class HistoryPage {
   constructor(
     private alertController: AlertController,
     private toastService: ToastService,
-    private storageService: StorageService,
+    public storageService: StorageService,
     public loadingService: LoadingService,
     private hapticService: HapticService,
     private modalCtrl: ModalController,

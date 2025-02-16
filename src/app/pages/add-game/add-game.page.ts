@@ -412,7 +412,6 @@ export class AddGamePage implements OnInit {
     await actionSheet.present();
   }
 
-  // TODO make this work on mobile, currently just works with web, file input not working after alert
   async presentWarningAlert() {
     localStorage.removeItem('alert');
     const alert = await this.alertController.create({

@@ -21,7 +21,7 @@ import {
   IonSelect,
   IonList,
 } from '@ionic/angular/standalone';
-import { TimeRange } from 'src/app/models/filter.model';
+import { GameFilter, TimeRange } from 'src/app/models/filter.model';
 import { Game } from 'src/app/models/game.model';
 import { GameFilterService } from 'src/app/services/game-filter/game-filter.service';
 import { SortUtilsService } from 'src/app/services/sort-utils/sort-utils.service';
@@ -121,9 +121,13 @@ export class GameFilterComponent implements OnInit {
 
   cancel(): Promise<boolean> {
     this.filterService.filters.update(() =>
-      localStorage.getItem('filter') ? JSON.parse(localStorage.getItem('filter')!) : this.filterService.filters()
+      localStorage.getItem('game-filter') ? JSON.parse(localStorage.getItem('game-filter')!) : this.filterService.filters()
     );
     return this.modalCtrl.dismiss(null, 'cancel');
+  }
+
+  updateFilter<T extends keyof GameFilter>(key: T, value: any): void {
+    this.filterService.filters.update((filters) => ({ ...filters, [key]: value }));
   }
 
   reset(): void {
@@ -132,17 +136,10 @@ export class GameFilterComponent implements OnInit {
 
   confirm(): Promise<boolean> {
     this.filterService.filters.update((filters) => ({ ...filters }));
+    this.filterService.saveFilters();
     // this.filterService.filterGames(this.storageService.games());
     this.getHighlightedDates();
     return this.modalCtrl.dismiss('confirm');
-  }
-
-  updateStart(event: CustomEvent): void {
-    this.filterService.filters.update((filters) => ({ ...filters, startDate: event.detail.value! }));
-  }
-
-  updateEnd(event: CustomEvent): void {
-    this.filterService.filters.update((filters) => ({ ...filters, endDate: event.detail.value! }));
   }
 
   private getLeagues(): void {
