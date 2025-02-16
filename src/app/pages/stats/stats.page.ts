@@ -1,4 +1,4 @@
-import { Component, CUSTOM_ELEMENTS_SCHEMA, ElementRef, OnInit, ViewChild, AfterViewInit, effect, computed, Signal, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, CUSTOM_ELEMENTS_SCHEMA, ElementRef, OnInit, ViewChild, AfterViewInit, computed, Signal, signal, ChangeDetectionStrategy, effect } from '@angular/core';
 import Chart from 'chart.js/auto';
 import {
   IonHeader,
@@ -107,6 +107,7 @@ export class StatsPage implements OnInit, AfterViewInit {
      */
     setTimeout(() => {
       this.swiperInstance = swiperRef?.nativeElement.swiper;
+      this.swiperInstance!.allowTouchMove = this.gameFilterService.filteredGames().length > 0;
     }, 0);
   }
   private swiperInstance: Swiper | undefined;
@@ -127,12 +128,15 @@ export class StatsPage implements OnInit, AfterViewInit {
   ) {
     addIcons({ filterOutline, calendarNumberOutline, calendarNumber });
     effect(() => {
-      this.gameFilterService.filteredGames();
-      if(this.gameFilterService.filteredGames().length > 0) {
       setTimeout(() => {
-        this.generateCharts();
+        if (this.gameFilterService.filteredGames().length > 0) {
+          this.generateCharts(true);
+          this.swiperInstance!.allowTouchMove = true;
+        } else {
+          this.swiperInstance!.allowTouchMove = false;
+        }
+        this.swiperInstance!.updateAutoHeight();
       }, 0);
-      }
     });
   }
 
@@ -158,7 +162,16 @@ export class StatsPage implements OnInit, AfterViewInit {
       componentProps: {},
     });
 
-    return await modal.present();
+    await modal.present();
+    modal.onDidDismiss().then(() => {
+      if (this.gameFilterService.filteredGames().length > 0) {
+        this.generateCharts(true);
+        this.swiperInstance!.allowTouchMove = true;
+      } else {
+        this.swiperInstance!.allowTouchMove = false;
+      }
+      this.swiperInstance!.updateAutoHeight();
+    });
   }
 
   async handleRefresh(event: any): Promise<void> {
@@ -217,12 +230,10 @@ export class StatsPage implements OnInit, AfterViewInit {
   }
 
   private generateScoreChart(isReload?: boolean): void {
-    console.log("called")
     if (!this.scoreChart) {
-      console.log('No score chart');
       return;
     }
-    
+
     this.scoreChartInstance = this.chartService.generateScoreChart(
       this.scoreChart,
       this.sortUtilsService.sortGameHistoryByDate([...this.gameFilterService.filteredGames()], true),

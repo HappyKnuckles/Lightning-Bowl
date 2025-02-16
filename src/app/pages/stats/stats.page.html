@@ -10,10 +10,9 @@
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
-  <ion-toolbar>
-    <ion-segment
-      *ngIf="!((gameFilterService.filteredGames().length <= 0 && !loadingService.isLoading) || gameFilterService.filteredGames().length <= 0)"
-      [value]="selectedSegment" (ionChange)="onSegmentChanged($event)">
+  <ion-toolbar
+    *ngIf="!((gameFilterService.filteredGames().length <= 0 && !loadingService.isLoading()) || gameFilterService.filteredGames().length <= 0)">
+    <ion-segment [value]="selectedSegment" (ionChange)="onSegmentChanged($event)">
       <ion-segment-button *ngFor="let segment of segments" [value]="segment">
         <ion-label class="segment-label">{{segment}}</ion-label>
       </ion-segment-button>
@@ -25,28 +24,12 @@
   <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
-  <!-- Show this message if there are no game history items and it's not loading -->
-  <ng-container *ngIf="!loadingService.isLoading();">
-    <ng-container *ngIf="storageService.games().length <= 0; else checkFilteredGames">
-      <ion-text class="no-game-text">
-        Start playing a few games to see your stats here!
-      </ion-text>
-    </ng-container>
-    <ng-template #checkFilteredGames>
-      <ng-container *ngIf="gameFilterService.filteredGames().length <= 0; else content">
-        <ion-text class="no-game-text">
-          No stats for this filter!
-        </ion-text>
-      </ng-container>
-    </ng-template>
-  </ng-container>
-  <!-- Main content to display when there is game history or when loading is done -->
-  <ng-template #content>
-    <swiper-container [spaceBetween]="8" [modules]="swiperModules" #swiper [slidesPerView]="1"
-      (swiperslidechange)="onSlideChanged()" [autoHeight]="true"  style="background: var(--ion-item-background)">
-      <!-- Overall Segment -->
-      <swiper-slide>
-        <div class="tab">
+  <swiper-container [spaceBetween]="8" [modules]="swiperModules" #swiper [slidesPerView]="1" [autoHeight]="true"
+    style="background: var(--ion-item-background)" (swiperslidechange)="onSlideChanged()">
+
+    <swiper-slide>
+      <div class="tab" *ngIf="gameFilterService.filteredGames().length > 0">
+        <ng-container>
           <app-stat-display [statDefinitions]="overallStatDefinitions" [currentStats]="statsService.currentStats()"
             [prevStats]="prevStats">
           </app-stat-display>
@@ -56,34 +39,36 @@
           <div class="stat-container">
             <canvas #scoreChart class="score" style="width: 300px; height: 400px"></canvas>
           </div>
-        </div>
-      </swiper-slide>
+        </ng-container>
+      </div>
+    </swiper-slide>
 
-      <!-- Spares Segment -->
-      <swiper-slide>
-        <div class="tab">
-          <app-spare-display [stats]="statsService.currentStats()" [prevStats]="prevStats"
-            id="spareStats"></app-spare-display>
+    <swiper-slide>
+      <div class="tab" *ngIf="gameFilterService.filteredGames().length > 0">
+        <ng-container>
+          <app-spare-display [stats]="statsService.currentStats()" [prevStats]="prevStats"></app-spare-display>
           <div class="stat-container">
             <canvas #pinChart class="spares" style="width: 300px; height: 300px"></canvas>
           </div>
-        </div>
-      </swiper-slide>
+        </ng-container>
+      </div>
+    </swiper-slide>
 
-      <!-- Throws Segment -->
-      <swiper-slide>
-        <div class="tab">
+    <swiper-slide>
+      <div class="tab" *ngIf="gameFilterService.filteredGames().length > 0">
+        <ng-container>
           <app-stat-display [statDefinitions]="throwStatDefinitions" [currentStats]="statsService.currentStats()"
             [prevStats]="prevStats">
           </app-stat-display>
           <div class="stat-container">
             <canvas #throwChart class="throws" style="width: 300px; height: 300px"></canvas>
           </div>
-        </div>
-      </swiper-slide>
+        </ng-container>
+      </div>
+    </swiper-slide>
 
-      <!-- Session Segment -->
-      <swiper-slide>
+    <swiper-slide>
+      <ng-container *ngIf="gameFilterService.filteredGames().length > 0">
         <ion-item class="date-picker" lines="none">
           <ion-select label="Session date" toggleIcon="calendar-number-outline" expandedIcon="calendar-number"
             [value]="selectedDate()" (ionChange)="_selectedDate.set($event.detail.value)">
@@ -101,13 +86,29 @@
             </div>
           </swiper-slide>
           <swiper-slide>
-            <div class="tab">
+            <div class="tab" *ngIf="gameFilterService.filteredGames().length > 0">
               <app-spare-display [prevStats]="statsService.currentStats()" [stats]="sessionStats()"
                 [id]="'sessionSpareStats'"></app-spare-display>
             </div>
           </swiper-slide>
         </swiper-container>
-      </swiper-slide>
-    </swiper-container>
+      </ng-container>
+    </swiper-slide>
+  </swiper-container>
+
+  <!-- Show this message if there are no game history items and it's not loading -->
+  <ng-container *ngIf="gameFilterService.filteredGames().length <= 0">
+    <ng-container *ngIf="storageService.games().length <= 0 && !loadingService.isLoading(); else checkFilteredGames">
+      <ion-text class="no-game-text">
+        Start playing a few games to see your stats here!
+      </ion-text>
+    </ng-container>
+  </ng-container>
+  <ng-template #checkFilteredGames>
+    <ng-container *ngIf="gameFilterService.filteredGames().length <= 0 && !loadingService.isLoading();">
+      <ion-text class="no-game-text">
+        No stats for this filter!
+      </ion-text>
+    </ng-container>
   </ng-template>
 </ion-content>

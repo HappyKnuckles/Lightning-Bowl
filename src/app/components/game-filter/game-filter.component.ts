@@ -110,7 +110,7 @@ export class GameFilterComponent implements OnInit {
         newStartDate = this.defaultFilters.startDate!;
         break;
     }
-    this.filterService.filters.update((filters) => ({ ...filters, startDate: newStartDate }));
+    this.filterService.filters.update((filters) => ({ ...filters, startDate: newStartDate, timeRange: event.detail.value }));
   }
 
   handleSelect(event: CustomEvent): void {
