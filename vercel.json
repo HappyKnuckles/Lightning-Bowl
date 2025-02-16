@@ -2,7 +2,10 @@
   "rewrites": [
     {
       "source": "/restapi/:path*",
-      "destination": "https://www.bowwwl.com/restapi/:path*"
+      "destination": "https://www.bowwwl.com/restapi/:path*",
+      "headers": {
+        "x-forwarded-proto": "https"
+      }
     }
   ]
 }
