@@ -54,10 +54,10 @@ export class GameStatsService {
   calculateStats(gameHistory: Game[]): void {
     const lastComparisonDate = localStorage.getItem('lastComparisonDate') ?? '0';
     const today = Date.now();
-
+    
     let lastGameDate = 0;
     if (gameHistory.length > 0) {
-      lastGameDate = gameHistory[gameHistory.length - 1].date;
+      lastGameDate = gameHistory[0].date;
     }
 
     if (lastComparisonDate !== '0') {
