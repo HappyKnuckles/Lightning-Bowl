@@ -190,8 +190,12 @@ export class BallsPage implements OnInit {
 
   async getSameCoreBalls(ball: Ball): Promise<void> {
     try {
-      const response = await firstValueFrom(this.http.get<Ball[]>(`restapi/balls/v2?core=${ball.core_name}`));
-      this.coreBalls = response.filter(coreBall => coreBall.ball_id !== ball.ball_id);
+      const response = await fetch(`restapi/balls/v2?core=${ball.core_name}`);
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const coreBalls: Ball[] = await response.json();
+      this.coreBalls = coreBalls.filter(coreBall => coreBall.ball_id !== ball.ball_id);
 
       if (this.coreBalls.length > 0) {
         this.loadingService.setLoading(true);
@@ -207,8 +211,12 @@ export class BallsPage implements OnInit {
 
   async getSameCoverstockBalls(ball: Ball): Promise<void> {
     try {
-      const response = await firstValueFrom(this.http.get<Ball[]>(`restapi/balls/v2?coverstock=${ball.coverstock_name}`));
-      this.coverstockBalls = response.filter(coverstockBall => coverstockBall.ball_id !== ball.ball_id);
+      const response = await fetch(`restapi/balls/v2?coverstock=${ball.coverstock_name}`);
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const coverstockBalls: Ball[] = await response.json();
+      this.coverstockBalls = coverstockBalls.filter(coverstockBall => coverstockBall.ball_id !== ball.ball_id);
 
       if (this.coverstockBalls.length > 0) {
         this.loadingService.setLoading(true);

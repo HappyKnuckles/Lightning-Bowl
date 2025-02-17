@@ -30,7 +30,6 @@ import { ToastService } from 'src/app/services/toast/toast.service';
 import { addIcons } from 'ionicons';
 import { chevronBack, add, openOutline, trashOutline } from 'ionicons/icons';
 import { ModalController } from '@ionic/angular';
-import { firstValueFrom } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { BallComboBoxComponent } from 'src/app/components/ball-combo-box/ball-combo-box.component';
 import { BallListComponent } from 'src/app/components/ball-list/ball-list.component';
@@ -101,8 +100,12 @@ export class ArsenalPage implements OnInit {
 
   async getSameCoreBalls(ball: Ball): Promise<void> {
     try {
-      const response = await firstValueFrom(this.http.get<Ball[]>(`restapi/balls/v2?core=${ball.core_name}`));
-      this.coreBalls = response.filter(coreBall => coreBall.ball_id !== ball.ball_id);
+      const response = await fetch(`restapi/balls/v2?core=${ball.core_name}`);
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const coreBalls: Ball[] = await response.json();
+      this.coreBalls = coreBalls.filter(coreBall => coreBall.ball_id !== ball.ball_id);
 
       if (this.coreBalls.length > 0) {
         this.loadingService.setLoading(true);
@@ -118,8 +121,12 @@ export class ArsenalPage implements OnInit {
 
   async getSameCoverstockBalls(ball: Ball): Promise<void> {
     try {
-      const response = await firstValueFrom(this.http.get<Ball[]>(`restapi/balls/v2?coverstock=${ball.coverstock_name}`));
-      this.coverstockBalls = response.filter(coverstockBall => coverstockBall.ball_id !== ball.ball_id);
+      const response = await fetch(`restapi/balls/v2?coverstock=${ball.coverstock_name}`);
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const coverstockBalls: Ball[] = await response.json();
+      this.coverstockBalls = coverstockBalls.filter(coverstockBall => coverstockBall.ball_id !== ball.ball_id);
 
       if (this.coverstockBalls.length > 0) {
         this.loadingService.setLoading(true);
