@@ -2,10 +2,22 @@
   "rewrites": [
     {
       "source": "/restapi/:path*",
-      "destination": "https://www.bowwwl.com/restapi/:path*",
-      "headers": {
-        "x-forwarded-proto": "https"
-      }
+      "destination": "https://www.bowwwl.com/restapi/:path*"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/restapi/:path*",
+      "headers": [
+        {
+          "key": "Accept",
+          "value": "application/json"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
+      ]
     }
   ]
 }
