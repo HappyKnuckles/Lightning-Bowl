@@ -46,7 +46,7 @@
     <swiper-slide>
       <div class="tab" *ngIf="gameFilterService.filteredGames().length > 0">
         <ng-container>
-          <app-spare-display [stats]="statsService.currentStats()" [prevStats]="prevStats"></app-spare-display>
+          <app-spare-display [stats]="statsService.currentStats()" [prevStats]="prevStats" id="overalSpareStats"></app-spare-display>
           <div class="stat-container">
             <canvas #pinChart class="spares" style="width: 300px; height: 300px"></canvas>
           </div>
