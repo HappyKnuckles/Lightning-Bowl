@@ -10,11 +10,12 @@ import { AppComponent } from './app/app.component';
 import { provideServiceWorker } from '@angular/service-worker';
 import { inject } from '@vercel/analytics';
 import { routes } from './app/tabs/tabs.routes';
+import { injectSpeedInsights } from '@vercel/speed-insights';
 
 if (environment.production) {
   enableProdMode();
 }
-
+injectSpeedInsights();
 inject();
 
 bootstrapApplication(AppComponent, {
