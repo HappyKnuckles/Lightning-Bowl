@@ -1,5 +1,5 @@
 import { NgIf, NgFor, NgClass, DatePipe } from '@angular/common';
-import { Component, Input, Renderer2, ViewChild, OnChanges, SimpleChanges, EventEmitter, Output, computed } from '@angular/core';
+import { Component, Input, Renderer2, ViewChild, OnChanges, SimpleChanges, computed } from '@angular/core';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { ImpactStyle } from '@capacitor/haptics';
@@ -89,7 +89,6 @@ export class GameComponent implements OnChanges {
   @Input() games!: Game[];
   @Input() isLeaguePage?: boolean = false;
   @Input() gameCount?: number;
-  @Output() resizeSwiperEvent = new EventEmitter<any>();
   @ViewChild('accordionGroup') accordionGroup!: IonAccordionGroup;
   leagues = computed(() => {
     const savedLeagues = this.storageService.leagues();
@@ -165,7 +164,6 @@ export class GameComponent implements OnChanges {
     setTimeout(() => {
       (event as InfiniteScrollCustomEvent).target.complete();
       this.showingGames = this.games.slice(0, nextPage);
-      this.resizeSwiperEvent.emit();
     }, 150);
   }
 
@@ -185,18 +183,6 @@ export class GameComponent implements OnChanges {
     if (accordionId) {
       this.openExpansionPanel(accordionId);    
       this.delayedCloseMap[game.gameId] = true;
-    }
-  }
-
-  resizeSwiper(event: CustomEvent): void {
-    const openIds = event.detail.value;
-    const gameLength = this.showingGames.length;
-    const openIndices = this.showingGames.map((game, index) => (openIds.includes(game.gameId) ? index : -1)).filter((index) => index !== -1);
-
-    const shouldEmit = openIndices.some((index) => gameLength - index <= 3);
-
-    if (shouldEmit || event.detail.value.length === 0) {
-      this.resizeSwiperEvent.emit();
     }
   }
 

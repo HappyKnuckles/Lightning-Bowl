@@ -60,7 +60,7 @@
 </ion-content>
 
 <ion-modal *ngFor="let league of leagueKeys()" [trigger]="league" #modal (didDismiss)="destroyCharts(league)"
-  (didPresent)="loadingService.setLoading(false); generateCharts(0, league, true)">
+  (didPresent)="loadingService.setLoading(false); generateCharts(league, true)">
   <ng-template>
     <ion-header [translucent]="true">
       <ion-toolbar>
@@ -73,44 +73,42 @@
       </ion-toolbar>
       <ion-toolbar>
         <ion-segment [value]="selectedSegment" (ionChange)="onSegmentChanged(league, $event)">
-          <ion-segment-button *ngFor="let segment of segments" [value]="segment">
+          <ion-segment-button *ngFor="let segment of segments" [value]="segment" [contentId]="segment">
             <ion-label class="segment-label">{{segment}}</ion-label>
           </ion-segment-button>
         </ion-segment>
       </ion-toolbar>
     </ion-header>
     <ion-content #modalContent>
-      <swiper-container [rewind]="true" [spaceBetween]="8" [modules]="swiperModules" [slidesPerView]="1" #swiper
-        (swiperslidechange)="onSlideChanged(league)" [autoHeight]="true" style="background: var(--ion-item-background)">
-        <!-- Overall Segment -->
-        <swiper-slide>
-          <div class="tab">
+      <ion-segment-view>
+        <ion-segment-content id="Overall">
+          <section class="tab">
             <app-stat-display [statDefinitions]="statDefinitions" [currentStats]="statsByLeague()[league]"
               [prevStats]="overallStats()"></app-stat-display>
             <div class="stat-container">
               <canvas #scoreChart style="width: 300px; height: 400px"></canvas>
             </div>
-          </div>
-        </swiper-slide>
-
-        <!-- Spares Segment -->
-        <swiper-slide>
-          <div class="tab">
+          </section>
+        </ion-segment-content>
+        
+        <ion-segment-content id="Spares">
+          <section class="tab">
             <app-spare-display [prevStats]="overallStats()" [stats]="statsByLeague()[league]"
               id="league-spareStats"></app-spare-display>
             <div class="stat-container">
               <canvas #pinChart style="width: 300px; height: 300px"></canvas>
             </div>
-          </div>
-        </swiper-slide>
+          </section>
+        </ion-segment-content>
 
-        <swiper-slide>
-          <div class="tab">
+        <ion-segment-content id="Games">
+          <section class="tab">
             <app-game [games]="gamesByLeague()[league]" [gameCount]="gamesByLeague()[league].length"
-              [isLeaguePage]="true" (resizeSwiperEvent)="resize()"></app-game>
-          </div>
-        </swiper-slide>
-      </swiper-container>
+              [isLeaguePage]="true"></app-game>
+          </section>
+        </ion-segment-content>
+
+      </ion-segment-view>
     </ion-content>
   </ng-template>
 </ion-modal>

@@ -1,4 +1,4 @@
-<ion-accordion-group color="dark" multiple="true" #accordionGroup (ionChange)="resizeSwiper($event); hideContent($event)">
+<ion-accordion-group color="dark" multiple="true" #accordionGroup (ionChange)="hideContent($event)">
   <!-- <ion-button (click)="deleteAll()"> Alles löschen</ion-button> -->
   @for (game of showingGames; track game.gameId) {
   <ion-item-sliding class="sliding" #slidingItem>

@@ -25,13 +25,8 @@
 @import "@ionic/angular/css/text-transformation.css";
 @import "@ionic/angular/css/flex-utils.css";
 
-swiper-container {
-  --swiper-pagination-bullet-inactive-color: var(--ion-text-color-step-800, #cccccc);
-  --swiper-pagination-color: var(--ion-color-primary, #0054e9);
-  --swiper-pagination-progressbar-bg-color: rgba(var(--ion-text-color-rgb, 0, 0, 0), 0.25);
-  --swiper-scrollbar-bg-color: rgba(var(--ion-text-color-rgb, 0, 0, 0), 0.1);
-  --swiper-scrollbar-drag-bg-color: rgba(var(--ion-text-color-rgb, 0, 0, 0), 0.5);
-  // height: auto;
+ion-segment-view{
+  height: fit-content;
 }
 
 .stat-container {
@@ -50,10 +45,7 @@ canvas {
   padding: 8px 0 16px;
 }
 
-swiper-slide {
-  width: 100%;
-  height: auto;
-}
+
 
 ion-input {
   --highlight-color-focused: var(--ion-input-color) !important;

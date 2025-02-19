@@ -18,8 +18,8 @@
 
   @if(selectedMode !== 'Single'){
   <ion-toolbar>
-    <ion-segment [value]="selectedSegment" (ionChange)="onSegmentChanged($event)">
-      <ion-segment-button *ngFor="let segment of segments" [value]="segment">
+    <ion-segment [value]="selectedSegment" [scrollable]="true">
+      <ion-segment-button *ngFor="let segment of segments" [value]="segment" [contentId]="segment">
         <ion-label class="segment-label">{{segment}}</ion-label>
       </ion-segment-button>
     </ion-segment>
@@ -49,26 +49,25 @@
 
 <ng-container *ngFor="let mode of seriesMode; let i = index;">
   <ion-content [fullscreen]="true" *ngIf="mode">
-    <swiper-container [modules]="swiperModules" #swiper [slidesPerView]="1" (swiperslidechange)="onSlideChanged()" [autoheight]="true">
-      <swiper-slide *ngFor="let trackIndex of trackIndexes[i]; let j = index">
-        <app-game-grid
-          (maxScoreChanged)="onMaxScoreChanged($event, trackIndex)"
-          (totalScoreChanged)="onTotalScoreChange($event, trackIndex)"
-          (leagueChanged)="onLeagueChange($event)"
-          (isPracticeChanged)="onIsPracticeChange($event)"></app-game-grid>
-        <ion-grid *ngIf="i !== 0">
-          <ion-row>
-            <ion-col class="middle count">Total: {{ totalScores[trackIndex] }}</ion-col>
-            <ion-col class="middle count">Max: {{ maxScores[trackIndex] }}</ion-col>
-          </ion-row>
-          <ion-row class="button-row">
-            <ion-col>
-              <ion-button (click)="clearFrames(j)">Clear Score</ion-button>
-            </ion-col>
-          </ion-row>
-        </ion-grid>
-      </swiper-slide>
-    </swiper-container>
+    <ion-segment-view>
+      <ion-segment-content *ngFor="let trackIndex of trackIndexes[i]; let j = index" [id]="segments[j]">
+          <app-game-grid (maxScoreChanged)="onMaxScoreChanged($event, trackIndex)"
+            (totalScoreChanged)="onTotalScoreChange($event, trackIndex)" (leagueChanged)="onLeagueChange($event)"
+            (isPracticeChanged)="onIsPracticeChange($event)"></app-game-grid>
+          <ion-grid *ngIf="i !== 0">
+            <ion-row>
+              <ion-col class="middle count">Total: {{ totalScores[trackIndex] }}</ion-col>
+              <ion-col class="middle count">Max: {{ maxScores[trackIndex] }}</ion-col>
+            </ion-row>
+            <ion-row class="button-row">
+              <ion-col>
+                <ion-button (click)="clearFrames(j)">Clear Score</ion-button>
+              </ion-col>
+            </ion-row>
+          </ion-grid>
+      </ion-segment-content>
+    </ion-segment-view>
+
     <ion-grid *ngIf="i === 0">
       <ion-row>
         <ion-col class="middle count">Total: {{ totalScores[i] }}</ion-col>

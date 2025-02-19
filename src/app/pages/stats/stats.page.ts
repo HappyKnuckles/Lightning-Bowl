@@ -19,8 +19,6 @@ import { GameStatsService } from 'src/app/services/game-stats/game-stats.service
 import { HapticService } from 'src/app/services/haptic/haptic.service';
 import { LoadingService } from 'src/app/services/loader/loading.service';
 import { FormsModule } from '@angular/forms';
-import { Swiper } from 'swiper';
-import { IonicSlides } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { calendarNumber, calendarNumberOutline, filterOutline } from 'ionicons/icons';
 import { StatDisplayComponent } from 'src/app/components/stat-display/stat-display.component';
@@ -65,7 +63,6 @@ import { UtilsService } from 'src/app/services/utils/utils.service';
 })
 export class StatsPage implements OnInit, AfterViewInit {
   @ViewChild(IonContent) content!: IonContent;
-  swiperModules = [IonicSlides];
   // Previous Stats
   prevStats: PrevStats = localStorage.getItem('prevStats') ? JSON.parse(localStorage.getItem('prevStats')!) : {};
   overallStatDefinitions = overallStatDefinitions;
@@ -99,18 +96,6 @@ export class StatsPage implements OnInit, AfterViewInit {
   @ViewChild('scoreChart', { static: false }) scoreChart?: ElementRef;
   @ViewChild('pinChart', { static: false }) pinChart?: ElementRef;
   @ViewChild('throwChart', { static: false }) throwChart?: ElementRef;
-  @ViewChild('swiper')
-  set swiper(swiperRef: ElementRef) {
-    /**
-     * This setTimeout waits for Ionic's async initialization to complete.
-     * Otherwise, an outdated swiper reference will be used.
-     */
-    setTimeout(() => {
-      this.swiperInstance = swiperRef?.nativeElement.swiper;
-      this.swiperInstance!.allowTouchMove = this.gameFilterService.filteredGames().length > 0;
-    }, 0);
-  }
-  private swiperInstance: Swiper | undefined;
   private pinChartInstance: Chart | null = null;
   private throwChartInstance: Chart | null = null;
   private scoreChartInstance: Chart | null = null;
@@ -128,15 +113,9 @@ export class StatsPage implements OnInit, AfterViewInit {
   ) {
     addIcons({ filterOutline, calendarNumberOutline, calendarNumber });
     effect(() => {
-      setTimeout(() => {
         if (this.gameFilterService.filteredGames().length > 0) {
           this.generateCharts(true);
-          this.swiperInstance!.allowTouchMove = true;
-        } else {
-          this.swiperInstance!.allowTouchMove = false;
         }
-        this.swiperInstance!.updateAutoHeight();
-      }, 0);
     });
   }
 
@@ -152,7 +131,7 @@ export class StatsPage implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    this.generateCharts();
+    this.generateCharts(true);
   }
 
   async openFilterModal(): Promise<void> {
@@ -166,11 +145,7 @@ export class StatsPage implements OnInit, AfterViewInit {
     modal.onDidDismiss().then(() => {
       if (this.gameFilterService.filteredGames().length > 0) {
         this.generateCharts(true);
-        this.swiperInstance!.allowTouchMove = true;
-      } else {
-        this.swiperInstance!.allowTouchMove = false;
       }
-      this.swiperInstance!.updateAutoHeight();
     });
   }
 
@@ -187,31 +162,9 @@ export class StatsPage implements OnInit, AfterViewInit {
   }
 
   onSegmentChanged(event: any): void {
-    if (this.swiperInstance) {
-      this.selectedSegment = event.detail.value;
-      const activeIndex = this.getSlideIndex(this.selectedSegment);
-      this.swiperInstance.slideTo(activeIndex);
-      this.generateCharts();
-    }
+    this.selectedSegment = event.detail.value;
+    this.generateCharts();
     this.content.scrollToTop(300);
-  }
-
-  onSlideChanged(): void {
-    if (this.swiperInstance) {
-      const activeIndex = this.swiperInstance.realIndex;
-      this.selectedSegment = this.getSegmentValue(activeIndex);
-      this.generateCharts();
-    }
-    this.content.scrollToTop(300);
-  }
-
-  private getSlideIndex(segment: string): number {
-    const index = this.segments.indexOf(segment);
-    return index !== -1 ? index : 0;
-  }
-
-  private getSegmentValue(index: number): string {
-    return this.segments[index] || 'Overall';
   }
 
   // TODO if filtergamedlength was 0, the charts dont load until restart
@@ -224,8 +177,6 @@ export class StatsPage implements OnInit, AfterViewInit {
       } else if (this.selectedSegment === 'Throws') {
         this.generateThrowChart(isReload);
       }
-
-      this.swiperInstance?.updateAutoHeight();
     }
   }
 

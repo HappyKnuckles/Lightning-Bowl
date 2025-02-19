@@ -1,4 +1,4 @@
-import { Component, CUSTOM_ELEMENTS_SCHEMA, ElementRef, OnInit, QueryList, ViewChild, ViewChildren } from '@angular/core';
+import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit, QueryList, ViewChild, ViewChildren } from '@angular/core';
 import {
   ActionSheetController,
   AlertController,
@@ -33,8 +33,6 @@ import { ToastService } from 'src/app/services/toast/toast.service';
 import { UserService } from 'src/app/services/user/user.service';
 import { defineCustomElements } from '@teamhive/lottie-player/loader';
 import { Device } from '@capacitor/device';
-import Swiper from 'swiper';
-import { IonicSlides } from '@ionic/angular';
 import { StorageService } from 'src/app/services/storage/storage.service';
 import { GameUtilsService } from 'src/app/services/game-utils/game-utils.service';
 import { LeagueSelectorComponent } from 'src/app/components/league-selector/league-selector.component';
@@ -80,7 +78,6 @@ defineCustomElements(window);
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class AddGamePage implements OnInit {
-  swiperModules = [IonicSlides];
   totalScores: number[] = new Array(8).fill(0);
   maxScores: number[] = new Array(8).fill(300);
   seriesMode: boolean[] = [true, false, false, false];
@@ -98,20 +95,9 @@ export class AddGamePage implements OnInit {
   leagues: string[] = [];
   @ViewChildren(GameGridComponent) gameGrids!: QueryList<GameGridComponent>;
   @ViewChild(IonModal) modal!: IonModal;
-  @ViewChild('swiper')
-  set swiper(swiperRef: ElementRef) {
-    /**
-     * This setTimeout waits for Ionic's async initialization to complete.
-     * Otherwise, an outdated swiper reference will be used.
-     */
-    setTimeout(() => {
-      this.swiperInstance = swiperRef?.nativeElement.swiper;
-    }, 0);
-  }
 
   selectedSegment: string = 'Game 1';
   segments: string[] = ['Game 1'];
-  private swiperInstance: Swiper | undefined;
   private allowedDeviceIds = [
     '820fabe8-d29b-45c2-89b3-6bcc0e149f2b',
     '21330a3a-9cff-41ce-981a-00208c21d883',
@@ -142,19 +128,6 @@ export class AddGamePage implements OnInit {
     });
     this.deviceId = (await Device.getId()).identifier;
     this.leagues = await this.storageService.loadLeagues();
-  }
-
-  updateSegments(): void {
-    if (this.selectedMode === SeriesMode.Series3) {
-      this.segments = ['Game 1', 'Game 2', 'Game 3'];
-    } else if (this.selectedMode === SeriesMode.Series4) {
-      this.segments = ['Game 1', 'Game 2', 'Game 3', 'Game 4'];
-    } else if (this.selectedMode === SeriesMode.Series5) {
-      this.segments = ['Game 1', 'Game 2', 'Game 3', 'Game 4', 'Game 5'];
-    } else {
-      this.segments = ['Game 1'];
-    }
-    this.selectedSegment = this.segments[0];
   }
 
   async handleImageUpload(): Promise<void> {
@@ -296,7 +269,6 @@ export class AddGamePage implements OnInit {
         // }
         this.hapticService.vibrate(ImpactStyle.Medium, 200);
         this.toastService.showToast('Game saved successfully.', 'add');
-        this.swiperInstance?.slideTo(0);
       } catch (error) {
         this.toastService.showToast('Oops, something went wrong.', 'bug', true);
       }
@@ -323,20 +295,7 @@ export class AddGamePage implements OnInit {
     return this.gameScoreCalculatorService.getSeriesCurrentScore(index, this.totalScores);
   }
 
-  onSegmentChanged(event: any) {
-    if (this.swiperInstance) {
-      this.selectedSegment = event.detail.value;
-      const activeIndex = this.getSlideIndex(this.selectedSegment);
-      this.swiperInstance.slideTo(activeIndex);
-    }
-  }
 
-  onSlideChanged() {
-    if (this.swiperInstance) {
-      const activeIndex = this.swiperInstance.realIndex;
-      this.selectedSegment = this.getSegmentValue(activeIndex);
-    }
-  }
   async presentActionSheet(): Promise<void> {
     const buttons = [];
     this.hapticService.vibrate(ImpactStyle.Medium, 200);
@@ -404,7 +363,6 @@ export class AddGamePage implements OnInit {
     });
 
     actionSheet.onWillDismiss().then(() => {
-      this.swiperInstance?.slideTo(0);
       this.sheetOpen = false;
       this.updateSegments();
     });
@@ -439,15 +397,18 @@ export class AddGamePage implements OnInit {
     });
   }
 
-  private getSlideIndex(segment: string): number {
-    const index = this.segments.indexOf(segment);
-    return index !== -1 ? index : 0;
+  private updateSegments(): void {
+    if (this.selectedMode === SeriesMode.Series3) {
+      this.segments = ['Game 1', 'Game 2', 'Game 3'];
+    } else if (this.selectedMode === SeriesMode.Series4) {
+      this.segments = ['Game 1', 'Game 2', 'Game 3', 'Game 4'];
+    } else if (this.selectedMode === SeriesMode.Series5) {
+      this.segments = ['Game 1', 'Game 2', 'Game 3', 'Game 4', 'Game 5'];
+    } else {
+      this.segments = ['Game 1'];
+    }
   }
-
-  private getSegmentValue(index: number): string {
-    return this.segments[index] || 'Game 1';
-  }
-
+  
   private showAdAlert(): Promise<boolean> {
     return new Promise((resolve) => {
       this.alertController

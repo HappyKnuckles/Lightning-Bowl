@@ -7,12 +7,10 @@ import { Subscription } from 'rxjs';
 import { NgIf } from '@angular/common';
 import { ToastComponent } from './components/toast/toast.component';
 import { SwUpdate } from '@angular/service-worker';
-import { register } from 'swiper/element/bundle';
 import { ThemeChangerService } from './services/theme-changer/theme-changer.service';
 import { HttpClient } from '@angular/common/http';
 import { GameStatsService } from './services/game-stats/game-stats.service';
 import { StorageService } from './services/storage/storage.service';
-register();
 
 @Component({
   selector: 'app-root',

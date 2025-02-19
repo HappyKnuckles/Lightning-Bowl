@@ -36,7 +36,7 @@ import {
 import { Game } from 'src/app/models/game.model';
 import { GameComponent } from '../../components/game/game.component';
 import { ToastService } from 'src/app/services/toast/toast.service';
-import { AlertController, IonicSlides } from '@ionic/angular';
+import { AlertController } from '@ionic/angular';
 import { LoadingService } from 'src/app/services/loader/loading.service';
 import { Stats } from 'src/app/models/stats.model';
 import { GameStatsService } from 'src/app/services/game-stats/game-stats.service';
@@ -44,7 +44,6 @@ import { HapticService } from 'src/app/services/haptic/haptic.service';
 import { ImpactStyle } from '@capacitor/haptics';
 import { StatDisplayComponent } from 'src/app/components/stat-display/stat-display.component';
 import { SpareDisplayComponent } from 'src/app/components/spare-display/spare-display.component';
-import Swiper from 'swiper';
 import { SortUtilsService } from 'src/app/services/sort-utils/sort-utils.service';
 import Chart from 'chart.js/auto';
 import { ChartGenerationService } from 'src/app/services/chart/chart-generation.service';
@@ -85,21 +84,10 @@ import { leagueStatDefinitions } from '../stats/stats.definitions';
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class LeaguePage {
-  swiperModules = [IonicSlides];
   @ViewChild('modalContent') content!: IonContent;
   @ViewChildren('modal') modals!: QueryList<IonModal>;
   @ViewChild('scoreChart', { static: false }) scoreChart?: ElementRef;
   @ViewChild('pinChart', { static: false }) pinChart?: ElementRef;
-  @ViewChild('swiper')
-  set swiper(swiperRef: ElementRef) {
-    /**
-     * This setTimeout waits for Ionic's async initialization to complete.
-     * Otherwise, an outdated swiper reference will be used.
-     */
-    setTimeout(() => {
-      this.swiperInstance = swiperRef?.nativeElement.swiper;
-    }, 0);
-  }
   selectedSegment: string = 'Overall';
   segments: string[] = ['Overall', 'Spares', 'Games'];
   statsValueChanged: boolean[] = [true, true];
@@ -138,7 +126,6 @@ export class LeaguePage {
   statDefinitions = leagueStatDefinitions;
   private scoreChartInstances: { [key: string]: Chart } = {};
   private pinChartInstances: { [key: string]: Chart } = {};
-  private swiperInstance: Swiper | undefined;
 
   constructor(
     public storageService: StorageService,
@@ -190,48 +177,19 @@ export class LeaguePage {
   }
 
   onSegmentChanged(league: string, event: any): void {
-    if (this.swiperInstance) {
-      this.selectedSegment = event.detail.value;
-      const activeIndex = this.getSlideIndex(this.selectedSegment);
-      this.swiperInstance.slideTo(activeIndex);
-      this.generateCharts(activeIndex, league);
-    }
+    this.selectedSegment = event.detail.value;
+    this.generateCharts(league);
     this.content.scrollToTop(300);
   }
 
-  onSlideChanged(league: string): void {
-    if (this.swiperInstance) {
-      const activeIndex = this.swiperInstance.realIndex;
-      this.selectedSegment = this.getSegmentValue(activeIndex);
-      this.generateCharts(activeIndex, league);
-      if (activeIndex === this.swiperInstance.slides.length - 1) {
-        this.swiperInstance.params.followFinger = false;
-      } else {
-        this.swiperInstance.params.followFinger = true;
-      }
-    }
-    this.content.scrollToTop(300);
-  }
-
-  generateCharts(index: number, league: string, isReload?: boolean): void {
-    if (this.storageService.games().length > 0 && (index === undefined || this.statsValueChanged[index])) {
+  generateCharts(league: string, isReload?: boolean): void {
+    if (this.storageService.games().length > 0) {
       if (this.selectedSegment === 'Overall') {
         this.generateScoreChart(league, isReload);
       } else if (this.selectedSegment === 'Spares') {
         this.generatePinChart(league, isReload);
       }
-
-      if (index !== undefined) {
-        this.statsValueChanged[index] = false;
-      }
-      this.swiperInstance?.updateAutoHeight();
     }
-  }
-
-  resize(): void {
-    setTimeout(() => {
-      this.swiperInstance?.updateAutoHeight(75);
-    }, 100);
   }
 
   async saveLeague(league: string): Promise<void> {
@@ -328,15 +286,6 @@ export class LeaguePage {
     });
 
     await alert.present();
-  }
-
-  private getSlideIndex(segment: string): number {
-    const index = this.segments.indexOf(segment);
-    return index !== -1 ? index : 0;
-  }
-
-  private getSegmentValue(index: number): string {
-    return this.segments[index] || 'Overall';
   }
 
   private generateScoreChart(league: string, isReload?: boolean): void {
