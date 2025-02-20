@@ -18,6 +18,8 @@ import {
   IonInput,
   IonSegment,
   IonSegmentButton,
+  IonSegmentView,
+  IonSegmentContent
 } from '@ionic/angular/standalone';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Game } from 'src/app/models/game.model';
@@ -70,6 +72,8 @@ defineCustomElements(window);
     IonInput,
     IonSegmentButton,
     IonSegment,
+    IonSegmentContent,
+    IonSegmentView,
     NgIf,
     NgFor,
     GameGridComponent,

@@ -19,6 +19,8 @@ import {
   IonItemOptions,
   IonModal,
   IonRefresher,
+  IonSegmentView,
+  IonSegmentContent
 } from '@ionic/angular/standalone';
 import { StorageService } from 'src/app/services/storage/storage.service';
 import { addIcons } from 'ionicons';
@@ -80,6 +82,8 @@ import { leagueStatDefinitions } from '../stats/stats.definitions';
     SpareDisplayComponent,
     IonSegmentButton,
     IonSegment,
+    IonSegmentView,
+    IonSegmentContent
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })

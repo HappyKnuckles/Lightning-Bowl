@@ -12,6 +12,8 @@ import {
   IonLabel,
   IonSelect,
   IonSelectOption,
+  IonSegmentView,
+  IonSegmentContent
 } from '@ionic/angular/standalone';
 import { NgIf, NgFor, DecimalPipe, DatePipe } from '@angular/common';
 import { ImpactStyle } from '@capacitor/haptics';
@@ -44,6 +46,8 @@ import { UtilsService } from 'src/app/services/utils/utils.service';
     IonLabel,
     IonSegmentButton,
     IonSegment,
+    IonSegmentContent,
+    IonSegmentView,
     IonHeader,
     IonToolbar,
     IonTitle,
