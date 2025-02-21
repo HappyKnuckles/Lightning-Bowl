@@ -10,8 +10,16 @@
       "source": "/restapi/:path*",
       "headers": [
         {
+          "key": "Host",
+          "value": "www.bowwwl.com"
+        },
+        {
+          "key": "Accept",
+          "value": "application/json"
+        },
+        {
           "key": "Cache-Control",
-          "value": "no-store, no-cache, must-revalidate, proxy-revalidate"
+          "value": "no-cache"
         }
       ]
     }
