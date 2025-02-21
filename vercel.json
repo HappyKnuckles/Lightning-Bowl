@@ -10,12 +10,8 @@
       "source": "/restapi/:path*",
       "headers": [
         {
-          "key": "Accept",
-          "value": "application/json"
-        },
-        {
           "key": "Cache-Control",
-          "value": "no-cache"
+          "value": "no-store, no-cache, must-revalidate, proxy-revalidate"
         }
       ]
     }
