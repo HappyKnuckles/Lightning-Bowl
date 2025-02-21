@@ -5,6 +5,7 @@ import { SortUtilsService } from '../sort-utils/sort-utils.service';
 import { Ball } from 'src/app/models/ball.model';
 import { signal } from '@angular/core';
 import { LoadingService } from '../loader/loading.service';
+import { environment } from 'src/environments/environment';
 
 @Injectable({
   providedIn: 'root',
@@ -59,13 +60,16 @@ export class StorageService {
 
   async loadAllBalls(): Promise<void> {
     try {
-      const response = await fetch(`restapi/balls?_format=json`);
-      const data = await response.json();
-      const sortedBalls: Ball[] = data.sort((a: { release_date: string | number | Date; }, b: { release_date: string | number | Date; }) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime());
+      // TODO remove fetch and use different
+      const response = await fetch(environment.bowwwlEndpoint + 'all-balls');
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const sortedBalls = await response.json();   
+
       this.allBalls.set(sortedBalls);
     } catch (error) {
       console.error('Failed to load all balls:', error);
-      console.log('Failed to load all balls:', error)
     }
   }
 

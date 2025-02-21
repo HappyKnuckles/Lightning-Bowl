@@ -34,6 +34,7 @@ import { HttpClient } from '@angular/common/http';
 import { BallComboBoxComponent } from 'src/app/components/ball-combo-box/ball-combo-box.component';
 import { BallListComponent } from 'src/app/components/ball-list/ball-list.component';
 import { LoadingService } from 'src/app/services/loader/loading.service';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-arsenal',
@@ -100,11 +101,13 @@ export class ArsenalPage implements OnInit {
 
   async getSameCoreBalls(ball: Ball): Promise<void> {
     try {
-      const response = await fetch(`restapi/balls/v2?core=${ball.core_name}`);
+      // TODO remove fetch and use different
+      const response = await fetch(`${environment.bowwwlEndpoint}core-balls?core=${ball.core_name}`);
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
       const coreBalls: Ball[] = await response.json();
+      // TODO do this in server
       this.coreBalls = coreBalls.filter(coreBall => coreBall.ball_id !== ball.ball_id);
 
       if (this.coreBalls.length > 0) {
@@ -121,11 +124,13 @@ export class ArsenalPage implements OnInit {
 
   async getSameCoverstockBalls(ball: Ball): Promise<void> {
     try {
-      const response = await fetch(`restapi/balls/v2?coverstock=${ball.coverstock_name}`);
+      // TODO remove fetch and use different
+      const response = await fetch(`${environment.bowwwlEndpoint}coverstock-balls?coverstock=${ball.coverstock_name}`);
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
       const coverstockBalls: Ball[] = await response.json();
+      // TODO do this in server
       this.coverstockBalls = coverstockBalls.filter(coverstockBall => coverstockBall.ball_id !== ball.ball_id);
 
       if (this.coverstockBalls.length > 0) {

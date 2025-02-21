@@ -181,7 +181,7 @@ export class GameComponent implements OnChanges {
     this.hapticService.vibrate(ImpactStyle.Light, 100);
 
     if (accordionId) {
-      this.openExpansionPanel(accordionId);    
+      this.openExpansionPanel(accordionId);
       this.delayedCloseMap[game.gameId] = true;
     }
   }

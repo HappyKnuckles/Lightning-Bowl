@@ -117,9 +117,9 @@ export class StatsPage implements OnInit, AfterViewInit {
   ) {
     addIcons({ filterOutline, calendarNumberOutline, calendarNumber });
     effect(() => {
-        if (this.gameFilterService.filteredGames().length > 0) {
-          this.generateCharts(true);
-        }
+      if (this.gameFilterService.filteredGames().length > 0) {
+        this.generateCharts(true);
+      }
     });
   }
 

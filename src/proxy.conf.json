@@ -1,8 +1,0 @@
-{
-  "/restapi": {
-    "target": "https://www.bowwwl.com",
-    "secure": false,
-    "changeOrigin": true,
-    "logLevel": "debug"
-  }
-}

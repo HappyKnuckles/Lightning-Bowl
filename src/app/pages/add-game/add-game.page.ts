@@ -412,7 +412,7 @@ export class AddGamePage implements OnInit {
       this.segments = ['Game 1'];
     }
   }
-  
+
   private showAdAlert(): Promise<boolean> {
     return new Promise((resolve) => {
       this.alertController

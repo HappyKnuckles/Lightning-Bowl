@@ -29,12 +29,12 @@ import { StorageService } from 'src/app/services/storage/storage.service';
 import { ToastService } from 'src/app/services/toast/toast.service';
 import { LoadingService } from 'src/app/services/loader/loading.service';
 import Fuse from 'fuse.js';
-import { firstValueFrom, Subject } from 'rxjs';
+import { Subject } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { BallListComponent } from 'src/app/components/ball-list/ball-list.component';
 import { HapticService } from 'src/app/services/haptic/haptic.service';
 import { ImpactStyle } from '@capacitor/haptics';
-
+import { environment } from 'src/environments/environment';
 @Component({
   selector: 'app-balls',
   templateUrl: './balls.page.html',
@@ -170,8 +170,14 @@ export class BallsPage implements OnInit {
 
   async loadBalls(event?: InfiniteScrollCustomEvent): Promise<void> {
     try {
-      const data = await firstValueFrom(this.http.get<Ball[]>(`restapi/balls/v2?page=${this.currentPage}`));
+      // TODO remove fetch and use different
 
+      const response = await fetch(`${environment.bowwwlEndpoint}balls-pages?page=${this.currentPage}`);
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      
       if (data.length > 0) {
         this.balls = [...this.balls, ...data];
         this.filteredBalls = this.balls;
@@ -190,11 +196,13 @@ export class BallsPage implements OnInit {
 
   async getSameCoreBalls(ball: Ball): Promise<void> {
     try {
-      const response = await fetch(`restapi/balls/v2?core=${ball.core_name}`);
+      // TODO remove fetch and use different
+      const response = await fetch(`${environment.bowwwlEndpoint}core-balls?core=${ball.core_name}`);
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
       const coreBalls: Ball[] = await response.json();
+      // TODO do this in server
       this.coreBalls = coreBalls.filter(coreBall => coreBall.ball_id !== ball.ball_id);
 
       if (this.coreBalls.length > 0) {
@@ -211,11 +219,13 @@ export class BallsPage implements OnInit {
 
   async getSameCoverstockBalls(ball: Ball): Promise<void> {
     try {
-      const response = await fetch(`restapi/balls/v2?coverstock=${ball.coverstock_name}`);
+      // TODO remove fetch and use different
+      const response = await fetch(`${environment.bowwwlEndpoint}coverstock-balls?coverstock=${ball.coverstock_name}`);
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
       const coverstockBalls: Ball[] = await response.json();
+      // TODO do this in server
       this.coverstockBalls = coverstockBalls.filter(coverstockBall => coverstockBall.ball_id !== ball.ball_id);
 
       if (this.coverstockBalls.length > 0) {
