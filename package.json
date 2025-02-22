@@ -9,7 +9,8 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "pretty": "npx prettier --write ."
+    "pretty": "npx prettier --write .",
+    "prepare": "husky install"
   },
   "private": true,
   "dependencies": {
@@ -69,6 +70,8 @@
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
+    "lint-staged": "^15.4.3",
+    "prettier": "3.5.2",
     "typescript": "^5.4.5"
   },
   "description": "Lightning Bowl, a bowling score tracker.",
@@ -79,5 +82,8 @@
     "Edge >=89",
     "Safari >=15",
     "iOS >=15"
-  ]
+  ],
+  "lint-staged": {
+    "*.{js,ts,css,md,html}": "prettier --write"
+  }
 }
