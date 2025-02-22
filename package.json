@@ -10,7 +10,7 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "pretty": "npx prettier --write .",
-    "prepare": "husky install"
+    "postinstall": "husky install || echo 'Skipping husky install'"
   },
   "private": true,
   "dependencies": {
