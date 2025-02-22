@@ -10,7 +10,7 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "pretty": "npx prettier --write .",
-    "prepare": "husky install"
+    "postinstall": "husky install || echo 'Skipping husky install'"
   },
   "private": true,
   "dependencies": {
@@ -83,6 +83,11 @@
     "Safari >=15",
     "iOS >=15"
   ],
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
   "lint-staged": {
     "*.{js,ts,css,md,html}": "prettier --write"
   }
