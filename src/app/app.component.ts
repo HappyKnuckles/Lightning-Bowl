@@ -33,9 +33,9 @@ export class AppComponent implements OnInit, OnDestroy {
     private themeService: ThemeChangerService,
     private http: HttpClient,
     private gameStatsService: GameStatsService,
-    private storageService: StorageService
-  ) // private gameFilterService: GameFilterService
-  {
+    private storageService: StorageService,
+  ) {
+    // private gameFilterService: GameFilterService
     this.initializeApp();
     const currentTheme = this.themeService.getCurrentTheme();
     this.themeService.applyTheme(currentTheme);
