@@ -146,11 +146,11 @@ export class StatsPage implements OnInit, AfterViewInit {
     });
 
     await modal.present();
-    modal.onDidDismiss().then(() => {
+    /* modal.onDidDismiss().then(() => {
       if (this.gameFilterService.filteredGames().length > 0) {
         this.generateCharts(true);
       }
-    });
+    });*/
   }
 
   async handleRefresh(event: any): Promise<void> {
