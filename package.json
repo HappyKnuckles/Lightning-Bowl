@@ -83,6 +83,11 @@
     "Safari >=15",
     "iOS >=15"
   ],
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
   "lint-staged": {
     "*.{js,ts,css,md,html}": "prettier --write"
   }
