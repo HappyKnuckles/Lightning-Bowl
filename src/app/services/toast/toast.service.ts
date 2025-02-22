@@ -12,8 +12,6 @@ export class ToastService {
   }>();
   toastState$ = this.toastSubject.asObservable();
 
-  constructor() {}
-
   showToast(message: string, icon: string, error?: boolean): void {
     this.toastSubject.next({ message, icon, error });
   }

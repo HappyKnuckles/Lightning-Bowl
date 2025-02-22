@@ -5,9 +5,7 @@ import { Game } from 'src/app/models/game.model';
   providedIn: 'root',
 })
 export class SortUtilsService {
-  constructor() {}
-
-  sortGameHistoryByDate(gameHistory: Game[], ascending: boolean = false): Game[] {
+  sortGameHistoryByDate(gameHistory: Game[], ascending = false): Game[] {
     return gameHistory.sort((a: { date: number }, b: { date: number }) => {
       if (ascending) {
         return a.date - b.date;
@@ -15,8 +13,8 @@ export class SortUtilsService {
     });
   }
 
-  sortGamesByLeagues(games: Game[], includePractice?: boolean): { [key: string]: Game[] } {
-    const gamesByLeague = games.reduce((acc: { [key: string]: Game[] }, game: Game) => {
+  sortGamesByLeagues(games: Game[], includePractice?: boolean): Record<string, Game[]> {
+    const gamesByLeague = games.reduce((acc: Record<string, Game[]>, game: Game) => {
       const league = game.league || (includePractice ? 'Practice' : '');
       if (!league) return acc;
       if (!acc[league]) {
@@ -28,7 +26,7 @@ export class SortUtilsService {
 
     const sortedEntries = Object.entries(gamesByLeague).sort((a, b) => b[1].length - a[1].length);
 
-    return sortedEntries.reduce((acc: { [key: string]: Game[] }, [league, games]) => {
+    return sortedEntries.reduce((acc: Record<string, Game[]>, [league, games]) => {
       acc[league] = games;
       return acc;
     }, {});

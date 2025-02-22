@@ -3,7 +3,16 @@ import { Subscription } from 'rxjs';
 import { ToastService } from 'src/app/services/toast/toast.service';
 import { IonToast } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { add, bug, checkmarkOutline, informationCircleOutline, refreshOutline, reloadOutline, removeOutline, shareSocialOutline } from 'ionicons/icons';
+import {
+  add,
+  bug,
+  checkmarkOutline,
+  informationCircleOutline,
+  refreshOutline,
+  reloadOutline,
+  removeOutline,
+  shareSocialOutline,
+} from 'ionicons/icons';
 
 @Component({
   selector: 'app-toast',
@@ -13,11 +22,11 @@ import { add, bug, checkmarkOutline, informationCircleOutline, refreshOutline, r
   imports: [IonToast],
 })
 export class ToastComponent implements OnDestroy {
-  isOpen: boolean = false;
-  message: string = '';
-  icon: string = '';
+  isOpen = false;
+  message = '';
+  icon = '';
   isError?: boolean = false;
-  private toastQueue: Array<{ message: string; icon: string; error?: boolean }> = [];
+  private toastQueue: { message: string; icon: string; error?: boolean }[] = [];
 
   private toastSubscription: Subscription;
 
@@ -36,10 +45,10 @@ export class ToastComponent implements OnDestroy {
       reloadOutline,
       shareSocialOutline,
       removeOutline,
-      informationCircleOutline
+      informationCircleOutline,
     });
-  } 
-  
+  }
+
   showNextToast(): void {
     if (this.toastQueue.length > 0) {
       const nextToast = this.toastQueue.shift();
@@ -51,7 +60,7 @@ export class ToastComponent implements OnDestroy {
       }
     }
   }
-  
+
   onToastDismiss(): void {
     this.isOpen = false;
     setTimeout(() => {

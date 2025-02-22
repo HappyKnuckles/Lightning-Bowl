@@ -5,8 +5,6 @@ import { Haptics, ImpactStyle } from '@capacitor/haptics';
   providedIn: 'root',
 })
 export class HapticService {
-  constructor() {}
-
   vibrate(style: ImpactStyle, duration: number) {
     // Add haptic feedback with fallback for web
     if (Haptics) {

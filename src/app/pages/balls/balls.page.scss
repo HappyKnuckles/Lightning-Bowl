@@ -60,7 +60,6 @@ ion-header {
 }
 
 ion-card {
-
   ion-card-title {
     font-size: 1.375rem;
   }
@@ -79,7 +78,9 @@ ion-card {
 
   ion-button {
     background: none;
+
     --background-activated: none;
+
     position: relative;
   }
 }

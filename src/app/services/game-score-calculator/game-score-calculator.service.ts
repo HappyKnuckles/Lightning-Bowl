@@ -6,7 +6,7 @@ import { Injectable } from '@angular/core';
 export class GameScoreCalculatorService {
   frameScores: number[] = [];
   frames: number[][] = [[]];
-  totalScore: number = 0;
+  totalScore = 0;
   rolls: number[] = Array.from({ length: 21 }, () => 0);
   maxScore = 300; // Maximum possible score is 300 for 10 strikes
 
@@ -82,7 +82,7 @@ export class GameScoreCalculatorService {
           if (secondThrow !== undefined) {
             if (this.isStrike(firstThrow)) {
               // Only manipulation for a strike in the first frame
-              this.maxScore; // Example action, adjust as needed
+              continue;
             } else if (this.isSpare(firstThrow, secondThrow)) {
               this.maxScore -= 10;
             } else {
@@ -116,7 +116,7 @@ export class GameScoreCalculatorService {
                 } else if (!this.isPreviousSpare(i) && this.isSpare(firstThrow, secondThrow)) {
                   this.maxScore -= 10;
                 } else if (!this.isPreviousSpare(i) && this.isStrike(firstThrow)) {
-                  this.maxScore; // Example action
+                  continue;
                 } else {
                   this.maxScore -= 30 - (firstThrow + secondThrow);
                 }

@@ -19,7 +19,7 @@ import {
   IonSegment,
   IonSegmentButton,
   IonSegmentView,
-  IonSegmentContent
+  IonSegmentContent,
 } from '@ionic/angular/standalone';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Game } from 'src/app/models/game.model';
@@ -85,22 +85,22 @@ export class AddGamePage implements OnInit {
   totalScores: number[] = new Array(8).fill(0);
   maxScores: number[] = new Array(8).fill(300);
   seriesMode: boolean[] = [true, false, false, false];
-  seriesId: string = '';
+  seriesId = '';
   selectedMode: SeriesMode = SeriesMode.Single;
   trackIndexes: number[][] = [[0], [1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11, 12]];
-  sheetOpen: boolean = false;
-  isAlertOpen: boolean = false;
+  sheetOpen = false;
+  isAlertOpen = false;
   alertButton = ['Dismiss'];
-  isModalOpen: boolean = false;
-  is300: boolean = false;
+  isModalOpen = false;
+  is300 = false;
   username = '';
   gameData!: Game;
-  deviceId: string = '';
+  deviceId = '';
   leagues: string[] = [];
   @ViewChildren(GameGridComponent) gameGrids!: QueryList<GameGridComponent>;
   @ViewChild(IonModal) modal!: IonModal;
 
-  selectedSegment: string = 'Game 1';
+  selectedSegment = 'Game 1';
   segments: string[] = ['Game 1'];
   private allowedDeviceIds = [
     '820fabe8-d29b-45c2-89b3-6bcc0e149f2b',
@@ -121,7 +121,7 @@ export class AddGamePage implements OnInit {
     private userService: UserService,
     private adService: AdService,
     private hapticService: HapticService,
-    private gameUtilsService: GameUtilsService
+    private gameUtilsService: GameUtilsService,
   ) {
     addIcons({ cameraOutline, chevronDown, chevronUp, medalOutline, documentTextOutline, add });
   }
@@ -274,6 +274,7 @@ export class AddGamePage implements OnInit {
         this.hapticService.vibrate(ImpactStyle.Medium, 200);
         this.toastService.showToast('Game saved successfully.', 'add');
       } catch (error) {
+        console.error(error);
         this.toastService.showToast('Oops, something went wrong.', 'bug', true);
       }
     } else this.setAlertOpen();
@@ -298,7 +299,6 @@ export class AddGamePage implements OnInit {
   getSeriesCurrentScore(index: number): number {
     return this.gameScoreCalculatorService.getSeriesCurrentScore(index, this.totalScores);
   }
-
 
   async presentActionSheet(): Promise<void> {
     const buttons = [];
@@ -397,7 +397,9 @@ export class AddGamePage implements OnInit {
       expirationDate.setDate(expirationDate.getDate() + 7);
       const alertData = { value: 'true', expiration: expirationDate.getTime() };
       localStorage.setItem('alert', JSON.stringify(alertData));
-      data.role === 'confirm' ? this.handleImageUpload() : null;
+      if (data.role === 'confirm') {
+        this.handleImageUpload();
+      }
     });
   }
 
@@ -427,6 +429,7 @@ export class AddGamePage implements OnInit {
                   await this.adService.showRewardedAd();
                   resolve(true);
                 } catch (error) {
+                  console.error(error);
                   resolve(false);
                 }
               },
@@ -478,8 +481,12 @@ export class AddGamePage implements OnInit {
       const permissionRequestResult = await Camera.checkPermissions();
 
       if (permissionRequestResult.photos === 'prompt') {
-        (await Camera.requestPermissions()).photos;
-        await this.handleImageUpload();
+        const permissions = await Camera.requestPermissions();
+        if (permissions.photos) {
+          await this.handleImageUpload();
+        } else {
+          this.showPermissionDeniedAlert();
+        }
       } else if (permissionRequestResult.photos === 'denied') {
         this.showPermissionDeniedAlert();
       } else {

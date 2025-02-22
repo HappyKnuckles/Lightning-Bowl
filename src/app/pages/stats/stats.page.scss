@@ -9,7 +9,7 @@
 .date-picker {
   font-size: 1.1rem;
   padding-left: 4px;
-  box-shadow: 0px 0px 3px 0px;
+  box-shadow: 0 0 3px 0;
   border-radius: 0 0 3px 3px;
 
   ion-select::part(text) {
@@ -22,8 +22,9 @@
 
   ion-button {
     background: none;
-    --background-activated: none;
     position: relative;
+
+    --background-activated: none;
   }
 }
 

@@ -1,19 +1,19 @@
 ion-modal {
   --background: none;
   --backdrop-opacity: var(--ion-backdrop-opacity, 0.4) !important;
-  --box-shadow: 0 28px 48px rgba(0, 0, 0, 0.4) !important;
+  --box-shadow: 0 28px 48px rgb(0 0 0 / 40%) !important;
 
   ion-datetime {
     border-radius: 16px;
-    box-shadow: rgba(var(--ion-color-primary), 0.3) 0px 10px 15px -3px;
+    box-shadow: rgba(var(--ion-color-primary), 0.3) 0 10px 15px -3px;
   }
 }
 
 .confirmBtn {
   width: 90%;
-  margin: 20px 0 32px 0;
+  margin: 20px 0 32px;
 }
 
 // ion-datetime-button::part(native) {
-//   font-size: 17px;
+//   font-size: 17px;font-sizefont-size
 // }

@@ -4,7 +4,7 @@ import { AppComponent } from './app.component';
 import { SwUpdate } from '@angular/service-worker';
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { StorageService } from './services/storage/storage.service';
-import { Observable, of } from 'rxjs'; // Import `of` to create observables
+import { Observable } from 'rxjs'; // Import `of` to create observables
 
 const mockStorageService = {
   getItem: jasmine.createSpy('getItem').and.returnValue(Promise.resolve(null)),
@@ -25,14 +25,14 @@ const mockSwUpdate = {
 describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-    schemas: [CUSTOM_ELEMENTS_SCHEMA],
-    imports: [AppComponent],
-    providers: [
+      schemas: [CUSTOM_ELEMENTS_SCHEMA],
+      imports: [AppComponent],
+      providers: [
         { provide: StorageService, useValue: mockStorageService },
         { provide: SwUpdate, useValue: mockSwUpdate },
         provideHttpClient(withInterceptorsFromDi()),
-    ]
-}).compileComponents();
+      ],
+    }).compileComponents();
   });
 
   it('should create the app', () => {

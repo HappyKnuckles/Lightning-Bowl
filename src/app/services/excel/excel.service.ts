@@ -13,7 +13,12 @@ import { SortUtilsService } from '../sort-utils/sort-utils.service';
   providedIn: 'root',
 })
 export class ExcelService {
-  constructor(private toastService: ToastService, private hapticService: HapticService, private storageService: StorageService, private sortUtils: SortUtilsService) { }
+  constructor(
+    private toastService: ToastService,
+    private hapticService: HapticService,
+    private storageService: StorageService,
+    private sortUtils: SortUtilsService,
+  ) {}
 
   async exportToExcel(gameHistory: Game[]): Promise<boolean> {
     const gameData = this.getGameDataForExport(gameHistory);
@@ -77,7 +82,7 @@ export class ExcelService {
     const worksheet = workbook.worksheets[0];
     const gameData: any[] = [];
     worksheet.eachRow((row, rowNumber) => {
-      const rowData: { [key: string]: any } = {};
+      const rowData: Record<string, any> = {};
       row.eachCell((cell, colNumber) => {
         rowData[worksheet.getRow(1).getCell(colNumber).value as string] = cell.value;
       });
@@ -268,6 +273,7 @@ export class ExcelService {
       });
       return true;
     } catch (error) {
+      console.error(error);
       return false;
     }
   }

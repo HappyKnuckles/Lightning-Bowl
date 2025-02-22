@@ -3,6 +3,7 @@ ion-badge {
   --padding-start: 6px;
   --padding-top: 4px;
   --padding-bottom: 4px;
+
   font-size: 1rem;
   vertical-align: sub;
   position: absolute;
@@ -11,7 +12,9 @@ ion-badge {
 
 ion-grid {
   background-color: var(--ion-color-quartiary);
+
   --ion-grid-padding: 0;
+
   border-radius: 3px;
 }
 
@@ -20,7 +23,9 @@ ion-grid {
 
   ion-button {
     background: none;
+
     --background-activated: none;
+
     position: relative;
   }
 }

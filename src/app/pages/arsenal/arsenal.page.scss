@@ -3,7 +3,9 @@
 
   ion-button {
     background: none;
+
     --background-activated: none;
+
     position: relative;
   }
 }
@@ -19,6 +21,7 @@
 
 ion-thumbnail {
   --size: 80px;
+
   margin-top: 8px;
   margin-bottom: 8px;
 }
@@ -35,6 +38,10 @@ ion-header {
       text-align: center;
     }
   }
+}
+
+ion-card-title{
+      padding-bottom: 12px;
 }
 
 .sliding {

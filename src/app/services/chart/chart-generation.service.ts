@@ -8,8 +8,6 @@ import Chart from 'chart.js/auto';
   providedIn: 'root',
 })
 export class ChartGenerationService {
-  constructor() { }
-
   generateScoreChart(scoreChart: ElementRef, games: Game[], existingChartInstance: Chart | undefined, isReload?: boolean): Chart {
     try {
       const { gameLabels, overallAverages, differences, gamesPlayedDaily } = this.calculateScoreChartData(games);
@@ -352,7 +350,7 @@ export class ChartGenerationService {
 
   private calculateScoreChartData(gameHistory: Game[]) {
     try {
-      const scoresByDate: { [date: string]: number[] } = {};
+      const scoresByDate: Record<string, number[]> = {};
       gameHistory.forEach((game: any) => {
         const date = new Date(game.date).toLocaleDateString('de-DE', {
           day: '2-digit',

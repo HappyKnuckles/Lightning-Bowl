@@ -18,7 +18,12 @@ import {
   IonIcon,
   IonButtons,
   IonButton,
-  IonText, IonModal, IonRippleEffect, IonList, IonRefresherContent, IonRefresher
+  IonText,
+  IonModal,
+  IonRippleEffect,
+  IonList,
+  IonRefresherContent,
+  IonRefresher,
 } from '@ionic/angular/standalone';
 import { Ball } from 'src/app/models/ball.model';
 import { addIcons } from 'ionicons';
@@ -41,7 +46,12 @@ import { environment } from 'src/environments/environment';
   styleUrls: ['./balls.page.scss'],
   standalone: true,
   providers: [ModalController],
-  imports: [IonRefresher, IonRefresherContent, IonList, IonRippleEffect, IonModal,
+  imports: [
+    IonRefresher,
+    IonRefresherContent,
+    IonList,
+    IonRippleEffect,
+    IonModal,
     IonText,
     IonButton,
     IonButtons,
@@ -61,7 +71,8 @@ import { environment } from 'src/environments/environment';
     IonToolbar,
     CommonModule,
     FormsModule,
-    BallListComponent],
+    BallListComponent,
+  ],
 })
 export class BallsPage implements OnInit {
   @ViewChild('core', { static: false }) coreModal!: IonModal;
@@ -71,7 +82,7 @@ export class BallsPage implements OnInit {
   coreBalls: Ball[] = [];
   balls: Ball[] = [];
   filteredBalls: Ball[] = [];
-  searchTerm: string = '';
+  searchTerm = '';
   currentPage = 0;
   hasMoreData = true;
   activeFilterCount = 0;
@@ -94,14 +105,14 @@ export class BallsPage implements OnInit {
     };
     return new Fuse(this.storageService.allBalls(), options);
   });
-  searchSubject: Subject<string> = new Subject();
+  searchSubject = new Subject<string>();
   constructor(
     private modalCtrl: ModalController,
     public loadingService: LoadingService,
     public storageService: StorageService,
     private toastService: ToastService,
     private http: HttpClient,
-    private hapticService: HapticService
+    private hapticService: HapticService,
   ) {
     addIcons({ globeOutline, openOutline, filterOutline, addOutline, camera });
     this.searchSubject.pipe().subscribe((query) => {
@@ -171,11 +182,13 @@ export class BallsPage implements OnInit {
   async loadBalls(event?: InfiniteScrollCustomEvent): Promise<void> {
     try {
       this.loadingService.setLoading(true);
-      const response = await firstValueFrom(this.http.get<Ball[]>(`${environment.bowwwlEndpoint}balls-pages`, {
-        params: {
-          page: this.currentPage.toString()
-        }
-      }));
+      const response = await firstValueFrom(
+        this.http.get<Ball[]>(`${environment.bowwwlEndpoint}balls-pages`, {
+          params: {
+            page: this.currentPage.toString(),
+          },
+        }),
+      );
 
       if (response.length > 0) {
         this.balls = [...this.balls, ...response];
@@ -186,7 +199,7 @@ export class BallsPage implements OnInit {
       }
     } catch (error) {
       console.error('Error fetching balls:', error);
-      this.toastService.showToast(`Error loading balls: ${error}`, "bug", true);
+      this.toastService.showToast(`Error loading balls: ${error}`, 'bug', true);
     } finally {
       this.loadingService.setLoading(false);
       if (event) {
@@ -197,12 +210,14 @@ export class BallsPage implements OnInit {
   async getSameCoreBalls(ball: Ball): Promise<void> {
     try {
       this.loadingService.setLoading(true);
-      const response = await firstValueFrom(this.http.get<Ball[]>(`${environment.bowwwlEndpoint}core-balls`, {
-        params: {
-          core: ball.core_name,
-          ballId: ball.ball_id.toString()
-        }
-      }));
+      const response = await firstValueFrom(
+        this.http.get<Ball[]>(`${environment.bowwwlEndpoint}core-balls`, {
+          params: {
+            core: ball.core_name,
+            ballId: ball.ball_id.toString(),
+          },
+        }),
+      );
 
       this.coreBalls = response;
 
@@ -222,12 +237,14 @@ export class BallsPage implements OnInit {
   async getSameCoverstockBalls(ball: Ball): Promise<void> {
     try {
       this.loadingService.setLoading(true);
-      const response = await firstValueFrom(this.http.get<Ball[]>(`${environment.bowwwlEndpoint}coverstock-balls`, {
-        params: {
-          coverstock: ball.coverstock_name,
-          ballId: ball.ball_id.toString()
-        }
-      }));
+      const response = await firstValueFrom(
+        this.http.get<Ball[]>(`${environment.bowwwlEndpoint}coverstock-balls`, {
+          params: {
+            coverstock: ball.coverstock_name,
+            ballId: ball.ball_id.toString(),
+          },
+        }),
+      );
 
       this.coverstockBalls = response;
 

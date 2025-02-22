@@ -1,18 +1,7 @@
 import { Component, OnInit, EventEmitter, Output, QueryList, ViewChildren, ViewChild, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { ToastService } from 'src/app/services/toast/toast.service';
 import { NgFor, NgIf } from '@angular/common';
-import {
-  IonGrid,
-  IonSelect,
-  IonSelectOption,
-  IonRow,
-  IonCol,
-  IonInput,
-  IonItem,
-  IonTextarea,
-  IonCheckbox,
-  IonList,
-} from '@ionic/angular/standalone';
+import { IonGrid, IonSelect, IonSelectOption, IonRow, IonCol, IonInput, IonItem, IonTextarea, IonCheckbox, IonList } from '@ionic/angular/standalone';
 import { FormsModule } from '@angular/forms';
 import { HapticService } from 'src/app/services/haptic/haptic.service';
 import { ImpactStyle } from '@capacitor/haptics';
@@ -44,7 +33,7 @@ import { GameDataTransformerService } from 'src/app/services/game-transform/game
     FormsModule,
     NgIf,
     NgFor,
-    LeagueSelectorComponent
+    LeagueSelectorComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
@@ -56,12 +45,12 @@ export class GameGridComponent implements OnInit {
   @ViewChildren(IonInput) inputs!: QueryList<IonInput>;
   @ViewChild('leagueSelector') leagueSelector!: LeagueSelectorComponent;
   @ViewChild('checkbox') checkbox!: IonCheckbox;
-  totalScore: number = 0;
-  maxScore: number = 300;
-  note: string = '';
+  totalScore = 0;
+  maxScore = 300;
+  note = '';
   balls: string[] = [];
   selectedLeague = '';
-  isPractice: boolean = true;
+  isPractice = true;
   frames = this.gameScoreCalculatorService.frames;
   frameScores = this.gameScoreCalculatorService.frameScores;
   constructor(
@@ -71,9 +60,8 @@ export class GameGridComponent implements OnInit {
     private toastService: ToastService,
     private hapticService: HapticService,
     private gameUtilsService: GameUtilsService,
-    private utilsService: UtilsService
-  ) {
-  }
+    private utilsService: UtilsService,
+  ) {}
 
   ngOnInit(): void {
     this.maxScore = this.gameScoreCalculatorService.maxScore;
@@ -129,7 +117,7 @@ export class GameGridComponent implements OnInit {
         isSeries,
         seriesId,
         this.note,
-        this.balls
+        this.balls,
       );
 
       await this.storageService.saveGameToLocalStorage(gameData);

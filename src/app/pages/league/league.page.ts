@@ -20,7 +20,7 @@ import {
   IonModal,
   IonRefresher,
   IonSegmentView,
-  IonSegmentContent
+  IonSegmentContent,
 } from '@ionic/angular/standalone';
 import { StorageService } from 'src/app/services/storage/storage.service';
 import { addIcons } from 'ionicons';
@@ -83,7 +83,7 @@ import { leagueStatDefinitions } from '../stats/stats.definitions';
     IonSegmentButton,
     IonSegment,
     IonSegmentView,
-    IonSegmentContent
+    IonSegmentContent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
@@ -92,11 +92,11 @@ export class LeaguePage {
   @ViewChildren('modal') modals!: QueryList<IonModal>;
   @ViewChild('scoreChart', { static: false }) scoreChart?: ElementRef;
   @ViewChild('pinChart', { static: false }) pinChart?: ElementRef;
-  selectedSegment: string = 'Overall';
+  selectedSegment = 'Overall';
   segments: string[] = ['Overall', 'Spares', 'Games'];
   statsValueChanged: boolean[] = [true, true];
-  isEditMode: { [key: string]: boolean } = {};
-  gamesByLeague: Signal<{ [key: string]: Game[] }> = computed(() => {
+  isEditMode: Record<string, boolean> = {};
+  gamesByLeague: Signal<Record<string, Game[]>> = computed(() => {
     const games = this.storageService.games();
     return this.sortUtilsService.sortGamesByLeagues(games, true);
   });
@@ -107,9 +107,9 @@ export class LeaguePage {
     const games = this.storageService.games();
     return this.statService.calculateBowlingStats(games);
   });
-  gamesByLeagueReverse: Signal<{ [key: string]: Game[] }> = computed(() => {
+  gamesByLeagueReverse: Signal<Record<string, Game[]>> = computed(() => {
     const gamesByLeague = this.gamesByLeague();
-    const gamesByLeagueReverse: { [key: string]: Game[] } = {};
+    const gamesByLeagueReverse: Record<string, Game[]> = {};
 
     Object.keys(gamesByLeague).forEach((league) => {
       gamesByLeagueReverse[league] = this.sortUtilsService.sortGameHistoryByDate(gamesByLeague[league] || [], true);
@@ -117,9 +117,9 @@ export class LeaguePage {
 
     return gamesByLeagueReverse;
   });
-  statsByLeague: Signal<{ [key: string]: Stats }> = computed(() => {
+  statsByLeague: Signal<Record<string, Stats>> = computed(() => {
     const gamesByLeague = this.gamesByLeague();
-    const statsByLeague: { [key: string]: Stats } = {};
+    const statsByLeague: Record<string, Stats> = {};
 
     Object.keys(gamesByLeague).forEach((league) => {
       statsByLeague[league] = this.statService.calculateBowlingStats(gamesByLeague[league] || []);
@@ -128,8 +128,8 @@ export class LeaguePage {
     return statsByLeague;
   });
   statDefinitions = leagueStatDefinitions;
-  private scoreChartInstances: { [key: string]: Chart } = {};
-  private pinChartInstances: { [key: string]: Chart } = {};
+  private scoreChartInstances: Record<string, Chart> = {};
+  private pinChartInstances: Record<string, Chart> = {};
 
   constructor(
     public storageService: StorageService,
@@ -139,7 +139,7 @@ export class LeaguePage {
     public loadingService: LoadingService,
     private alertController: AlertController,
     private toastService: ToastService,
-    private chartService: ChartGenerationService
+    private chartService: ChartGenerationService,
   ) {
     addIcons({
       addOutline,
@@ -246,7 +246,7 @@ export class LeaguePage {
         {
           text: 'Cancel',
           role: 'cancel',
-          handler: () => { },
+          // handler: () => { },
         },
         {
           text: 'Delete',
@@ -301,7 +301,7 @@ export class LeaguePage {
       this.scoreChart,
       this.gamesByLeagueReverse()[league],
       this.scoreChartInstances[league]!,
-      isReload
+      isReload,
     );
   }
 
@@ -314,7 +314,7 @@ export class LeaguePage {
       this.pinChart,
       this.statsByLeague()[league],
       this.pinChartInstances[league]!,
-      isReload
+      isReload,
     );
   }
 }

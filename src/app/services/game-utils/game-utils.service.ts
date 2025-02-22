@@ -6,8 +6,6 @@ import { GameScoreCalculatorService } from '../game-score-calculator/game-score-
   providedIn: 'root',
 })
 export class GameUtilsService {
-  constructor() { }
-
   isGameValid(gameScoreCalculatorService?: GameScoreCalculatorService, game?: Game): boolean {
     const frames = game ? game.frames : gameScoreCalculatorService!.frames;
     let isValid = true;

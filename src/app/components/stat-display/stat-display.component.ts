@@ -15,7 +15,6 @@ export class StatDisplayComponent {
   @Input() statDefinitions: StatDefinition[] = [];
   @Input() currentStats!: any;
   @Input() prevStats?: any;
-  constructor() {}
 
   trackByKey(index: number, stat: any): string {
     return stat.key;

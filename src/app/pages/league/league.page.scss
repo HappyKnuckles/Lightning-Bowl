@@ -3,7 +3,9 @@
 
   ion-button {
     background: none;
+
     --background-activated: none;
+
     position: relative;
   }
 }
@@ -11,7 +13,8 @@
 .sliding {
   ion-item:not(.note, .league) {
     --padding-start: 0;
-    // --inner-padding-end: 0;
+
+    // --inner-padding-end: 0;--inner-padding-end--inner-padding-end
   }
 
   .score {

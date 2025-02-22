@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { LeagueSelectorComponent } from './league-selector.component';
 import { StorageService } from 'src/app/services/storage/storage.service';

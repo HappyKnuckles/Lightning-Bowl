@@ -1,4 +1,16 @@
-import { Component, CUSTOM_ELEMENTS_SCHEMA, ElementRef, OnInit, ViewChild, AfterViewInit, computed, Signal, signal, ChangeDetectionStrategy, effect } from '@angular/core';
+import {
+  Component,
+  CUSTOM_ELEMENTS_SCHEMA,
+  ElementRef,
+  OnInit,
+  ViewChild,
+  AfterViewInit,
+  computed,
+  Signal,
+  signal,
+  ChangeDetectionStrategy,
+  effect,
+} from '@angular/core';
 import Chart from 'chart.js/auto';
 import {
   IonHeader,
@@ -13,7 +25,7 @@ import {
   IonSelect,
   IonSelectOption,
   IonSegmentView,
-  IonSegmentContent
+  IonSegmentContent,
 } from '@ionic/angular/standalone';
 import { NgIf, NgFor, DecimalPipe, DatePipe } from '@angular/common';
 import { ImpactStyle } from '@capacitor/haptics';
@@ -94,7 +106,7 @@ export class StatsPage implements OnInit, AfterViewInit {
 
     return this.statsService.calculateBowlingStats(filteredGames) as SessionStats;
   });
-  selectedSegment: string = 'Overall';
+  selectedSegment = 'Overall';
   segments: string[] = ['Overall', 'Spares', 'Throws', 'Sessions'];
   // Viewchilds and Instances
   @ViewChild('scoreChart', { static: false }) scoreChart?: ElementRef;
@@ -113,7 +125,7 @@ export class StatsPage implements OnInit, AfterViewInit {
     public gameFilterService: GameFilterService,
     private sortUtilsService: SortUtilsService,
     private utilsService: UtilsService,
-    private chartService: ChartGenerationService
+    private chartService: ChartGenerationService,
   ) {
     addIcons({ filterOutline, calendarNumberOutline, calendarNumber });
     effect(() => {
@@ -193,7 +205,7 @@ export class StatsPage implements OnInit, AfterViewInit {
       this.scoreChart,
       this.sortUtilsService.sortGameHistoryByDate([...this.gameFilterService.filteredGames()], true),
       this.scoreChartInstance!,
-      isReload
+      isReload,
     );
   }
 
@@ -214,7 +226,7 @@ export class StatsPage implements OnInit, AfterViewInit {
       this.throwChart,
       this.statsService.currentStats(),
       this.throwChartInstance!,
-      isReload
+      isReload,
     );
   }
 }

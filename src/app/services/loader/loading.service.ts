@@ -5,7 +5,6 @@ import { Injectable, signal } from '@angular/core';
 })
 export class LoadingService {
   #isLoading = signal<boolean>(false);
-  constructor() {}
   get isLoading() {
     return this.#isLoading;
   }

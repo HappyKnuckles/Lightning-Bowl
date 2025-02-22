@@ -5,8 +5,6 @@ import { Game } from 'src/app/models/game.model';
   providedIn: 'root',
 })
 export class GameDataTransformerService {
-  constructor() {}
-
   transformGameData(
     frames: any,
     frameScores: number[],
@@ -16,7 +14,7 @@ export class GameDataTransformerService {
     isSeries?: boolean,
     seriesId?: string,
     note?: string,
-    balls?: string[]
+    balls?: string[],
   ): Game {
     try {
       const gameId = Date.now() + '_' + Math.random().toString(36).slice(2, 9); // Generate a unique gameId

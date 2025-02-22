@@ -24,7 +24,7 @@
       label="Color Theme"
       interface="popover"
       [(ngModel)]="currentColor"
-      [ngClass]="currentColor"
+      [ngClass]="currentColor?.toLowerCase()"
       placeholder="{{currentColor}}"
       (ionChange)="changeColor()">
       <ion-select-option *ngFor="let color of optionsWithClasses; let i = index;" [value]="color.name" [ngClass]="color.class">

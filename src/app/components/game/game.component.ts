@@ -101,10 +101,10 @@ export class GameComponent implements OnChanges {
     return [...new Set([...leagueKeys, ...savedLeagues])];
   });
   showingGames: Game[] = [];
-  isEditMode: { [key: string]: boolean } = {};
-  private closeTimers: { [gameId: string]: any } = {};
-  public delayedCloseMap: { [gameId: string]: boolean } = {};
-  private originalGameState: { [key: string]: Game } = {};
+  isEditMode: Record<string, boolean> = {};
+  private closeTimers: Record<string, any> = {};
+  public delayedCloseMap: Record<string, boolean> = {};
+  private originalGameState: Record<string, Game> = {};
   constructor(
     private alertController: AlertController,
     private toastService: ToastService,
@@ -114,7 +114,7 @@ export class GameComponent implements OnChanges {
     private hapticService: HapticService,
     private renderer: Renderer2,
     private gameUtilsService: GameUtilsService,
-    private utilsService: UtilsService
+    private utilsService: UtilsService,
   ) {
     addIcons({
       trashOutline,
@@ -144,7 +144,7 @@ export class GameComponent implements OnChanges {
         {
           text: 'Cancel',
           role: 'cancel',
-          handler: () => { },
+          // handler: () => { },
         },
         {
           text: 'Delete',

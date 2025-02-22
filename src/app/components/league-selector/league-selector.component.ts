@@ -47,15 +47,19 @@ import { ToastService } from 'src/app/services/toast/toast.service';
   standalone: true,
 })
 export class LeagueSelectorComponent {
-  @Input() isAddPage: boolean = false;
+  @Input() isAddPage = false;
   @Output() leagueChanged = new EventEmitter<string>();
-  selectedLeague: string = '';
-  newLeague: string = '';
+  selectedLeague = '';
+  newLeague = '';
   leaguesToDelete: string[] = [];
-  leagueToChange: string = '';
-  isModalOpen: boolean = false;
+  leagueToChange = '';
+  isModalOpen = false;
 
-  constructor(public storageService: StorageService, private toastService: ToastService, private alertController: AlertController) {
+  constructor(
+    public storageService: StorageService,
+    private toastService: ToastService,
+    private alertController: AlertController,
+  ) {
     // this.leagueSubscriptions.add(
     //   merge(this.storageService.newLeagueAdded, this.storageService.leagueDeleted, this.storageService.leagueChanged).subscribe(() => {
     //     this.getLeagues();

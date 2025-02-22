@@ -23,7 +23,7 @@ export class StatRowComponent implements OnChanges {
   @Input() id?: string;
   @Input() isPercentage?: boolean;
 
-  statDifference: string = '0';
+  statDifference = '0';
 
   constructor(private utilsService: UtilsService) {
     addIcons({ informationCircleOutline, arrowUp, arrowDown });

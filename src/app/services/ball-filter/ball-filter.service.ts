@@ -19,6 +19,4 @@ export class BallFilterService {
     maxDiff: 0.1,
     inArsenal: false,
   };
-
-  constructor() {}
 }

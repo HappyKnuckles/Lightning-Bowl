@@ -10,7 +10,8 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "pretty": "npx prettier --write .",
-    "postinstall": "husky install || echo 'Skipping husky install'"
+    "postinstall": "husky install || echo 'Skipping husky install'",
+    "lint": "ng lint"
   },
   "private": true,
   "dependencies": {
@@ -63,6 +64,8 @@
     "@types/events": "^3.0.3",
     "@types/jasmine": "~5.1.0",
     "@types/node": "^22.5.4",
+    "angular-eslint": "19.1.0",
+    "eslint": "^9.20.0",
     "jasmine-core": "~5.1.0",
     "jasmine-spec-reporter": "~5.0.0",
     "karma": "~6.4.0",
@@ -72,7 +75,11 @@
     "karma-jasmine-html-reporter": "~2.1.0",
     "lint-staged": "^15.4.3",
     "prettier": "3.5.2",
-    "typescript": "^5.4.5"
+    "stylelint": "^16.14.1",
+    "stylelint-config-standard": "^37.0.0",
+    "stylelint-config-standard-scss": "^14.0.0",
+    "typescript": "^5.4.5",
+    "typescript-eslint": "8.23.0"
   },
   "description": "Lightning Bowl, a bowling score tracker.",
   "browserslist": [
@@ -83,12 +90,9 @@
     "Safari >=15",
     "iOS >=15"
   ],
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
   "lint-staged": {
-    "*.{js,ts,css,md,html}": "prettier --write"
+    "*.{js,ts,css,md,html}": "prettier --write",
+    "*.ts": "eslint",
+    "*.{scss,css}": "stylelint --fix"
   }
 }

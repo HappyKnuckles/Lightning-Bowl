@@ -4,8 +4,6 @@ import { environment } from 'src/environments/environment';
   providedIn: 'root',
 })
 export class ImageProcesserService {
-  constructor() {}
-
   async performOCR(image: File): Promise<string> {
     // Convert image file to base64 string
     const reader = new FileReader();

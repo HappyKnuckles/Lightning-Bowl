@@ -72,13 +72,13 @@ export class SettingsPage implements OnInit {
     { name: 'Red', class: 'red-option' },
     { name: 'Gray', class: 'gray-option' },
   ];
-  userEmail: string = '';
-  feedbackMessage: string = '';
+  userEmail = '';
+  feedbackMessage = '';
   constructor(
     private userService: UserService,
     private toastService: ToastService,
     private loadingService: LoadingService,
-    private themeService: ThemeChangerService
+    private themeService: ThemeChangerService,
   ) {
     addIcons({ personCircleOutline, colorPaletteOutline, logoGithub, addOutline, mailOutline, chevronBack, sendOutline });
   }
