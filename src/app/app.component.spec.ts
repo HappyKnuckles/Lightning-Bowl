@@ -2,7 +2,7 @@ import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { AppComponent } from './app.component';
 import { SwUpdate } from '@angular/service-worker';
-import { HttpClientModule } from '@angular/common/http';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { StorageService } from './services/storage/storage.service';
 import { Observable, of } from 'rxjs'; // Import `of` to create observables
 
@@ -25,13 +25,14 @@ const mockSwUpdate = {
 describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AppComponent, HttpClientModule],
-      schemas: [CUSTOM_ELEMENTS_SCHEMA],
-      providers: [
+    schemas: [CUSTOM_ELEMENTS_SCHEMA],
+    imports: [AppComponent],
+    providers: [
         { provide: StorageService, useValue: mockStorageService },
         { provide: SwUpdate, useValue: mockSwUpdate },
-      ],
-    }).compileComponents();
+        provideHttpClient(withInterceptorsFromDi()),
+    ]
+}).compileComponents();
   });
 
   it('should create the app', () => {
