@@ -7,7 +7,7 @@ import { Game } from 'src/app/models/game.model';
 export class SortUtilsService {
   constructor() {}
 
-  sortGameHistoryByDate(gameHistory: Game[], ascending?: boolean): Game[] {
+  sortGameHistoryByDate(gameHistory: Game[], ascending: boolean = false): Game[] {
     return gameHistory.sort((a: { date: number }, b: { date: number }) => {
       if (ascending) {
         return a.date - b.date;

@@ -29,7 +29,7 @@ import { StorageService } from 'src/app/services/storage/storage.service';
 import { ToastService } from 'src/app/services/toast/toast.service';
 import { LoadingService } from 'src/app/services/loader/loading.service';
 import Fuse from 'fuse.js';
-import { Subject } from 'rxjs';
+import { firstValueFrom, Subject } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { BallListComponent } from 'src/app/components/ball-list/ball-list.component';
 import { HapticService } from 'src/app/services/haptic/haptic.service';
@@ -170,16 +170,15 @@ export class BallsPage implements OnInit {
 
   async loadBalls(event?: InfiniteScrollCustomEvent): Promise<void> {
     try {
-      // TODO remove fetch and use different
+      this.loadingService.setLoading(true);
+      const response = await firstValueFrom(this.http.get<Ball[]>(`${environment.bowwwlEndpoint}balls-pages`, {
+        params: {
+          page: this.currentPage.toString()
+        }
+      }));
 
-      const response = await fetch(`${environment.bowwwlEndpoint}balls-pages?page=${this.currentPage}`);
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      const data = await response.json();
-      
-      if (data.length > 0) {
-        this.balls = [...this.balls, ...data];
+      if (response.length > 0) {
+        this.balls = [...this.balls, ...response];
         this.filteredBalls = this.balls;
         this.currentPage++;
       } else {
@@ -188,26 +187,29 @@ export class BallsPage implements OnInit {
     } catch (error) {
       console.error('Error fetching balls:', error);
       this.toastService.showToast(`Error loading balls: ${error}`, "bug", true);
+    } finally {
+      this.loadingService.setLoading(false);
       if (event) {
         event.target.complete();
       }
     }
   }
-
   async getSameCoreBalls(ball: Ball): Promise<void> {
     try {
-      // TODO remove fetch and use different
-      const response = await fetch(`${environment.bowwwlEndpoint}core-balls?core=${ball.core_name}`);
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      const coreBalls: Ball[] = await response.json();
-      // TODO do this in server
-      this.coreBalls = coreBalls.filter(coreBall => coreBall.ball_id !== ball.ball_id);
+      this.loadingService.setLoading(true);
+      const response = await firstValueFrom(this.http.get<Ball[]>(`${environment.bowwwlEndpoint}core-balls`, {
+        params: {
+          core: ball.core_name,
+          ballId: ball.ball_id.toString()
+        }
+      }));
+
+      this.coreBalls = response;
 
       if (this.coreBalls.length > 0) {
-        this.loadingService.setLoading(true);
         this.coreModal.present();
+      } else {
+        this.toastService.showToast(`No similar balls found for core: ${ball.core_name}.`, 'information-circle-outline');
       }
     } catch (error) {
       console.error('Error fetching core balls:', error);
@@ -219,18 +221,20 @@ export class BallsPage implements OnInit {
 
   async getSameCoverstockBalls(ball: Ball): Promise<void> {
     try {
-      // TODO remove fetch and use different
-      const response = await fetch(`${environment.bowwwlEndpoint}coverstock-balls?coverstock=${ball.coverstock_name}`);
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      const coverstockBalls: Ball[] = await response.json();
-      // TODO do this in server
-      this.coverstockBalls = coverstockBalls.filter(coverstockBall => coverstockBall.ball_id !== ball.ball_id);
+      this.loadingService.setLoading(true);
+      const response = await firstValueFrom(this.http.get<Ball[]>(`${environment.bowwwlEndpoint}coverstock-balls`, {
+        params: {
+          coverstock: ball.coverstock_name,
+          ballId: ball.ball_id.toString()
+        }
+      }));
+
+      this.coverstockBalls = response;
 
       if (this.coverstockBalls.length > 0) {
-        this.loadingService.setLoading(true);
         await this.coverstockModal.present();
+      } else {
+        this.toastService.showToast(`No similar balls found for coverstock: ${ball.coverstock_name}.`, 'information-circle-outline');
       }
     } catch (error) {
       console.error('Error fetching coverstock balls:', error);

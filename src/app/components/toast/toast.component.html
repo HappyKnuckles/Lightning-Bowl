@@ -1,8 +1,8 @@
 <ion-toast
   [isOpen]="isOpen"
   message="{{ message }}"
-  [duration]="4000"
-  (willDismiss)="isOpen = false"
+  [duration]="3000"
+  (willDismiss)="onToastDismiss()"
   class="customToast"
   icon="{{ icon }}"
   [class.error]="isError"

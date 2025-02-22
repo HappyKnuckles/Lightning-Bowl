@@ -35,6 +35,7 @@ import { BallComboBoxComponent } from 'src/app/components/ball-combo-box/ball-co
 import { BallListComponent } from 'src/app/components/ball-list/ball-list.component';
 import { LoadingService } from 'src/app/services/loader/loading.service';
 import { environment } from 'src/environments/environment';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-arsenal',
@@ -101,18 +102,20 @@ export class ArsenalPage implements OnInit {
 
   async getSameCoreBalls(ball: Ball): Promise<void> {
     try {
-      // TODO remove fetch and use different
-      const response = await fetch(`${environment.bowwwlEndpoint}core-balls?core=${ball.core_name}`);
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      const coreBalls: Ball[] = await response.json();
-      // TODO do this in server
-      this.coreBalls = coreBalls.filter(coreBall => coreBall.ball_id !== ball.ball_id);
+      this.loadingService.setLoading(true);
+      const response = await firstValueFrom(this.http.get<Ball[]>(`${environment.bowwwlEndpoint}core-balls`, {
+        params: {
+          core: ball.core_name,
+          ballId: ball.ball_id.toString()
+        }
+      }));
+
+      this.coreBalls = response;
 
       if (this.coreBalls.length > 0) {
-        this.loadingService.setLoading(true);
         this.coreModal.present();
+      } else {
+        this.toastService.showToast(`No similar balls found for core: ${ball.core_name}.`, 'information-circle-outline');
       }
     } catch (error) {
       console.error('Error fetching core balls:', error);
@@ -124,18 +127,20 @@ export class ArsenalPage implements OnInit {
 
   async getSameCoverstockBalls(ball: Ball): Promise<void> {
     try {
-      // TODO remove fetch and use different
-      const response = await fetch(`${environment.bowwwlEndpoint}coverstock-balls?coverstock=${ball.coverstock_name}`);
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      const coverstockBalls: Ball[] = await response.json();
-      // TODO do this in server
-      this.coverstockBalls = coverstockBalls.filter(coverstockBall => coverstockBall.ball_id !== ball.ball_id);
+      this.loadingService.setLoading(true);
+      const response = await firstValueFrom(this.http.get<Ball[]>(`${environment.bowwwlEndpoint}coverstock-balls`, {
+        params: {
+          coverstock: ball.coverstock_name,
+          ballId: ball.ball_id.toString()
+        }
+      }));
+
+      this.coverstockBalls = response;
 
       if (this.coverstockBalls.length > 0) {
-        this.loadingService.setLoading(true);
         await this.coverstockModal.present();
+      } else {
+        this.toastService.showToast(`No similar balls found for coverstock: ${ball.coverstock_name}.`, 'information-circle-outline');
       }
     } catch (error) {
       console.error('Error fetching coverstock balls:', error);

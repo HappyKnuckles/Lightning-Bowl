@@ -7,12 +7,13 @@ import { HapticService } from 'src/app/services/haptic/haptic.service';
 import { ImpactStyle } from '@capacitor/haptics';
 import { Game } from 'src/app/models/game.model';
 import { StorageService } from 'src/app/services/storage/storage.service';
+import { SortUtilsService } from '../sort-utils/sort-utils.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ExcelService {
-  constructor(private toastService: ToastService, private hapticService: HapticService, private storageService: StorageService) { }
+  constructor(private toastService: ToastService, private hapticService: HapticService, private storageService: StorageService, private sortUtils: SortUtilsService) { }
 
   async exportToExcel(gameHistory: Game[]): Promise<boolean> {
     const gameData = this.getGameDataForExport(gameHistory);
@@ -152,8 +153,8 @@ export class ExcelService {
         await this.storageService.saveBallToArsenal(ballToAdd);
       }
     }
-
-    await this.storageService.saveGamesToLocalStorage(gameData);
+    const sortedGames = this.sortUtils.sortGameHistoryByDate(gameData);
+    await this.storageService.saveGamesToLocalStorage(sortedGames);
   }
 
   private async saveExcelFile(buffer: any, fileName: string): Promise<void> {
