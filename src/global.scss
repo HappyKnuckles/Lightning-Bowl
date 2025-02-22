@@ -67,8 +67,6 @@ ion-input {
 ion-header {
   // background-color: #080f08;
 
-background-colorbackground-color
-
   ion-toolbar {
     height: 50px !important;
     display: flex;
@@ -87,8 +85,8 @@ background-colorbackground-color
 }
 
 ion-app {
-  // letter-spacing: .38px;letter-spacingletter-spacing
-  font-size: 1.1rem;font-size
+  // letter-spacing: .38px;
+  font-size: 1.1rem;
 }
 
 .tooltip {
@@ -147,8 +145,8 @@ ion-item {
   gap: 8px;
   margin: 5px 5px 10px;
   max-width: 100%;
-  // font-weight: 600;font-weightfont-weight
-  justify-items: center;justify-items
+  // font-weight: 600;
+  justify-items: center;
 
   ion-input:not(.frame-scores) {
     color: var(--ion-input-color);
@@ -227,8 +225,7 @@ body {
 
 ion-segment {
   // --background: var(--ion-tab-bar-background, var(--ion-color-step-50, #f7f7f7))
-  //;--background
-
+  //;
  --background: var(--ion-color-dark);
   --background: #252525;
 }

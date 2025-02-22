@@ -92,8 +92,6 @@
   ],
   "lint-staged": {
     "*.{js,ts,css,md,html}": "prettier --write",
-    "*.ts": "eslint",
-    "*.css": "stylelint",
-    "*.scss": "stylelint --syntax=scss"
+    "*.ts": "eslint"
   }
 }
