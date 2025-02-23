@@ -31,7 +31,7 @@ import { ImpactStyle } from '@capacitor/haptics';
 import { HapticService } from 'src/app/services/haptic/haptic.service';
 import { LoadingService } from 'src/app/services/loader/loading.service';
 import { ToastService } from 'src/app/services/toast/toast.service';
-import { ModalController } from '@ionic/angular';
+import { ModalController, RefresherCustomEvent } from '@ionic/angular';
 import { StorageService } from 'src/app/services/storage/storage.service';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { GameComponent } from 'src/app/components/game/game.component';
@@ -74,7 +74,7 @@ export class HistoryPage {
     private hapticService: HapticService,
     private modalCtrl: ModalController,
     public gameFilterService: GameFilterService,
-    private excelService: ExcelService
+    private excelService: ExcelService,
   ) {
     addIcons({
       cloudUploadOutline,
@@ -96,7 +96,7 @@ export class HistoryPage {
     return await modal.present();
   }
 
-  async handleRefresh(event: any): Promise<void> {
+  async handleRefresh(event: RefresherCustomEvent): Promise<void> {
     try {
       this.hapticService.vibrate(ImpactStyle.Medium, 200);
       await this.storageService.loadGameHistory();

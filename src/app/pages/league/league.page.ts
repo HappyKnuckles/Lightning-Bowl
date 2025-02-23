@@ -38,7 +38,7 @@ import {
 import { Game } from 'src/app/models/game.model';
 import { GameComponent } from '../../components/game/game.component';
 import { ToastService } from 'src/app/services/toast/toast.service';
-import { AlertController } from '@ionic/angular';
+import { AlertController, RefresherCustomEvent } from '@ionic/angular';
 import { LoadingService } from 'src/app/services/loader/loading.service';
 import { Stats } from 'src/app/models/stats.model';
 import { GameStatsService } from 'src/app/services/game-stats/game-stats.service';
@@ -154,7 +154,7 @@ export class LeaguePage {
     });
   }
 
-  async handleRefresh(event: any): Promise<void> {
+  async handleRefresh(event: RefresherCustomEvent): Promise<void> {
     try {
       this.hapticService.vibrate(ImpactStyle.Medium, 200);
       await this.storageService.loadGameHistory();
@@ -201,7 +201,7 @@ export class LeaguePage {
     this.toastService.showToast('League saved sucessfully.', 'add');
   }
 
-  getGamesByLeague(league: string): any[] {
+  getGamesByLeague(league: string): Game[] {
     return this.gamesByLeague()[league] || [];
   }
 

@@ -28,7 +28,7 @@ import {
 import { Ball } from 'src/app/models/ball.model';
 import { addIcons } from 'ionicons';
 import { globeOutline, camera, addOutline, filterOutline, openOutline } from 'ionicons/icons';
-import { InfiniteScrollCustomEvent, ModalController } from '@ionic/angular';
+import { InfiniteScrollCustomEvent, ModalController, RefresherCustomEvent } from '@ionic/angular';
 import { BallFilterComponent } from 'src/app/components/ball-filter/ball-filter.component';
 import { StorageService } from 'src/app/services/storage/storage.service';
 import { ToastService } from 'src/app/services/toast/toast.service';
@@ -134,7 +134,7 @@ export class BallsPage implements OnInit {
     }
   }
 
-  async handleRefresh(event: any): Promise<void> {
+  async handleRefresh(event: RefresherCustomEvent): Promise<void> {
     try {
       this.hapticService.vibrate(ImpactStyle.Medium, 200);
       this.loadingService.setLoading(true);

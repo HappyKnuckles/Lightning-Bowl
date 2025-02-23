@@ -16,8 +16,9 @@
   <!-- Show this message if there are no game history items and it's not loading -->
   <ng-container *ngIf="storageService.games().length <= 0 && !loadingService.isLoading(); else content">
     <ion-text class="no-game-text">
-      {{ storageService.games().length <= 0 && !loadingService.isLoading()
-        ? 'Start playing a few games to see your leagues here!' : 'No leagues saved!!' }} </ion-text>
+      {{ storageService.games().length <= 0 && !loadingService.isLoading() ? 'Start playing a few games to see your leagues here!' : 'No leagues
+      saved!!' }}
+    </ion-text>
   </ng-container>
   <ng-template #content>
     <ng-container *ngFor="let league of leagueKeys(); let i = index;">
@@ -59,7 +60,11 @@
   </ng-template>
 </ion-content>
 
-<ion-modal *ngFor="let league of leagueKeys()" [trigger]="league" #modal (didDismiss)="destroyCharts(league)"
+<ion-modal
+  *ngFor="let league of leagueKeys()"
+  [trigger]="league"
+  #modal
+  (didDismiss)="destroyCharts(league)"
   (didPresent)="loadingService.setLoading(false); generateCharts(league, true)">
   <ng-template>
     <ion-header [translucent]="true">
@@ -73,7 +78,7 @@
       </ion-toolbar>
       <ion-toolbar>
         <ion-segment [value]="selectedSegment" (ionChange)="onSegmentChanged(league, $event)">
-          <ion-segment-button *ngFor="let segment of segments" [value]="segment" [contentId]="segment">
+          <ion-segment-button *ngFor="let segment of segments" [value]="segment" [contentId]="segment + '-' + league">
             <ion-label class="segment-label">{{segment}}</ion-label>
           </ion-segment-button>
         </ion-segment>
@@ -81,33 +86,32 @@
     </ion-header>
     <ion-content #modalContent>
       <ion-segment-view>
-        <ion-segment-content id="Overall">
+        <ion-segment-content id="Overall-{{league}}">
           <section class="tab">
-            <app-stat-display [statDefinitions]="statDefinitions" [currentStats]="statsByLeague()[league]"
+            <app-stat-display
+              [statDefinitions]="statDefinitions"
+              [currentStats]="statsByLeague()[league]"
               [prevStats]="overallStats()"></app-stat-display>
             <div class="stat-container">
               <canvas #scoreChart style="width: 300px; height: 400px"></canvas>
             </div>
           </section>
         </ion-segment-content>
-        
-        <ion-segment-content id="Spares">
+
+        <ion-segment-content id="Spares-{{league}}">
           <section class="tab">
-            <app-spare-display [prevStats]="overallStats()" [stats]="statsByLeague()[league]"
-              id="league-spareStats"></app-spare-display>
+            <app-spare-display [prevStats]="overallStats()" [stats]="statsByLeague()[league]" id="league-spareStats"></app-spare-display>
             <div class="stat-container">
               <canvas #pinChart style="width: 300px; height: 300px"></canvas>
             </div>
           </section>
         </ion-segment-content>
 
-        <ion-segment-content id="Games">
+        <ion-segment-content id="Games-{{league}}">
           <section class="tab">
-            <app-game [games]="gamesByLeague()[league]" [gameCount]="gamesByLeague()[league].length"
-              [isLeaguePage]="true"></app-game>
+            <app-game [games]="gamesByLeague()[league]" [gameCount]="gamesByLeague()[league].length" [isLeaguePage]="true"></app-game>
           </section>
         </ion-segment-content>
-
       </ion-segment-view>
     </ion-content>
   </ng-template>

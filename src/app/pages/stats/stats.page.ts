@@ -39,7 +39,7 @@ import { StatDisplayComponent } from 'src/app/components/stat-display/stat-displ
 import { PrevStats, SessionStats } from 'src/app/models/stats.model';
 import { SpareDisplayComponent } from '../../components/spare-display/spare-display.component';
 import { StorageService } from 'src/app/services/storage/storage.service';
-import { ModalController } from '@ionic/angular';
+import { ModalController, RefresherCustomEvent } from '@ionic/angular';
 import { SortUtilsService } from 'src/app/services/sort-utils/sort-utils.service';
 import { ChartGenerationService } from 'src/app/services/chart/chart-generation.service';
 import { overallStatDefinitions, seriesStatDefinitions, sessionStatDefinitions, throwStatDefinitions } from './stats.definitions';
@@ -165,7 +165,7 @@ export class StatsPage implements OnInit, AfterViewInit {
     });*/
   }
 
-  async handleRefresh(event: any): Promise<void> {
+  async handleRefresh(event: RefresherCustomEvent): Promise<void> {
     try {
       this.hapticService.vibrate(ImpactStyle.Medium, 200);
       await this.storageService.loadGameHistory();

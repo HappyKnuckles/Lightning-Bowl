@@ -11,7 +11,8 @@
     "test": "ng test",
     "pretty": "npx prettier --write .",
     "postinstall": "husky install || echo 'Skipping husky install'",
-    "lint": "ng lint"
+    "lint": "ng lint",
+    "stylelint": "npx stylelint \"src/**/*.scss\""
   },
   "private": true,
   "dependencies": {
