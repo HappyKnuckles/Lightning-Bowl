@@ -351,7 +351,7 @@ export class ChartGenerationService {
   private calculateScoreChartData(gameHistory: Game[]) {
     try {
       const scoresByDate: Record<string, number[]> = {};
-      gameHistory.forEach((game: any) => {
+      gameHistory.forEach((game: Game) => {
         const date = new Date(game.date).toLocaleDateString('de-DE', {
           day: '2-digit',
           month: '2-digit',

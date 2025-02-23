@@ -1,3 +1,5 @@
+type StatValue = number | number[] | string;
+
 export interface Stats {
   totalGames: number;
   totalPins: number;
@@ -29,7 +31,7 @@ export interface Stats {
   high4Series?: number;
   average5SeriesScore?: number;
   high5Series?: number;
-  [key: string]: any;
+  [key: string]: StatValue | undefined;
 }
 export interface SessionStats extends Stats {
   lowGame: number;
@@ -69,5 +71,7 @@ export interface PrevStats {
   average4SeriesScore?: number;
   high4Series?: number;
   average5SeriesScore?: number;
-  [key: string]: any;
+  [key: string]: StatValue | undefined;
 }
+
+export type GameStats = Stats | SessionStats | SeriesStats | PrevStats;

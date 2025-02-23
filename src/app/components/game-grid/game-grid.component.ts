@@ -11,6 +11,7 @@ import { UtilsService } from 'src/app/services/utils/utils.service';
 import { GameUtilsService } from 'src/app/services/game-utils/game-utils.service';
 import { GameScoreCalculatorService } from 'src/app/services/game-score-calculator/game-score-calculator.service';
 import { GameDataTransformerService } from 'src/app/services/game-transform/game-data-transform.service';
+import { InputCustomEvent } from '@ionic/angular';
 
 @Component({
   selector: 'app-game-grid',
@@ -84,8 +85,8 @@ export class GameGridComponent implements OnInit {
     this.leagueChanged.emit(this.selectedLeague);
   }
 
-  simulateScore(event: any, frameIndex: number, inputIndex: number): void {
-    const inputValue = event.target.value;
+  simulateScore(event: InputCustomEvent, frameIndex: number, inputIndex: number): void {
+    const inputValue = event.detail.value!;
     const parsedValue = this.parseInputValue(inputValue, frameIndex, inputIndex);
 
     if (!this.isValidNumber0to10(parsedValue)) {
@@ -121,10 +122,9 @@ export class GameGridComponent implements OnInit {
       );
 
       await this.storageService.saveGameToLocalStorage(gameData);
-      this.toastService.showToast('Game saved succesfully.', 'add');
       this.clearFrames(true);
     } catch (error) {
-      this.toastService.showToast(`Error saving game data to local storage: ${error}`, 'bug', true);
+      console.error('Error saving game to local storage:', error);
     }
   }
 
@@ -132,7 +132,7 @@ export class GameGridComponent implements OnInit {
     return this.gameUtilsService.isGameValid(this.gameScoreCalculatorService);
   }
 
-  isNumber(value: any): boolean {
+  isNumber(value: unknown): boolean {
     return this.utilsService.isNumber(value);
   }
 
@@ -167,7 +167,7 @@ export class GameGridComponent implements OnInit {
     return this.gameUtilsService.isValidFrameScore(inputValue, frameIndex, inputIndex, this.gameScoreCalculatorService);
   }
 
-  private handleInvalidInput(event: any): void {
+  private handleInvalidInput(event: InputCustomEvent): void {
     this.hapticService.vibrate(ImpactStyle.Heavy, 300);
     event.target.value = '';
   }

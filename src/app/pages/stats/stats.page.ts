@@ -39,7 +39,7 @@ import { StatDisplayComponent } from 'src/app/components/stat-display/stat-displ
 import { PrevStats, SessionStats } from 'src/app/models/stats.model';
 import { SpareDisplayComponent } from '../../components/spare-display/spare-display.component';
 import { StorageService } from 'src/app/services/storage/storage.service';
-import { ModalController, RefresherCustomEvent } from '@ionic/angular';
+import { ModalController, RefresherCustomEvent, SegmentCustomEvent } from '@ionic/angular';
 import { SortUtilsService } from 'src/app/services/sort-utils/sort-utils.service';
 import { ChartGenerationService } from 'src/app/services/chart/chart-generation.service';
 import { overallStatDefinitions, seriesStatDefinitions, sessionStatDefinitions, throwStatDefinitions } from './stats.definitions';
@@ -177,8 +177,8 @@ export class StatsPage implements OnInit, AfterViewInit {
     }
   }
 
-  onSegmentChanged(event: any): void {
-    this.selectedSegment = event.detail.value;
+  onSegmentChanged(event: SegmentCustomEvent): void {
+    this.selectedSegment = event.detail.value?.toString() || 'Overall';
     this.generateCharts();
     this.content.scrollToTop(300);
   }

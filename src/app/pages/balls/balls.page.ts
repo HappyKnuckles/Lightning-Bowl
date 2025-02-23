@@ -28,7 +28,7 @@ import {
 import { Ball } from 'src/app/models/ball.model';
 import { addIcons } from 'ionicons';
 import { globeOutline, camera, addOutline, filterOutline, openOutline } from 'ionicons/icons';
-import { InfiniteScrollCustomEvent, ModalController, RefresherCustomEvent } from '@ionic/angular';
+import { InfiniteScrollCustomEvent, ModalController, RefresherCustomEvent, SearchbarCustomEvent } from '@ionic/angular';
 import { BallFilterComponent } from 'src/app/components/ball-filter/ball-filter.component';
 import { StorageService } from 'src/app/services/storage/storage.service';
 import { ToastService } from 'src/app/services/toast/toast.service';
@@ -151,8 +151,8 @@ export class BallsPage implements OnInit {
     }
   }
 
-  searchBalls(event: any): void {
-    const query = event.target.value.toLowerCase();
+  searchBalls(event: SearchbarCustomEvent): void {
+    const query = event.detail.value!.toLowerCase();
     this.searchTerm = query;
     this.searchSubject.next(query);
   }

@@ -102,7 +102,7 @@ export class GameComponent implements OnChanges {
   });
   showingGames: Game[] = [];
   isEditMode: Record<string, boolean> = {};
-  private closeTimers: Record<string, any> = {};
+  private closeTimers: Record<string, NodeJS.Timeout> = {};
   public delayedCloseMap: Record<string, boolean> = {};
   private originalGameState: Record<string, Game> = {};
   constructor(
@@ -159,16 +159,16 @@ export class GameComponent implements OnChanges {
     await alert.present();
   }
 
-  loadMoreGames(event: any): void {
+  loadMoreGames(event: InfiniteScrollCustomEvent): void {
     const nextPage = this.showingGames.length + 25;
     setTimeout(() => {
-      (event as InfiniteScrollCustomEvent).target.complete();
+      event.target.complete();
       this.showingGames = this.games.slice(0, nextPage);
-    }, 150);
+    }, 50);
   }
 
-  parseIntValue(value: any): number {
-    return this.utilsService.parseIntValue(value);
+  parseIntValue(value: unknown): number {
+    return this.utilsService.parseIntValue(value) as number;
   }
 
   saveOriginalStateAndEnableEdit(game: Game): void {
@@ -224,11 +224,6 @@ export class GameComponent implements OnChanges {
     } else nativeEl.value = accordionId;
   }
 
-  deleteAll(): void {
-    this.storageService.deleteAllData();
-    window.dispatchEvent(new Event('dataDeleted'));
-  }
-
   cancelEdit(game: Game): void {
     // Revert to the original game state
     if (this.originalGameState[game.gameId]) {
@@ -245,12 +240,21 @@ export class GameComponent implements OnChanges {
         this.toastService.showToast('Invalid input.', 'bug', true);
         return;
       } else {
-        if (game.league === undefined || game.league === '') {
-          game.isPractice = true;
-        } else game.isPractice = false;
-        game.totalScore = game.frameScores[9];
-        await this.storageService.saveGameToLocalStorage(game);
-        this.toastService.showToast('Game edit saved sucessfully!', 'refresh-outline');
+        // Create a deep copy of the game object
+        const gameCopy = JSON.parse(JSON.stringify(game));
+
+        gameCopy.frames.forEach((frame: any) => {
+          delete frame.isInvalid;
+        });
+
+        if (gameCopy.league === undefined || gameCopy.league === '') {
+          gameCopy.isPractice = true;
+        } else {
+          gameCopy.isPractice = false;
+        }
+        gameCopy.totalScore = gameCopy.frameScores[9];
+        await this.storageService.saveGameToLocalStorage(gameCopy);
+        this.toastService.showToast('Game edit saved successfully!', 'refresh-outline');
         this.enableEdit(game);
       }
     } catch (error) {

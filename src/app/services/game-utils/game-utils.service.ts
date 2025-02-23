@@ -10,13 +10,13 @@ export class GameUtilsService {
     const frames = game ? game.frames : gameScoreCalculatorService!.frames;
     let isValid = true;
     frames.forEach((frame: any, index: number) => {
-      const throws = Array.isArray(frame) ? frame : frame.throws.map((t: { value: any }) => t.value);
+      const throws = Array.isArray(frame) ? frame : frame.throws.map((t: { value: number | string }) => t.value);
       if (index < 9) {
         // For frames 1 to 9
         const frameValid =
           (throws[0] === 10 && isNaN(parseInt(throws[1]))) ||
           (throws[0] !== 10 &&
-            throws.reduce((acc: any, curr: any) => acc + curr, 0) <= 10 &&
+            throws.reduce((acc: number, curr: number) => acc + curr, 0) <= 10 &&
             throws.every((throwValue: number) => throwValue >= 0 && throwValue <= 10));
         if (!frameValid) {
           isValid = false;

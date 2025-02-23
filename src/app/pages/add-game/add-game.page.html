@@ -51,20 +51,22 @@
   <ion-content [fullscreen]="true" *ngIf="mode">
     <ion-segment-view>
       <ion-segment-content *ngFor="let trackIndex of trackIndexes[i]; let j = index" [id]="segments[j]">
-          <app-game-grid (maxScoreChanged)="onMaxScoreChanged($event, trackIndex)"
-            (totalScoreChanged)="onTotalScoreChange($event, trackIndex)" (leagueChanged)="onLeagueChange($event)"
-            (isPracticeChanged)="onIsPracticeChange($event)"></app-game-grid>
-          <ion-grid *ngIf="i !== 0">
-            <ion-row>
-              <ion-col class="middle count">Total: {{ totalScores[trackIndex] }}</ion-col>
-              <ion-col class="middle count">Max: {{ maxScores[trackIndex] }}</ion-col>
-            </ion-row>
-            <ion-row class="button-row">
-              <ion-col>
-                <ion-button (click)="clearFrames(j)">Clear Score</ion-button>
-              </ion-col>
-            </ion-row>
-          </ion-grid>
+        <app-game-grid
+          (maxScoreChanged)="onMaxScoreChanged($event, trackIndex)"
+          (totalScoreChanged)="onTotalScoreChange($event, trackIndex)"
+          (leagueChanged)="onLeagueChange($event)"
+          (isPracticeChanged)="onIsPracticeChange($event)"></app-game-grid>
+        <ion-grid *ngIf="i !== 0">
+          <ion-row>
+            <ion-col class="middle count">Total: {{ totalScores[trackIndex] }}</ion-col>
+            <ion-col class="middle count">Max: {{ maxScores[trackIndex] }}</ion-col>
+          </ion-row>
+          <ion-row class="button-row">
+            <ion-col>
+              <ion-button (click)="clearFrames(j)">Clear Score</ion-button>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
       </ion-segment-content>
     </ion-segment-view>
 
@@ -171,7 +173,7 @@
                 [value]="gameData.frameScores[frameIndex]"
                 inputmode="numeric"
                 clearOnEdit="true"
-                (ionChange)="updateFrameScore($event.target.value, frameIndex)">
+                (ionChange)="updateFrameScore($event, frameIndex)">
               </ion-input>
             </ion-col>
           </ion-row>
@@ -179,7 +181,7 @@
       </div>
       <ion-list lines="full" style="border-radius: 7px">
         <ion-item>
-          <ion-checkbox (ionChange)="gameData.isPractice = $event.target.checked" name="isPractice">Practice</ion-checkbox>
+          <ion-checkbox checked="true" (ionChange)="gameData.isPractice = $event.target.checked" name="isPractice">Practice</ion-checkbox>
         </ion-item>
         <!-- <ion-item class="league">
           <ion-select name="league" (ionChange)="gameData.league = $event.target.value" label="League/Tournament"

@@ -40,7 +40,7 @@ export class UtilsService {
     return false;
   }
 
-  areArraysEqual(arr1: any[], arr2: any[]): boolean {
+  areArraysEqual(arr1: unknown[], arr2: unknown[]): boolean {
     if (arr1.length !== arr2.length) {
       return false;
     }
@@ -49,12 +49,12 @@ export class UtilsService {
     return sortedArr1.every((value, index) => value === sortedArr2[index]);
   }
 
-  isNumber(value: any): boolean {
-    return !isNaN(parseFloat(value)) && isFinite(value);
+  isNumber(value: unknown): boolean {
+    return !isNaN(parseFloat(value as string)) && isFinite(value as number);
   }
 
-  parseIntValue(value: any): any {
-    const parsedValue = parseInt(value, 10);
+  parseIntValue(value: unknown): string | number {
+    const parsedValue = parseInt(value as string, 10);
     return isNaN(parsedValue) ? '' : parsedValue;
   }
 

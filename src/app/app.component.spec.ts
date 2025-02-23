@@ -17,7 +17,7 @@ const mockSwUpdate = {
     subscriber.next({ current: '1.0.0', available: '1.1.0' });
     subscriber.complete();
   }),
-  subscribe: (callback: (value: any) => void) => {
+  subscribe: (callback: (value: unknown) => void) => {
     mockSwUpdate.available.subscribe(callback);
   },
 };

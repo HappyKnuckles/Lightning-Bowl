@@ -38,7 +38,7 @@ import {
 import { Game } from 'src/app/models/game.model';
 import { GameComponent } from '../../components/game/game.component';
 import { ToastService } from 'src/app/services/toast/toast.service';
-import { AlertController, RefresherCustomEvent } from '@ionic/angular';
+import { AlertController, RefresherCustomEvent, SegmentCustomEvent } from '@ionic/angular';
 import { LoadingService } from 'src/app/services/loader/loading.service';
 import { Stats } from 'src/app/models/stats.model';
 import { GameStatsService } from 'src/app/services/game-stats/game-stats.service';
@@ -180,8 +180,8 @@ export class LeaguePage {
     this.statsValueChanged = [true, true];
   }
 
-  onSegmentChanged(league: string, event: any): void {
-    this.selectedSegment = event.detail.value;
+  onSegmentChanged(league: string, event: SegmentCustomEvent): void {
+    this.selectedSegment = event.detail.value?.toString() || 'Overall';
     this.generateCharts(league);
     this.content.scrollToTop(300);
   }

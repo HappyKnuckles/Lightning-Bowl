@@ -28,8 +28,8 @@ export class GameDataTransformerService {
         gameId: gameId,
         date: date,
         frames: frames.map((frame: any[], frameIndex: number) => ({
-          throws: frame.map((throwValue: any, throwIndex: number) => ({
-            value: parseInt(throwValue),
+          throws: frame.map((throwValue: number | string, throwIndex: number) => ({
+            value: parseInt(throwValue as string),
             throwIndex: throwIndex + 1, // Add 1 to make it 1-based index
           })),
           frameIndex: frameIndex + 1,

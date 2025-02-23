@@ -50,7 +50,10 @@ export class GameFilterService {
   get filters() {
     return this.#filters;
   }
-  constructor(private utilsService: UtilsService, private storageService: StorageService) {
+  constructor(
+    private utilsService: UtilsService,
+    private storageService: StorageService,
+  ) {
     this.setDefaultFilters();
     // this.filterGames();
   }
@@ -61,7 +64,7 @@ export class GameFilterService {
       const gameDate = formatDate(new Date(game.date).toISOString());
       const startDate = formatDate(filters.startDate!);
       const endDate = formatDate(filters.endDate!);
-
+      // TODO try to find out how to not call it so often
       return (
         gameDate >= startDate &&
         gameDate <= endDate &&
@@ -70,8 +73,8 @@ export class GameFilterService {
         (filters.excludePractice ? !game.isPractice : true) &&
         (!filters.isPerfect || game.isPerfect) &&
         (!filters.isClean || game.isClean) &&
-        (filters.leagues.includes('all') || filters.leagues.includes(game.league || '')) &&
-        (filters.balls.includes('all') || filters.balls.includes(game.balls!.join(', ')))
+        (filters.leagues.includes('all') || filters.leagues.length === 0 || filters.leagues.includes(game.league || '')) &&
+        (filters.balls.includes('all') || filters.balls.length === 0 || filters.balls.includes(game.balls!.join(', ')))
       );
     });
     return filter;

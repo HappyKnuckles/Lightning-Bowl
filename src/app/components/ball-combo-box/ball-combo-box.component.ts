@@ -13,9 +13,10 @@ import {
   IonToolbar,
   IonCheckbox,
   IonInfiniteScroll,
-  IonInfiniteScrollContent, IonTitle
+  IonInfiniteScrollContent,
+  IonTitle,
 } from '@ionic/angular/standalone';
-import { InfiniteScrollCustomEvent } from '@ionic/angular';
+import { InfiniteScrollCustomEvent, SearchbarCustomEvent } from '@ionic/angular';
 import { StorageService } from 'src/app/services/storage/storage.service';
 
 @Component({
@@ -23,7 +24,8 @@ import { StorageService } from 'src/app/services/storage/storage.service';
   templateUrl: './ball-combo-box.component.html',
   styleUrls: ['./ball-combo-box.component.scss'],
   standalone: true,
-  imports: [IonTitle,
+  imports: [
+    IonTitle,
     IonInfiniteScrollContent,
     IonInfiniteScroll,
     IonCheckbox,
@@ -57,7 +59,7 @@ export class BallComboBoxComponent implements OnInit, OnDestroy {
   private batchSize = 100;
   public loadedCount = 0;
 
-  constructor(public storageService: StorageService) { }
+  constructor(public storageService: StorageService) {}
 
   ngOnInit(): void {
     this.filteredBalls = [...this.balls];
@@ -98,8 +100,8 @@ export class BallComboBoxComponent implements OnInit, OnDestroy {
     }
   }
 
-  searchBalls(event: any): void {
-    const searchTerm = event.target.value.toLowerCase();
+  searchBalls(event: SearchbarCustomEvent): void {
+    const searchTerm = event.detail.value!.toLowerCase();
     if (searchTerm && searchTerm.trim() !== '') {
       const result = this.fuse.search(searchTerm);
       this.filteredBalls = result.map((res) => res.item);

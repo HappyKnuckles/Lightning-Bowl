@@ -29,7 +29,11 @@ export class StorageService {
     return this.#allBalls;
   }
 
-  constructor(private storage: Storage, private sortUtilsService: SortUtilsService, private loadingService: LoadingService) {
+  constructor(
+    private storage: Storage,
+    private sortUtilsService: SortUtilsService,
+    private loadingService: LoadingService,
+  ) {
     this.init();
   }
 
@@ -65,7 +69,7 @@ export class StorageService {
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
-      const sortedBalls = await response.json();   
+      const sortedBalls = await response.json();
 
       this.allBalls.set(sortedBalls);
     } catch (error) {
@@ -77,7 +81,7 @@ export class StorageService {
     const key = 'arsenal' + '_' + ball.ball_id;
     await this.save(key, ball);
     this.arsenal.update((balls) => {
-      const uniqueBalls = new Set(balls.map(b => b.ball_name));
+      const uniqueBalls = new Set(balls.map((b) => b.ball_name));
       if (!uniqueBalls.has(ball.ball_name)) {
         return [...balls, ball];
       }
@@ -199,7 +203,7 @@ export class StorageService {
     return data;
   }
 
-  private async save(key: string, data: any) {
+  private async save(key: string, data: unknown) {
     await this.storage.set(key, data);
   }
 

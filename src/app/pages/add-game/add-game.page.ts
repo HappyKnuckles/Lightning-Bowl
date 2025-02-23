@@ -41,6 +41,7 @@ import { LeagueSelectorComponent } from 'src/app/components/league-selector/leag
 import { GameGridComponent } from 'src/app/components/game-grid/game-grid.component';
 import { GameScoreCalculatorService } from 'src/app/services/game-score-calculator/game-score-calculator.service';
 import { GameDataTransformerService } from 'src/app/services/game-transform/game-data-transform.service';
+import { InputCustomEvent } from '@ionic/angular';
 
 const enum SeriesMode {
   Single = 'Single',
@@ -218,8 +219,8 @@ export class AddGamePage implements OnInit {
     return this.gameUtilsService.isGameValid(undefined, game);
   }
 
-  updateFrameScore(value: any, index: number): void {
-    this.gameData.frameScores[index] = value;
+  updateFrameScore(event: InputCustomEvent, index: number): void {
+    this.gameData.frameScores[index] = parseInt(event.detail.value!, 10);
   }
 
   clearFrames(index?: number): void {
@@ -275,7 +276,7 @@ export class AddGamePage implements OnInit {
         this.toastService.showToast('Game saved successfully.', 'add');
       } catch (error) {
         console.error(error);
-        this.toastService.showToast('Oops, something went wrong.', 'bug', true);
+        this.toastService.showToast(`Error saving game data to local storage: ${error}`, 'bug', true);
       }
     } else this.setAlertOpen();
   }

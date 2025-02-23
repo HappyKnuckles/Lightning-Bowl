@@ -107,17 +107,20 @@ export class HistoryPage {
     }
   }
 
-  async handleFileUpload(event: any): Promise<void> {
+  async handleFileUpload(event: Event): Promise<void> {
     try {
       this.loadingService.setLoading(true);
-      this.file = event.target.files[0];
+      const input = event.target as HTMLInputElement;
+      if (!input.files || input.files.length === 0) return;
+      this.file = input.files[0];
       const gameData = await this.excelService.readExcelData(this.file);
       await this.excelService.transformData(gameData);
       this.toastService.showToast('Uploaded Excel file successfully.', 'checkmark-outline');
     } catch (error) {
       this.toastService.showToast(`Error: ${error}`, 'bug', true);
     } finally {
-      event.target.value = '';
+      const input = event.target as HTMLInputElement;
+      input.value = '';
       this.loadingService.setLoading(false);
     }
   }
@@ -157,5 +160,10 @@ export class HistoryPage {
       ],
     });
     await alert.present();
+  }
+
+  deleteAll(): void {
+    this.storageService.deleteAllData();
+    window.dispatchEvent(new Event('dataDeleted'));
   }
 }

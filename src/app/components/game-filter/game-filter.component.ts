@@ -68,7 +68,7 @@ export class GameFilterComponent implements OnInit {
     public filterService: GameFilterService,
     private sortUtilsService: SortUtilsService,
     public storageService: StorageService,
-    private utilsService: UtilsService
+    private utilsService: UtilsService,
   ) {}
 
   ngOnInit(): void {
@@ -121,12 +121,12 @@ export class GameFilterComponent implements OnInit {
 
   cancel(): Promise<boolean> {
     this.filterService.filters.update(() =>
-      localStorage.getItem('game-filter') ? JSON.parse(localStorage.getItem('game-filter')!) : this.filterService.filters()
+      localStorage.getItem('game-filter') ? JSON.parse(localStorage.getItem('game-filter')!) : this.filterService.filters(),
     );
     return this.modalCtrl.dismiss(null, 'cancel');
   }
 
-  updateFilter<T extends keyof GameFilter>(key: T, value: any): void {
+  updateFilter<T extends keyof GameFilter>(key: T, value: unknown): void {
     this.filterService.filters.update((filters) => ({ ...filters, [key]: value }));
   }
 

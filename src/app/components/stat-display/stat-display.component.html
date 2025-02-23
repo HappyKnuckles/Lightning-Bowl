@@ -1,14 +1,14 @@
 <div class="stat-container">
-  <ng-container *ngFor="let stat of statDefinitions; trackBy: trackByKey">
+  @for (stat of statDefinitions; track stat.key) {
     <div class="stats">
       <app-stat-row
         [label]="stat.label"
-        [currentStat]="currentStats[stat.key]"
-        [prevStat]="stat.prevKey ? prevStats[stat.prevKey] : undefined"
+        [currentStat]="getNumericStat(currentStats, stat.key)!"
+        [prevStat]="stat.prevKey ? getNumericStat(prevStats, stat.prevKey) : undefined"
         [toolTip]="stat.toolTip"
         [id]="stat.id"
         [isPercentage]="stat.isPercentage">
       </app-stat-row>
     </div>
-  </ng-container>
+  }
 </div>
