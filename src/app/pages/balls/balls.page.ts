@@ -105,6 +105,10 @@ export class BallsPage implements OnInit {
     };
     return new Fuse(this.storageService.allBalls(), options);
   });
+  // TODO this should be used for fuse search, it holds all balls from storage computed with the current selected filters
+  // searchFilteredBalls = computed(() => {
+  //   this.storageService.allBalls()
+  // });
   searchSubject = new Subject<string>();
   constructor(
     private modalCtrl: ModalController,
@@ -158,6 +162,7 @@ export class BallsPage implements OnInit {
   }
 
   async removeFromArsenal(ball: Ball): Promise<void> {
+    this.hapticService.vibrate(ImpactStyle.Light, 100);
     await this.storageService.removeFromArsenal(ball);
     this.toastService.showToast(`${ball.ball_name} removed from Arsenal.`, 'checkmark-outline');
   }
@@ -167,6 +172,7 @@ export class BallsPage implements OnInit {
   }
 
   async saveBallToArsenal(ball: Ball): Promise<void> {
+    this.hapticService.vibrate(ImpactStyle.Light, 100);
     await this.storageService.saveBallToArsenal(ball);
     this.toastService.showToast(`${ball.ball_name} added to Arsenal.`, 'add');
   }
@@ -209,6 +215,8 @@ export class BallsPage implements OnInit {
   }
   async getSameCoreBalls(ball: Ball): Promise<void> {
     try {
+      this.hapticService.vibrate(ImpactStyle.Light, 100);
+
       this.loadingService.setLoading(true);
       const response = await firstValueFrom(
         this.http.get<Ball[]>(`${environment.bowwwlEndpoint}core-balls`, {
@@ -236,6 +244,8 @@ export class BallsPage implements OnInit {
 
   async getSameCoverstockBalls(ball: Ball): Promise<void> {
     try {
+      this.hapticService.vibrate(ImpactStyle.Light, 100);
+
       this.loadingService.setLoading(true);
       const response = await firstValueFrom(
         this.http.get<Ball[]>(`${environment.bowwwlEndpoint}coverstock-balls`, {

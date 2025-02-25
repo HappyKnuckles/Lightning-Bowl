@@ -22,20 +22,25 @@ import {
   IonCardContent,
   IonCard,
   IonCardTitle,
-  IonText, IonItemSliding, IonItemOption, IonItemOptions
+  IonText,
+  IonItemSliding,
+  IonItemOption,
+  IonItemOptions,
 } from '@ionic/angular/standalone';
 import { StorageService } from 'src/app/services/storage/storage.service';
 import { Ball } from 'src/app/models/ball.model';
 import { ToastService } from 'src/app/services/toast/toast.service';
 import { addIcons } from 'ionicons';
 import { chevronBack, add, openOutline, trashOutline } from 'ionicons/icons';
-import { ModalController } from '@ionic/angular';
+import { AlertController, ModalController } from '@ionic/angular';
 import { HttpClient } from '@angular/common/http';
 import { BallComboBoxComponent } from 'src/app/components/ball-combo-box/ball-combo-box.component';
 import { BallListComponent } from 'src/app/components/ball-list/ball-list.component';
 import { LoadingService } from 'src/app/services/loader/loading.service';
 import { environment } from 'src/environments/environment';
 import { firstValueFrom } from 'rxjs';
+import { ImpactStyle } from '@capacitor/haptics';
+import { HapticService } from 'src/app/services/haptic/haptic.service';
 
 @Component({
   selector: 'app-arsenal',
@@ -43,7 +48,10 @@ import { firstValueFrom } from 'rxjs';
   styleUrls: ['./arsenal.page.scss'],
   standalone: true,
   providers: [ModalController],
-  imports: [IonItemOptions, IonItemOption, IonItemSliding,
+  imports: [
+    IonItemOptions,
+    IonItemOption,
+    IonItemSliding,
     IonText,
     IonThumbnail,
     IonCardTitle,
@@ -68,7 +76,8 @@ import { firstValueFrom } from 'rxjs';
     CommonModule,
     FormsModule,
     BallComboBoxComponent,
-    BallListComponent],
+    BallListComponent,
+  ],
 })
 export class ArsenalPage implements OnInit {
   @ViewChild('core', { static: false }) coreModal!: IonModal;
@@ -77,9 +86,18 @@ export class ArsenalPage implements OnInit {
   coreBalls: Ball[] = [];
   presentingElement?: HTMLElement;
   ballsWithoutArsenal: Signal<Ball[]> = computed(() =>
-    this.storageService.allBalls().filter((ball) => !this.storageService.arsenal().some((arsenalBall) => arsenalBall.ball_id === ball.ball_id))
+    this.storageService.allBalls().filter((ball) => !this.storageService.arsenal().some((arsenalBall) => arsenalBall.ball_id === ball.ball_id)),
   );
-  constructor(public storageService: StorageService, private loadingService: LoadingService, public toastService: ToastService, public modalCtrl: ModalController, private http: HttpClient) {
+  constructor(
+    public storageService: StorageService,
+    private hapticService: HapticService,
+    private alertController: AlertController,
+
+    private loadingService: LoadingService,
+    public toastService: ToastService,
+    public modalCtrl: ModalController,
+    private http: HttpClient,
+  ) {
     addIcons({ add, trashOutline, chevronBack, openOutline });
   }
 
@@ -87,9 +105,28 @@ export class ArsenalPage implements OnInit {
     this.presentingElement = document.querySelector('.ion-page')!;
   }
 
-  removeFromArsenal(ball: Ball): void {
-    this.storageService.removeFromArsenal(ball);
-    this.toastService.showToast(`Ball removed from arsenal: ${ball.ball_name}`, 'checkmark-outline');
+  async removeFromArsenal(ball: Ball): Promise<void> {
+    this.hapticService.vibrate(ImpactStyle.Heavy, 300);
+    const alert = await this.alertController.create({
+      header: 'Confirm Deletion',
+      message: `Are you sure you want to remove ${ball.ball_name} from your arsenal?`,
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel',
+          // handler: () => { },
+        },
+        {
+          text: 'Delete',
+          handler: async () => {
+            this.storageService.removeFromArsenal(ball);
+            this.toastService.showToast(`Ball removed from arsenal: ${ball.ball_name}`, 'checkmark-outline');
+          },
+        },
+      ],
+    });
+
+    await alert.present();
   }
 
   saveBallToArsenal(ball: Ball[]): void {
@@ -102,13 +139,17 @@ export class ArsenalPage implements OnInit {
 
   async getSameCoreBalls(ball: Ball): Promise<void> {
     try {
+      this.hapticService.vibrate(ImpactStyle.Light, 100);
+
       this.loadingService.setLoading(true);
-      const response = await firstValueFrom(this.http.get<Ball[]>(`${environment.bowwwlEndpoint}core-balls`, {
-        params: {
-          core: ball.core_name,
-          ballId: ball.ball_id.toString()
-        }
-      }));
+      const response = await firstValueFrom(
+        this.http.get<Ball[]>(`${environment.bowwwlEndpoint}core-balls`, {
+          params: {
+            core: ball.core_name,
+            ballId: ball.ball_id.toString(),
+          },
+        }),
+      );
 
       this.coreBalls = response;
 
@@ -127,13 +168,17 @@ export class ArsenalPage implements OnInit {
 
   async getSameCoverstockBalls(ball: Ball): Promise<void> {
     try {
+      this.hapticService.vibrate(ImpactStyle.Light, 100);
+
       this.loadingService.setLoading(true);
-      const response = await firstValueFrom(this.http.get<Ball[]>(`${environment.bowwwlEndpoint}coverstock-balls`, {
-        params: {
-          coverstock: ball.coverstock_name,
-          ballId: ball.ball_id.toString()
-        }
-      }));
+      const response = await firstValueFrom(
+        this.http.get<Ball[]>(`${environment.bowwwlEndpoint}coverstock-balls`, {
+          params: {
+            coverstock: ball.coverstock_name,
+            ballId: ball.ball_id.toString(),
+          },
+        }),
+      );
 
       this.coverstockBalls = response;
 

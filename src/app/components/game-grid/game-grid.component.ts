@@ -73,15 +73,6 @@ export class GameGridComponent implements OnInit {
 
   onLeagueChanged(league: string): void {
     this.selectedLeague = league;
-    if (this.selectedLeague === '' || this.selectedLeague === 'New') {
-      this.isPractice = true;
-      this.checkbox.checked = true;
-      this.checkbox.disabled = false;
-    } else {
-      this.isPractice = false;
-      this.checkbox.checked = false;
-      this.checkbox.disabled = true;
-    }
     this.leagueChanged.emit(this.selectedLeague);
   }
 

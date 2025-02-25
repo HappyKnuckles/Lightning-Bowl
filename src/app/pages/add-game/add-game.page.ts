@@ -20,6 +20,7 @@ import {
   IonSegmentButton,
   IonSegmentView,
   IonSegmentContent,
+  IonCheckbox,
 } from '@ionic/angular/standalone';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Game } from 'src/app/models/game.model';
@@ -71,6 +72,7 @@ defineCustomElements(window);
     IonModal,
     IonButtons,
     IonInput,
+    IonCheckbox,
     IonSegmentButton,
     IonSegment,
     IonSegmentContent,
@@ -100,7 +102,7 @@ export class AddGamePage implements OnInit {
   leagues: string[] = [];
   @ViewChildren(GameGridComponent) gameGrids!: QueryList<GameGridComponent>;
   @ViewChild(IonModal) modal!: IonModal;
-
+  @ViewChild('modalCheckbox') modalCheckbox!: IonCheckbox;
   selectedSegment = 'Game 1';
   segments: string[] = ['Game 1'];
   private allowedDeviceIds = [
@@ -177,20 +179,34 @@ export class AddGamePage implements OnInit {
     this.modal.dismiss(null, 'cancel');
   }
 
-  onLeagueChange(league: string): void {
-    this.gameGrids.forEach((trackGrid: GameGridComponent) => {
-      trackGrid.leagueSelector.selectedLeague = league;
-      trackGrid.selectedLeague = league;
+  onLeagueChange(league: string, isModal = false): void {
+    if (isModal) {
+      this.gameData.league = league;
       if (league === '' || league === 'New') {
-        trackGrid.isPractice = true;
-        trackGrid.checkbox.checked = true;
-        trackGrid.checkbox.disabled = false;
+        this.gameData.isPractice = true;
+        this.modalCheckbox.checked = true;
+        this.modalCheckbox.disabled = false;
       } else {
-        trackGrid.isPractice = false;
-        trackGrid.checkbox.checked = false;
-        trackGrid.checkbox.disabled = true;
+        this.gameData.isPractice = false;
+        this.modalCheckbox.checked = false;
+        this.modalCheckbox.disabled = true;
       }
-    });
+      console.log(this.modalCheckbox);
+    } else {
+      this.gameGrids.forEach((trackGrid: GameGridComponent) => {
+        trackGrid.leagueSelector.selectedLeague = league;
+        trackGrid.selectedLeague = league;
+        if (league === '' || league === 'New') {
+          trackGrid.isPractice = true;
+          trackGrid.checkbox.checked = true;
+          trackGrid.checkbox.disabled = false;
+        } else {
+          trackGrid.isPractice = false;
+          trackGrid.checkbox.checked = false;
+          trackGrid.checkbox.disabled = true;
+        }
+      });
+    }
   }
 
   onIsPracticeChange(isPractice: boolean): void {
@@ -452,7 +468,7 @@ export class AddGamePage implements OnInit {
     try {
       const { frames, frameScores, totalScore } = this.gameUtilsService.parseBowlingScores(input, this.username!);
       this.gameData = this.transformGameService.transformGameData(frames, frameScores, totalScore, false, '', false, '', '', []);
-
+      this.gameData.isPractice = true;
       if (this.gameData.frames.length === 10 && this.gameData.frameScores.length === 10 && this.gameData.totalScore <= 300) {
         this.isModalOpen = true;
       } else {

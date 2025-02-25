@@ -241,7 +241,7 @@ export class GameComponent implements OnChanges {
         return;
       } else {
         // Create a deep copy of the game object
-        const gameCopy = JSON.parse(JSON.stringify(game));
+        const gameCopy = structuredClone(game);
 
         gameCopy.frames.forEach((frame: any) => {
           delete frame.isInvalid;

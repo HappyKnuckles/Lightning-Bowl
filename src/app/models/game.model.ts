@@ -22,22 +22,13 @@ export interface Game {
 
 // TODO adjust code to use frame interface instead
 
-// interface Frames {
+// interface Frame {
 //     frameIndex: number;
-//     throws: Throws[];
+//     frameScore: number;
+//     throws: Throw[];
 // }
 
-// export interface Throws {
+// export interface Throw {
 //     throwIndex: number;
 //     value: number;
-// }
-
-// export type ThrowsArray = [Throws, Throws];
-
-// export interface Game {
-//     gameId: string;
-//     date: number;
-//     frames: Frames[];
-//     totalScore: number;
-//     frameScores: number[];
 // }

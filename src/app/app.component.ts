@@ -59,7 +59,6 @@ export class AppComponent implements OnInit, OnDestroy {
 
   //TODO maybe implement custom alert to have title etc instead of confirm
   private initializeApp(): void {
-    // Listen for version updates and prompt the user
     this.swUpdate.versionUpdates.subscribe((event) => {
       if (event.type === 'VERSION_READY') {
         const lastCommitDate = localStorage.getItem('lastCommitDate');
@@ -68,7 +67,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
         // Fetch the latest commits from the master branch on GitHub
         this.http.get(apiUrl).subscribe({
-          next: (data: any) => {
+          next: async (data: any) => {
             const newCommits = [];
 
             for (const commit of data) {
@@ -80,17 +79,45 @@ export class AppComponent implements OnInit, OnDestroy {
 
             if (newCommits.length > 0) {
               const commitMessages = newCommits.join('\n');
-              if (confirm(`**New Version Available**\n\nChanges:\n${commitMessages}\n\nLoad it?`)) {
-                localStorage.setItem('lastCommitDate', new Date(data[0].commit.committer.date).toISOString());
-                window.location.reload();
-              }
+              const alert = await this.alertController.create({
+                header: 'New Version Available',
+                message: `Changes:\n${commitMessages}\n\nLoad it?`,
+                buttons: [
+                  {
+                    text: 'Cancel',
+                    role: 'cancel',
+                  },
+                  {
+                    text: 'Load',
+                    handler: () => {
+                      localStorage.setItem('lastCommitDate', new Date(data[0].commit.committer.date).toISOString());
+                      window.location.reload();
+                    },
+                  },
+                ],
+              });
+              await alert.present();
             }
           },
-          error: (error) => {
+          error: async (error) => {
             console.error('Failed to fetch the latest commits:', error);
-            if (confirm('A new version is available. Load it?')) {
-              window.location.reload();
-            }
+            const alert = await this.alertController.create({
+              header: 'New Version Available',
+              message: 'A new version is available. Load it?',
+              buttons: [
+                {
+                  text: 'Cancel',
+                  role: 'cancel',
+                },
+                {
+                  text: 'Load',
+                  handler: () => {
+                    window.location.reload();
+                  },
+                },
+              ],
+            });
+            await alert.present();
           },
         });
       }

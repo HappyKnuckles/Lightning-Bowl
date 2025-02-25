@@ -97,6 +97,7 @@ export class GameUtilsService {
     return parseInt(inputValue, 10);
   }
 
+  //TODO maybe adjust so their is always 10 frames
   parseBowlingScores(input: string, username: string): { frames: any[]; frameScores: number[]; totalScore: number } {
     const lines = input.split('\n').filter((line) => line.trim() !== '');
 
