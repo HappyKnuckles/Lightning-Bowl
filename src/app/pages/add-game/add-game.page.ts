@@ -93,7 +93,6 @@ export class AddGamePage implements OnInit {
   trackIndexes: number[][] = [[0], [1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11, 12]];
   sheetOpen = false;
   isAlertOpen = false;
-  alertButton = ['Dismiss'];
   isModalOpen = false;
   is300 = false;
   username = '';
@@ -294,11 +293,7 @@ export class AddGamePage implements OnInit {
         console.error(error);
         this.toastService.showToast(`Error saving game data to local storage: ${error}`, 'bug', true);
       }
-    } else this.setAlertOpen();
-  }
-
-  setAlertOpen(): void {
-    this.isAlertOpen = !this.isAlertOpen;
+    } else this.isAlertOpen = true;
   }
 
   onMaxScoreChanged(maxScore: number, index: number): void {

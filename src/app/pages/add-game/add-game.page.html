@@ -27,7 +27,7 @@
   }
 </ion-header>
 
-<ion-alert [isOpen]="isAlertOpen" header="Error" message="You didn't fill all inputs" [buttons]="alertButton" (didDismiss)="setAlertOpen()">
+<ion-alert [isOpen]="isAlertOpen" header="Error" message="You didn't fill all inputs" [buttons]="['Dismiss']" (didDismiss)="isAlertOpen = false">
 </ion-alert>
 
 <div

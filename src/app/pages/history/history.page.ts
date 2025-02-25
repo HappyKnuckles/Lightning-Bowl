@@ -38,6 +38,7 @@ import { GameComponent } from 'src/app/components/game/game.component';
 import { ExcelService } from 'src/app/services/excel/excel.service';
 import { GameFilterService } from 'src/app/services/game-filter/game-filter.service';
 import { GameFilterComponent } from 'src/app/components/game-filter/game-filter.component';
+import { GameFilterActiveComponent } from 'src/app/components/game-filter-active/game-filter-active.component';
 
 @Component({
   selector: 'app-history',
@@ -61,6 +62,7 @@ import { GameFilterComponent } from 'src/app/components/game-filter/game-filter.
     ReactiveFormsModule,
     FormsModule,
     GameComponent,
+    GameFilterActiveComponent,
   ],
 })
 export class HistoryPage {

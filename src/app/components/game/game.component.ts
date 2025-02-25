@@ -24,6 +24,10 @@ import {
   IonInfiniteScroll,
   IonInfiniteScrollContent,
   IonText,
+  IonChip,
+  IonList,
+  IonItemDivider,
+  IonLabel,
 } from '@ionic/angular/standalone';
 import { toPng } from 'html-to-image';
 import { addIcons } from 'ionicons';
@@ -52,6 +56,10 @@ import { UtilsService } from 'src/app/services/utils/utils.service';
   styleUrls: ['./game.component.scss'],
   providers: [DatePipe, ModalController],
   imports: [
+    IonLabel,
+    IonItemDivider,
+    IonList,
+    IonChip,
     IonText,
     IonInfiniteScrollContent,
     IonInfiniteScroll,
@@ -167,27 +175,23 @@ export class GameComponent implements OnChanges {
     }, 50);
   }
 
-  parseIntValue(value: unknown): number {
-    return this.utilsService.parseIntValue(value) as number;
-  }
-
-  saveOriginalStateAndEnableEdit(game: Game): void {
-    this.originalGameState[game.gameId] = JSON.parse(JSON.stringify(game));
-    this.enableEdit(game, game.gameId);
-  }
-
-  enableEdit(game: Game, accordionId?: string): void {
-    this.isEditMode[game.gameId] = !this.isEditMode[game.gameId];
-    this.hapticService.vibrate(ImpactStyle.Light, 100);
-
-    if (accordionId) {
-      this.openExpansionPanel(accordionId);
-      this.delayedCloseMap[game.gameId] = true;
+  isNewMonth(index: number): boolean {
+    if (index === 0) {
+      return true;
     }
+    const currentGameDate = new Date(this.showingGames[index].date);
+    const previousGameDate = new Date(this.showingGames[index - 1].date);
+    return currentGameDate.getMonth() !== previousGameDate.getMonth() || currentGameDate.getFullYear() !== previousGameDate.getFullYear();
+  }
+
+  getMonthName(timestamp: number): string {
+    const date = new Date(timestamp);
+    const options: Intl.DateTimeFormatOptions = { month: 'long', year: 'numeric' };
+    return date.toLocaleDateString(undefined, options);
   }
 
   // Hides the accordion content so it renders faster
-  hideContent(event: CustomEvent) {
+  hideContent(event: CustomEvent): void {
     const openGameIds: string[] = event.detail.value || [];
 
     openGameIds.forEach((gameId) => {
@@ -224,6 +228,24 @@ export class GameComponent implements OnChanges {
     } else nativeEl.value = accordionId;
   }
 
+  parseIntValue(value: unknown): number {
+    return this.utilsService.parseIntValue(value) as number;
+  }
+
+  saveOriginalStateAndEnableEdit(game: Game): void {
+    this.originalGameState[game.gameId] = JSON.parse(JSON.stringify(game));
+    this.enableEdit(game, game.gameId);
+  }
+
+  enableEdit(game: Game, accordionId?: string): void {
+    this.isEditMode[game.gameId] = !this.isEditMode[game.gameId];
+    this.hapticService.vibrate(ImpactStyle.Light, 100);
+
+    if (accordionId) {
+      this.openExpansionPanel(accordionId);
+      this.delayedCloseMap[game.gameId] = true;
+    }
+  }
   cancelEdit(game: Game): void {
     // Revert to the original game state
     if (this.originalGameState[game.gameId]) {

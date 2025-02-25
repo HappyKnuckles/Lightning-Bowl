@@ -46,6 +46,7 @@ import { overallStatDefinitions, seriesStatDefinitions, sessionStatDefinitions, 
 import { GameFilterService } from 'src/app/services/game-filter/game-filter.service';
 import { GameFilterComponent } from 'src/app/components/game-filter/game-filter.component';
 import { UtilsService } from 'src/app/services/utils/utils.service';
+import { GameFilterActiveComponent } from 'src/app/components/game-filter-active/game-filter-active.component';
 
 @Component({
   selector: 'app-stats',
@@ -74,6 +75,7 @@ import { UtilsService } from 'src/app/services/utils/utils.service';
     DatePipe,
     StatDisplayComponent,
     SpareDisplayComponent,
+    GameFilterActiveComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
