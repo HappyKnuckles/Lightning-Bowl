@@ -112,9 +112,7 @@
         </ion-segment-content>
 
         <ion-segment-content id="Games-{{league}}">
-          <section class="tab">
-            <app-game [games]="gamesByLeague()[league]" [gameCount]="gamesByLeague()[league].length" [isLeaguePage]="true"></app-game>
-          </section>
+          <app-game [games]="gamesByLeague()[league]" [gameCount]="gamesByLeague()[league].length" [isLeaguePage]="true"></app-game>
         </ion-segment-content>
       </ion-segment-view>
     </ion-content>

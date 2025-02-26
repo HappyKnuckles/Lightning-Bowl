@@ -6,6 +6,8 @@ import { Ball } from 'src/app/models/ball.model';
 import { signal } from '@angular/core';
 import { LoadingService } from '../loader/loading.service';
 import { environment } from 'src/environments/environment';
+import { firstValueFrom } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root',
@@ -33,6 +35,7 @@ export class StorageService {
     private storage: Storage,
     private sortUtilsService: SortUtilsService,
     private loadingService: LoadingService,
+    private http: HttpClient,
   ) {
     this.init();
   }
@@ -64,14 +67,9 @@ export class StorageService {
 
   async loadAllBalls(): Promise<void> {
     try {
-      // TODO remove fetch and use different
-      const response = await fetch(environment.bowwwlEndpoint + 'all-balls');
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      const sortedBalls = await response.json();
+      const response = await firstValueFrom(this.http.get<Ball[]>(`${environment.bowwwlEndpoint}all-balls`));
 
-      this.allBalls.set(sortedBalls);
+      this.allBalls.set(response);
     } catch (error) {
       console.error('Failed to load all balls:', error);
     }
