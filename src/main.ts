@@ -24,7 +24,7 @@ bootstrapApplication(AppComponent, {
     importProvidersFrom(BrowserModule, IonicStorageModule.forRoot()),
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
     provideAnimationsAsync(),
-    provideIonicAngular(),
+    provideIonicAngular({ innerHTMLTemplatesEnabled: true }),
     provideHttpClient(withInterceptorsFromDi()),
     provideServiceWorker('ngsw-worker.js', {
       enabled: !isDevMode(),

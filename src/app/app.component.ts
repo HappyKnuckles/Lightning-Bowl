@@ -11,6 +11,7 @@ import { ThemeChangerService } from './services/theme-changer/theme-changer.serv
 import { HttpClient } from '@angular/common/http';
 import { GameStatsService } from './services/game-stats/game-stats.service';
 import { StorageService } from './services/storage/storage.service';
+import { DomSanitizer } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-root',
@@ -21,7 +22,6 @@ import { StorageService } from './services/storage/storage.service';
 })
 export class AppComponent implements OnInit, OnDestroy {
   private userNameSubscription: Subscription;
-  commitMessage = '';
   username = '';
 
   constructor(
@@ -34,6 +34,7 @@ export class AppComponent implements OnInit, OnDestroy {
     private http: HttpClient,
     private gameStatsService: GameStatsService,
     private storageService: StorageService,
+    private sanitizer: DomSanitizer,
   ) {
     // private gameFilterService: GameFilterService
     this.initializeApp();
@@ -57,7 +58,6 @@ export class AppComponent implements OnInit, OnDestroy {
     this.userNameSubscription.unsubscribe();
   }
 
-  //TODO maybe implement custom alert to have title etc instead of confirm
   private initializeApp(): void {
     this.swUpdate.versionUpdates.subscribe((event) => {
       if (event.type === 'VERSION_READY') {
@@ -78,10 +78,17 @@ export class AppComponent implements OnInit, OnDestroy {
             }
 
             if (newCommits.length > 0) {
-              const commitMessages = newCommits.join('\n');
+              const commitMessages = newCommits.map((msg) => `<li>${msg}</li>`).join('');
+              const sanitizedMessage = this.sanitizer.sanitize(
+                1,
+                `<div class="commit-message"><ul>${commitMessages}</ul><br><span class="load-text">Load it?</span></div>`,
+              );
+
               const alert = await this.alertController.create({
+                backdropDismiss: false,
                 header: 'New Version Available',
-                message: `Changes:\n${commitMessages}\n\nLoad it?`,
+                subHeader: 'Following changes were made:',
+                message: sanitizedMessage || '',
                 buttons: [
                   {
                     text: 'Cancel',
@@ -106,12 +113,16 @@ export class AppComponent implements OnInit, OnDestroy {
           error: async (error) => {
             console.error('Failed to fetch the latest commits:', error);
             const alert = await this.alertController.create({
+              backdropDismiss: false,
               header: 'New Version Available',
               message: 'A new version is available. Load it?',
               buttons: [
                 {
                   text: 'Cancel',
                   role: 'cancel',
+                  handler: () => {
+                    localStorage.setItem('update', 'true');
+                  },
                 },
                 {
                   text: 'Load',

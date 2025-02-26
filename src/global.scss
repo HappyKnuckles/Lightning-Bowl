@@ -25,7 +25,7 @@
 @import url("@ionic/angular/css/text-transformation.css");
 @import url("@ionic/angular/css/flex-utils.css");
 
-ion-segment-view{
+ion-segment-view {
   height: fit-content;
 }
 
@@ -205,6 +205,15 @@ ion-item {
   }
 }
 
+.commit-message {
+  text-align: left;
+
+  .load-text {
+    font-size: larger;
+    font-weight: 500;
+  }
+}
+
 .alert-header-white .alert-title {
   color: white !important;
 }
@@ -226,6 +235,6 @@ body {
 ion-segment {
   // --background: var(--ion-tab-bar-background, var(--ion-color-step-50, #f7f7f7))
   //;
- --background: var(--ion-color-dark);
+  --background: var(--ion-color-dark);
   --background: #252525;
 }
