@@ -187,7 +187,9 @@ export class BallsPage implements OnInit {
 
   async loadBalls(event?: InfiniteScrollCustomEvent): Promise<void> {
     try {
-      this.loadingService.setLoading(true);
+      if (!event) {
+        this.loadingService.setLoading(true);
+      }
       const response = await firstValueFrom(
         this.http.get<Ball[]>(`${environment.bowwwlEndpoint}balls-pages`, {
           params: {
@@ -207,7 +209,9 @@ export class BallsPage implements OnInit {
       console.error('Error fetching balls:', error);
       this.toastService.showToast(`Error loading balls: ${error}`, 'bug', true);
     } finally {
-      this.loadingService.setLoading(false);
+      if (!event) {
+        this.loadingService.setLoading(false);
+      }
       if (event) {
         event.target.complete();
       }

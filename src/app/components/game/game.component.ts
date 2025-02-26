@@ -106,7 +106,10 @@ export class GameComponent implements OnChanges {
     }, []);
     return [...new Set([...leagueKeys, ...savedLeagues])];
   });
+  sortedGames: Game[] = [];
   showingGames: Game[] = [];
+  private batchSize = 100;
+  public loadedCount = 0;
   isEditMode: Record<string, boolean> = {};
   private closeTimers: Record<string, NodeJS.Timeout> = {};
   public delayedCloseMap: Record<string, boolean> = {};
@@ -137,9 +140,9 @@ export class GameComponent implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['games'] && this.games) {
-      console.log('Original games:', this.games);
-      this.showingGames = this.games.slice(0, 25);
-      console.log('Initial showingGames:', this.showingGames);
+      this.sortedGames = [...this.games].sort((a, b) => b.date - a.date);
+      this.showingGames = this.sortedGames.slice(0, this.batchSize);
+      this.loadedCount += this.batchSize;
     }
   }
 
@@ -169,11 +172,12 @@ export class GameComponent implements OnChanges {
 
   loadMoreGames(event: InfiniteScrollCustomEvent): void {
     setTimeout(() => {
-      const totalGames = this.games.length;
-      const nextPage = this.showingGames.length + 25;
-      this.showingGames = this.games.slice(Math.max(totalGames - nextPage, 0), totalGames).reverse();
-      console.log('After loading more games:', this.showingGames);
+      this.showingGames = this.sortedGames.slice(0, this.loadedCount + this.batchSize);
+      this.loadedCount += this.batchSize;
       event.target.complete();
+      if (this.loadedCount >= this.games.length) {
+        event.target.disabled = true;
+      }
     }, 50);
   }
 

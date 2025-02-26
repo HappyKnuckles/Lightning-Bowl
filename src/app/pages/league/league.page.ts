@@ -201,14 +201,6 @@ export class LeaguePage {
     this.toastService.showToast('League saved sucessfully.', 'add');
   }
 
-  getGamesByLeague(league: string): Game[] {
-    return this.gamesByLeague()[league] || [];
-  }
-
-  getStatsByLeague(league: string): Stats {
-    return this.statsByLeague()[league] || [];
-  }
-
   async addLeague() {
     const alert = await this.alertController.create({
       header: 'Add League',
