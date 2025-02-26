@@ -14,12 +14,16 @@
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
   <!-- Show this message if there are no game history items and it's not loading -->
-  <ng-container *ngIf="storageService.games().length <= 0 && !loadingService.isLoading(); else content">
-    <ion-text class="no-game-text">
-      {{ storageService.games().length <= 0 && !loadingService.isLoading() ? 'Start playing a few games to see your leagues here!' : 'No leagues
-      saved!!' }}
-    </ion-text>
+  <ng-container *ngIf="storageService.games().length <= 0  && !loadingService.isLoading(); else noLeagues">
+    <ion-text class="no-game-text"> Start playing a few games to see your leagues here! </ion-text>
   </ng-container>
+
+  <ng-template #noLeagues>
+    <ng-container *ngIf="leagueKeys().length <= 0  && !loadingService.isLoading(); else content">
+      <ion-text class="no-game-text"> No leagues saved! </ion-text>
+    </ng-container>
+  </ng-template>
+
   <ng-template #content>
     <ng-container *ngFor="let league of leagueKeys(); let i = index;">
       @if(league !== 'Practice'){

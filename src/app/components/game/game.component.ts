@@ -24,7 +24,6 @@ import {
   IonInfiniteScroll,
   IonInfiniteScrollContent,
   IonText,
-  IonChip,
   IonList,
   IonItemDivider,
   IonLabel,
@@ -59,7 +58,6 @@ import { UtilsService } from 'src/app/services/utils/utils.service';
     IonLabel,
     IonItemDivider,
     IonList,
-    IonChip,
     IonText,
     IonInfiniteScrollContent,
     IonInfiniteScroll,
@@ -139,7 +137,9 @@ export class GameComponent implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['games'] && this.games) {
+      console.log('Original games:', this.games);
       this.showingGames = this.games.slice(0, 25);
+      console.log('Initial showingGames:', this.showingGames);
     }
   }
 
@@ -168,10 +168,12 @@ export class GameComponent implements OnChanges {
   }
 
   loadMoreGames(event: InfiniteScrollCustomEvent): void {
-    const nextPage = this.showingGames.length + 25;
     setTimeout(() => {
+      const totalGames = this.games.length;
+      const nextPage = this.showingGames.length + 25;
+      this.showingGames = this.games.slice(Math.max(totalGames - nextPage, 0), totalGames).reverse();
+      console.log('After loading more games:', this.showingGames);
       event.target.complete();
-      this.showingGames = this.games.slice(0, nextPage);
     }, 50);
   }
 

@@ -1,4 +1,4 @@
-import { NgIf } from '@angular/common';
+import { DatePipe, NgIf } from '@angular/common';
 import { Component } from '@angular/core';
 import { IonChip } from '@ionic/angular/standalone';
 import { GameFilter } from 'src/app/models/filter.model';
@@ -8,7 +8,7 @@ import { UtilsService } from 'src/app/services/utils/utils.service';
 @Component({
   selector: 'app-game-filter-active',
   standalone: true,
-  imports: [IonChip, NgIf],
+  imports: [IonChip, NgIf, DatePipe],
   templateUrl: './game-filter-active.component.html',
   styleUrl: './game-filter-active.component.scss',
 })
