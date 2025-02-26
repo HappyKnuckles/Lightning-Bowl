@@ -86,6 +86,10 @@ export class AppComponent implements OnInit, OnDestroy {
                   {
                     text: 'Cancel',
                     role: 'cancel',
+                    handler: () => {
+                      localStorage.setItem('lastCommitDate', new Date(data[0].commit.committer.date).toISOString());
+                      localStorage.setItem('update', 'true');
+                    },
                   },
                   {
                     text: 'Load',

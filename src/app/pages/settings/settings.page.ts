@@ -18,10 +18,20 @@ import {
   IonTextarea,
   IonModal,
   IonButtons,
+  IonList,
 } from '@ionic/angular/standalone';
 import { FormsModule, NgForm, ReactiveFormsModule } from '@angular/forms';
 import { addIcons } from 'ionicons';
-import { colorPaletteOutline, logoGithub, personCircleOutline, sendOutline, addOutline, mailOutline, chevronBack } from 'ionicons/icons';
+import {
+  colorPaletteOutline,
+  logoGithub,
+  personCircleOutline,
+  sendOutline,
+  addOutline,
+  mailOutline,
+  chevronBack,
+  refreshCircleOutline,
+} from 'ionicons/icons';
 import { NgClass, NgFor } from '@angular/common';
 import { ToastService } from 'src/app/services/toast/toast.service';
 import { UserService } from 'src/app/services/user/user.service';
@@ -37,6 +47,7 @@ import { LeagueSelectorComponent } from '../../components/league-selector/league
   styleUrls: ['./settings.page.scss'],
   standalone: true,
   imports: [
+    IonList,
     IonButtons,
     IonModal,
     IonTextarea,
@@ -74,13 +85,14 @@ export class SettingsPage implements OnInit {
   ];
   userEmail = '';
   feedbackMessage = '';
+  updateAvailable = false;
   constructor(
     private userService: UserService,
     private toastService: ToastService,
     private loadingService: LoadingService,
     private themeService: ThemeChangerService,
   ) {
-    addIcons({ personCircleOutline, colorPaletteOutline, logoGithub, addOutline, mailOutline, chevronBack, sendOutline });
+    addIcons({ personCircleOutline, colorPaletteOutline, logoGithub, mailOutline, refreshCircleOutline, addOutline, chevronBack, sendOutline });
   }
 
   ngOnInit(): void {
@@ -89,6 +101,7 @@ export class SettingsPage implements OnInit {
     this.userService.getUsername().subscribe((username: string) => {
       this.username = username;
     });
+    this.updateAvailable = localStorage.getItem('update') !== null;
   }
 
   changeName(): void {
@@ -98,6 +111,11 @@ export class SettingsPage implements OnInit {
   changeColor(): void {
     this.themeService.saveColorTheme(this.currentColor!);
     this.toastService.showToast(`Changed theme to ${this.currentColor}.`, 'checkmark-outline');
+  }
+
+  updateApp(): void {
+    localStorage.removeItem('update');
+    window.location.reload();
   }
 
   async submitFeedback(form: NgForm): Promise<void> {
@@ -110,13 +128,13 @@ export class SettingsPage implements OnInit {
       this.loadingService.setLoading(true);
       try {
         await emailjs.send(environment.emailServiceID, environment.emailTemplateID, templateParams, environment.emailUserID);
-        alert('Thank you for your feedback!');
         this.userEmail = '';
         this.feedbackMessage = '';
+        this.toastService.showToast('Feedback sent successfully.', 'checkmark-outline');
         form.resetForm();
       } catch (error) {
         console.error('ERROR...', error);
-        alert('Unexpected error occurred, please try again later.');
+        this.toastService.showToast('Error sending feedback.', 'bug-outline', true);
       } finally {
         this.loadingService.setLoading(false);
       }

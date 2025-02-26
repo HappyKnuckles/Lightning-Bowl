@@ -5,47 +5,54 @@
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-item>
-    <ion-icon name="person-circle-outline" slot="start"></ion-icon>
-    <ion-input
-      class="ion-text-right"
-      label="Your name"
-      type="text"
-      [value]="username"
-      placeholder="{{username}}"
-      (ionChange)="username = $event.target.value!.toString()"
-      (ionChange)="changeName()"
-      style="margin-right: 21px">
-    </ion-input>
-  </ion-item>
-  <ion-item>
-    <ion-icon name="color-palette-outline" slot="start"></ion-icon>
-    <ion-select
-      label="Color Theme"
-      interface="popover"
-      [(ngModel)]="currentColor"
-      [ngClass]="currentColor?.toLowerCase()"
-      placeholder="{{currentColor}}"
-      (ionChange)="changeColor()">
-      <ion-select-option *ngFor="let color of optionsWithClasses; let i = index;" [value]="color.name" [ngClass]="color.class">
-        {{ color.name }}
-      </ion-select-option>
-    </ion-select>
-  </ion-item>
+  <ion-list>
+    <ion-item>
+      <ion-icon name="person-circle-outline" slot="start"></ion-icon>
+      <ion-input
+        class="ion-text-right"
+        label="Your name"
+        type="text"
+        [value]="username"
+        placeholder="{{username}}"
+        (ionChange)="username = $event.target.value!.toString()"
+        (ionChange)="changeName()"
+        style="margin-right: 21px">
+      </ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-icon name="color-palette-outline" slot="start"></ion-icon>
+      <ion-select
+        label="Color Theme"
+        interface="popover"
+        [(ngModel)]="currentColor"
+        [ngClass]="currentColor?.toLowerCase()"
+        placeholder="{{currentColor}}"
+        (ionChange)="changeColor()">
+        <ion-select-option *ngFor="let color of optionsWithClasses; let i = index;" [value]="color.name" [ngClass]="color.class">
+          {{ color.name }}
+        </ion-select-option>
+      </ion-select>
+    </ion-item>
 
-  <app-league-selector></app-league-selector>
+    <app-league-selector></app-league-selector>
 
-  <!-- TODO maybe add InAppBrowser for this -->
-  <ion-item href="https://github.com/HappyKnuckles/bowling-stats/issues" button detail="false">
-    <ion-icon name="logo-github" slot="start"></ion-icon>
-    <ion-label>Feature/Bug overview</ion-label>
-    <p class="link">Follow me</p>
-  </ion-item>
-  <ion-item id="feedback-modal" class="ion-activatable ripple-parent rectangle">
-    <ion-icon name="mail-outline" slot="start"></ion-icon>
-    <ion-label>Feedback/Requests</ion-label>
-    <p class="link">Open form</p>
-  </ion-item>
+    <!-- TODO maybe add InAppBrowser for this -->
+    <ion-item href="https://github.com/HappyKnuckles/bowling-stats/issues" button detail="false">
+      <ion-icon name="logo-github" slot="start"></ion-icon>
+      <ion-label>Feature/Bug overview</ion-label>
+      <p class="link">Follow me</p>
+    </ion-item>
+    <ion-item id="feedback-modal" class="ion-activatable ripple-parent rectangle">
+      <ion-icon name="mail-outline" slot="start"></ion-icon>
+      <ion-label>Feedback/Requests</ion-label>
+      <p class="link">Open form</p>
+    </ion-item>
+    <ion-item (click)="updateApp()" button [detail]="false" *ngIf="updateAvailable">
+      <ion-icon name="refresh-circle-outline" slot="start"></ion-icon>
+      <ion-label>Load update</ion-label>
+      <ion-button slot="end"> Update </ion-button>
+    </ion-item>
+  </ion-list>
 </ion-content>
 
 <ion-modal trigger="feedback-modal" #feedback [keepContentsMounted]="true">
