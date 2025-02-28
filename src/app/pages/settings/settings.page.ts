@@ -101,7 +101,7 @@ export class SettingsPage implements OnInit {
     this.userService.getUsername().subscribe((username: string) => {
       this.username = username;
     });
-    this.updateAvailable = localStorage.getItem('update') !== null;
+    this.updateAvailable = localStorage.getItem('update') !== null ? true : false;
   }
 
   changeName(): void {
