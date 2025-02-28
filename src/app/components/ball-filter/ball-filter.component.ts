@@ -12,7 +12,10 @@ import { FormsModule } from '@angular/forms';
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class BallFilterComponent {
-  constructor(private ballFilterService: BallFilterService, private modalCtrl: ModalController) {}
+  constructor(
+    private ballFilterService: BallFilterService,
+    private modalCtrl: ModalController,
+  ) {}
 
   // ngOnInit() { }
 

@@ -47,14 +47,18 @@ export class GameStatsService {
   });
   // TODO adjust and implement it completely
   seriesStats = {};
-  constructor(private gameFilterService: GameFilterService, private utilsService: UtilsService, private storageService: StorageService) {
+  constructor(
+    private gameFilterService: GameFilterService,
+    private utilsService: UtilsService,
+    private storageService: StorageService,
+  ) {
     // this.calculateStats(this.gameFilterService.filteredGames());
   }
 
   calculateStats(gameHistory: Game[]): void {
     const lastComparisonDate = localStorage.getItem('lastComparisonDate') ?? '0';
     const today = Date.now();
-    
+
     let lastGameDate = 0;
     if (gameHistory.length > 0) {
       lastGameDate = gameHistory[0].date;

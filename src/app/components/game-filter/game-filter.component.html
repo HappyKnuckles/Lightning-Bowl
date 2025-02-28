@@ -127,6 +127,7 @@
         [ngModel]="filterService.filters().balls"
         label="Balls"
         multiple="true"
+        placeholder="All"
         (ionChange)="updateFilter('balls', $event.detail.value)">
         <!-- <ion-select-option value="all">All</ion-select-option>
         <ion-select-option value="">None</ion-select-option> -->

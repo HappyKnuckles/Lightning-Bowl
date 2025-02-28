@@ -1,7 +1,6 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { BallListComponent } from './ball-list.component';
 
-
 describe('BallListComponent', () => {
   let component: BallListComponent;
   let fixture: ComponentFixture<BallListComponent>;

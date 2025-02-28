@@ -167,10 +167,10 @@ export class AddGamePage implements OnInit {
           this.loadingService.setLoading(false);
         }
       } else {
-        this.presentWarningAlert();
+        await this.presentWarningAlert();
       }
     } else {
-      this.presentWarningAlert();
+      await this.presentWarningAlert();
     }
   }
 
@@ -190,7 +190,6 @@ export class AddGamePage implements OnInit {
         this.modalCheckbox.checked = false;
         this.modalCheckbox.disabled = true;
       }
-      console.log(this.modalCheckbox);
     } else {
       this.gameGrids.forEach((trackGrid: GameGridComponent) => {
         trackGrid.leagueSelector.selectedLeague = league;
@@ -231,7 +230,7 @@ export class AddGamePage implements OnInit {
   }
 
   isGameValid(game: Game): boolean {
-    return this.gameUtilsService.isGameValid(undefined, game);
+    return this.gameUtilsService.isGameValid(game);
   }
 
   updateFrameScore(event: InputCustomEvent, index: number): void {
@@ -378,11 +377,34 @@ export class AddGamePage implements OnInit {
       buttons: buttons,
     });
 
+    let gameData: any[] = [];
+
     actionSheet.onWillDismiss().then(() => {
+      gameData = this.gameGrids.map((gameGrid: GameGridComponent) => {
+        return {
+          frames: gameGrid.frames,
+          selectedLeague: gameGrid.selectedLeague,
+          note: gameGrid.note,
+          balls: gameGrid.balls,
+          isPractice: gameGrid.isPractice,
+        };
+      });
+
       this.sheetOpen = false;
       this.updateSegments();
     });
 
+    actionSheet.onDidDismiss().then(() => {
+      this.gameGrids.forEach((gameGrid: GameGridComponent, index: number) => {
+        if (gameData[index] === undefined) return;
+        gameGrid.frames = gameData[index].frames;
+        gameGrid.note = gameData[index].note;
+        gameGrid.balls = gameData[index].balls;
+        gameGrid.isPractice = gameData[index].isPractice;
+        gameGrid.onLeagueChanged(gameData[index].selectedLeague);
+        gameGrid.updateScores();
+      });
+    });
     await actionSheet.present();
   }
 
@@ -497,10 +519,10 @@ export class AddGamePage implements OnInit {
         if (permissions.photos) {
           await this.handleImageUpload();
         } else {
-          this.showPermissionDeniedAlert();
+          await this.showPermissionDeniedAlert();
         }
       } else if (permissionRequestResult.photos === 'denied') {
-        this.showPermissionDeniedAlert();
+        await this.showPermissionDeniedAlert();
       } else {
         const image = await Camera.getPhoto({
           quality: 90,

@@ -4,8 +4,7 @@
     <ion-buttons slot="start">
       <ion-button [href]="storageService.url">
         <div class="powered-by">powered by</div>
-        <img [src]="storageService.url + '/sites/default/files/logo/bowwwl-logo.svg'" alt="bowwwl" title="bowwwl.com"
-          style="height: 1.5rem" />
+        <img [src]="storageService.url + '/sites/default/files/logo/bowwwl-logo.svg'" alt="bowwwl" title="bowwwl.com" style="height: 1.5rem" />
       </ion-button>
     </ion-buttons>
     <!-- <ion-buttons slot="end" class="action-sheet">
@@ -16,8 +15,7 @@
     </ion-buttons> -->
   </ion-toolbar>
   <ion-toolbar>
-    <ion-searchbar (ionInput)="searchBalls($event)" placeholder="Search for a ball" showCancelButton="focus"
-      debounce="300"></ion-searchbar>
+    <ion-searchbar (ionInput)="searchBalls($event)" placeholder="Search for a ball" showCancelButton="focus" debounce="300"></ion-searchbar>
   </ion-toolbar>
 </ion-header>
 
@@ -39,12 +37,12 @@
         </ion-card-subtitle>
       </ion-card-header>
       <ion-card-content>
-        <ion-img [src]="storageService.url + ball.thumbnail_image" style="height: 15vh"
-          [alt]="'Image for' + ' ' + ball.ball_name"></ion-img>
+        <ion-img [src]="storageService.url + ball.thumbnail_image" style="height: 15vh" [alt]="'Image for' + ' ' + ball.ball_name"></ion-img>
         <div class="ball-info">
           <ion-list lines="none" (click)="getSameCoreBalls(ball)" class="ion-activatable ion-ripple-parent list">
             <div class="core">
-              <h2 class="title">Core:</h2><ion-icon name="open-outline"></ion-icon>
+              <h2 class="title">Core:</h2>
+              <ion-icon name="open-outline"></ion-icon>
             </div>
             <p class="info">{{ ball.core_name }}</p>
             <p class="info">RG: {{ ball.core_rg }}</p>
@@ -55,7 +53,8 @@
           </ion-list>
           <ion-list lines="none" (click)="getSameCoverstockBalls(ball)" class="ion-activatable ion-ripple-parent list">
             <div class="coverstock">
-              <h2 class="title">Coverstock:</h2><ion-icon name="open-outline"></ion-icon>
+              <h2 class="title">Coverstock:</h2>
+              <ion-icon name="open-outline"></ion-icon>
             </div>
             <p class="info">{{ ball.coverstock_type }}</p>
             <p class="info">{{ ball.coverstock_name }}</p>
@@ -64,16 +63,13 @@
           </ion-list>
         </div>
       </ion-card-content>
-      <ion-button *ngIf="isInArsenal(ball)" style="float: right" fill="clear" (click)="removeFromArsenal(ball)"> Remove
-        from arsenal </ion-button>
-      <ion-button *ngIf="!isInArsenal(ball)" style="float: right" fill="clear" (click)="saveBallToArsenal(ball)"> Add to
-        arsenal </ion-button>
+      <ion-button *ngIf="isInArsenal(ball)" style="float: right" fill="clear" (click)="removeFromArsenal(ball)"> Remove from arsenal </ion-button>
+      <ion-button *ngIf="!isInArsenal(ball)" style="float: right" fill="clear" (click)="saveBallToArsenal(ball)"> Add to arsenal </ion-button>
     </ion-card>
     }
     <!-- Infinite Scroll -->
     <ion-infinite-scroll threshold="100px" (ionInfinite)="loadBalls($event)" *ngIf="hasMoreData">
-      <ion-infinite-scroll-content loadingSpinner="crescent"
-        loadingText="Loading more balls..."></ion-infinite-scroll-content>
+      <ion-infinite-scroll-content loadingSpinner="crescent" loadingText="Loading more balls..."></ion-infinite-scroll-content>
     </ion-infinite-scroll>
   </ng-template>
 </ion-content>

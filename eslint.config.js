@@ -32,6 +32,7 @@ module.exports = tseslint.config(
           suffixes: ["Component", "Page"],
         },
       ],
+      "no-console": ["warn", { allow: ["warn", "error"] }],
     },
   },
   {

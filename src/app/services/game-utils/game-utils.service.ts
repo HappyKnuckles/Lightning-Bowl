@@ -1,13 +1,12 @@
 import { Injectable } from '@angular/core';
 import { Game } from 'src/app/models/game.model';
-import { GameScoreCalculatorService } from '../game-score-calculator/game-score-calculator.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class GameUtilsService {
-  isGameValid(gameScoreCalculatorService?: GameScoreCalculatorService, game?: Game): boolean {
-    const frames = game ? game.frames : gameScoreCalculatorService!.frames;
+  isGameValid(game?: Game, allFrames?: number[][]): boolean {
+    const frames = game ? game.frames : allFrames || [];
     let isValid = true;
     frames.forEach((frame: any, index: number) => {
       const throws = Array.isArray(frame) ? frame : frame.throws.map((t: { value: number | string }) => t.value);
@@ -45,19 +44,19 @@ export class GameUtilsService {
     return isValid;
   }
 
-  parseInputValue(inputValue: string, frameIndex: number, inputIndex: number, gameScoreCalculatorService: GameScoreCalculatorService): number {
+  parseInputValue(inputValue: string, frameIndex: number, inputIndex: number, frames: number[][]): number {
     if (frameIndex < 9) {
       // Frames 1-9
       if (inputValue === 'X' || inputValue === 'x') {
         return 10; // Strike
       } else if (inputValue === '/') {
-        const firstThrow = gameScoreCalculatorService.frames[frameIndex][0] || 0;
+        const firstThrow = frames[frameIndex][0] || 0;
         return 10 - firstThrow; // Spare
       }
     } else {
       // 10th Frame
-      const firstThrow = gameScoreCalculatorService.frames[frameIndex][0] || 0;
-      const secondThrow = gameScoreCalculatorService.frames[frameIndex][1] || 0;
+      const firstThrow = frames[frameIndex][0] || 0;
+      const secondThrow = frames[frameIndex][1] || 0;
 
       switch (inputIndex) {
         case 0: // First throw of 10th frame
@@ -67,16 +66,15 @@ export class GameUtilsService {
           break;
         case 1: // Second throw of 10th frame
           if (firstThrow === 10) {
-            // First throw was a strike, any value (0-10) is valid
+            // First throw was a strike; any value (0-10) is valid
             if (inputValue === 'X' || inputValue === 'x') {
-              return 10; // Strike
+              return 10;
             }
           } else if (inputValue === '/') {
-            // First throw was not a strike, use spare notation
+            // First throw was not a strike; spare notation applies
             return 10 - firstThrow;
           }
           break;
-
         case 2: // Third throw of 10th frame
           if (firstThrow === 10) {
             // If first throw is a strike, handle second throw conditions
@@ -86,9 +84,9 @@ export class GameUtilsService {
               return 10 - secondThrow; // Spare after a non-strike second throw
             }
           } else if (firstThrow + secondThrow === 10) {
-            // First two throws were a spare, any value (0-10) is valid
+            // First two throws were a spare; any value (0-10) is valid
             if (inputValue === 'X' || inputValue === 'x') {
-              return 10; // Strike
+              return 10;
             }
           }
           break;
@@ -97,16 +95,11 @@ export class GameUtilsService {
     return parseInt(inputValue, 10);
   }
 
-  //TODO maybe adjust so their is always 10 frames
   parseBowlingScores(input: string, username: string): { frames: any[]; frameScores: number[]; totalScore: number } {
     const lines = input.split('\n').filter((line) => line.trim() !== '');
-
     const userIndex = lines.findIndex((line) => line.toLowerCase().includes(username.toLowerCase()));
-
     const linesAfterUsername = userIndex >= 0 ? lines.slice(userIndex + 1) : [];
-
     const nextNonXLineIndex = linesAfterUsername.findIndex((line) => /^[a-wyz]/i.test(line));
-
     const relevantLines = nextNonXLineIndex >= 0 ? linesAfterUsername.slice(0, nextNonXLineIndex) : linesAfterUsername;
 
     if (relevantLines.length < 2) {
@@ -127,13 +120,9 @@ export class GameUtilsService {
     if (frameScores.length > 10) {
       frameScores = frameScores.slice(0, 10);
     }
-    // if (frameScores[9] === frameScores[10]) {
-    //   frameScores.splice(frameScores.length - 1, 1);
-    // }
 
     throwValues = throwValues.filter((value) => value.trim() !== '');
     let prevValue: number | undefined;
-
     throwValues = throwValues.map((value) => {
       if (value === 'X' || value === '×') {
         prevValue = 10;
@@ -157,13 +146,13 @@ export class GameUtilsService {
 
     throwValues.forEach((value) => {
       const intValue = parseInt(value, 10);
-      const isNinthFrame = frames.length === 9;
+      const isTenthFrame = frames.length === 9;
       if (frames.length < 10) {
         currentFrame.push(intValue);
-        if ((currentFrame.length === 2 && !isNinthFrame) || (isNinthFrame && currentFrame.length === 3)) {
+        if ((currentFrame.length === 2 && !isTenthFrame) || (isTenthFrame && currentFrame.length === 3)) {
           frames.push([...currentFrame]);
           currentFrame = [];
-        } else if (intValue === 10 && !isNinthFrame) {
+        } else if (intValue === 10 && !isTenthFrame) {
           frames.push([...currentFrame]);
           currentFrame = [];
         }
@@ -175,55 +164,51 @@ export class GameUtilsService {
     }
 
     const totalScore = frameScores[9];
-
     return { frames, frameScores, totalScore };
   }
 
-  isValidFrameScore(inputValue: number, frameIndex: number, inputIndex: number, gameScoreCalculatorService: GameScoreCalculatorService): boolean {
-    if (inputIndex === 1) {
-      if (gameScoreCalculatorService.frames[frameIndex][0] === undefined) {
-        return false;
-      }
+  isValidFrameScore(inputValue: number, frameIndex: number, inputIndex: number, frames: number[][]): boolean {
+    // For the second throw, ensure that there is already a first throw.
+    if (inputIndex === 1 && frames[frameIndex][0] === undefined) {
+      return false;
     }
 
     if (frameIndex < 9) {
       // Regular frames (1-9)
-      const firstThrow = gameScoreCalculatorService.frames[frameIndex][0] || 0;
-      const secondThrow = inputIndex === 1 ? inputValue : gameScoreCalculatorService.frames[frameIndex][1] || 0;
-      if (inputIndex === 0 && secondThrow !== undefined) {
-        return inputValue + secondThrow <= 10;
+      const firstThrow = frames[frameIndex][0] || 0;
+      const secondThrow = inputIndex === 1 ? inputValue : frames[frameIndex][1] || 0;
+      if (inputIndex === 0 && frames[frameIndex][1] !== undefined) {
+        return inputValue + frames[frameIndex][1] <= 10;
       }
       return firstThrow + secondThrow <= 10;
     } else {
       // 10th frame
-      const firstThrow = gameScoreCalculatorService.frames[frameIndex][0] || 0;
-      const secondThrow = gameScoreCalculatorService.frames[frameIndex][1] || 0;
+      const firstThrow = frames[frameIndex][0] || 0;
+      const secondThrow = frames[frameIndex][1] || 0;
       switch (inputIndex) {
         case 0:
           return inputValue <= 10;
         case 1:
           if (firstThrow === 10) {
-            // First throw is a strike, second throw can be any value 0-10
+            // First throw is a strike; second throw can be any value 0-10
             return inputValue <= 10;
           } else {
-            // First throw is not a strike, second throw + first throw must be <= 10
+            // Otherwise, the sum must be ≤ 10
             return firstThrow + inputValue <= 10;
           }
         case 2:
           if (firstThrow === 10) {
-            // First throw is a strike
             if (secondThrow === 10) {
-              // Second throw is also a strike, third throw can be any value 0-10
+              // Both first and second throws are strikes
               return inputValue <= 10;
             } else {
-              // Second throw is not a strike, third throw can only be 10 - second throw
               return inputValue <= 10 - secondThrow;
             }
           } else if (firstThrow + secondThrow === 10) {
-            // First two throws are a spare, third throw can be any value 0-10
+            // Spare in the first two throws
             return inputValue <= 10;
           } else {
-            // First two throws are not a strike or spare, no third throw allowed
+            // No third throw allowed if no strike or spare
             return false;
           }
         default:

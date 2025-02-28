@@ -291,7 +291,7 @@ export class GameComponent implements OnChanges {
   }
 
   isGameValid(game: Game): boolean {
-    return this.gameUtilsService.isGameValid(undefined, game);
+    return this.gameUtilsService.isGameValid(game);
   }
 
   async takeScreenshotAndShare(game: Game): Promise<void> {

@@ -4,121 +4,89 @@ import { Injectable } from '@angular/core';
   providedIn: 'root',
 })
 export class GameScoreCalculatorService {
-  frameScores: number[] = [];
-  frames: number[][] = [[]];
-  totalScore = 0;
-  rolls: number[] = Array.from({ length: 21 }, () => 0);
-  maxScore = 300; // Maximum possible score is 300 for 10 strikes
-
-  constructor() {
-    this.addFrame();
-  }
-
-  addFrame(): void {
-    for (let i = 1; i < 10; i++) {
-      this.frames.push([]);
-    }
-  }
-
-  clearRolls(): void {
-    // Reset rolls array
-    this.rolls = Array.from({ length: 21 }, () => 0);
-    this.frames = [[]];
-    this.frameScores = [];
-    this.addFrame();
-    // Recalculate the score and max score
-    this.totalScore = 0;
-    this.maxScore = 300;
-  }
-
-  calculateScore(): number {
-    let index = 0;
-    this.frames.forEach((frame) => {
+  calculateScore(frames: number[][]): { totalScore: number; frameScores: number[] } {
+    const rolls: number[] = [];
+    frames.forEach((frame) => {
       frame.forEach((value) => {
-        this.rolls[index++] = value;
+        rolls.push(value);
       });
     });
 
-    let score = 0;
+    let totalScore = 0;
+    const frameScores: number[] = Array(10).fill(0);
     let frameIndex = 0;
 
     for (let frame = 0; frame < 10; frame++) {
-      if (this.isStrike(this.rolls[frameIndex]) && this.rolls[frameIndex] != null && this.rolls[frameIndex + 1] != null) {
-        score += 10 + this.strikeBonus(frameIndex, this.rolls);
+      if (this.isStrike(rolls[frameIndex])) {
+        totalScore += 10 + this.strikeBonus(frameIndex, rolls);
+        frameScores[frame] = totalScore;
         frameIndex++;
-      } else if (
-        this.isSpare(this.rolls[frameIndex], this.rolls[frameIndex + 1]) &&
-        this.rolls[frameIndex] != null &&
-        this.rolls[frameIndex + 1] != null
-      ) {
-        score += 10 + this.spareBonus(frameIndex, this.rolls);
+      } else if (this.isSpare(rolls[frameIndex], rolls[frameIndex + 1])) {
+        totalScore += 10 + this.spareBonus(frameIndex, rolls);
+        frameScores[frame] = totalScore;
         frameIndex += 2;
-      } else if (this.rolls[frameIndex] != null && this.rolls[frameIndex + 1] != null) {
-        score += this.sumOfBallsInFrame(frameIndex, this.rolls);
+      } else {
+        totalScore += this.sumOfBallsInFrame(frameIndex, rolls);
+        frameScores[frame] = totalScore;
         frameIndex += 2;
       }
-      this.frameScores[frame] = score;
     }
-    this.totalScore = score;
-    return this.totalScore;
+
+    return { totalScore, frameScores };
   }
 
-  calculateMaxScore(): number {
-    this.maxScore = 300;
+  calculateMaxScore(frames: number[][], currentTotalScore: number): number {
+    let maxScore = 300;
 
-    for (let i = 0; i < this.frames.length; i++) {
-      // Fix loop condition to iterate correctly over frames
-      if (!this.frames[i] || this.frames[i].length === 0) {
-        break; // Exit if the frame is empty or undefined
+    for (let i = 0; i < frames.length; i++) {
+      if (!frames[i] || frames[i].length === 0) {
+        break;
       }
 
-      const firstThrow = this.frames[i][0];
-      const secondThrow = this.frames[i][1];
+      const firstThrow = frames[i][0];
+      const secondThrow = frames[i][1];
 
-      // Handle frames before the last frame (0-8)
+      // Handle frames 0-8 (non-final frames)
       if (i < 9) {
-        // Case for first frame
+        // Special handling for the first frame.
         if (i === 0) {
           if (secondThrow !== undefined) {
             if (this.isStrike(firstThrow)) {
-              // Only manipulation for a strike in the first frame
+              // Nothing to modify for a strike in the first frame.
               continue;
             } else if (this.isSpare(firstThrow, secondThrow)) {
-              this.maxScore -= 10;
+              maxScore -= 10;
             } else {
-              this.maxScore -= 30 - (firstThrow + secondThrow);
+              maxScore -= 30 - (firstThrow + secondThrow);
             }
-            continue; // Exit to ensure no other manipulations occur
+            continue;
           }
-        }
-        // Handle other frames (1-8)
-        else {
+        } else {
           if (secondThrow !== undefined) {
-            if (i >= 2 && this.isPreviousStrike(i - 1) && this.isPreviousStrike(i)) {
+            if (i >= 2 && this.isPreviousStrike(frames, i - 1) && this.isPreviousStrike(frames, i)) {
               if (this.isSpare(firstThrow, secondThrow)) {
-                this.maxScore -= 30 - firstThrow;
+                maxScore -= 30 - firstThrow;
               } else {
-                this.maxScore -= 60 - (firstThrow + 2 * (firstThrow + secondThrow));
+                maxScore -= 60 - (firstThrow + 2 * (firstThrow + secondThrow));
               }
               continue;
             }
-
             if (i >= 1) {
               if (firstThrow !== 10) {
-                if (this.isPreviousStrike(i) && this.isSpare(firstThrow, secondThrow)) {
-                  this.maxScore -= 20;
-                } else if (this.isPreviousStrike(i) && !this.isSpare(firstThrow, secondThrow)) {
-                  this.maxScore -= 50 - 2 * (firstThrow + secondThrow);
-                } else if (this.isPreviousSpare(i) && this.isSpare(firstThrow, secondThrow)) {
-                  this.maxScore -= 20 - firstThrow;
-                } else if (this.isPreviousSpare(i) && !this.isSpare(firstThrow, secondThrow)) {
-                  this.maxScore -= 40 - (2 * firstThrow + secondThrow);
-                } else if (!this.isPreviousSpare(i) && this.isSpare(firstThrow, secondThrow)) {
-                  this.maxScore -= 10;
-                } else if (!this.isPreviousSpare(i) && this.isStrike(firstThrow)) {
+                if (this.isPreviousStrike(frames, i) && this.isSpare(firstThrow, secondThrow)) {
+                  maxScore -= 20;
+                } else if (this.isPreviousStrike(frames, i) && !this.isSpare(firstThrow, secondThrow)) {
+                  maxScore -= 50 - 2 * (firstThrow + secondThrow);
+                } else if (this.isPreviousSpare(frames, i) && this.isSpare(firstThrow, secondThrow)) {
+                  maxScore -= 20 - firstThrow;
+                } else if (this.isPreviousSpare(frames, i) && !this.isSpare(firstThrow, secondThrow)) {
+                  maxScore -= 40 - (2 * firstThrow + secondThrow);
+                } else if (!this.isPreviousSpare(frames, i) && this.isSpare(firstThrow, secondThrow)) {
+                  maxScore -= 10;
+                } else if (!this.isPreviousSpare(frames, i) && this.isStrike(firstThrow)) {
                   continue;
                 } else {
-                  this.maxScore -= 30 - (firstThrow + secondThrow);
+                  maxScore -= 30 - (firstThrow + secondThrow);
                 }
                 continue;
               }
@@ -128,47 +96,44 @@ export class GameScoreCalculatorService {
       }
       // Handle the last frame (index 9)
       else {
-        const thirdThrow = this.frames[i][2];
+        const thirdThrow = frames[i][2];
         if (thirdThrow !== undefined) {
-          this.maxScore = this.totalScore;
+          maxScore = currentTotalScore;
           continue;
         }
-
         if (secondThrow !== undefined) {
           if (this.isStrike(firstThrow)) {
-            if (this.isPreviousStrike(i) && !this.isStrike(secondThrow)) {
-              this.maxScore -= 20 - secondThrow;
-            } else if (!this.isPreviousStrike(i) && !this.isStrike(secondThrow)) {
-              this.maxScore -= 10;
+            if (this.isPreviousStrike(frames, i) && !this.isStrike(secondThrow)) {
+              maxScore -= 20 - secondThrow;
+            } else if (!this.isPreviousStrike(frames, i) && !this.isStrike(secondThrow)) {
+              maxScore -= 10;
             }
           } else if (!this.isSpare(firstThrow, secondThrow)) {
-            this.maxScore = this.totalScore;
+            maxScore = currentTotalScore;
           }
           continue;
         }
-
-        // Handle cases based on previous strikes or spares
-        if (this.isPreviousSpare(i) && !this.isPreviousStrike(i)) {
+        if (this.isPreviousSpare(frames, i) && !this.isPreviousStrike(frames, i)) {
           if (!this.isStrike(firstThrow)) {
-            this.maxScore -= 20 - firstThrow;
+            maxScore -= 20 - firstThrow;
           }
-        } else if (!this.isPreviousStrike(i) && !this.isPreviousSpare(i)) {
+        } else if (!this.isPreviousStrike(frames, i) && !this.isPreviousSpare(frames, i)) {
           if (!this.isStrike(firstThrow)) {
-            this.maxScore -= 10;
+            maxScore -= 10;
           }
-        } else if (this.isPreviousStrike(i - 1) && this.isPreviousStrike(i) && !this.isPreviousSpare(i)) {
+        } else if (this.isPreviousStrike(frames, i - 1) && this.isPreviousStrike(frames, i) && !this.isPreviousSpare(frames, i)) {
           if (!this.isStrike(firstThrow)) {
-            this.maxScore -= 30 - firstThrow;
+            maxScore -= 30 - firstThrow;
           }
-        } else if (this.isPreviousStrike(i) && !this.isPreviousSpare(i)) {
+        } else if (this.isPreviousStrike(frames, i) && !this.isPreviousSpare(frames, i)) {
           if (!this.isStrike(firstThrow)) {
-            this.maxScore -= 20;
+            maxScore -= 20;
           }
         }
       }
     }
 
-    return this.maxScore;
+    return maxScore;
   }
 
   getSeriesMaxScore(index: number, maxScores: number[]): number {
@@ -197,37 +162,31 @@ export class GameScoreCalculatorService {
     return 0;
   }
 
-  isStrike(roll: number): boolean {
+  private isStrike(roll: number): boolean {
     return roll === 10;
   }
 
-  isPreviousStrike(index: number): boolean {
-    if (this.frames[index - 1][0] === 10) {
-      return true;
-    }
-    return false;
-  }
-
-  isPreviousSpare(index: number): boolean {
-    if (this.frames[index - 1][0] + this.frames[index - 1][1] === 10) {
-      return true;
-    }
-    return false;
-  }
-
-  isSpare(roll1: number, roll2: number): boolean {
+  private isSpare(roll1: number, roll2: number): boolean {
     return roll1 + roll2 === 10;
   }
 
-  sumOfBallsInFrame(frameIndex: number, rolls: number[]): number {
-    return rolls[frameIndex] + rolls[frameIndex + 1];
+  private isPreviousStrike(frames: number[][], index: number): boolean {
+    return !!(frames[index - 1] && frames[index - 1][0] === 10);
   }
 
-  spareBonus(frameIndex: number, rolls: number[]): number {
-    return rolls[frameIndex + 2];
+  private isPreviousSpare(frames: number[][], index: number): boolean {
+    return !!(frames[index - 1] && frames[index - 1][0] + frames[index - 1][1] === 10);
   }
 
-  strikeBonus(frameIndex: number, rolls: number[]): number {
-    return rolls[frameIndex + 1] + rolls[frameIndex + 2];
+  private sumOfBallsInFrame(frameIndex: number, rolls: number[]): number {
+    return (rolls[frameIndex] || 0) + (rolls[frameIndex + 1] || 0);
+  }
+
+  private spareBonus(frameIndex: number, rolls: number[]): number {
+    return rolls[frameIndex + 2] || 0;
+  }
+
+  private strikeBonus(frameIndex: number, rolls: number[]): number {
+    return (rolls[frameIndex + 1] || 0) + (rolls[frameIndex + 2] || 0);
   }
 }

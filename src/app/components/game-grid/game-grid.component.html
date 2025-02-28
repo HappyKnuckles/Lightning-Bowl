@@ -12,6 +12,7 @@
           inputmode="numeric"
           autocapitalize="on"
           debounce="1000"
+          [value]="getFrameValue(frameIndex, 0)"
           (ionInput)="simulateScore($event, frameIndex, 0)">
         </ion-input>
       </ion-col>
@@ -23,6 +24,7 @@
           autocapitalize="on"
           debounce="1000"
           [disabled]="frames[frameIndex][0] === 10 && i !== 10"
+          [value]="getFrameValue(frameIndex, 1)"
           (ionInput)="simulateScore($event, frameIndex, 1)">
         </ion-input>
       </ion-col>
@@ -34,6 +36,7 @@
           autocapitalize="on"
           debounce="1000"
           [disabled]="frames[frameIndex][0] === 10 && i !== 10"
+          [value]="getFrameValue(frameIndex, 1)"
           (ionInput)="simulateScore($event, frameIndex, 1)">
         </ion-input>
       </ion-col>
@@ -44,6 +47,7 @@
           inputmode="numeric"
           autocapitalize="on"
           debounce="1000"
+          [value]="getFrameValue(frameIndex, 2)"
           [disabled]="frames[frameIndex][0] !== 10 && frames[frameIndex][0] + (frames[frameIndex][1] || 0) !== 10"
           (ionInput)="simulateScore($event, frameIndex, 2)">
         </ion-input>
@@ -67,6 +71,7 @@
     </ion-row>
   </ion-grid>
 </div>
+
 <div style="margin: 0 5px">
   <ion-list lines="full" style="border-radius: 7px">
     <ion-item>

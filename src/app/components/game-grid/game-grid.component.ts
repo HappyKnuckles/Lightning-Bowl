@@ -46,14 +46,16 @@ export class GameGridComponent implements OnInit {
   @ViewChildren(IonInput) inputs!: QueryList<IonInput>;
   @ViewChild('leagueSelector') leagueSelector!: LeagueSelectorComponent;
   @ViewChild('checkbox') checkbox!: IonCheckbox;
+
   totalScore = 0;
   maxScore = 300;
   note = '';
   balls: string[] = [];
   selectedLeague = '';
   isPractice = true;
-  frames = this.gameScoreCalculatorService.frames;
-  frameScores = this.gameScoreCalculatorService.frameScores;
+  frames: number[][] = Array.from({ length: 10 }, () => []); // 10 frames
+  frameScores: number[] = [];
+
   constructor(
     private gameScoreCalculatorService: GameScoreCalculatorService,
     public storageService: StorageService,
@@ -65,8 +67,7 @@ export class GameGridComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.maxScore = this.gameScoreCalculatorService.maxScore;
-    this.totalScore = this.gameScoreCalculatorService.totalScore;
+    this.updateScores();
     this.maxScoreChanged.emit(this.maxScore);
     this.totalScoreChanged.emit(this.totalScore);
   }
@@ -74,6 +75,11 @@ export class GameGridComponent implements OnInit {
   onLeagueChanged(league: string): void {
     this.selectedLeague = league;
     this.leagueChanged.emit(this.selectedLeague);
+  }
+
+  getFrameValue(frameIndex: number, inputIndex: number): string {
+    const val = this.frames[frameIndex][inputIndex];
+    return val !== undefined ? val.toString() : '';
   }
 
   simulateScore(event: InputCustomEvent, frameIndex: number, inputIndex: number): void {
@@ -89,11 +95,43 @@ export class GameGridComponent implements OnInit {
       return;
     }
 
-    this.gameScoreCalculatorService.frames[frameIndex][inputIndex] = parsedValue;
+    this.frames[frameIndex][inputIndex] = parsedValue;
     this.updateScores();
     this.focusNextInput(frameIndex, inputIndex);
   }
 
+  clearFrames(isSave: boolean): void {
+    this.frames = Array.from({ length: 10 }, () => []);
+    this.frameScores = [];
+    this.totalScore = 0;
+    this.maxScore = 300;
+
+    this.inputs.forEach((input) => {
+      input.value = '';
+    });
+
+    if (isSave) {
+      this.note = '';
+      this.selectedLeague = '';
+      this.leagueSelector.selectedLeague = '';
+      this.balls = [];
+    }
+
+    this.updateScores();
+    this.maxScoreChanged.emit(this.maxScore);
+    this.totalScoreChanged.emit(this.totalScore);
+  }
+
+  updateScores(): void {
+    const scoreResult = this.gameScoreCalculatorService.calculateScore(this.frames);
+    this.totalScore = scoreResult.totalScore;
+    this.frameScores = scoreResult.frameScores;
+
+    this.maxScore = this.gameScoreCalculatorService.calculateMaxScore(this.frames, this.totalScore);
+
+    this.maxScoreChanged.emit(this.maxScore);
+    this.totalScoreChanged.emit(this.totalScore);
+  }
   async saveGameToLocalStorage(isSeries: boolean, seriesId: string): Promise<void> {
     try {
       if (this.selectedLeague === 'New') {
@@ -101,9 +139,9 @@ export class GameGridComponent implements OnInit {
         return;
       }
       const gameData = this.transformGameService.transformGameData(
-        this.gameScoreCalculatorService.frames,
-        this.gameScoreCalculatorService.frameScores,
-        this.gameScoreCalculatorService.totalScore,
+        this.frames,
+        this.frameScores,
+        this.totalScore,
         this.isPractice,
         this.selectedLeague,
         isSeries,
@@ -120,34 +158,15 @@ export class GameGridComponent implements OnInit {
   }
 
   isGameValid(): boolean {
-    return this.gameUtilsService.isGameValid(this.gameScoreCalculatorService);
+    return this.gameUtilsService.isGameValid(undefined, this.frames);
   }
 
   isNumber(value: unknown): boolean {
     return this.utilsService.isNumber(value);
   }
 
-  clearFrames(isSave: boolean): void {
-    this.gameScoreCalculatorService.clearRolls();
-    this.inputs.forEach((input) => {
-      input.value = '';
-    });
-    if (isSave) {
-      this.note = '';
-      this.selectedLeague = '';
-      this.leagueSelector.selectedLeague = '';
-      this.balls = [];
-    }
-    this.frames = this.gameScoreCalculatorService.frames;
-    this.frameScores = this.gameScoreCalculatorService.frameScores;
-    this.maxScore = this.gameScoreCalculatorService.maxScore;
-    this.totalScore = this.gameScoreCalculatorService.totalScore;
-    this.maxScoreChanged.emit(this.maxScore);
-    this.totalScoreChanged.emit(this.totalScore);
-  }
-
   private parseInputValue(inputValue: string, frameIndex: number, inputIndex: number): number {
-    return this.gameUtilsService.parseInputValue(inputValue, frameIndex, inputIndex, this.gameScoreCalculatorService);
+    return this.gameUtilsService.parseInputValue(inputValue, frameIndex, inputIndex, this.frames);
   }
 
   private isValidNumber0to10(value: number): boolean {
@@ -155,7 +174,7 @@ export class GameGridComponent implements OnInit {
   }
 
   private isValidFrameScore(inputValue: number, frameIndex: number, inputIndex: number): boolean {
-    return this.gameUtilsService.isValidFrameScore(inputValue, frameIndex, inputIndex, this.gameScoreCalculatorService);
+    return this.gameUtilsService.isValidFrameScore(inputValue, frameIndex, inputIndex, this.frames);
   }
 
   private handleInvalidInput(event: InputCustomEvent): void {
@@ -163,20 +182,13 @@ export class GameGridComponent implements OnInit {
     event.target.value = '';
   }
 
-  private updateScores(): void {
-    this.totalScore = this.gameScoreCalculatorService.calculateScore();
-    this.maxScore = this.gameScoreCalculatorService.calculateMaxScore();
-    this.maxScoreChanged.emit(this.maxScore);
-    this.totalScoreChanged.emit(this.totalScore);
-  }
-
   private async focusNextInput(frameIndex: number, inputIndex: number) {
     await new Promise((resolve) => setTimeout(resolve, 50));
     const inputArray = this.inputs.toArray();
-    // Calculate the current index in the linear array of inputs
+    // Calculate the current index in the linear array of inputs.
     const currentInputPosition = frameIndex * 2 + inputIndex;
 
-    // Find the next input element that is not disabled
+    // Find the next input element that is not disabled.
     for (let i = currentInputPosition + 1; i < inputArray.length; i++) {
       const nextInput = inputArray[i];
       const nextInputElement = await nextInput.getInputElement();
