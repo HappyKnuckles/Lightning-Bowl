@@ -34,12 +34,12 @@ import { StorageService } from 'src/app/services/storage/storage.service';
 import { ToastService } from 'src/app/services/toast/toast.service';
 import { LoadingService } from 'src/app/services/loader/loading.service';
 import Fuse from 'fuse.js';
-import { firstValueFrom, Subject } from 'rxjs';
+import { Subject } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { BallListComponent } from 'src/app/components/ball-list/ball-list.component';
 import { HapticService } from 'src/app/services/haptic/haptic.service';
 import { ImpactStyle } from '@capacitor/haptics';
-import { environment } from 'src/environments/environment';
+import { BallService } from 'src/app/services/ball/ball.service';
 @Component({
   selector: 'app-balls',
   templateUrl: './balls.page.html',
@@ -117,6 +117,7 @@ export class BallsPage implements OnInit {
     private toastService: ToastService,
     private http: HttpClient,
     private hapticService: HapticService,
+    private ballService: BallService,
   ) {
     addIcons({ globeOutline, openOutline, filterOutline, addOutline, camera });
     this.searchSubject.pipe().subscribe((query) => {
@@ -190,13 +191,7 @@ export class BallsPage implements OnInit {
       if (!event) {
         this.loadingService.setLoading(true);
       }
-      const response = await firstValueFrom(
-        this.http.get<Ball[]>(`${environment.bowwwlEndpoint}balls-pages`, {
-          params: {
-            page: this.currentPage.toString(),
-          },
-        }),
-      );
+      const response = await this.ballService.loadBalls(this.currentPage);
 
       if (response.length > 0) {
         this.balls = [...this.balls, ...response];
@@ -217,21 +212,13 @@ export class BallsPage implements OnInit {
       }
     }
   }
+
   async getSameCoreBalls(ball: Ball): Promise<void> {
     try {
       this.hapticService.vibrate(ImpactStyle.Light, 100);
-
       this.loadingService.setLoading(true);
-      const response = await firstValueFrom(
-        this.http.get<Ball[]>(`${environment.bowwwlEndpoint}core-balls`, {
-          params: {
-            core: ball.core_name,
-            ballId: ball.ball_id.toString(),
-          },
-        }),
-      );
 
-      this.coreBalls = response;
+      this.coreBalls = await this.ballService.getSameCoreBalls(ball);
 
       if (this.coreBalls.length > 0) {
         this.coreModal.present();
@@ -249,18 +236,9 @@ export class BallsPage implements OnInit {
   async getSameCoverstockBalls(ball: Ball): Promise<void> {
     try {
       this.hapticService.vibrate(ImpactStyle.Light, 100);
-
       this.loadingService.setLoading(true);
-      const response = await firstValueFrom(
-        this.http.get<Ball[]>(`${environment.bowwwlEndpoint}coverstock-balls`, {
-          params: {
-            coverstock: ball.coverstock_name,
-            ballId: ball.ball_id.toString(),
-          },
-        }),
-      );
 
-      this.coverstockBalls = response;
+      this.coverstockBalls = await this.ballService.getSameCoverstockBalls(ball);
 
       if (this.coverstockBalls.length > 0) {
         await this.coverstockModal.present();

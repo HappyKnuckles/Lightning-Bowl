@@ -33,14 +33,12 @@ import { ToastService } from 'src/app/services/toast/toast.service';
 import { addIcons } from 'ionicons';
 import { chevronBack, add, openOutline, trashOutline } from 'ionicons/icons';
 import { AlertController, ModalController } from '@ionic/angular';
-import { HttpClient } from '@angular/common/http';
 import { BallComboBoxComponent } from 'src/app/components/ball-combo-box/ball-combo-box.component';
 import { BallListComponent } from 'src/app/components/ball-list/ball-list.component';
 import { LoadingService } from 'src/app/services/loader/loading.service';
-import { environment } from 'src/environments/environment';
-import { firstValueFrom } from 'rxjs';
 import { ImpactStyle } from '@capacitor/haptics';
 import { HapticService } from 'src/app/services/haptic/haptic.service';
+import { BallService } from 'src/app/services/ball/ball.service';
 
 @Component({
   selector: 'app-arsenal',
@@ -96,7 +94,7 @@ export class ArsenalPage implements OnInit {
     private loadingService: LoadingService,
     public toastService: ToastService,
     public modalCtrl: ModalController,
-    private http: HttpClient,
+    private ballService: BallService,
   ) {
     addIcons({ add, trashOutline, chevronBack, openOutline });
   }
@@ -140,18 +138,9 @@ export class ArsenalPage implements OnInit {
   async getSameCoreBalls(ball: Ball): Promise<void> {
     try {
       this.hapticService.vibrate(ImpactStyle.Light, 100);
-
       this.loadingService.setLoading(true);
-      const response = await firstValueFrom(
-        this.http.get<Ball[]>(`${environment.bowwwlEndpoint}core-balls`, {
-          params: {
-            core: ball.core_name,
-            ballId: ball.ball_id.toString(),
-          },
-        }),
-      );
 
-      this.coreBalls = response;
+      this.coreBalls = await this.ballService.getSameCoreBalls(ball);
 
       if (this.coreBalls.length > 0) {
         this.coreModal.present();
@@ -169,18 +158,9 @@ export class ArsenalPage implements OnInit {
   async getSameCoverstockBalls(ball: Ball): Promise<void> {
     try {
       this.hapticService.vibrate(ImpactStyle.Light, 100);
-
       this.loadingService.setLoading(true);
-      const response = await firstValueFrom(
-        this.http.get<Ball[]>(`${environment.bowwwlEndpoint}coverstock-balls`, {
-          params: {
-            coverstock: ball.coverstock_name,
-            ballId: ball.ball_id.toString(),
-          },
-        }),
-      );
 
-      this.coverstockBalls = response;
+      this.coverstockBalls = await this.ballService.getSameCoverstockBalls(ball);
 
       if (this.coverstockBalls.length > 0) {
         await this.coverstockModal.present();

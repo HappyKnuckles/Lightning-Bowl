@@ -5,9 +5,7 @@ import { SortUtilsService } from '../sort-utils/sort-utils.service';
 import { Ball } from 'src/app/models/ball.model';
 import { signal } from '@angular/core';
 import { LoadingService } from '../loader/loading.service';
-import { environment } from 'src/environments/environment';
-import { firstValueFrom } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
+import { BallService } from '../ball/ball.service';
 
 @Injectable({
   providedIn: 'root',
@@ -35,7 +33,7 @@ export class StorageService {
     private storage: Storage,
     private sortUtilsService: SortUtilsService,
     private loadingService: LoadingService,
-    private http: HttpClient,
+    private ballService: BallService,
   ) {
     this.init();
   }
@@ -67,8 +65,7 @@ export class StorageService {
 
   async loadAllBalls(): Promise<void> {
     try {
-      const response = await firstValueFrom(this.http.get<Ball[]>(`${environment.bowwwlEndpoint}all-balls`));
-
+      const response = await this.ballService.loadAllBalls();
       this.allBalls.set(response);
     } catch (error) {
       console.error('Failed to load all balls:', error);
@@ -124,9 +121,9 @@ export class StorageService {
     const key = 'game' + gameData.gameId;
     await this.save(key, gameData);
     this.games.update((games) => {
-      const index = games.findIndex((g) => g.gameId === gameData.gameId);
+      const index = games.findIndex((game) => game.gameId === gameData.gameId);
       if (index !== -1) {
-        return games.map((g, i) => (i === index ? gameData : g));
+        return games.map((game, i) => (i === index ? gameData : game));
       } else {
         return [gameData, ...games];
       }

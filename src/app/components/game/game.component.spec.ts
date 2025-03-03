@@ -19,8 +19,6 @@ describe('GameComponent', () => {
     fixture = TestBed.createComponent(GameComponent);
     component = fixture.componentInstance;
     component.games = [];
-    component.leagues = [];
-
     fixture.detectChanges();
   }));
 
