@@ -9,8 +9,6 @@ import { ToastComponent } from './components/toast/toast.component';
 import { SwUpdate } from '@angular/service-worker';
 import { ThemeChangerService } from './services/theme-changer/theme-changer.service';
 import { HttpClient } from '@angular/common/http';
-import { GameStatsService } from './services/game-stats/game-stats.service';
-import { StorageService } from './services/storage/storage.service';
 import { DomSanitizer } from '@angular/platform-browser';
 
 @Component({
@@ -32,11 +30,8 @@ export class AppComponent implements OnInit, OnDestroy {
     private swUpdate: SwUpdate,
     private themeService: ThemeChangerService,
     private http: HttpClient,
-    private gameStatsService: GameStatsService,
-    private storageService: StorageService,
     private sanitizer: DomSanitizer,
   ) {
-    // private gameFilterService: GameFilterService
     this.initializeApp();
     const currentTheme = this.themeService.getCurrentTheme();
     this.themeService.applyTheme(currentTheme);
@@ -46,11 +41,6 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   async ngOnInit(): Promise<void> {
-    // Load stats here initially so prevstats are loaded before the first game
-    const gameHistory = await this.storageService.loadGameHistory();
-    // this.gameFilterService.setDefaultFilters();
-    // this.gameFilterService.filterGames();
-    this.gameStatsService.calculateStats(gameHistory);
     this.greetUser();
   }
 
