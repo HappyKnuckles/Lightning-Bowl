@@ -2,6 +2,10 @@
   <ion-list>
     <!-- <ion-button (click)="deleteAll()"> Alles löschen</ion-button> -->
     @for (game of showingGames; track game.gameId) {
+      <ion-item-divider *ngIf="$index === 0 || isNewMonth($index)" style="padding: 8px; font-size: 1.2rem">
+        <ion-label>{{ getMonthName(game.date) }}</ion-label>
+      </ion-item-divider>
+      
       <ion-item-sliding class="sliding" #slidingItem>
         <ion-item-options side="end" (ionSwipe)="deleteGame(game.gameId); slidingItem.closeOpened()">
           <ion-item-option color="danger" expandable (click)="deleteGame(game.gameId); slidingItem.closeOpened()">
@@ -23,10 +27,6 @@
             <ion-icon class="title" style="transform: translateY(-2px)" name="create-outline"></ion-icon>
           </ion-item-option>
         </ion-item-options>
-
-        <ion-item-divider *ngIf="$index === 0 || isNewMonth($index)" style="padding: 8px; font-size: 1.2rem">
-          <ion-label>{{ getMonthName(game.date) }}</ion-label>
-        </ion-item-divider>
 
         <ion-item lines="none">
           <ion-accordion #accordionRef [value]="game.gameId" [id]="game.gameId">
