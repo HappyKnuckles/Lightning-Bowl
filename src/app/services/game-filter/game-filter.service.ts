@@ -74,7 +74,7 @@ export class GameFilterService {
         (!filters.isPerfect || game.isPerfect) &&
         (!filters.isClean || game.isClean) &&
         (filters.leagues.includes('all') || filters.leagues.length === 0 || filters.leagues.includes(game.league || '')) &&
-        (filters.balls.includes('all') || filters.balls.length === 0 || filters.balls.includes(game.balls!.join(', ')))
+        (filters.balls.includes('all') || filters.balls.length === 0 || game.balls!.some((ball) => filters.balls.includes(ball)))
       );
     });
     return filter;
