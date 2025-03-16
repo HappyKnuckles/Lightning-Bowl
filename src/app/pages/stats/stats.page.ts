@@ -36,7 +36,7 @@ import { FormsModule } from '@angular/forms';
 import { addIcons } from 'ionicons';
 import { calendarNumber, calendarNumberOutline, filterOutline } from 'ionicons/icons';
 import { StatDisplayComponent } from 'src/app/components/stat-display/stat-display.component';
-import { PrevStats, SessionStats } from 'src/app/models/stats.model';
+import { SessionStats } from 'src/app/models/stats.model';
 import { SpareDisplayComponent } from '../../components/spare-display/spare-display.component';
 import { StorageService } from 'src/app/services/storage/storage.service';
 import { ModalController, RefresherCustomEvent, SegmentCustomEvent } from '@ionic/angular';
@@ -81,8 +81,6 @@ import { GameFilterActiveComponent } from 'src/app/components/game-filter-active
 })
 export class StatsPage implements OnInit, AfterViewInit {
   @ViewChild(IonContent) content!: IonContent;
-  // Previous Stats
-  prevStats: PrevStats = localStorage.getItem('prevStats') ? JSON.parse(localStorage.getItem('prevStats')!) : {};
   overallStatDefinitions = overallStatDefinitions;
   seriesStatDefinitions = seriesStatDefinitions;
   throwStatDefinitions = throwStatDefinitions;
@@ -122,9 +120,9 @@ export class StatsPage implements OnInit, AfterViewInit {
     public loadingService: LoadingService,
     public statsService: GameStatsService,
     public storageService: StorageService,
+    public gameFilterService: GameFilterService,
     private hapticService: HapticService,
     private modalCtrl: ModalController,
-    public gameFilterService: GameFilterService,
     private sortUtilsService: SortUtilsService,
     private utilsService: UtilsService,
     private chartService: ChartGenerationService,

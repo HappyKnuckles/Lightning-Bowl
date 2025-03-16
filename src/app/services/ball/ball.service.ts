@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
+import { delay, firstValueFrom, retryWhen, scan } from 'rxjs';
 import { Ball } from 'src/app/models/ball.model';
 import { environment } from 'src/environments/environment';
 
@@ -22,8 +22,21 @@ export class BallService {
   }
 
   async loadAllBalls(): Promise<Ball[]> {
-    const response = await firstValueFrom(this.http.get<Ball[]>(`${environment.bowwwlEndpoint}all-balls`));
-    return response;
+    return firstValueFrom(
+      this.http.get<Ball[]>(`${environment.bowwwlEndpoint}all-balls`).pipe(
+        retryWhen((errors) =>
+          errors.pipe(
+            scan((retryCount, error) => {
+              if (retryCount >= 5) {
+                throw error;
+              }
+              return retryCount + 1;
+            }, 0),
+            delay(1000),
+          ),
+        ),
+      ),
+    );
   }
 
   async getSameCoreBalls(ball: Ball): Promise<Ball[]> {

@@ -26,9 +26,15 @@
     <ion-segment-content id="Overall">
       <section class="tab" *ngIf="gameFilterService.filteredGames().length > 0">
         <ng-container>
-          <app-stat-display [statDefinitions]="overallStatDefinitions" [currentStats]="statsService.currentStats()" [prevStats]="prevStats">
+          <app-stat-display
+            [statDefinitions]="overallStatDefinitions"
+            [currentStats]="statsService.currentStats()"
+            [prevStats]="statsService.prevStats()">
           </app-stat-display>
-          <app-stat-display [statDefinitions]="seriesStatDefinitions" [currentStats]="statsService.currentStats()" [prevStats]="prevStats">
+          <app-stat-display
+            [statDefinitions]="seriesStatDefinitions"
+            [currentStats]="statsService.currentStats()"
+            [prevStats]="statsService.prevStats()">
           </app-stat-display>
           <div class="stat-container">
             <canvas #scoreChart class="score" style="width: 300px; height: 400px"></canvas>
@@ -40,7 +46,7 @@
     <ion-segment-content id="Spares">
       <section class="tab" *ngIf="gameFilterService.filteredGames().length > 0">
         <ng-container>
-          <app-spare-display [stats]="statsService.currentStats()" [prevStats]="prevStats" id="overalSpareStats"></app-spare-display>
+          <app-spare-display [stats]="statsService.currentStats()" [prevStats]="statsService.prevStats()" id="overalSpareStats"></app-spare-display>
           <div class="stat-container">
             <canvas #pinChart class="spares" style="width: 300px; height: 300px"></canvas>
           </div>
@@ -51,7 +57,10 @@
     <ion-segment-content id="Throws">
       <section class="tab" *ngIf="gameFilterService.filteredGames().length > 0">
         <ng-container>
-          <app-stat-display [statDefinitions]="throwStatDefinitions" [currentStats]="statsService.currentStats()" [prevStats]="prevStats">
+          <app-stat-display
+            [statDefinitions]="throwStatDefinitions"
+            [currentStats]="statsService.currentStats()"
+            [prevStats]="statsService.prevStats()">
           </app-stat-display>
           <div class="stat-container">
             <canvas #throwChart class="throws" style="width: 300px; height: 300px"></canvas>
