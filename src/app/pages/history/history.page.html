@@ -4,7 +4,7 @@
       <ion-button for="excelUpload" type="button" class="action-sheet" slot="start" fill="clear" (click)="openExcelFileInput()">
         <ion-icon slot="icon-only" name="cloud-upload-outline"></ion-icon>
       </ion-button>
-      <ion-button (click)="exportToExcel()" class="action-sheet" fill="clear">
+      <ion-button (click)="exportToExcel()" class="action-sheet" fill="clear" [disabled]="(storageService.games().length <= 0 && !loadingService.isLoading())">
         <ion-icon slot="icon-only" name="cloud-download-outline"></ion-icon> </ion-button
     ></ion-buttons>
     <!-- Clear Input on Upload-->
@@ -14,7 +14,7 @@
       <ion-badge>{{gameFilterService.filteredGames().length }}</ion-badge>
     </ion-title>
     <ion-buttons slot="end" class="action-sheet">
-      <ion-button fill="clear" (click)="openFilterModal()" [disabled]="(gameFilterService.filteredGames().length <= 0 && !loadingService.isLoading)">
+      <ion-button fill="clear" (click)="openFilterModal()" [disabled]="(storageService.games().length <= 0 && !loadingService.isLoading())">
         <ion-icon slot="icon-only" name="filter-outline"></ion-icon>
         <ion-text class="filter-indicator" *ngIf="gameFilterService.activeFilterCount() !== 0">{{gameFilterService.activeFilterCount()}}</ion-text>
       </ion-button>
