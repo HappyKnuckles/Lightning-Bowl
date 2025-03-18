@@ -170,40 +170,28 @@ export class ExcelService {
 
   private async saveExcelFile(buffer: ArrayBuffer, fileName: string): Promise<void> {
     try {
-      let binary = '';
-      const bytes = new Uint8Array(buffer);
-      const length = bytes.byteLength;
-
-      for (let i = 0; i < length; i++) {
-        binary += String.fromCharCode(bytes[i]);
-      }
-
-      const base64Data = btoa(binary);
-      const dataUri = 'data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,' + base64Data;
-
-      if (isPlatform('desktop') || isPlatform('mobileweb') || isPlatform('pwa')) {
-        const anchor = document.createElement('a');
-        anchor.href = dataUri;
-        anchor.download = fileName;
-
-        document.body.appendChild(anchor);
-        anchor.click();
-        document.body.removeChild(anchor);
-
-        this.toastService.showToast(`File saved successfully.`, 'checkmark-outline');
-      } else {
-        const savedFile = await Filesystem.writeFile({
-          path: fileName,
-          data: dataUri,
-          directory: Directory.Documents,
-          recursive: true,
-        });
-        this.toastService.showToast(`File saved at path: ${savedFile.uri}`, 'checkmark-outline');
-      }
+      // Create a Blob from the buffer
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      // Generate a temporary URL for the blob
+      const blobUrl = URL.createObjectURL(blob);
+      
+      // Create an anchor element and set its properties for download
+      const anchor = document.createElement('a');
+      anchor.href = blobUrl;
+      anchor.download = fileName;
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+      
+      // Revoke the URL after the download starts
+      URL.revokeObjectURL(blobUrl);
+      
+      this.toastService.showToast('File saved successfully.', 'checkmark-outline');
     } catch (error) {
       this.toastService.showToast(`${error}`, 'bug', true);
     }
   }
+  
 
   private getGameDataForExport(gameHistory: Game[]): string[][] {
     const gameData: string[][] = [];
