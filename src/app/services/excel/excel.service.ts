@@ -170,13 +170,13 @@ export class ExcelService {
 
   private async saveExcelFile(buffer: ArrayBuffer, fileName: string): Promise<void> {
     try {
-      // Create a Blob from the buffer
       const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
       const blobUrl = URL.createObjectURL(blob);
       
       const anchor = document.createElement('a');
       anchor.href = blobUrl;
       anchor.download = fileName;
+      anchor.target = '_blank';
       document.body.appendChild(anchor);
       anchor.click();
       document.body.removeChild(anchor);
