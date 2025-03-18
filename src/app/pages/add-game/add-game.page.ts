@@ -146,13 +146,13 @@ export class AddGamePage implements OnInit {
       const { value, expiration } = JSON.parse(alertData);
       if (value === 'true' && new Date().getTime() < expiration) {
         try {
-          if ((isPlatform('android') || isPlatform('ios')) && !isPlatform('mobileweb')) {
-            const adWatched = await this.showAdAlert();
-            if (!adWatched) {
-              this.toastService.showToast('You need to watch the ad to use this service.', 'bug', true);
-              return;
-            }
-          }
+          // if ((isPlatform('android') || isPlatform('ios')) && !isPlatform('mobileweb')) {
+          //   const adWatched = await this.showAdAlert();
+          //   if (!adWatched) {
+          //     this.toastService.showToast('You need to watch the ad to use this service.', 'bug', true);
+          //     return;
+          //   }
+          // }
           const imageUrl: File | Blob | undefined = await this.takeOrChoosePicture();
           if (imageUrl instanceof File) {
             this.loadingService.setLoading(true);
@@ -179,30 +179,20 @@ export class AddGamePage implements OnInit {
   }
 
   onLeagueChange(league: string, isModal = false): void {
+    const isPractice = league === '' || league === 'New';
+
     if (isModal) {
       this.gameData.league = league;
-      if (league === '' || league === 'New') {
-        this.gameData.isPractice = true;
-        this.modalCheckbox.checked = true;
-        this.modalCheckbox.disabled = false;
-      } else {
-        this.gameData.isPractice = false;
-        this.modalCheckbox.checked = false;
-        this.modalCheckbox.disabled = true;
-      }
+      this.gameData.isPractice = isPractice;
+      this.modalCheckbox.checked = isPractice;
+      this.modalCheckbox.disabled = !isPractice;
     } else {
       this.gameGrids.forEach((trackGrid: GameGridComponent) => {
         trackGrid.leagueSelector.selectedLeague = league;
         trackGrid.selectedLeague = league;
-        if (league === '' || league === 'New') {
-          trackGrid.isPractice = true;
-          trackGrid.checkbox.checked = true;
-          trackGrid.checkbox.disabled = false;
-        } else {
-          trackGrid.isPractice = false;
-          trackGrid.checkbox.checked = false;
-          trackGrid.checkbox.disabled = true;
-        }
+        trackGrid.isPractice = isPractice;
+        trackGrid.checkbox.checked = isPractice;
+        trackGrid.checkbox.disabled = !isPractice;
       });
     }
   }
@@ -251,48 +241,36 @@ export class AddGamePage implements OnInit {
   }
 
   calculateScore(): void {
-    let allGamesValid = true;
-
     const isSeries = this.seriesMode.some((mode, i) => mode && i !== 0);
     if (isSeries) {
       this.seriesId = this.generateUniqueSeriesId();
     }
 
-    this.gameGrids.forEach((trackGrid: GameGridComponent) => {
-      if (!trackGrid.isGameValid()) {
-        allGamesValid = false;
-        this.hapticService.vibrate(ImpactStyle.Heavy, 300);
-        return;
-      }
-    });
+    const gameGridArray = this.gameGrids.toArray();
+    if (!gameGridArray.every((grid: GameGridComponent) => grid.isGameValid())) {
+      this.hapticService.vibrate(ImpactStyle.Heavy, 300);
+      this.isAlertOpen = true;
+      return;
+    }
 
-    if (allGamesValid) {
-      try {
-        let perfectGame = false;
-        this.gameGrids.forEach((trackGrid: GameGridComponent) => {
-          if (trackGrid.totalScore === 300) {
-            perfectGame = true;
-          }
-          setTimeout(() => {
-            trackGrid.saveGameToLocalStorage(isSeries, this.seriesId);
-          }, 5);
-        });
-        if (perfectGame) {
-          this.is300 = true;
-          setTimeout(() => {
-            this.is300 = false;
-          }, 4000);
-        }
-        // if ((isPlatform('android') || isPlatform('ios')) && !isPlatform('mobileweb')) {
-        //   await this.adService.showIntertistalAd();
-        // }
-        this.hapticService.vibrate(ImpactStyle.Medium, 200);
-        this.toastService.showToast('Game saved successfully.', 'add');
-      } catch (error) {
-        console.error(error);
-        this.toastService.showToast(`Error saving game data to local storage: ${error}`, 'bug', true);
+    try {
+      const perfectGame = gameGridArray.some((grid: GameGridComponent) => grid.totalScore === 300);
+
+      gameGridArray.forEach((grid: GameGridComponent) => {
+        setTimeout(() => grid.saveGameToLocalStorage(isSeries, this.seriesId), 5);
+      });
+
+      if (perfectGame) {
+        this.is300 = true;
+        setTimeout(() => (this.is300 = false), 4000);
       }
-    } else this.isAlertOpen = true;
+
+      this.hapticService.vibrate(ImpactStyle.Medium, 200);
+      this.toastService.showToast('Game saved successfully.', 'add');
+    } catch (error) {
+      console.error(error);
+      this.toastService.showToast(`Error saving game data to local storage: ${error}`, 'bug', true);
+    }
   }
 
   onMaxScoreChanged(maxScore: number, index: number): void {
@@ -315,57 +293,20 @@ export class AddGamePage implements OnInit {
     const buttons = [];
     this.hapticService.vibrate(ImpactStyle.Medium, 200);
     this.sheetOpen = true;
-    if (!this.seriesMode[0]) {
-      buttons.push({
-        text: SeriesMode.Single,
-        handler: () => {
-          this.seriesMode[0] = true;
-          this.seriesMode[1] = false;
-          this.seriesMode[2] = false;
-          this.seriesMode[3] = false;
-          this.selectedMode = SeriesMode.Single;
-        },
-      });
-    }
 
-    if (!this.seriesMode[1]) {
-      buttons.push({
-        text: SeriesMode.Series3,
-        handler: () => {
-          this.seriesMode[0] = false;
-          this.seriesMode[1] = true;
-          this.seriesMode[2] = false;
-          this.seriesMode[3] = false;
-          this.selectedMode = SeriesMode.Series3;
-        },
-      });
-    }
+    const modes = [SeriesMode.Single, SeriesMode.Series3, SeriesMode.Series4, SeriesMode.Series5];
 
-    if (!this.seriesMode[2]) {
-      buttons.push({
-        text: SeriesMode.Series4,
-        handler: () => {
-          this.seriesMode[0] = false;
-          this.seriesMode[1] = false;
-          this.seriesMode[2] = true;
-          this.seriesMode[3] = false;
-          this.selectedMode = SeriesMode.Series4;
-        },
-      });
-    }
-
-    if (!this.seriesMode[3]) {
-      buttons.push({
-        text: SeriesMode.Series5,
-        handler: () => {
-          this.seriesMode[0] = false;
-          this.seriesMode[1] = false;
-          this.seriesMode[2] = false;
-          this.seriesMode[3] = true;
-          this.selectedMode = SeriesMode.Series5;
-        },
-      });
-    }
+    modes.forEach((mode, index) => {
+      if (!this.seriesMode[index]) {
+        buttons.push({
+          text: mode,
+          handler: () => {
+            this.seriesMode = this.seriesMode.map((_, i) => i === index);
+            this.selectedMode = mode;
+          },
+        });
+      }
+    });
 
     buttons.push({
       text: 'Cancel',
@@ -374,37 +315,39 @@ export class AddGamePage implements OnInit {
 
     const actionSheet = await this.actionSheetCtrl.create({
       header: 'Choose series mode',
-      buttons: buttons,
+      buttons,
     });
 
-    let gameData: any[] = [];
+    let gameData: Partial<Game>[] = [];
+
+    const captureGameData = () =>
+      this.gameGrids.map((gameGrid: GameGridComponent) => ({
+        frames: gameGrid.frames,
+        league: gameGrid.selectedLeague,
+        note: gameGrid.note,
+        balls: gameGrid.balls,
+        isPractice: gameGrid.isPractice,
+      }));
 
     actionSheet.onWillDismiss().then(() => {
-      gameData = this.gameGrids.map((gameGrid: GameGridComponent) => {
-        return {
-          frames: gameGrid.frames,
-          selectedLeague: gameGrid.selectedLeague,
-          note: gameGrid.note,
-          balls: gameGrid.balls,
-          isPractice: gameGrid.isPractice,
-        };
-      });
-
+      gameData = captureGameData();
       this.sheetOpen = false;
       this.updateSegments();
     });
 
     actionSheet.onDidDismiss().then(() => {
       this.gameGrids.forEach((gameGrid: GameGridComponent, index: number) => {
-        if (gameData[index] === undefined) return;
-        gameGrid.frames = gameData[index].frames;
-        gameGrid.note = gameData[index].note;
-        gameGrid.balls = gameData[index].balls;
-        gameGrid.isPractice = gameData[index].isPractice;
-        gameGrid.onLeagueChanged(gameData[index].selectedLeague);
+        const data = gameData[index];
+        if (!data) return;
+        gameGrid.frames = data.frames;
+        gameGrid.note = data.note!;
+        gameGrid.balls = data.balls!;
+        gameGrid.isPractice = data.isPractice!;
+        gameGrid.onLeagueChanged(data.league!);
         gameGrid.updateScores();
       });
     });
+
     await actionSheet.present();
   }
 
@@ -449,37 +392,37 @@ export class AddGamePage implements OnInit {
     }
   }
 
-  private showAdAlert(): Promise<boolean> {
-    return new Promise((resolve) => {
-      this.alertController
-        .create({
-          header: 'Ad required',
-          message: 'To use this service, you need to watch an ad.',
-          buttons: [
-            {
-              text: 'Watch ad',
-              handler: async () => {
-                try {
-                  await this.adService.showRewardedAd();
-                  resolve(true);
-                } catch (error) {
-                  console.error(error);
-                  resolve(false);
-                }
-              },
-            },
-            {
-              text: 'Cancel',
-              role: 'cancel',
-              handler: () => {
-                resolve(false);
-              },
-            },
-          ],
-        })
-        .then((alert) => alert.present());
-    });
-  }
+  // private showAdAlert(): Promise<boolean> {
+  //   return new Promise((resolve) => {
+  //     this.alertController
+  //       .create({
+  //         header: 'Ad required',
+  //         message: 'To use this service, you need to watch an ad.',
+  //         buttons: [
+  //           {
+  //             text: 'Watch ad',
+  //             handler: async () => {
+  //               try {
+  //                 await this.adService.showRewardedAd();
+  //                 resolve(true);
+  //               } catch (error) {
+  //                 console.error(error);
+  //                 resolve(false);
+  //               }
+  //             },
+  //           },
+  //           {
+  //             text: 'Cancel',
+  //             role: 'cancel',
+  //             handler: () => {
+  //               resolve(false);
+  //             },
+  //           },
+  //         ],
+  //       })
+  //       .then((alert) => alert.present());
+  //   });
+  // }
 
   private parseBowlingScores(input: string): void {
     try {
@@ -542,7 +485,7 @@ export class AddGamePage implements OnInit {
       }
     }
 
-    return undefined;
+    return;
   }
 
   private async showPermissionDeniedAlert(): Promise<void> {
