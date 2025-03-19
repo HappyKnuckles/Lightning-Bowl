@@ -84,13 +84,18 @@ export class GameGridComponent implements OnInit {
 
   simulateScore(event: InputCustomEvent, frameIndex: number, inputIndex: number): void {
     const inputValue = event.detail.value!;
-    const parsedValue = this.parseInputValue(inputValue, frameIndex, inputIndex);
+    const parsedValue = this.gameUtilsService.parseInputValue(inputValue, frameIndex, inputIndex, this.frames);
 
+    if (inputValue.length === 0) {
+      this.frames[frameIndex].splice(inputIndex, 1);
+      this.updateScores();
+      return;
+    }
     if (!this.isValidNumber0to10(parsedValue)) {
       this.handleInvalidInput(event);
       return;
     }
-    if (!this.isValidFrameScore(parsedValue, frameIndex, inputIndex)) {
+    if (!this.gameUtilsService.isValidFrameScore(parsedValue, frameIndex, inputIndex, this.frames)) {
       this.handleInvalidInput(event);
       return;
     }
@@ -165,16 +170,8 @@ export class GameGridComponent implements OnInit {
     return this.utilsService.isNumber(value);
   }
 
-  private parseInputValue(inputValue: string, frameIndex: number, inputIndex: number): number {
-    return this.gameUtilsService.parseInputValue(inputValue, frameIndex, inputIndex, this.frames);
-  }
-
   private isValidNumber0to10(value: number): boolean {
     return !isNaN(value) && value >= 0 && value <= 10;
-  }
-
-  private isValidFrameScore(inputValue: number, frameIndex: number, inputIndex: number): boolean {
-    return this.gameUtilsService.isValidFrameScore(inputValue, frameIndex, inputIndex, this.frames);
   }
 
   private handleInvalidInput(event: InputCustomEvent): void {
