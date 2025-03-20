@@ -1,36 +1,64 @@
-import { Component, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit } from '@angular/core';
 import { ModalController } from '@ionic/angular';
 import { BallFilterService } from 'src/app/services/ball-filter/ball-filter.service';
 import { FormsModule } from '@angular/forms';
-
+import { Brand, Core, Coverstock } from 'src/app/models/ball.model';
+import { BallService } from 'src/app/services/ball/ball.service';
+import { NgFor } from '@angular/common';
+import { BallFilter, CoreType, Market } from 'src/app/models/filter.model';
 @Component({
   selector: 'app-ball-filter',
   templateUrl: './ball-filter.component.html',
   styleUrls: ['./ball-filter.component.scss'],
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, NgFor],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
-export class BallFilterComponent {
+export class BallFilterComponent implements OnInit {
+  brands: Brand[] = [];
+  cores: Core[] = [];
+  coverstocks: Coverstock[] = [];
+  markets: Market[] = [Market.ALL, Market.US, Market.INT];
+  coreTypes: CoreType[] = [CoreType.ALL, CoreType.ASYMMETRIC, CoreType.SYMMETRIC];
+  weights: number[] = [7,8,9,10,11,12,13,14,15,16];
   constructor(
-    private ballFilterService: BallFilterService,
+    public ballFilterService: BallFilterService,
     private modalCtrl: ModalController,
+    private ballService: BallService,
   ) {}
 
-  // ngOnInit() { }
+  async ngOnInit() { 
+    await this.getFilterTypes();
+  }
+
+  async getFilterTypes(){
+    this.brands = await this.ballService.getBrands();
+    this.cores = await this.ballService.getCores();
+    this.coverstocks = await this.ballService.getCoverstocks();
+  }
 
   cancel(): Promise<boolean> {
-    // this.ballFilterService.filters.update(() =>
-    //   localStorage.getItem('filter') ? JSON.parse(localStorage.getItem('filter')!) : this.ballFilterService.filters
-    // );
+    this.ballFilterService.filters.update(() =>
+      localStorage.getItem('ball-filter') ? JSON.parse(localStorage.getItem('ball-filter')!) : this.ballFilterService.filters
+    );
     return this.modalCtrl.dismiss(null, 'cancel');
   }
 
   reset(): void {
-    // this.ballFilterService.resetFilters();
+    this.ballFilterService.resetFilters();
+  }
+
+  updateFilter<T extends keyof BallFilter>(key: T, value: unknown): void {
+    this.ballFilterService.filters.update((filters) => ({
+      ...filters,
+      [key]: value,
+    }));
   }
 
   confirm(): Promise<boolean> {
+    this.ballFilterService.filters.update((filters) => ({
+      ...filters}));
+      this.ballFilterService.saveFilters();
     // this.ballFilterService.filterGames(this.games);
     return this.modalCtrl.dismiss('confirm');
   }

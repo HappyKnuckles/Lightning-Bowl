@@ -14,7 +14,7 @@
     <ion-item>
       <ion-input
         class="ion-text-center"
-        [ngModel]="filterService.filters().minScore"
+        [ngModel]="gameFilterService.filters().minScore"
         name="minScore"
         clearOnEdit="true"
         inputmode="numeric"
@@ -25,14 +25,14 @@
         label="-"
         class="ion-text-center"
         style="width: 60%"
-        [ngModel]="filterService.filters().maxScore"
+        [ngModel]="gameFilterService.filters().maxScore"
         name="maxScore"
         clearOnEdit="true"
         inputmode="numeric"
         (ionChange)="updateFilter('maxScore', $event.detail.value)"></ion-input>
     </ion-item>
     <ion-item>
-      <ion-select name="timeRange" label="Time Range" (ionChange)="startDateChange($event)" [ngModel]="filterService.filters().timeRange">
+      <ion-select name="timeRange" label="Time Range" (ionChange)="startDateChange($event)" [ngModel]="gameFilterService.filters().timeRange">
         <ion-select-option [value]="0">Today</ion-select-option>
         <ion-select-option [value]="1">Last week</ion-select-option>
         <ion-select-option [value]="2">Last month</ion-select-option>
@@ -62,13 +62,13 @@
               year: 'numeric',
             },
           }"
-          [ngModel]="filterService.filters().startDate"
+          [ngModel]="gameFilterService.filters().startDate"
           name="startDate"
           [highlightedDates]="highlightedDates"
           (ionChange)="updateFilter('startDate', $event.detail.value)"
           presentation="date"
           [min]="defaultFilters.startDate"
-          [max]="filterService.filters().endDate"></ion-datetime>
+          [max]="gameFilterService.filters().endDate"></ion-datetime>
       </ng-template>
     </ion-modal>
     <ion-modal [keepContentsMounted]="true">
@@ -83,36 +83,36 @@
               year: 'numeric',
             },
           }"
-          [ngModel]="filterService.filters().endDate"
+          [ngModel]="gameFilterService.filters().endDate"
           name="endDate"
           [highlightedDates]="highlightedDates"
           (ionChange)="updateFilter('endDate', $event.detail.value)"
           presentation="date"
-          [min]="filterService.filters().startDate"></ion-datetime>
+          [min]="gameFilterService.filters().startDate"></ion-datetime>
       </ng-template>
     </ion-modal>
     <ion-item>
       <ion-toggle
-        [ngModel]="filterService.filters().excludePractice"
+        [ngModel]="gameFilterService.filters().excludePractice"
         name="isPractice"
         (ionChange)="updateFilter('excludePractice', $event.detail.checked)"
         >Exclude practice games</ion-toggle
       >
     </ion-item>
     <ion-item>
-      <ion-toggle [ngModel]="filterService.filters().isPerfect" name="isPerfect" (ionChange)="updateFilter('isPerfect', $event.detail.checked)"
+      <ion-toggle [ngModel]="gameFilterService.filters().isPerfect" name="isPerfect" (ionChange)="updateFilter('isPerfect', $event.detail.checked)"
         >Only perfect games</ion-toggle
       >
     </ion-item>
     <ion-item>
-      <ion-toggle [ngModel]="filterService.filters().isClean" name="isClean" (ionChange)="updateFilter('isClean', $event.detail.checked)"
+      <ion-toggle [ngModel]="gameFilterService.filters().isClean" name="isClean" (ionChange)="updateFilter('isClean', $event.detail.checked)"
         >Only clean games</ion-toggle
       >
     </ion-item>
     <ion-item>
       <ion-select
         name="league"
-        [ngModel]="filterService.filters().leagues"
+        [ngModel]="gameFilterService.filters().leagues"
         label="League"
         multiple="true"
         (ionChange)="updateFilter('leagues', $event.detail.value)">
@@ -124,7 +124,7 @@
     <ion-item>
       <ion-select
         name="balls"
-        [ngModel]="filterService.filters().balls"
+        [ngModel]="gameFilterService.filters().balls"
         label="Balls"
         multiple="true"
         placeholder="All"
@@ -137,5 +137,5 @@
   </ion-list>
 </ion-content>
 <ion-footer style="display: flex" class="ion-justify-content-center">
-  <ion-button class="confirm-btn" (click)="confirm()">Confirm ({{ filterService.filteredGames().length }} Games)</ion-button>
+  <ion-button class="confirm-btn" (click)="confirm()">Confirm ({{ gameFilterService.filteredGames().length }} Games)</ion-button>
 </ion-footer>

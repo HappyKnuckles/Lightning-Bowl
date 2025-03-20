@@ -1,4 +1,4 @@
-<!-- <ion-header [translucent]="true">
+<ion-header [translucent]="true">
   <ion-toolbar>
     <ion-buttons slot="start">
       <ion-button color="medium" (click)="cancel()">Cancel</ion-button>
@@ -9,34 +9,86 @@
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
+
 <ion-content>
   <ion-list style="padding-top: 10px" lines="full">
-    <ion-item>
-      <ion-input class="ion-text-center"  name="minScore" clearOnEdit="true"
-        inputmode="numeric" label="Score range"></ion-input>
-       <ion-label class="ion-text-center" style="margin-inline-end: 8px">-</ion-label>
-      <ion-input label="-" class="ion-text-center" style="width: 60%" name="maxScore"
-        clearOnEdit="true" inputmode="numeric"></ion-input>
-    </ion-item>
-    <ion-item>
-      <ion-toggle name="isPractice">Exclude practice games</ion-toggle>
-    </ion-item>
-    <ion-item>
-      <ion-toggle  name="isPerfect">Only perfect games</ion-toggle>
-    </ion-item>
-     <ion-item>
-      <ion-toggle [(ngModel)]="filters().isClean" name="isClean">Only clean games</ion-toggle>
-    </ion-item>
-     <ion-item>
-      <ion-select name="league" [(ngModel)]="filters().league" [value]="filters().league" label="League" multiple="true"
-        (ionChange)="handleSelect($event)">
-        <ion-select-option value="all">All</ion-select-option>
-        <ion-select-option value="">None</ion-select-option>
-        <ion-select-option *ngFor="let league of leagues" [value]="league">{{ league }}</ion-select-option>
-      </ion-select>
-    </ion-item> 
+   <ion-item>
+    <ion-select label="Brands" multiple="true" placeholder="All" [ngModel]="ballFilterService.filters().brands" (ionChange)="updateFilter('brands', $event.detail.value)">
+      <ion-select-option *ngFor="let brand of brands" [value]="brand.id">{{brand.brand_name}}</ion-select-option>
+    </ion-select>
+   </ion-item>
+   <ion-item>
+    <ion-select label="Cores" multiple="true" placeholder="All" [ngModel]="ballFilterService.filters().cores" (ionChange)="updateFilter('cores', $event.detail.value)">
+      <ion-select-option *ngFor="let core of cores" [value]="core.id">{{core.core_name}}</ion-select-option>
+    </ion-select>
+   </ion-item>
+   <ion-item>
+    <ion-select label="Coverstocks" multiple="true" placeholder="All" [ngModel]="ballFilterService.filters().coverstocks" (ionChange)="updateFilter('coverstocks', $event.detail.value)">
+      <ion-select-option *ngFor="let coverstock of coverstocks" [value]="coverstock.id">{{coverstock.coverstock_name}}</ion-select-option>
+    </ion-select>
+   </ion-item>
+   <ion-item>
+    <ion-select label="Market" [ngModel]="ballFilterService.filters().market" (ionChange)="updateFilter('market', $event.detail.value)">
+      <ion-select-option *ngFor="let market of markets" [value]="market">{{market}}</ion-select-option>
+    </ion-select>
+   </ion-item>
+   <!-- Important call api before filter-->
+   <ion-item>
+    <ion-select label="Weight">
+      <ion-select-option *ngFor="let weight of weights">{{weight}}</ion-select-option>
+    </ion-select>
+   </ion-item>
+   <ion-item>
+    <ion-select label="Core type" [ngModel]="ballFilterService.filters().coreType" (ionChange)="updateFilter('coreType', $event.detail.value)">
+      <ion-select-option *ngFor="let coreType of coreTypes" [value]="coreType">{{coreType}}</ion-select-option>
+    </ion-select>
+   </ion-item>
+   <ion-item>
+    <ion-input
+      class="ion-text-center"
+      [ngModel]="ballFilterService.filters().minRg"
+      name="minRg"
+      clearOnEdit="true"
+      inputmode="numeric"
+      label="Score range"
+      (ionChange)="updateFilter('minRg', $event.detail.value)"></ion-input>
+    <!-- <ion-label class="ion-text-center" style="margin-inline-end: 8px">-</ion-label> -->
+    <ion-input
+      label="-"
+      class="ion-text-center"
+      style="width: 60%"
+      [ngModel]="ballFilterService.filters().maxRg"
+      name="maxRg"
+      clearOnEdit="true"
+      inputmode="numeric"
+      (ionChange)="updateFilter('maxRg', $event.detail.value)"></ion-input>
+  </ion-item>
+  <ion-item>
+    <ion-input
+      class="ion-text-center"
+      [ngModel]="ballFilterService.filters().minDiff"
+      name="minDiff"
+      clearOnEdit="true"
+      inputmode="numeric"
+      label="Score range"
+      (ionChange)="updateFilter('minDiff', $event.detail.value)"></ion-input>
+    <!-- <ion-label class="ion-text-center" style="margin-inline-end: 8px">-</ion-label> -->
+    <ion-input
+      label="-"
+      class="ion-text-center"
+      style="width: 60%"
+      [ngModel]="ballFilterService.filters().maxDiff"
+      name="maxDiff"
+      clearOnEdit="true"
+      inputmode="numeric"
+      (ionChange)="updateFilter('maxDiff', $event.detail.value)"></ion-input>
+  </ion-item>
+  <ion-item>
+    <ion-toggle [ngModel]="ballFilterService.filters().inArsenal" (ionChange)="updateFilter('inArsenal', $event.detail.checked)">Only Arsenal</ion-toggle>
+   </ion-item>
+  <!-- TODO Releasedate, availability-->
   </ion-list>
 </ion-content>
 <ion-footer style="display: flex" class="ion-justify-content-center">
   <ion-button class="confirmBtn" (click)="confirm()">Confirm</ion-button>
-</ion-footer> -->
+</ion-footer>

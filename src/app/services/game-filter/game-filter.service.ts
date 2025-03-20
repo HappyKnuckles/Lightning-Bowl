@@ -20,6 +20,7 @@ export class GameFilterService {
     startDate: '',
     endDate: '',
   };
+  
   activeFilterCount: Signal<number> = computed(() => {
     return Object.keys(this.filters()).reduce((count, key) => {
       const filterValue = this.filters()[key as keyof GameFilter];
@@ -38,6 +39,7 @@ export class GameFilterService {
       return count;
     }, 0);
   });
+
   #filteredGames = computed(() => {
     const games = this.storageService.games();
     const filters = this.filters();
@@ -46,10 +48,12 @@ export class GameFilterService {
   get filteredGames() {
     return this.#filteredGames;
   }
+
   #filters = signal<GameFilter>({ ...this.defaultFilters });
   get filters() {
     return this.#filters;
   }
+
   constructor(
     private utilsService: UtilsService,
     private storageService: StorageService,
@@ -59,7 +63,7 @@ export class GameFilterService {
   }
 
   filterGames(games: Game[], filters: GameFilter): Game[] {
-    const filter = games.filter((game) => {
+    const filteredGames = games.filter((game) => {
       const formatDate = (date: string) => date.split('T')[0];
       const gameDate = formatDate(new Date(game.date).toISOString());
       const startDate = formatDate(filters.startDate!);
@@ -77,7 +81,7 @@ export class GameFilterService {
         (filters.balls.includes('all') || filters.balls.length === 0 || game.balls!.some((ball) => filters.balls.includes(ball)))
       );
     });
-    return filter;
+    return filteredGames;
     // this.filteredGames.update(() => [...filteredGames]);
   }
 

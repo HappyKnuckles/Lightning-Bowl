@@ -40,6 +40,7 @@ import { BallListComponent } from 'src/app/components/ball-list/ball-list.compon
 import { HapticService } from 'src/app/services/haptic/haptic.service';
 import { ImpactStyle } from '@capacitor/haptics';
 import { BallService } from 'src/app/services/ball/ball.service';
+import { BallFilterService } from 'src/app/services/ball-filter/ball-filter.service';
 @Component({
   selector: 'app-balls',
   templateUrl: './balls.page.html',
@@ -86,7 +87,6 @@ export class BallsPage implements OnInit {
   searchTerm = '';
   currentPage = 0;
   hasMoreData = true;
-  activeFilterCount = 0;
   fuse = computed(() => {
     const options = {
       keys: [
@@ -118,6 +118,7 @@ export class BallsPage implements OnInit {
     private toastService: ToastService,
     private hapticService: HapticService,
     private ballService: BallService,
+    public ballFilterService: BallFilterService
   ) {
     addIcons({ globeOutline, openOutline, filterOutline, addOutline, camera });
     this.searchSubject.pipe().subscribe((query) => {
@@ -182,7 +183,9 @@ export class BallsPage implements OnInit {
     const modal = await this.modalCtrl.create({
       component: BallFilterComponent,
     });
-
+    modal.onDidDismiss().then(() => {
+      console.log(this.ballFilterService.filteredBalls())
+    });
     return await modal.present();
   }
 

@@ -59,21 +59,21 @@ import { UtilsService } from 'src/app/services/utils/utils.service';
 })
 export class GameFilterComponent implements OnInit {
   @Input() filteredGames!: Game[];
-  defaultFilters = this.filterService.defaultFilters;
+  defaultFilters = this.gameFilterService.defaultFilters;
   highlightedDates: { date: string; textColor: string; backgroundColor: string }[] = [];
   leagues: string[] = [];
 
   constructor(
     private modalCtrl: ModalController,
-    public filterService: GameFilterService,
+    public gameFilterService: GameFilterService,
     private sortUtilsService: SortUtilsService,
     public storageService: StorageService,
     private utilsService: UtilsService,
   ) {}
 
   ngOnInit(): void {
-    if (!this.filterService.filters().startDate && !this.filterService.filters().endDate) {
-      this.filterService.filters.update((filters) => ({
+    if (!this.gameFilterService.filters().startDate && !this.gameFilterService.filters().endDate) {
+      this.gameFilterService.filters.update((filters) => ({
         ...filters,
         startDate: new Date(this.storageService.games()[this.storageService.games().length - 1].date).toISOString() || Date.now().toString(),
         endDate: new Date(this.storageService.games()[0].date).toISOString() || Date.now().toString(),
@@ -110,33 +110,33 @@ export class GameFilterComponent implements OnInit {
         newStartDate = this.defaultFilters.startDate!;
         break;
     }
-    this.filterService.filters.update((filters) => ({ ...filters, startDate: newStartDate, timeRange: event.detail.value }));
+    this.gameFilterService.filters.update((filters) => ({ ...filters, startDate: newStartDate, timeRange: event.detail.value }));
   }
 
   handleSelect(event: CustomEvent): void {
     if (event.detail.value.includes('all')) {
-      this.filterService.filters.update((filters) => ({ ...filters, leagues: ['all'] }));
+      this.gameFilterService.filters.update((filters) => ({ ...filters, leagues: ['all'] }));
     }
   }
 
   cancel(): Promise<boolean> {
-    this.filterService.filters.update(() =>
-      localStorage.getItem('game-filter') ? JSON.parse(localStorage.getItem('game-filter')!) : this.filterService.filters(),
+    this.gameFilterService.filters.update(() =>
+      localStorage.getItem('game-filter') ? JSON.parse(localStorage.getItem('game-filter')!) : this.gameFilterService.filters(),
     );
     return this.modalCtrl.dismiss(null, 'cancel');
   }
 
   updateFilter<T extends keyof GameFilter>(key: T, value: unknown): void {
-    this.filterService.filters.update((filters) => ({ ...filters, [key]: value }));
+    this.gameFilterService.filters.update((filters) => ({ ...filters, [key]: value }));
   }
 
   reset(): void {
-    this.filterService.resetFilters();
+    this.gameFilterService.resetFilters();
   }
 
   confirm(): Promise<boolean> {
-    this.filterService.filters.update((filters) => ({ ...filters }));
-    this.filterService.saveFilters();
+    this.gameFilterService.filters.update((filters) => ({ ...filters }));
+    this.gameFilterService.saveFilters();
     // this.filterService.filterGames(this.storageService.games());
     this.getHighlightedDates();
     return this.modalCtrl.dismiss('confirm');
