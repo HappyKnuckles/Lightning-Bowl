@@ -29,7 +29,7 @@
     </ion-select>
    </ion-item>
    <ion-item>
-    <ion-select label="Market" name="market" [ngModel]="ballFilterService.filters().market" (ionChange)="updateFilter('market', $event.detail.value)">
+    <ion-select label="Market" name="market" placeholder="All" [ngModel]="ballFilterService.filters().market" (ionChange)="updateFilter('market', $event.detail.value)">
       <ion-select-option *ngFor="let market of markets" [value]="market">{{market}}</ion-select-option>
     </ion-select>
    </ion-item>
@@ -40,7 +40,7 @@
     </ion-select>
    </ion-item>
    <ion-item>
-    <ion-select label="Core type" name="coreType" [ngModel]="ballFilterService.filters().coreType" (ionChange)="updateFilter('coreType', $event.detail.value)">
+    <ion-select label="Core type" name="coreType" placeholder="All" [ngModel]="ballFilterService.filters().coreType" (ionChange)="updateFilter('coreType', $event.detail.value)">
       <ion-select-option *ngFor="let coreType of coreTypes" [value]="coreType">{{coreType}}</ion-select-option>
     </ion-select>
    </ion-item>
