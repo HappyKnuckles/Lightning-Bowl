@@ -1,17 +1,38 @@
 import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit } from '@angular/core';
-import { ModalController } from '@ionic/angular';
 import { BallFilterService } from 'src/app/services/ball-filter/ball-filter.service';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Brand, Core, Coverstock } from 'src/app/models/ball.model';
 import { BallService } from 'src/app/services/ball/ball.service';
-import { NgFor } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { BallFilter, CoreType, Market } from 'src/app/models/filter.model';
+import { IonButton, IonButtons, IonContent, IonDatetime, IonDatetimeButton, IonFooter, IonHeader, IonInput, IonItem, IonLabel, IonList, IonModal, IonSelect, IonSelectOption, IonTitle, IonToggle, IonToolbar, ModalController} from '@ionic/angular/standalone';
 @Component({
   selector: 'app-ball-filter',
   templateUrl: './ball-filter.component.html',
   styleUrls: ['./ball-filter.component.scss'],
   standalone: true,
-  imports: [FormsModule, NgFor],
+  imports: [FormsModule,
+    IonList,
+    IonFooter,
+    IonToggle,
+    IonModal,
+    IonDatetime,
+    IonDatetimeButton,
+    IonLabel,
+    IonInput,
+    IonButton,
+    IonItem,
+    IonContent,
+    IonHeader,
+    IonTitle,
+    IonToolbar,
+    IonButtons,
+    IonSelect,
+    FormsModule,
+    ReactiveFormsModule,
+    CommonModule,
+    IonSelectOption,    
+  ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class BallFilterComponent implements OnInit {

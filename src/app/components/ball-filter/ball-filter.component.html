@@ -13,33 +13,34 @@
 <ion-content>
   <ion-list style="padding-top: 10px" lines="full">
    <ion-item>
-    <ion-select label="Brands" multiple="true" placeholder="All" [ngModel]="ballFilterService.filters().brands" (ionChange)="updateFilter('brands', $event.detail.value)">
+    <!-- TODO make this a typeahead component-->
+    <ion-select label="Brands" name="brands" multiple="true" placeholder="All" [ngModel]="ballFilterService.filters().brands" (ionChange)="updateFilter('brands', $event.detail.value)">
       <ion-select-option *ngFor="let brand of brands" [value]="brand.id">{{brand.brand_name}}</ion-select-option>
     </ion-select>
    </ion-item>
    <ion-item>
-    <ion-select label="Cores" multiple="true" placeholder="All" [ngModel]="ballFilterService.filters().cores" (ionChange)="updateFilter('cores', $event.detail.value)">
+    <ion-select label="Cores" name="cores" multiple="true" placeholder="All" [ngModel]="ballFilterService.filters().cores" (ionChange)="updateFilter('cores', $event.detail.value)">
       <ion-select-option *ngFor="let core of cores" [value]="core.id">{{core.core_name}}</ion-select-option>
     </ion-select>
    </ion-item>
    <ion-item>
-    <ion-select label="Coverstocks" multiple="true" placeholder="All" [ngModel]="ballFilterService.filters().coverstocks" (ionChange)="updateFilter('coverstocks', $event.detail.value)">
+    <ion-select label="Coverstocks" name="coverstocks" multiple="true" placeholder="All" [ngModel]="ballFilterService.filters().coverstocks" (ionChange)="updateFilter('coverstocks', $event.detail.value)">
       <ion-select-option *ngFor="let coverstock of coverstocks" [value]="coverstock.id">{{coverstock.coverstock_name}}</ion-select-option>
     </ion-select>
    </ion-item>
    <ion-item>
-    <ion-select label="Market" [ngModel]="ballFilterService.filters().market" (ionChange)="updateFilter('market', $event.detail.value)">
+    <ion-select label="Market" name="market" [ngModel]="ballFilterService.filters().market" (ionChange)="updateFilter('market', $event.detail.value)">
       <ion-select-option *ngFor="let market of markets" [value]="market">{{market}}</ion-select-option>
     </ion-select>
    </ion-item>
    <!-- Important call api before filter-->
    <ion-item>
-    <ion-select label="Weight">
+    <ion-select label="Weight" value="15">
       <ion-select-option *ngFor="let weight of weights">{{weight}}</ion-select-option>
     </ion-select>
    </ion-item>
    <ion-item>
-    <ion-select label="Core type" [ngModel]="ballFilterService.filters().coreType" (ionChange)="updateFilter('coreType', $event.detail.value)">
+    <ion-select label="Core type" name="coreType" [ngModel]="ballFilterService.filters().coreType" (ionChange)="updateFilter('coreType', $event.detail.value)">
       <ion-select-option *ngFor="let coreType of coreTypes" [value]="coreType">{{coreType}}</ion-select-option>
     </ion-select>
    </ion-item>
@@ -50,7 +51,7 @@
       name="minRg"
       clearOnEdit="true"
       inputmode="numeric"
-      label="Score range"
+      label="RG range"
       (ionChange)="updateFilter('minRg', $event.detail.value)"></ion-input>
     <!-- <ion-label class="ion-text-center" style="margin-inline-end: 8px">-</ion-label> -->
     <ion-input
@@ -70,7 +71,7 @@
       name="minDiff"
       clearOnEdit="true"
       inputmode="numeric"
-      label="Score range"
+      label="Diff range"
       (ionChange)="updateFilter('minDiff', $event.detail.value)"></ion-input>
     <!-- <ion-label class="ion-text-center" style="margin-inline-end: 8px">-</ion-label> -->
     <ion-input
