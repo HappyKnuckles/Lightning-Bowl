@@ -63,9 +63,9 @@ export class StorageService {
     return gameHistory;
   }
 
-  async loadAllBalls(): Promise<void> {
+  async loadAllBalls(updated?: string, weight?: number): Promise<void> {
     try {
-      const response = await this.ballService.loadAllBalls();
+      const response = await this.ballService.loadAllBalls(updated, weight);
       this.allBalls.set(response);
     } catch (error) {
       console.error('Failed to load all balls:', error);

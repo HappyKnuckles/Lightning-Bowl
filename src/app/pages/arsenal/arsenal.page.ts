@@ -140,7 +140,7 @@ export class ArsenalPage implements OnInit {
       this.hapticService.vibrate(ImpactStyle.Light, 100);
       this.loadingService.setLoading(true);
 
-      this.coreBalls = await this.ballService.getSameCoreBalls(ball);
+      this.coreBalls = await this.ballService.getBallsByCore(ball);
 
       if (this.coreBalls.length > 0) {
         this.coreModal.present();
@@ -160,7 +160,7 @@ export class ArsenalPage implements OnInit {
       this.hapticService.vibrate(ImpactStyle.Light, 100);
       this.loadingService.setLoading(true);
 
-      this.coverstockBalls = await this.ballService.getSameCoverstockBalls(ball);
+      this.coverstockBalls = await this.ballService.getBallsByCoverstock(ball);
 
       if (this.coverstockBalls.length > 0) {
         await this.coverstockModal.present();

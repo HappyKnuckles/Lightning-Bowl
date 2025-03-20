@@ -22,3 +22,23 @@ export interface Ball {
   thumbnail_image: string;
   us_int: string;
 }
+
+export interface Core {
+  core_name: string;
+  brand: string;
+  id: string;
+  api_filter_url: string;
+}
+
+export interface Coverstock {
+  coverstock_name: string;
+  brand: string;
+  id: string;
+  api_filter_url: string;
+}
+
+export interface Brand {
+  brand_name: string;
+  id: string;
+  logo: string;
+}

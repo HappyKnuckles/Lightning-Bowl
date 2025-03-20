@@ -24,6 +24,7 @@ import {
   IonList,
   IonRefresherContent,
   IonRefresher,
+  IonChip,
 } from '@ionic/angular/standalone';
 import { Ball } from 'src/app/models/ball.model';
 import { addIcons } from 'ionicons';
@@ -35,7 +36,6 @@ import { ToastService } from 'src/app/services/toast/toast.service';
 import { LoadingService } from 'src/app/services/loader/loading.service';
 import Fuse from 'fuse.js';
 import { Subject } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
 import { BallListComponent } from 'src/app/components/ball-list/ball-list.component';
 import { HapticService } from 'src/app/services/haptic/haptic.service';
 import { ImpactStyle } from '@capacitor/haptics';
@@ -47,6 +47,7 @@ import { BallService } from 'src/app/services/ball/ball.service';
   standalone: true,
   providers: [ModalController],
   imports: [
+    IonChip,
     IonRefresher,
     IonRefresherContent,
     IonList,
@@ -115,7 +116,6 @@ export class BallsPage implements OnInit {
     public loadingService: LoadingService,
     public storageService: StorageService,
     private toastService: ToastService,
-    private http: HttpClient,
     private hapticService: HapticService,
     private ballService: BallService,
   ) {
@@ -218,7 +218,7 @@ export class BallsPage implements OnInit {
       this.hapticService.vibrate(ImpactStyle.Light, 100);
       this.loadingService.setLoading(true);
 
-      this.coreBalls = await this.ballService.getSameCoreBalls(ball);
+      this.coreBalls = await this.ballService.getBallsByCore(ball);
 
       if (this.coreBalls.length > 0) {
         this.coreModal.present();
@@ -238,7 +238,7 @@ export class BallsPage implements OnInit {
       this.hapticService.vibrate(ImpactStyle.Light, 100);
       this.loadingService.setLoading(true);
 
-      this.coverstockBalls = await this.ballService.getSameCoverstockBalls(ball);
+      this.coverstockBalls = await this.ballService.getBallsByCoverstock(ball);
 
       if (this.coverstockBalls.length > 0) {
         await this.coverstockModal.present();

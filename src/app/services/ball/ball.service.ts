@@ -1,7 +1,7 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { delay, firstValueFrom, retryWhen, scan } from 'rxjs';
-import { Ball } from 'src/app/models/ball.model';
+import { firstValueFrom, retry } from 'rxjs';
+import { Ball, Brand, Core, Coverstock } from 'src/app/models/ball.model';
 import { environment } from 'src/environments/environment';
 
 @Injectable({
@@ -21,25 +21,19 @@ export class BallService {
     return response;
   }
 
-  async loadAllBalls(): Promise<Ball[]> {
-    return firstValueFrom(
-      this.http.get<Ball[]>(`${environment.bowwwlEndpoint}all-balls`).pipe(
-        retryWhen((errors) =>
-          errors.pipe(
-            scan((retryCount, error) => {
-              if (retryCount >= 5) {
-                throw error;
-              }
-              return retryCount + 1;
-            }, 0),
-            delay(1000),
-          ),
-        ),
-      ),
-    );
+  async loadAllBalls(updated?: string, weight?: number): Promise<Ball[]> {
+    let params = new HttpParams();
+    if (updated) {
+      params = params.set('updated', updated);
+    }
+    if (weight !== undefined) {
+      params = params.set('weight', weight.toString());
+    }
+
+    return firstValueFrom(this.http.get<Ball[]>(`${environment.bowwwlEndpoint}all-balls`, { params }).pipe(retry({ count: 5, delay: 2000 })));
   }
 
-  async getSameCoreBalls(ball: Ball): Promise<Ball[]> {
+  async getBallsByCore(ball: Ball): Promise<Ball[]> {
     const response = await firstValueFrom(
       this.http.get<Ball[]>(`${environment.bowwwlEndpoint}core-balls`, {
         params: {
@@ -51,7 +45,7 @@ export class BallService {
     return response;
   }
 
-  async getSameCoverstockBalls(ball: Ball): Promise<Ball[]> {
+  async getBallsByCoverstock(ball: Ball): Promise<Ball[]> {
     const response = await firstValueFrom(
       this.http.get<Ball[]>(`${environment.bowwwlEndpoint}coverstock-balls`, {
         params: {
@@ -60,6 +54,32 @@ export class BallService {
         },
       }),
     );
+    return response;
+  }
+
+  async getBallByBrand(brand: string): Promise<Ball[]> {
+    const response = await firstValueFrom(
+      this.http.get<Ball[]>(`${environment.bowwwlEndpoint}brand`, {
+        params: {
+          brand,
+        },
+      }),
+    );
+    return response;
+  }
+
+  async getBrands(): Promise<Brand[]> {
+    const response = await firstValueFrom(this.http.get<Brand[]>(`${environment.bowwwlEndpoint}brands`));
+    return response;
+  }
+
+  async getCores(): Promise<Core[]> {
+    const response = await firstValueFrom(this.http.get<Core[]>(`${environment.bowwwlEndpoint}cores`));
+    return response;
+  }
+
+  async getCoverstocks(): Promise<Coverstock[]> {
+    const response = await firstValueFrom(this.http.get<Coverstock[]>(`${environment.bowwwlEndpoint}coverstocks`));
     return response;
   }
 }
