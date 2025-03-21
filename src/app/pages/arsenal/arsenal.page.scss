@@ -55,11 +55,16 @@ ion-img::part(image) {
   border-radius: 50%;
 }
 
-.ball-info{
-  display: flex;
-  gap: 8px;
+.ball-info {
 
-  ion-badge{
-    padding: 4px;
+  ion-chip {
+    text-align: center;
+    padding: 6px;
+    margin-left: 0;
+    margin-right: 4px;
+    font-size: 0.75rem;
+    &:last-child {
+      margin: 0;
+    }
   }
 }

@@ -24,11 +24,10 @@ import {
   IonList,
   IonRefresherContent,
   IonRefresher,
-  IonChip,
 } from '@ionic/angular/standalone';
 import { Ball } from 'src/app/models/ball.model';
 import { addIcons } from 'ionicons';
-import { globeOutline, camera, addOutline, filterOutline, openOutline } from 'ionicons/icons';
+import { globeOutline, camera, addOutline, filterOutline, openOutline, closeCircle } from 'ionicons/icons';
 import { InfiniteScrollCustomEvent, ModalController, RefresherCustomEvent, SearchbarCustomEvent } from '@ionic/angular';
 import { BallFilterComponent } from 'src/app/components/ball-filter/ball-filter.component';
 import { StorageService } from 'src/app/services/storage/storage.service';
@@ -41,6 +40,7 @@ import { HapticService } from 'src/app/services/haptic/haptic.service';
 import { ImpactStyle } from '@capacitor/haptics';
 import { BallService } from 'src/app/services/ball/ball.service';
 import { BallFilterService } from 'src/app/services/ball-filter/ball-filter.service';
+import { BallFilterActiveComponent } from '../../components/ball-filter-active/ball-filter-active.component';
 
 @Component({
   selector: 'app-balls',
@@ -49,7 +49,6 @@ import { BallFilterService } from 'src/app/services/ball-filter/ball-filter.serv
   standalone: true,
   providers: [ModalController],
   imports: [
-    IonChip,
     IonRefresher,
     IonRefresherContent,
     IonList,
@@ -75,6 +74,7 @@ import { BallFilterService } from 'src/app/services/ball-filter/ball-filter.serv
     CommonModule,
     FormsModule,
     BallListComponent,
+    BallFilterActiveComponent,
   ],
 })
 export class BallsPage implements OnInit {
@@ -136,7 +136,7 @@ export class BallsPage implements OnInit {
     private ballService: BallService,
     public ballFilterService: BallFilterService,
   ) {
-    addIcons({ globeOutline, openOutline, filterOutline, addOutline, camera });
+    addIcons({ filterOutline, closeCircle, globeOutline, openOutline, addOutline, camera });
     this.searchSubject.subscribe((query) => {
       this.searchTerm = query;
       if (this.content) {

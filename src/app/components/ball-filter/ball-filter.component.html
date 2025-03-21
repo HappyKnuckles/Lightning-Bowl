@@ -21,7 +21,7 @@
         placeholder="All"
         [ngModel]="ballFilterService.filters().brands"
         (ionChange)="updateFilter('brands', $event.detail.value)">
-        <ion-select-option *ngFor="let brand of ballService.brands()" [value]="brand.id">{{ brand.brand_name }}</ion-select-option>
+        <ion-select-option *ngFor="let brand of ballService.brands()" [value]="brand.brand_name">{{ brand.brand_name }}</ion-select-option>
       </ion-select>
     </ion-item>
     <ion-item>
@@ -32,7 +32,7 @@
         placeholder="All"
         [ngModel]="ballFilterService.filters().cores"
         (ionChange)="updateFilter('cores', $event.detail.value)">
-        <ion-select-option *ngFor="let core of ballService.cores()" [value]="core.id">{{ core.core_name }}</ion-select-option>
+        <ion-select-option *ngFor="let core of ballService.cores()" [value]="core.core_name">{{ core.core_name }}</ion-select-option>
       </ion-select>
     </ion-item>
     <ion-item>
@@ -43,7 +43,7 @@
         placeholder="All"
         [ngModel]="ballFilterService.filters().coverstocks"
         (ionChange)="updateFilter('coverstocks', $event.detail.value)">
-        <ion-select-option *ngFor="let coverstock of ballService.coverstocks()" [value]="coverstock.id">{{
+        <ion-select-option *ngFor="let coverstock of ballService.coverstocks()" [value]="coverstock.coverstock_name">{{
           coverstock.coverstock_name
         }}</ion-select-option>
       </ion-select>

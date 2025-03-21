@@ -26,7 +26,7 @@ import {
   IonItemSliding,
   IonItemOption,
   IonItemOptions,
-  IonBadge,
+  IonChip,
 } from '@ionic/angular/standalone';
 import { StorageService } from 'src/app/services/storage/storage.service';
 import { Ball } from 'src/app/models/ball.model';
@@ -48,7 +48,7 @@ import { BallService } from 'src/app/services/ball/ball.service';
   standalone: true,
   providers: [ModalController],
   imports: [
-    IonBadge,
+    IonChip,
     IonItemOptions,
     IonItemOption,
     IonItemSliding,
@@ -86,7 +86,9 @@ export class ArsenalPage implements OnInit {
   coreBalls: Ball[] = [];
   presentingElement?: HTMLElement;
   ballsWithoutArsenal: Signal<Ball[]> = computed(() =>
-    this.storageService.allBalls().filter((ball) => !this.storageService.arsenal().some((arsenalBall) => arsenalBall.ball_id === ball.ball_id)),
+    this.storageService
+      .allBalls()
+      .filter((ball) => !this.storageService.arsenal().some((b) => b.ball_id === ball.ball_id && b.core_weight === ball.core_weight)),
   );
   constructor(
     public storageService: StorageService,
