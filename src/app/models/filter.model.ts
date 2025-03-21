@@ -1,4 +1,3 @@
-
 export interface GameFilter {
   excludePractice: boolean;
   minScore: number;
@@ -17,8 +16,9 @@ export interface BallFilter {
   coverstocks: string[];
   cores: string[];
   market: Market;
+  weight: string;
   coreType: CoreType;
-  availability: string;
+  availability: boolean;
   releaseDate: string;
   minRg: number;
   maxRg: number;
@@ -37,14 +37,20 @@ export enum TimeRange {
   ALL = 6,
 }
 
-export enum Market{
-  ALL = 'all',
-  US = 'us',
-  INT = 'int',
+export enum Market {
+  ALL = 'All',
+  US = 'US',
+  INT = 'Overseas',
 }
 
-export enum CoreType{
-  ALL = 'all',
-  ASYMMETRIC = 'asymmetric',
-  SYMMETRIC = 'symmetric',
+export enum CoreType {
+  ALL = 'All',
+  ASYMMETRIC = 'Asymmetric',
+  SYMMETRIC = 'Symmetric',
 }
+
+// export enum Availability{
+//   ALL = 'all',
+//   AVAILABLE = 'available',
+//   DISCONTINUED = 'discontinued',
+// }

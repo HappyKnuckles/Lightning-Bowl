@@ -39,8 +39,10 @@ export class StorageService {
   }
 
   async init() {
+    const ballFilter = localStorage.getItem('ball-filter');
+    const weight = JSON.parse(ballFilter!).weight;
     await this.storage.create();
-    await this.loadInitialData();
+    await this.loadInitialData(weight);
   }
 
   async loadArsenal(): Promise<void> {
@@ -73,11 +75,11 @@ export class StorageService {
   }
 
   async saveBallToArsenal(ball: Ball) {
-    const key = 'arsenal' + '_' + ball.ball_id;
+    const key = 'arsenal' + '_' + ball.ball_id + '_' + ball.core_weight;
     await this.save(key, ball);
     this.arsenal.update((balls) => {
-      const uniqueBalls = new Set(balls.map((b) => b.ball_name));
-      if (!uniqueBalls.has(ball.ball_name)) {
+      const isUnique = !balls.some((b) => b.ball_id === ball.ball_id && b.core_weight === ball.core_weight);
+      if (isUnique) {
         return [...balls, ball];
       }
       return balls;
@@ -86,7 +88,7 @@ export class StorageService {
 
   async saveBallsToArsenal(balls: Ball[]) {
     for (const ball of balls) {
-      const key = 'arsenal' + '_' + ball.ball_id;
+      const key = 'arsenal' + '_' + ball.ball_id + '_' + ball.core_weight;
       await this.save(key, ball);
     }
     this.arsenal.update(() => [...balls]);
@@ -131,9 +133,9 @@ export class StorageService {
   }
 
   async removeFromArsenal(ball: Ball) {
-    const key = 'arsenal' + '_' + ball.ball_id;
+    const key = 'arsenal' + '_' + ball.ball_id + '_' + ball.core_weight;
     await this.delete(key);
-    this.arsenal.update((balls) => balls.filter((b) => b.ball_id !== ball.ball_id));
+    this.arsenal.update((balls) => balls.filter((b) => !(b.ball_id === ball.ball_id && b.core_weight === ball.core_weight)));
   }
 
   async deleteLeague(league: string) {
@@ -176,11 +178,14 @@ export class StorageService {
     this.leagues.set([]);
   }
 
-  private async loadInitialData() {
+  private async loadInitialData(weight: number): Promise<void> {
     await this.loadLeagues();
     await this.loadGameHistory();
     await this.loadArsenal();
-    await this.loadAllBalls();
+    await this.loadAllBalls(undefined, weight);
+    await this.ballService.getBrands();
+    await this.ballService.getCores();
+    await this.ballService.getCoverstocks();
     if (this.games().length > 0) {
       localStorage.getItem('first-game');
       if (localStorage.getItem('first-game') === null) {

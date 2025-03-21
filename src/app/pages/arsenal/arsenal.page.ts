@@ -26,6 +26,7 @@ import {
   IonItemSliding,
   IonItemOption,
   IonItemOptions,
+  IonBadge,
 } from '@ionic/angular/standalone';
 import { StorageService } from 'src/app/services/storage/storage.service';
 import { Ball } from 'src/app/models/ball.model';
@@ -47,6 +48,7 @@ import { BallService } from 'src/app/services/ball/ball.service';
   standalone: true,
   providers: [ModalController],
   imports: [
+    IonBadge,
     IonItemOptions,
     IonItemOption,
     IonItemSliding,

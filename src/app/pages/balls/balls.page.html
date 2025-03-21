@@ -10,7 +10,7 @@
     <ion-buttons slot="end" class="action-sheet">
       <ion-button fill="clear" (click)="openFilterModal()">
         <ion-icon slot="icon-only" name="filter-outline"></ion-icon>
-        <ion-text class="filter-indicator" *ngIf="ballFilterService.activeFilterCount() !== 0">{{ballFilterService.activeFilterCount()}}</ion-text>
+        <ion-text class="filter-indicator" *ngIf="isFilterActive()">{{ballFilterService.activeFilterCount()}}</ion-text>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
@@ -23,11 +23,12 @@
   <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
-  <ng-container *ngIf="(filteredBalls.length <= 0) && !loadingService.isLoading(); else content">
+  <ng-container *ngIf="(displayedBalls.length <= 0) && !loadingService.isLoading(); else content">
     <ion-text class="no-game-text"> No balls found. </ion-text>
   </ng-container>
   <ng-template #content>
-    @for (ball of filteredBalls; track ball.ball_id) {
+    <!-- TODO include active filters here-->
+    @for (ball of displayedBalls; track ball.ball_id) {
     <ion-card role="article">
       <ion-card-header>
         <ion-card-title>{{ ball.ball_name }}</ion-card-title>

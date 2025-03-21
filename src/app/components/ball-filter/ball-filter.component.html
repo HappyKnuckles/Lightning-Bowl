@@ -12,84 +12,126 @@
 
 <ion-content>
   <ion-list style="padding-top: 10px" lines="full">
-   <ion-item>
-    <!-- TODO make this a typeahead component-->
-    <ion-select label="Brands" name="brands" multiple="true" placeholder="All" [ngModel]="ballFilterService.filters().brands" (ionChange)="updateFilter('brands', $event.detail.value)">
-      <ion-select-option *ngFor="let brand of brands" [value]="brand.id">{{brand.brand_name}}</ion-select-option>
-    </ion-select>
-   </ion-item>
-   <ion-item>
-    <ion-select label="Cores" name="cores" multiple="true" placeholder="All" [ngModel]="ballFilterService.filters().cores" (ionChange)="updateFilter('cores', $event.detail.value)">
-      <ion-select-option *ngFor="let core of cores" [value]="core.id">{{core.core_name}}</ion-select-option>
-    </ion-select>
-   </ion-item>
-   <ion-item>
-    <ion-select label="Coverstocks" name="coverstocks" multiple="true" placeholder="All" [ngModel]="ballFilterService.filters().coverstocks" (ionChange)="updateFilter('coverstocks', $event.detail.value)">
-      <ion-select-option *ngFor="let coverstock of coverstocks" [value]="coverstock.id">{{coverstock.coverstock_name}}</ion-select-option>
-    </ion-select>
-   </ion-item>
-   <ion-item>
-    <ion-select label="Market" name="market" placeholder="All" [ngModel]="ballFilterService.filters().market" (ionChange)="updateFilter('market', $event.detail.value)">
-      <ion-select-option *ngFor="let market of markets" [value]="market">{{market}}</ion-select-option>
-    </ion-select>
-   </ion-item>
-   <!-- Important call api before filter-->
-   <ion-item>
-    <ion-select label="Weight" value="15">
-      <ion-select-option *ngFor="let weight of weights">{{weight}}</ion-select-option>
-    </ion-select>
-   </ion-item>
-   <ion-item>
-    <ion-select label="Core type" name="coreType" placeholder="All" [ngModel]="ballFilterService.filters().coreType" (ionChange)="updateFilter('coreType', $event.detail.value)">
-      <ion-select-option *ngFor="let coreType of coreTypes" [value]="coreType">{{coreType}}</ion-select-option>
-    </ion-select>
-   </ion-item>
-   <ion-item>
-    <ion-input
-      class="ion-text-center"
-      [ngModel]="ballFilterService.filters().minRg"
-      name="minRg"
-      clearOnEdit="true"
-      inputmode="numeric"
-      label="RG range"
-      (ionChange)="updateFilter('minRg', $event.detail.value)"></ion-input>
-    <!-- <ion-label class="ion-text-center" style="margin-inline-end: 8px">-</ion-label> -->
-    <ion-input
-      label="-"
-      class="ion-text-center"
-      style="width: 60%"
-      [ngModel]="ballFilterService.filters().maxRg"
-      name="maxRg"
-      clearOnEdit="true"
-      inputmode="numeric"
-      (ionChange)="updateFilter('maxRg', $event.detail.value)"></ion-input>
-  </ion-item>
-  <ion-item>
-    <ion-input
-      class="ion-text-center"
-      [ngModel]="ballFilterService.filters().minDiff"
-      name="minDiff"
-      clearOnEdit="true"
-      inputmode="numeric"
-      label="Diff range"
-      (ionChange)="updateFilter('minDiff', $event.detail.value)"></ion-input>
-    <!-- <ion-label class="ion-text-center" style="margin-inline-end: 8px">-</ion-label> -->
-    <ion-input
-      label="-"
-      class="ion-text-center"
-      style="width: 60%"
-      [ngModel]="ballFilterService.filters().maxDiff"
-      name="maxDiff"
-      clearOnEdit="true"
-      inputmode="numeric"
-      (ionChange)="updateFilter('maxDiff', $event.detail.value)"></ion-input>
-  </ion-item>
-  <ion-item>
-    <ion-toggle [ngModel]="ballFilterService.filters().inArsenal" (ionChange)="updateFilter('inArsenal', $event.detail.checked)">Only Arsenal</ion-toggle>
-   </ion-item>
-  <!-- TODO Releasedate, availability-->
+    <ion-item>
+      <!-- TODO make this a typeahead component-->
+      <ion-select
+        label="Brands"
+        name="brands"
+        multiple="true"
+        placeholder="All"
+        [ngModel]="ballFilterService.filters().brands"
+        (ionChange)="updateFilter('brands', $event.detail.value)">
+        <ion-select-option *ngFor="let brand of ballService.brands()" [value]="brand.id">{{ brand.brand_name }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+    <ion-item>
+      <ion-select
+        label="Cores"
+        name="cores"
+        multiple="true"
+        placeholder="All"
+        [ngModel]="ballFilterService.filters().cores"
+        (ionChange)="updateFilter('cores', $event.detail.value)">
+        <ion-select-option *ngFor="let core of ballService.cores()" [value]="core.id">{{ core.core_name }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+    <ion-item>
+      <ion-select
+        label="Coverstocks"
+        name="coverstocks"
+        multiple="true"
+        placeholder="All"
+        [ngModel]="ballFilterService.filters().coverstocks"
+        (ionChange)="updateFilter('coverstocks', $event.detail.value)">
+        <ion-select-option *ngFor="let coverstock of ballService.coverstocks()" [value]="coverstock.id">{{
+          coverstock.coverstock_name
+        }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+    <!---->
+    <ion-item>
+      <ion-select
+        label="Core type"
+        name="coreType"
+        placeholder="All"
+        [ngModel]="ballFilterService.filters().coreType"
+        (ionChange)="updateFilter('coreType', $event.detail.value)">
+        <ion-select-option *ngFor="let coreType of coreTypes" [value]="coreType">{{ coreType }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+    <ion-item>
+      <ion-select
+        label="Market"
+        name="market"
+        placeholder="All"
+        [ngModel]="ballFilterService.filters().market"
+        (ionChange)="updateFilter('market', $event.detail.value)">
+        <ion-select-option *ngFor="let market of markets" [value]="market">{{ market }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+    <ion-item>
+      <ion-select
+        label="Weight"
+        name="weight"
+        placeholder="15"
+        [ngModel]="ballFilterService.filters().weight"
+        (ionChange)="updateFilter('weight', $event.detail.value)">
+        <ion-select-option *ngFor="let weight of weights" [value]="weight">{{ weight }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+    <ion-item>
+      <ion-input
+        class="ion-text-center"
+        [ngModel]="ballFilterService.filters().minRg"
+        name="minRg"
+        clearOnEdit="true"
+        inputmode="numeric"
+        label="RG range"
+        (ionChange)="updateFilter('minRg', $event.detail.value)"></ion-input>
+      <!-- <ion-label class="ion-text-center" style="margin-inline-end: 8px">-</ion-label> -->
+      <ion-input
+        label="-"
+        class="ion-text-center"
+        style="width: 60%"
+        [ngModel]="ballFilterService.filters().maxRg"
+        name="maxRg"
+        clearOnEdit="true"
+        inputmode="numeric"
+        (ionChange)="updateFilter('maxRg', $event.detail.value)"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-input
+        class="ion-text-center"
+        [ngModel]="ballFilterService.filters().minDiff"
+        name="minDiff"
+        clearOnEdit="true"
+        inputmode="numeric"
+        label="Diff range"
+        (ionChange)="updateFilter('minDiff', $event.detail.value)"></ion-input>
+      <!-- <ion-label class="ion-text-center" style="margin-inline-end: 8px">-</ion-label> -->
+      <ion-input
+        label="-"
+        class="ion-text-center"
+        style="width: 60%"
+        [ngModel]="ballFilterService.filters().maxDiff"
+        name="maxDiff"
+        clearOnEdit="true"
+        inputmode="numeric"
+        (ionChange)="updateFilter('maxDiff', $event.detail.value)"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-toggle [ngModel]="ballFilterService.filters().inArsenal" (ionChange)="updateFilter('inArsenal', $event.detail.checked)"
+        >Only arsenal</ion-toggle
+      >
+    </ion-item>
+    <ion-item>
+      <ion-toggle [ngModel]="ballFilterService.filters().availability" (ionChange)="updateFilter('availability', $event.detail.checked)"
+        >Exclude discontinued</ion-toggle
+      >
+    </ion-item>
+    <!-- TODO Releasedate, availability-->
   </ion-list>
 </ion-content>
 <ion-footer style="display: flex" class="ion-justify-content-center">
-  <ion-button class="confirmBtn" (click)="confirm()">Confirm</ion-button>
+  <ion-button class="confirmBtn" (click)="confirm()">Confirm ({{ ballFilterService.filteredBalls().length }} Balls)</ion-button>
 </ion-footer>

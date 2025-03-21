@@ -54,3 +54,12 @@ ion-card-title {
 ion-img::part(image) {
   border-radius: 50%;
 }
+
+.ball-info{
+  display: flex;
+  gap: 8px;
+
+  ion-badge{
+    padding: 4px;
+  }
+}

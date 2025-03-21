@@ -1,5 +1,5 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { firstValueFrom, retry } from 'rxjs';
 import { Ball, Brand, Core, Coverstock } from 'src/app/models/ball.model';
 import { environment } from 'src/environments/environment';
@@ -8,6 +8,18 @@ import { environment } from 'src/environments/environment';
   providedIn: 'root',
 })
 export class BallService {
+  #brands = signal<Brand[]>([]);
+  #cores = signal<Core[]>([]);
+  #coverstocks = signal<Coverstock[]>([]);
+  get brands() {
+    return this.#brands;
+  }
+  get cores() {
+    return this.#cores;
+  }
+  get coverstocks() {
+    return this.#coverstocks;
+  }
   constructor(private http: HttpClient) {}
 
   async loadBalls(page: number): Promise<Ball[]> {
@@ -70,16 +82,19 @@ export class BallService {
 
   async getBrands(): Promise<Brand[]> {
     const response = await firstValueFrom(this.http.get<Brand[]>(`${environment.bowwwlEndpoint}brands`));
+    this.brands.set(response);
     return response;
   }
 
   async getCores(): Promise<Core[]> {
     const response = await firstValueFrom(this.http.get<Core[]>(`${environment.bowwwlEndpoint}cores`));
+    this.cores.set(response);
     return response;
   }
 
   async getCoverstocks(): Promise<Coverstock[]> {
     const response = await firstValueFrom(this.http.get<Coverstock[]>(`${environment.bowwwlEndpoint}coverstocks`));
+    this.coverstocks.set(response);
     return response;
   }
 }
