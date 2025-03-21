@@ -40,7 +40,7 @@ export class StorageService {
 
   async init() {
     const ballFilter = localStorage.getItem('ball-filter');
-    const weight = JSON.parse(ballFilter!).weight;
+    const weight = ballfilter ? JSON.parse(ballFilter).weight : '15';
     await this.storage.create();
     await this.loadInitialData(weight);
   }
