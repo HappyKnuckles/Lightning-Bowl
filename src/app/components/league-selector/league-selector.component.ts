@@ -1,4 +1,3 @@
-import { NgFor, NgIf } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { AlertController, SelectChangeEventDetail } from '@ionic/angular';
@@ -38,8 +37,6 @@ import { ToastService } from 'src/app/services/toast/toast.service';
     IonButton,
     IonInput,
     IonSelect,
-    NgIf,
-    NgFor,
     FormsModule,
     ReactiveFormsModule,
     IonSelectOption,

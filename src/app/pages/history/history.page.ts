@@ -26,7 +26,7 @@ import {
   filterOutline,
   medalOutline,
 } from 'ionicons/icons';
-import { NgIf, DatePipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { ImpactStyle } from '@capacitor/haptics';
 import { HapticService } from 'src/app/services/haptic/haptic.service';
 import { LoadingService } from 'src/app/services/loader/loading.service';
@@ -57,7 +57,6 @@ import { GameFilterActiveComponent } from 'src/app/components/game-filter-active
     IonBadge,
     IonContent,
     IonRefresher,
-    NgIf,
     IonText,
     ReactiveFormsModule,
     FormsModule,

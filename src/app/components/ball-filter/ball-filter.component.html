@@ -21,7 +21,9 @@
         placeholder="All"
         [ngModel]="ballFilterService.filters().brands"
         (ionChange)="updateFilter('brands', $event.detail.value)">
-        <ion-select-option *ngFor="let brand of ballService.brands()" [value]="brand.brand_name">{{ brand.brand_name }}</ion-select-option>
+        @for (brand of ballService.brands(); track brand) {
+          <ion-select-option [value]="brand.brand_name">{{ brand.brand_name }}</ion-select-option>
+        }
       </ion-select>
     </ion-item>
     <ion-item>
@@ -32,7 +34,9 @@
         placeholder="All"
         [ngModel]="ballFilterService.filters().cores"
         (ionChange)="updateFilter('cores', $event.detail.value)">
-        <ion-select-option *ngFor="let core of ballService.cores()" [value]="core.core_name">{{ core.core_name }}</ion-select-option>
+        @for (core of ballService.cores(); track core) {
+          <ion-select-option [value]="core.core_name">{{ core.core_name }}</ion-select-option>
+        }
       </ion-select>
     </ion-item>
     <ion-item>
@@ -43,9 +47,9 @@
         placeholder="All"
         [ngModel]="ballFilterService.filters().coverstocks"
         (ionChange)="updateFilter('coverstocks', $event.detail.value)">
-        <ion-select-option *ngFor="let coverstock of ballService.coverstocks()" [value]="coverstock.coverstock_name">{{
-          coverstock.coverstock_name
-        }}</ion-select-option>
+        @for (coverstock of ballService.coverstocks(); track coverstock) {
+          <ion-select-option [value]="coverstock.coverstock_name">{{ coverstock.coverstock_name }}</ion-select-option>
+        }
       </ion-select>
     </ion-item>
     <!---->
@@ -56,7 +60,9 @@
         placeholder="All"
         [ngModel]="ballFilterService.filters().coreType"
         (ionChange)="updateFilter('coreType', $event.detail.value)">
-        <ion-select-option *ngFor="let coreType of coreTypes" [value]="coreType">{{ coreType }}</ion-select-option>
+        @for (coreType of coreTypes; track coreType) {
+          <ion-select-option [value]="coreType">{{ coreType }}</ion-select-option>
+        }
       </ion-select>
     </ion-item>
     <ion-item>
@@ -66,7 +72,9 @@
         placeholder="All"
         [ngModel]="ballFilterService.filters().market"
         (ionChange)="updateFilter('market', $event.detail.value)">
-        <ion-select-option *ngFor="let market of markets" [value]="market">{{ market }}</ion-select-option>
+        @for (market of markets; track market) {
+          <ion-select-option [value]="market">{{ market }}</ion-select-option>
+        }
       </ion-select>
     </ion-item>
     <ion-item>
@@ -76,7 +84,9 @@
         placeholder="15"
         [ngModel]="ballFilterService.filters().weight"
         (ionChange)="updateFilter('weight', $event.detail.value)">
-        <ion-select-option *ngFor="let weight of weights" [value]="weight">{{ weight }}</ion-select-option>
+        @for (weight of weights; track weight) {
+          <ion-select-option [value]="weight">{{ weight }}</ion-select-option>
+        }
       </ion-select>
     </ion-item>
     <ion-item>

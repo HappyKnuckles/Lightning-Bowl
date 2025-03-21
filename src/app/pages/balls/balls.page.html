@@ -10,7 +10,9 @@
     <ion-buttons slot="end" class="action-sheet">
       <ion-button fill="clear" (click)="openFilterModal()">
         <ion-icon slot="icon-only" name="filter-outline"></ion-icon>
-        <ion-text class="filter-indicator" *ngIf="isFilterActive()">{{ballFilterService.activeFilterCount()}}</ion-text>
+        @if (isFilterActive()) {
+        <ion-text class="filter-indicator">{{ballFilterService.activeFilterCount()}}</ion-text>
+        }
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
@@ -26,55 +28,60 @@
   <div class="filter-info">
     <app-ball-filter-active></app-ball-filter-active>
   </div>
-  <ng-container *ngIf="(displayedBalls.length <= 0) && !loadingService.isLoading(); else content">
-    <ion-text class="no-game-text"> No balls found. </ion-text>
-  </ng-container>
-  <ng-template #content>
-    @for (ball of displayedBalls; track ball.ball_id) {
-    <ion-card role="article">
-      <ion-card-header>
-        <ion-card-title>{{ ball.ball_name }}</ion-card-title>
-        <ion-card-subtitle>
-          {{ball.brand_name}} ({{ball.release_date}})
-          <ion-icon *ngIf="ball.us_int === 'Overseas'" name="globe-outline" style="vertical-align: text-top"></ion-icon>
-        </ion-card-subtitle>
-      </ion-card-header>
-      <ion-card-content>
-        <ion-img [src]="storageService.url + ball.thumbnail_image" style="height: 15vh" [alt]="'Image for' + ' ' + ball.ball_name"></ion-img>
-        <div class="ball-info">
-          <ion-list lines="none" (click)="getSameCoreBalls(ball)" class="ion-activatable ion-ripple-parent list">
-            <div class="core">
-              <h2 class="title">Core:</h2>
-              <ion-icon name="open-outline"></ion-icon>
-            </div>
-            <p class="info">{{ ball.core_name }}</p>
-            <p class="info">RG: {{ ball.core_rg }}</p>
-            <p class="info">Diff: {{ ball.core_diff }}</p>
-            <p class="info" *ngIf="ball.core_int_diff">Int. Diff: {{ ball.core_int_diff }}</p>
-            <p class="info">{{ ball.core_type }}</p>
-            <ion-ripple-effect></ion-ripple-effect>
-          </ion-list>
-          <ion-list lines="none" (click)="getSameCoverstockBalls(ball)" class="ion-activatable ion-ripple-parent list">
-            <div class="coverstock">
-              <h2 class="title">Coverstock:</h2>
-              <ion-icon name="open-outline"></ion-icon>
-            </div>
-            <p class="info">{{ ball.coverstock_type }}</p>
-            <p class="info">{{ ball.coverstock_name }}</p>
-            <p class="info">{{ ball.factory_finish }}</p>
-            <ion-ripple-effect></ion-ripple-effect>
-          </ion-list>
-        </div>
-      </ion-card-content>
-      <ion-button *ngIf="isInArsenal(ball)" style="float: right" fill="clear" (click)="removeFromArsenal(ball)"> Remove from arsenal </ion-button>
-      <ion-button *ngIf="!isInArsenal(ball)" style="float: right" fill="clear" (click)="saveBallToArsenal(ball)"> Add to arsenal </ion-button>
-    </ion-card>
+  @if ((displayedBalls.length <= 0) && !loadingService.isLoading()) {
+  <ion-text class="no-game-text"> No balls found. </ion-text>
+  } @else { @for (ball of displayedBalls; track ball.ball_id) {
+  <ion-card role="article">
+    <ion-card-header>
+      <ion-card-title>{{ ball.ball_name }}</ion-card-title>
+      <ion-card-subtitle>
+        {{ball.brand_name}} ({{ball.release_date}}) @if (ball.us_int === 'Overseas') {
+        <ion-icon name="globe-outline" style="vertical-align: text-top"></ion-icon>
+        }
+      </ion-card-subtitle>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-img [src]="storageService.url + ball.thumbnail_image" style="height: 15vh" [alt]="'Image for' + ' ' + ball.ball_name"></ion-img>
+      <div class="ball-info">
+        <ion-list lines="none" (click)="getSameCoreBalls(ball)" class="ion-activatable ion-ripple-parent list">
+          <div class="core">
+            <h2 class="title">Core:</h2>
+            <ion-icon name="open-outline"></ion-icon>
+          </div>
+          <p class="info">{{ ball.core_name }}</p>
+          <p class="info">RG: {{ ball.core_rg }}</p>
+          <p class="info">Diff: {{ ball.core_diff }}</p>
+          @if (ball.core_int_diff) {
+          <p class="info">Int. Diff: {{ ball.core_int_diff }}</p>
+          }
+          <p class="info">{{ ball.core_type }}</p>
+          <ion-ripple-effect></ion-ripple-effect>
+        </ion-list>
+        <ion-list lines="none" (click)="getSameCoverstockBalls(ball)" class="ion-activatable ion-ripple-parent list">
+          <div class="coverstock">
+            <h2 class="title">Coverstock:</h2>
+            <ion-icon name="open-outline"></ion-icon>
+          </div>
+          <p class="info">{{ ball.coverstock_type }}</p>
+          <p class="info">{{ ball.coverstock_name }}</p>
+          <p class="info">{{ ball.factory_finish }}</p>
+          <ion-ripple-effect></ion-ripple-effect>
+        </ion-list>
+      </div>
+    </ion-card-content>
+    @if (isInArsenal(ball)) {
+    <ion-button style="float: right" fill="clear" (click)="removeFromArsenal(ball)"> Remove from arsenal </ion-button>
+    } @if (!isInArsenal(ball)) {
+    <ion-button style="float: right" fill="clear" (click)="saveBallToArsenal(ball)"> Add to arsenal </ion-button>
     }
-    <!-- Infinite Scroll -->
-    <ion-infinite-scroll threshold="100px" (ionInfinite)="loadBalls($event)" *ngIf="hasMoreData">
-      <ion-infinite-scroll-content loadingSpinner="crescent" loadingText="Loading more balls..."></ion-infinite-scroll-content>
-    </ion-infinite-scroll>
-  </ng-template>
+  </ion-card>
+  }
+  <!-- Infinite Scroll -->
+  @if (hasMoreData) {
+  <ion-infinite-scroll threshold="100px" (ionInfinite)="loadBalls($event)">
+    <ion-infinite-scroll-content loadingSpinner="crescent" loadingText="Loading more balls..."></ion-infinite-scroll-content>
+  </ion-infinite-scroll>
+  } }
 </ion-content>
 
 <ion-modal [initialBreakpoint]="0.35" [breakpoints]="[0, 0.35, 0.5, 0.75]" #coverstock>

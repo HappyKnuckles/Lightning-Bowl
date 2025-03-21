@@ -1,4 +1,3 @@
-import { CommonModule } from '@angular/common';
 import { Component, CUSTOM_ELEMENTS_SCHEMA, Input, OnInit } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ModalController } from '@ionic/angular';
@@ -52,7 +51,6 @@ import { UtilsService } from 'src/app/services/utils/utils.service';
     IonSelect,
     FormsModule,
     ReactiveFormsModule,
-    CommonModule,
     IonSelectOption,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],

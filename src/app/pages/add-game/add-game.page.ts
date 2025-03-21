@@ -26,7 +26,7 @@ import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Game } from 'src/app/models/game.model';
 import { addIcons } from 'ionicons';
 import { add, chevronDown, chevronUp, cameraOutline, documentTextOutline, medalOutline } from 'ionicons/icons';
-import { NgIf, NgFor } from '@angular/common';
+
 import { ImpactStyle } from '@capacitor/haptics';
 import { AdService } from 'src/app/services/ad/ad.service';
 import { HapticService } from 'src/app/services/haptic/haptic.service';
@@ -77,8 +77,6 @@ defineCustomElements(window);
     IonSegment,
     IonSegmentContent,
     IonSegmentView,
-    NgIf,
-    NgFor,
     GameGridComponent,
     LeagueSelectorComponent,
   ],

@@ -32,7 +32,7 @@ import {
   chevronBack,
   refreshCircleOutline,
 } from 'ionicons/icons';
-import { NgClass, NgFor } from '@angular/common';
+import { NgClass } from '@angular/common';
 import { ToastService } from 'src/app/services/toast/toast.service';
 import { UserService } from 'src/app/services/user/user.service';
 import { ThemeChangerService } from 'src/app/services/theme-changer/theme-changer.service';
@@ -67,7 +67,6 @@ import { LeagueSelectorComponent } from '../../components/league-selector/league
     IonSelect,
     IonSelectOption,
     NgClass,
-    NgFor,
     FormsModule,
     ReactiveFormsModule,
     LeagueSelectorComponent,

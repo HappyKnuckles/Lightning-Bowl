@@ -28,9 +28,9 @@
         [ngClass]="currentColor?.toLowerCase()"
         placeholder="{{currentColor}}"
         (ionChange)="changeColor()">
-        <ion-select-option *ngFor="let color of optionsWithClasses; let i = index;" [value]="color.name" [ngClass]="color.class">
-          {{ color.name }}
-        </ion-select-option>
+        @for (color of optionsWithClasses; track color; let i = $index) {
+        <ion-select-option [value]="color.name" [ngClass]="color.class"> {{ color.name }} </ion-select-option>
+        }
       </ion-select>
     </ion-item>
 
@@ -47,11 +47,13 @@
       <ion-label>Feedback/Requests</ion-label>
       <p class="link">Open form</p>
     </ion-item>
-    <ion-item (click)="updateApp()" button [detail]="false" *ngIf="updateAvailable">
+    @if (updateAvailable) {
+    <ion-item (click)="updateApp()" button [detail]="false">
       <ion-icon name="refresh-circle-outline" slot="start"></ion-icon>
       <ion-label>Load update</ion-label>
       <ion-button slot="end"> Update </ion-button>
     </ion-item>
+    }
   </ion-list>
 </ion-content>
 

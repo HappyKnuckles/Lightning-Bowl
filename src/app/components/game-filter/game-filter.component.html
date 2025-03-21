@@ -118,7 +118,9 @@
         (ionChange)="updateFilter('leagues', $event.detail.value)">
         <ion-select-option value="all">All</ion-select-option>
         <ion-select-option value="">None</ion-select-option>
-        <ion-select-option *ngFor="let league of leagues" [value]="league">{{ league }}</ion-select-option>
+        @for (league of leagues; track league) {
+          <ion-select-option [value]="league">{{ league }}</ion-select-option>
+        }
       </ion-select>
     </ion-item>
     <ion-item>
@@ -130,8 +132,10 @@
         placeholder="All"
         (ionChange)="updateFilter('balls', $event.detail.value)">
         <!-- <ion-select-option value="all">All</ion-select-option>
-        <ion-select-option value="">None</ion-select-option> -->
-        <ion-select-option *ngFor="let ball of storageService.arsenal()" [value]="ball.ball_name">{{ ball.ball_name }}</ion-select-option>
+              <ion-select-option value="">None</ion-select-option> -->
+        @for (ball of storageService.arsenal(); track ball) {
+          <ion-select-option [value]="ball.ball_name">{{ ball.ball_name }}</ion-select-option>
+        }
       </ion-select>
     </ion-item>
   </ion-list>

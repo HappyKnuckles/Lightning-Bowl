@@ -1,75 +1,87 @@
 <div class="grid-container">
-  <ion-grid fixed="true" *ngFor="let i of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; let frameIndex = index">
-    <ion-row>
-      <ion-col class="middle frame">{{ i }}</ion-col>
-    </ion-row>
-    <ion-row>
-      <ion-col class="input-col" *ngIf="i !== 10"></ion-col>
-      <ion-col class="input-col">
-        <ion-input
-          type="text"
-          clearOnEdit="true"
-          inputmode="numeric"
-          autocapitalize="on"
-          debounce="1000"
-          [value]="getFrameValue(frameIndex, 0)"
-          (ionInput)="simulateScore($event, frameIndex, 0)">
-        </ion-input>
-      </ion-col>
-      <ion-col class="input-col" *ngIf="i !== 10">
-        <ion-input
-          type="text"
-          clearOnEdit="true"
-          inputmode="numeric"
-          autocapitalize="on"
-          debounce="1000"
-          [disabled]="frames[frameIndex][0] === 10 && i !== 10"
-          [value]="getFrameValue(frameIndex, 1)"
-          (ionInput)="simulateScore($event, frameIndex, 1)">
-        </ion-input>
-      </ion-col>
-      <ion-col class="input-col" *ngIf="i === 10">
-        <ion-input
-          type="text"
-          clearOnEdit="true"
-          inputmode="numeric"
-          autocapitalize="on"
-          debounce="1000"
-          [disabled]="frames[frameIndex][0] === 10 && i !== 10"
-          [value]="getFrameValue(frameIndex, 1)"
-          (ionInput)="simulateScore($event, frameIndex, 1)">
-        </ion-input>
-      </ion-col>
-      <ion-col class="input-col" *ngIf="i === 10">
-        <ion-input
-          type="text"
-          clearOnEdit="true"
-          inputmode="numeric"
-          autocapitalize="on"
-          debounce="1000"
-          [value]="getFrameValue(frameIndex, 2)"
-          [disabled]="frames[frameIndex][0] !== 10 && frames[frameIndex][0] + (frames[frameIndex][1] || 0) !== 10"
-          (ionInput)="simulateScore($event, frameIndex, 2)">
-        </ion-input>
-      </ion-col>
-    </ion-row>
-    <ion-row
-      *ngIf="
+  @for (i of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; track i; let frameIndex = $index) {
+    <ion-grid fixed="true">
+      <ion-row>
+        <ion-col class="middle frame">{{ i }}</ion-col>
+      </ion-row>
+      <ion-row>
+        @if (i !== 10) {
+          <ion-col class="input-col"></ion-col>
+        }
+        <ion-col class="input-col">
+          <ion-input
+            type="text"
+            clearOnEdit="true"
+            inputmode="numeric"
+            autocapitalize="on"
+            debounce="1000"
+            [value]="getFrameValue(frameIndex, 0)"
+            (ionInput)="simulateScore($event, frameIndex, 0)">
+          </ion-input>
+        </ion-col>
+        @if (i !== 10) {
+          <ion-col class="input-col">
+            <ion-input
+              type="text"
+              clearOnEdit="true"
+              inputmode="numeric"
+              autocapitalize="on"
+              debounce="1000"
+              [disabled]="frames[frameIndex][0] === 10 && i !== 10"
+              [value]="getFrameValue(frameIndex, 1)"
+              (ionInput)="simulateScore($event, frameIndex, 1)">
+            </ion-input>
+          </ion-col>
+        }
+        @if (i === 10) {
+          <ion-col class="input-col">
+            <ion-input
+              type="text"
+              clearOnEdit="true"
+              inputmode="numeric"
+              autocapitalize="on"
+              debounce="1000"
+              [disabled]="frames[frameIndex][0] === 10 && i !== 10"
+              [value]="getFrameValue(frameIndex, 1)"
+              (ionInput)="simulateScore($event, frameIndex, 1)">
+            </ion-input>
+          </ion-col>
+        }
+        @if (i === 10) {
+          <ion-col class="input-col">
+            <ion-input
+              type="text"
+              clearOnEdit="true"
+              inputmode="numeric"
+              autocapitalize="on"
+              debounce="1000"
+              [value]="getFrameValue(frameIndex, 2)"
+              [disabled]="frames[frameIndex][0] !== 10 && frames[frameIndex][0] + (frames[frameIndex][1] || 0) !== 10"
+              (ionInput)="simulateScore($event, frameIndex, 2)">
+            </ion-input>
+          </ion-col>
+        }
+      </ion-row>
+      @if (
         (frames[frameIndex][0] !== undefined || frames[frameIndex][1] !== undefined || (i === 10 && frames[frameIndex][0] !== undefined)) &&
         isNumber(frameScores[i - 1])
-      ">
-      <ion-col class="middle count">{{ frameScores[i - 1] }}</ion-col>
-    </ion-row>
-    <ion-row
-      *ngIf="
+      ) {
+        <ion-row>
+          <ion-col class="middle count">{{ frameScores[i - 1] }}</ion-col>
+        </ion-row>
+      }
+      @if (
         !(
           (frames[frameIndex][0] !== undefined || frames[frameIndex][1] !== undefined || (i === 10 && frames[frameIndex][0] !== undefined)) &&
           isNumber(frameScores[i - 1])
         )
-      ">
-      <ion-col class="middle count" style="color: var(--ion-color-quartiary)">0</ion-col>
-    </ion-row>
-  </ion-grid>
+      ) {
+        <ion-row>
+          <ion-col class="middle count" style="color: var(--ion-color-quartiary)">0</ion-col>
+        </ion-row>
+      }
+    </ion-grid>
+  }
 </div>
 
 <div style="margin: 0 5px">
@@ -81,9 +93,11 @@
     <app-league-selector [isAddPage]="true" (leagueChanged)="onLeagueChanged($event)" #leagueSelector></app-league-selector>
     <ion-item>
       <ion-select [(ngModel)]="balls" multiple="true" name="balls" placeholder="None" label="Balls">
-        <ion-select-option *ngFor="let ball of storageService.arsenal()" [value]="ball.ball_name">
-          {{ ball.ball_name }}
-        </ion-select-option>
+        @for (ball of storageService.arsenal(); track ball) {
+          <ion-select-option [value]="ball.ball_name">
+            {{ ball.ball_name }}
+          </ion-select-option>
+        }
       </ion-select>
     </ion-item>
     <ion-item>

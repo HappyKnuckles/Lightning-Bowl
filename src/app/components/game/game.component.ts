@@ -1,4 +1,4 @@
-import { NgIf, NgFor, NgClass, DatePipe } from '@angular/common';
+import { NgClass, DatePipe } from '@angular/common';
 import { Component, Input, Renderer2, ViewChild, OnChanges, SimpleChanges, computed } from '@angular/core';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
@@ -81,8 +81,6 @@ import { UtilsService } from 'src/app/services/utils/utils.service';
     IonRow,
     IonCol,
     IonInput,
-    NgIf,
-    NgFor,
     NgClass,
     IonSelect,
     IonSelectOption,

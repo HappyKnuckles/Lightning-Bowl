@@ -4,18 +4,23 @@
     <ion-buttons slot="end" class="action-sheet">
       <ion-button fill="clear" (click)="openFilterModal()" [disabled]="(storageService.games().length <= 0 && !loadingService.isLoading())">
         <ion-icon slot="icon-only" name="filter-outline"></ion-icon>
-        <ion-text class="filter-indicator" *ngIf="gameFilterService.activeFilterCount() !== 0">{{gameFilterService.activeFilterCount()}}</ion-text>
+        @if (gameFilterService.activeFilterCount() !== 0) {
+        <ion-text class="filter-indicator">{{gameFilterService.activeFilterCount()}}</ion-text>
+        }
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
-  <ion-toolbar
-    *ngIf="!((gameFilterService.filteredGames().length <= 0 && !loadingService.isLoading()) || gameFilterService.filteredGames().length <= 0)">
+  @if (!((gameFilterService.filteredGames().length <= 0 && !loadingService.isLoading()) || gameFilterService.filteredGames().length <= 0)) {
+  <ion-toolbar>
     <ion-segment value="Overall" (ionChange)="onSegmentChanged($event)">
-      <ion-segment-button *ngFor="let segment of segments" [value]="segment" [contentId]="segment">
+      @for (segment of segments; track segment) {
+      <ion-segment-button [value]="segment" [contentId]="segment">
         <ion-label class="segment-label">{{segment}}</ion-label>
       </ion-segment-button>
+      }
     </ion-segment>
   </ion-toolbar>
+  }
 </ion-header>
 
 <ion-content [fullscreen]="true">
@@ -24,7 +29,8 @@
   </ion-refresher>
   <ion-segment-view>
     <ion-segment-content id="Overall">
-      <section class="tab" *ngIf="gameFilterService.filteredGames().length > 0">
+      @if (gameFilterService.filteredGames().length > 0) {
+      <section class="tab">
         <ng-container>
           <app-stat-display
             [statDefinitions]="overallStatDefinitions"
@@ -41,10 +47,12 @@
           </div>
         </ng-container>
       </section>
+      }
     </ion-segment-content>
 
     <ion-segment-content id="Spares">
-      <section class="tab" *ngIf="gameFilterService.filteredGames().length > 0">
+      @if (gameFilterService.filteredGames().length > 0) {
+      <section class="tab">
         <ng-container>
           <app-spare-display [stats]="statsService.currentStats()" [prevStats]="statsService.prevStats()" id="overalSpareStats"></app-spare-display>
           <div class="stat-container">
@@ -52,10 +60,12 @@
           </div>
         </ng-container>
       </section>
+      }
     </ion-segment-content>
 
     <ion-segment-content id="Throws">
-      <section class="tab" *ngIf="gameFilterService.filteredGames().length > 0">
+      @if (gameFilterService.filteredGames().length > 0) {
+      <section class="tab">
         <ng-container>
           <app-stat-display
             [statDefinitions]="throwStatDefinitions"
@@ -67,51 +77,46 @@
           </div>
         </ng-container>
       </section>
+      }
     </ion-segment-content>
 
     <ion-segment-content id="Sessions">
-      <ng-container *ngIf="gameFilterService.filteredGames().length > 0">
-        <ion-item class="date-picker" lines="none">
-          <ion-select
-            label="Session date"
-            toggleIcon="calendar-number-outline"
-            expandedIcon="calendar-number"
-            [value]="selectedDate()"
-            (ionChange)="_selectedDate.set($event.detail.value)">
-            <ion-select-option *ngFor="let unixDate of uniqueSortedDates()" [value]="unixDate">
-              {{ (unixDate | date:'dd.MM.yyyy') }}
-            </ion-select-option>
-          </ion-select>
+      @if (gameFilterService.filteredGames().length > 0) {
+      <ion-item class="date-picker" lines="none">
+        <ion-select
+          label="Session date"
+          toggleIcon="calendar-number-outline"
+          expandedIcon="calendar-number"
+          [value]="selectedDate()"
+          (ionChange)="_selectedDate.set($event.detail.value)">
+          @for (unixDate of uniqueSortedDates(); track unixDate) {
+          <ion-select-option [value]="unixDate"> {{ (unixDate | date:'dd.MM.yyyy') }} </ion-select-option>
+          }
+        </ion-select>
+      </ion-item>
+      <section class="tab">
+        <ion-item lines="none" style="--background: none">
+          <ion-label>
+            <h1>Overall</h1>
+          </ion-label>
         </ion-item>
-
-        <section class="tab">
-          <ion-item lines="none" style="--background: none">
-            <ion-label>
-              <h1>Overall</h1>
-            </ion-label>
-          </ion-item>
-          <app-stat-display [statDefinitions]="sessionStatDefinitions" [currentStats]="sessionStats()" [prevStats]="statsService.currentStats()">
-          </app-stat-display>
-          <ion-item lines="none" style="--background: none">
-            <ion-label>
-              <h1>Spares</h1>
-            </ion-label>
-          </ion-item>
-          <app-spare-display [prevStats]="statsService.currentStats()" [stats]="sessionStats()" [id]="'sessionSpareStats'"> </app-spare-display>
-        </section>
-      </ng-container>
+        <app-stat-display [statDefinitions]="sessionStatDefinitions" [currentStats]="sessionStats()" [prevStats]="statsService.currentStats()">
+        </app-stat-display>
+        <ion-item lines="none" style="--background: none">
+          <ion-label>
+            <h1>Spares</h1>
+          </ion-label>
+        </ion-item>
+        <app-spare-display [prevStats]="statsService.currentStats()" [stats]="sessionStats()" [id]="'sessionSpareStats'"> </app-spare-display>
+      </section>
+      }
     </ion-segment-content>
   </ion-segment-view>
 
   <!-- Show this message if there are no game history items and it's not loading -->
-  <ng-container *ngIf="gameFilterService.filteredGames().length <= 0">
-    <ng-container *ngIf="storageService.games().length <= 0 && !loadingService.isLoading(); else checkFilteredGames">
-      <ion-text class="no-game-text"> Start playing a few games to see your stats here! </ion-text>
-    </ng-container>
-  </ng-container>
-  <ng-template #checkFilteredGames>
-    <ng-container *ngIf="gameFilterService.filteredGames().length <= 0 && !loadingService.isLoading();">
-      <ion-text class="no-game-text"> No stats for this filter! </ion-text>
-    </ng-container>
-  </ng-template>
+  @if (gameFilterService.filteredGames().length <= 0) { @if (storageService.games().length <= 0 && !loadingService.isLoading()) {
+  <ion-text class="no-game-text"> Start playing a few games to see your stats here! </ion-text>
+  } @else { @if (gameFilterService.filteredGames().length <= 0 && !loadingService.isLoading();) {
+  <ion-text class="no-game-text"> No stats for this filter! </ion-text>
+  } } }
 </ion-content>

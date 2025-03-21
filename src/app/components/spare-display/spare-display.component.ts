@@ -1,4 +1,4 @@
-import { CommonModule, NgIf, NgStyle } from '@angular/common';
+import { DecimalPipe, NgStyle } from '@angular/common';
 import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, Input } from '@angular/core';
 import { IonText, IonCol, IonRow, IonIcon, IonGrid } from '@ionic/angular/standalone';
 import { PrevStats, SessionStats, Stats } from 'src/app/models/stats.model';
@@ -12,7 +12,7 @@ import { UtilsService } from 'src/app/services/utils/utils.service';
   styleUrls: ['./spare-display.component.scss'],
   standalone: true,
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
-  imports: [IonText, IonCol, IonRow, IonIcon, IonGrid, NgIf, NgStyle, CommonModule],
+  imports: [IonText, IonCol, IonRow, IonIcon, IonGrid, NgStyle, DecimalPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SpareDisplayComponent {

@@ -14,58 +14,47 @@
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
   <!-- Show this message if there are no game history items and it's not loading -->
-  <ng-container *ngIf="storageService.games().length <= 0  && !loadingService.isLoading(); else noLeagues">
-    <ion-text class="no-game-text"> Start playing a few games to see your leagues here! </ion-text>
-  </ng-container>
-
-  <ng-template #noLeagues>
-    <ng-container *ngIf="leagueKeys().length <= 0  && !loadingService.isLoading(); else content">
-      <ion-text class="no-game-text"> No leagues saved! </ion-text>
-    </ng-container>
-  </ng-template>
-
-  <ng-template #content>
-    <ng-container *ngFor="let league of leagueKeys(); let i = index;">
-      @if(league !== 'Practice'){
-      <ion-item-sliding class="sliding" #slidingItem>
-        <ion-item-options side="end" (ionSwipe)="deleteLeague(league); slidingItem.closeOpened();">
-          <ion-item-option color="danger" expandable (click)="deleteLeague(league); slidingItem.closeOpened();">
-            <ion-icon class="title" style="transform: translateY(-2px)" name="trash-outline"></ion-icon>
-          </ion-item-option>
-        </ion-item-options>
-        <ion-item-options side="start" (ionSwipe)="editLeague(league); slidingItem.closeOpened();">
-          <ion-item-option expandable (click)="editLeague(league); slidingItem.closeOpened();">
-            <ion-icon class="title" style="transform: translateY(-2px)" name="create-outline"></ion-icon>
-          </ion-item-option>
-        </ion-item-options>
-
-        <ion-item (click)="loadingService.setLoading(true)" button [id]="league">
-          <ion-label class="game-info">
-            <div class="title">{{ league }}</div>
-            <div class="score">Games: {{gamesByLeague()[league].length}}</div>
-            <div class="score">Avg: {{statsByLeague()[league].averageScore | number: '1.1-2' }}</div>
-            <div class="score">High: {{statsByLeague()[league].highGame}}</div>
-          </ion-label>
-        </ion-item>
-      </ion-item-sliding>
-      } @else {
-      <div class="sliding">
-        <ion-item (click)="loadingService.setLoading(true)" button [id]="league">
-          <ion-label class="game-info">
-            <div class="title">{{ league }}</div>
-            <div class="score">Games: {{gamesByLeague()[league].length}}</div>
-            <div class="score">Avg: {{statsByLeague()[league].averageScore | number: '1.1-2' }}</div>
-            <div class="score">High: {{statsByLeague()[league].highGame}}</div>
-          </ion-label>
-        </ion-item>
-      </div>
-      }
-    </ng-container>
-  </ng-template>
+  @if (storageService.games().length <= 0 && !loadingService.isLoading()) {
+  <ion-text class="no-game-text"> Start playing a few games to see your leagues here! </ion-text>
+  } @else { @if (leagueKeys().length <= 0 && !loadingService.isLoading()) {
+  <ion-text class="no-game-text"> No leagues saved! </ion-text>
+  } @else { @for (league of leagueKeys(); track league; let i = $index) { @if(league !== 'Practice'){
+  <ion-item-sliding class="sliding" #slidingItem>
+    <ion-item-options side="end" (ionSwipe)="deleteLeague(league); slidingItem.closeOpened();">
+      <ion-item-option color="danger" expandable (click)="deleteLeague(league); slidingItem.closeOpened();">
+        <ion-icon class="title" style="transform: translateY(-2px)" name="trash-outline"></ion-icon>
+      </ion-item-option>
+    </ion-item-options>
+    <ion-item-options side="start" (ionSwipe)="editLeague(league); slidingItem.closeOpened();">
+      <ion-item-option expandable (click)="editLeague(league); slidingItem.closeOpened();">
+        <ion-icon class="title" style="transform: translateY(-2px)" name="create-outline"></ion-icon>
+      </ion-item-option>
+    </ion-item-options>
+    <ion-item (click)="loadingService.setLoading(true)" button [id]="league">
+      <ion-label class="game-info">
+        <div class="title">{{ league }}</div>
+        <div class="score">Games: {{gamesByLeague()[league].length}}</div>
+        <div class="score">Avg: {{statsByLeague()[league].averageScore | number: '1.1-2' }}</div>
+        <div class="score">High: {{statsByLeague()[league].highGame}}</div>
+      </ion-label>
+    </ion-item>
+  </ion-item-sliding>
+  } @else {
+  <div class="sliding">
+    <ion-item (click)="loadingService.setLoading(true)" button [id]="league">
+      <ion-label class="game-info">
+        <div class="title">{{ league }}</div>
+        <div class="score">Games: {{gamesByLeague()[league].length}}</div>
+        <div class="score">Avg: {{statsByLeague()[league].averageScore | number: '1.1-2' }}</div>
+        <div class="score">High: {{statsByLeague()[league].highGame}}</div>
+      </ion-label>
+    </ion-item>
+  </div>
+  } } } }
 </ion-content>
 
+@for (league of leagueKeys(); track league) {
 <ion-modal
-  *ngFor="let league of leagueKeys()"
   [trigger]="league"
   #modal
   (didDismiss)="destroyCharts(league)"
@@ -82,9 +71,11 @@
       </ion-toolbar>
       <ion-toolbar>
         <ion-segment [value]="selectedSegment" (ionChange)="onSegmentChanged(league, $event)">
-          <ion-segment-button *ngFor="let segment of segments" [value]="segment" [contentId]="segment + '-' + league">
+          @for (segment of segments; track segment) {
+          <ion-segment-button [value]="segment" [contentId]="segment + '-' + league">
             <ion-label class="segment-label">{{segment}}</ion-label>
           </ion-segment-button>
+          }
         </ion-segment>
       </ion-toolbar>
     </ion-header>
@@ -101,7 +92,6 @@
             </div>
           </section>
         </ion-segment-content>
-
         <ion-segment-content id="Spares-{{league}}">
           <section class="tab">
             <app-spare-display [prevStats]="overallStats()" [stats]="statsByLeague()[league]" id="league-spareStats"></app-spare-display>
@@ -110,7 +100,6 @@
             </div>
           </section>
         </ion-segment-content>
-
         <ion-segment-content id="Games-{{league}}">
           <app-game [games]="gamesByLeague()[league]" [gameCount]="gamesByLeague()[league].length" [isLeaguePage]="true"></app-game>
         </ion-segment-content>
@@ -118,3 +107,4 @@
     </ion-content>
   </ng-template>
 </ion-modal>
+}

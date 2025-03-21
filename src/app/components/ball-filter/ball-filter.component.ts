@@ -2,7 +2,7 @@ import { Component, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { BallFilterService } from 'src/app/services/ball-filter/ball-filter.service';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BallService } from 'src/app/services/ball/ball.service';
-import { CommonModule } from '@angular/common';
+
 import { BallFilter, CoreType, Market } from 'src/app/models/filter.model';
 import {
   IonButton,
@@ -51,7 +51,6 @@ import { ToastService } from 'src/app/services/toast/toast.service';
     IonSelect,
     FormsModule,
     ReactiveFormsModule,
-    CommonModule,
     IonSelectOption,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],

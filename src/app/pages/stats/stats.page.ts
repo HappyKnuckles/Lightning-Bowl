@@ -27,7 +27,7 @@ import {
   IonSegmentView,
   IonSegmentContent,
 } from '@ionic/angular/standalone';
-import { NgIf, NgFor, DecimalPipe, DatePipe } from '@angular/common';
+import { DecimalPipe, DatePipe } from '@angular/common';
 import { ImpactStyle } from '@capacitor/haptics';
 import { GameStatsService } from 'src/app/services/game-stats/game-stats.service';
 import { HapticService } from 'src/app/services/haptic/haptic.service';
@@ -69,8 +69,6 @@ import { GameFilterActiveComponent } from 'src/app/components/game-filter-active
     IonSelectOption,
     IonSelect,
     IonText,
-    NgIf,
-    NgFor,
     FormsModule,
     DatePipe,
     StatDisplayComponent,

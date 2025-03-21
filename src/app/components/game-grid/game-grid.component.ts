@@ -1,6 +1,6 @@
 import { Component, OnInit, EventEmitter, Output, QueryList, ViewChildren, ViewChild, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { ToastService } from 'src/app/services/toast/toast.service';
-import { NgFor, NgIf } from '@angular/common';
+
 import { IonGrid, IonSelect, IonSelectOption, IonRow, IonCol, IonInput, IonItem, IonTextarea, IonCheckbox, IonList } from '@ionic/angular/standalone';
 import { FormsModule } from '@angular/forms';
 import { HapticService } from 'src/app/services/haptic/haptic.service';
@@ -21,7 +21,6 @@ import { InputCustomEvent } from '@ionic/angular';
   standalone: true,
   imports: [
     IonSelect,
-    NgFor,
     IonSelectOption,
     IonList,
     IonCheckbox,
@@ -32,8 +31,6 @@ import { InputCustomEvent } from '@ionic/angular';
     IonCol,
     IonInput,
     FormsModule,
-    NgIf,
-    NgFor,
     LeagueSelectorComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],

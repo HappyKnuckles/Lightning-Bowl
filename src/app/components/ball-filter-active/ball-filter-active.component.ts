@@ -3,12 +3,11 @@ import { BallFilter } from 'src/app/models/filter.model';
 import { BallFilterService } from 'src/app/services/ball-filter/ball-filter.service';
 import { UtilsService } from 'src/app/services/utils/utils.service';
 import { IonChip } from '@ionic/angular/standalone';
-import { NgIf } from '@angular/common';
 
 @Component({
   selector: 'app-ball-filter-active',
   standalone: true,
-  imports: [IonChip, NgIf],
+  imports: [IonChip],
   templateUrl: './ball-filter-active.component.html',
   styleUrl: './ball-filter-active.component.scss',
 })

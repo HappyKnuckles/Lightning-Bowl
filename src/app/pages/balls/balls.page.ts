@@ -1,5 +1,5 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import {
   IonContent,
@@ -71,7 +71,6 @@ import { BallFilterActiveComponent } from '../../components/ball-filter-active/b
     IonHeader,
     IonTitle,
     IonToolbar,
-    CommonModule,
     FormsModule,
     BallListComponent,
     BallFilterActiveComponent,

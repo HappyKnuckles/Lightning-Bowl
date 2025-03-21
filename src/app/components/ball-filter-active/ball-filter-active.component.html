@@ -1,27 +1,43 @@
-<ion-chip *ngIf="isFilterActive('weight')"> Weight: {{ getFilterValue("weight") }}lbs </ion-chip>
+@if (isFilterActive("weight")) {
+  <ion-chip> Weight: {{ getFilterValue("weight") }}lbs </ion-chip>
+}
 
-<ion-chip *ngIf="isFilterActive('coreType')"> Core Type: {{ getFilterValue("coreType") }} </ion-chip>
+@if (isFilterActive("coreType")) {
+  <ion-chip> Core Type: {{ getFilterValue("coreType") }} </ion-chip>
+}
 
-<ion-chip *ngIf="isFilterActive('availability')"> Availability: {{ getFilterValue("availability") ? "Available" : "Discontinued" }} </ion-chip>
+@if (isFilterActive("availability")) {
+  <ion-chip> Availability: {{ getFilterValue("availability") ? "Available" : "Discontinued" }} </ion-chip>
+}
 
-<ion-chip *ngIf="isFilterActive('market')"> Market: {{ getFilterValue("market") }} </ion-chip>
+@if (isFilterActive("market")) {
+  <ion-chip> Market: {{ getFilterValue("market") }} </ion-chip>
+}
 
-<ion-chip *ngIf="isFilterActive('inArsenal')"> Arsenal only </ion-chip>
+@if (isFilterActive("inArsenal")) {
+  <ion-chip> Arsenal only </ion-chip>
+}
 
-<ion-chip *ngIf="isFilterActive('brands') && getFilterValue('brands').length > 0"> Brands: {{ getFilterValue("brands").join(", ") }} </ion-chip>
+@if (isFilterActive("brands") && getFilterValue("brands").length > 0) {
+  <ion-chip> Brands: {{ getFilterValue("brands").join(", ") }} </ion-chip>
+}
 
-<ion-chip *ngIf="isFilterActive('coverstocks') && getFilterValue('coverstocks').length > 0">
-  Coverstocks: {{ getFilterValue("coverstocks").join(", ") }}
-</ion-chip>
+@if (isFilterActive("coverstocks") && getFilterValue("coverstocks").length > 0) {
+  <ion-chip> Coverstocks: {{ getFilterValue("coverstocks").join(", ") }} </ion-chip>
+}
 
-<ion-chip *ngIf="isFilterActive('cores') && getFilterValue('cores').length > 0"> Cores: {{ getFilterValue("cores").join(", ") }} </ion-chip>
+@if (isFilterActive("cores") && getFilterValue("cores").length > 0) {
+  <ion-chip> Cores: {{ getFilterValue("cores").join(", ") }} </ion-chip>
+}
 
 <!-- <ion-chip *ngIf="isFilterActive('releaseDate')">
-  Release Date: {{ getFilterValue('releaseDate') | date }}
+Release Date: {{ getFilterValue('releaseDate') | date }}
 </ion-chip> -->
 
-<ion-chip *ngIf="isFilterActive('minRg') || isFilterActive('maxRg')"> RG: {{ getFilterValue("minRg") }} - {{ getFilterValue("maxRg") }} </ion-chip>
+@if (isFilterActive("minRg") || isFilterActive("maxRg")) {
+  <ion-chip> RG: {{ getFilterValue("minRg") }} - {{ getFilterValue("maxRg") }} </ion-chip>
+}
 
-<ion-chip *ngIf="isFilterActive('minDiff') || isFilterActive('maxDiff')">
-  Diff: {{ getFilterValue("minDiff") }} - {{ getFilterValue("maxDiff") }}
-</ion-chip>
+@if (isFilterActive("minDiff") || isFilterActive("maxDiff")) {
+  <ion-chip> Diff: {{ getFilterValue("minDiff") }} - {{ getFilterValue("maxDiff") }} </ion-chip>
+}

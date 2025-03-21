@@ -4,7 +4,7 @@ import { ToastService } from './services/toast/toast.service';
 import { LoadingService } from './services/loader/loading.service';
 import { UserService } from './services/user/user.service';
 import { Subscription } from 'rxjs';
-import { NgIf } from '@angular/common';
+
 import { ToastComponent } from './components/toast/toast.component';
 import { SwUpdate } from '@angular/service-worker';
 import { ThemeChangerService } from './services/theme-changer/theme-changer.service';
@@ -16,7 +16,7 @@ import { DomSanitizer } from '@angular/platform-browser';
   templateUrl: 'app.component.html',
   styleUrls: ['app.component.scss'],
   standalone: true,
-  imports: [IonApp, NgIf, IonBackdrop, IonSpinner, IonRouterOutlet, ToastComponent],
+  imports: [IonApp, IonBackdrop, IonSpinner, IonRouterOutlet, ToastComponent],
 })
 export class AppComponent implements OnInit, OnDestroy {
   private userNameSubscription: Subscription;
