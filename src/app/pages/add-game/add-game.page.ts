@@ -49,6 +49,7 @@ const enum SeriesMode {
   Series3 = '3 Series',
   Series4 = '4 Series',
   Series5 = '5 Series',
+  Series6 = '6 Series',
 }
 
 defineCustomElements(window);
@@ -87,10 +88,10 @@ defineCustomElements(window);
 export class AddGamePage implements OnInit {
   totalScores: number[] = new Array(8).fill(0);
   maxScores: number[] = new Array(8).fill(300);
-  seriesMode: boolean[] = [true, false, false, false];
+  seriesMode: boolean[] = [true, false, false, false, false];
   seriesId = '';
   selectedMode: SeriesMode = SeriesMode.Single;
-  trackIndexes: number[][] = [[0], [1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11, 12]];
+  trackIndexes: number[][] = [[0], [1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11, 12], [13, 14, 15, 16, 17, 18]];
   sheetOpen = false;
   isAlertOpen = false;
   isModalOpen = false;
@@ -294,7 +295,7 @@ export class AddGamePage implements OnInit {
     this.hapticService.vibrate(ImpactStyle.Medium, 200);
     this.sheetOpen = true;
 
-    const modes = [SeriesMode.Single, SeriesMode.Series3, SeriesMode.Series4, SeriesMode.Series5];
+    const modes = [SeriesMode.Single, SeriesMode.Series3, SeriesMode.Series4, SeriesMode.Series5, SeriesMode.Series6];
 
     modes.forEach((mode, index) => {
       if (!this.seriesMode[index]) {
@@ -387,6 +388,8 @@ export class AddGamePage implements OnInit {
       this.segments = ['Game 1', 'Game 2', 'Game 3', 'Game 4'];
     } else if (this.selectedMode === SeriesMode.Series5) {
       this.segments = ['Game 1', 'Game 2', 'Game 3', 'Game 4', 'Game 5'];
+    } else if (this.selectedMode === SeriesMode.Series6) {
+      this.segments = ['Game 1', 'Game 2', 'Game 3', 'Game 4', 'Game 5', 'Game 6'];
     } else {
       this.segments = ['Game 1'];
     }

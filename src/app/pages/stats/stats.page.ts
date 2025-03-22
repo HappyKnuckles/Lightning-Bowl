@@ -34,12 +34,12 @@ import { HapticService } from 'src/app/services/haptic/haptic.service';
 import { LoadingService } from 'src/app/services/loader/loading.service';
 import { FormsModule } from '@angular/forms';
 import { addIcons } from 'ionicons';
-import { calendarNumber, calendarNumberOutline, filterOutline } from 'ionicons/icons';
+import { calendarNumber, calendarNumberOutline, filterOutline, cloudUploadOutline, cloudDownloadOutline } from 'ionicons/icons';
 import { StatDisplayComponent } from 'src/app/components/stat-display/stat-display.component';
 import { SessionStats } from 'src/app/models/stats.model';
 import { SpareDisplayComponent } from '../../components/spare-display/spare-display.component';
 import { StorageService } from 'src/app/services/storage/storage.service';
-import { ModalController, RefresherCustomEvent, SegmentCustomEvent } from '@ionic/angular';
+import { AlertController, ModalController, RefresherCustomEvent, SegmentCustomEvent } from '@ionic/angular';
 import { SortUtilsService } from 'src/app/services/sort-utils/sort-utils.service';
 import { ChartGenerationService } from 'src/app/services/chart/chart-generation.service';
 import { overallStatDefinitions, seriesStatDefinitions, sessionStatDefinitions, throwStatDefinitions } from './stats.definitions';
@@ -47,6 +47,9 @@ import { GameFilterService } from 'src/app/services/game-filter/game-filter.serv
 import { GameFilterComponent } from 'src/app/components/game-filter/game-filter.component';
 import { UtilsService } from 'src/app/services/utils/utils.service';
 import { GameFilterActiveComponent } from 'src/app/components/game-filter-active/game-filter-active.component';
+import { ToastService } from 'src/app/services/toast/toast.service';
+import { ExcelService } from 'src/app/services/excel/excel.service';
+import { Filesystem } from '@capacitor/filesystem';
 
 @Component({
   selector: 'app-stats',
@@ -126,8 +129,11 @@ export class StatsPage implements OnInit, AfterViewInit {
     private sortUtilsService: SortUtilsService,
     private utilsService: UtilsService,
     private chartService: ChartGenerationService,
+    private toastService: ToastService,
+    private excelService: ExcelService,
+    private alertController: AlertController,
   ) {
-    addIcons({ filterOutline, calendarNumberOutline, calendarNumber });
+    addIcons({ cloudUploadOutline, cloudDownloadOutline, filterOutline, calendarNumberOutline, calendarNumber });
     effect(() => {
       if (this.gameFilterService.filteredGames().length > 0) {
         this.generateCharts(true);
@@ -181,6 +187,60 @@ export class StatsPage implements OnInit, AfterViewInit {
     this.selectedSegment = event.detail.value?.toString() || 'Overall';
     this.generateCharts();
     this.content.scrollToTop(300);
+  }
+
+  async handleFileUpload(event: Event): Promise<void> {
+    try {
+      this.loadingService.setLoading(true);
+      const input = event.target as HTMLInputElement;
+      if (!input.files || input.files.length === 0) return;
+      const file = input.files[0];
+      const gameData = await this.excelService.readExcelData(file);
+      await this.excelService.transformData(gameData);
+      this.toastService.showToast('Uploaded Excel file successfully.', 'checkmark-outline');
+    } catch (error) {
+      this.toastService.showToast(`Error: ${error}`, 'bug', true);
+    } finally {
+      const input = event.target as HTMLInputElement;
+      input.value = '';
+      this.loadingService.setLoading(false);
+    }
+  }
+
+  openExcelFileInput(): void {
+    const fileInput = document.getElementById('excelUpload');
+    if (fileInput) {
+      fileInput.click();
+    }
+  }
+
+  async exportToExcel(): Promise<void> {
+    const gotPermission = await this.excelService.exportToExcel(this.storageService.games());
+    if (!gotPermission) {
+      this.showPermissionDeniedAlert();
+    }
+  }
+  private async showPermissionDeniedAlert(): Promise<void> {
+    const alert = await this.alertController.create({
+      header: 'Permission Denied',
+      message: 'To save to Gamedata.xlsx, you need to give permissions!',
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel',
+        },
+        {
+          text: 'Try again',
+          handler: async () => {
+            const permissionRequestResult = await Filesystem.requestPermissions();
+            if (permissionRequestResult.publicStorage === 'granted') {
+              this.exportToExcel();
+            }
+          },
+        },
+      ],
+    });
+    await alert.present();
   }
 
   // TODO if filtergamedlength was 0, the charts dont load until restart

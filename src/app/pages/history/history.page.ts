@@ -67,7 +67,6 @@ import { GameFilterActiveComponent } from 'src/app/components/game-filter-active
 })
 export class HistoryPage {
   @ViewChild('accordionGroup') accordionGroup!: IonAccordionGroup;
-  file!: File;
   constructor(
     private alertController: AlertController,
     private toastService: ToastService,
@@ -114,8 +113,8 @@ export class HistoryPage {
       this.loadingService.setLoading(true);
       const input = event.target as HTMLInputElement;
       if (!input.files || input.files.length === 0) return;
-      this.file = input.files[0];
-      const gameData = await this.excelService.readExcelData(this.file);
+      const file = input.files[0];
+      const gameData = await this.excelService.readExcelData(file);
       await this.excelService.transformData(gameData);
       this.toastService.showToast('Uploaded Excel file successfully.', 'checkmark-outline');
     } catch (error) {

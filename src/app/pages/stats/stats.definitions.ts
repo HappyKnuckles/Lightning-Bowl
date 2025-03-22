@@ -61,6 +61,8 @@ export const seriesStatDefinitions: StatDefinition[] = [
   { label: 'High 4-series', key: 'high4Series', id: 'high4Series' },
   { label: 'Average 5-series score', key: 'average5SeriesScore', id: 'average5SeriesScore', prevKey: 'average5SeriesScore' },
   { label: 'High 5-series', key: 'high5Series', id: 'high5Series' },
+  { label: 'Average 6-series score', key: 'average6SeriesScore', id: 'average6SeriesScore', prevKey: 'average6SeriesScore' },
+  { label: 'High 6-series', key: 'high6Series', id: 'high6Series' },
 ];
 export const leagueStatDefinitions: StatDefinition[] = [
   { label: 'Games', key: 'totalGames', id: 'league-totalGames' },

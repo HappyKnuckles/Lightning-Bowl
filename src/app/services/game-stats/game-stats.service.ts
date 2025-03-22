@@ -191,11 +191,14 @@ export class GameStatsService {
     high4Series: number;
     average5SeriesScore: number;
     high5Series: number;
+    average6SeriesScore: number;
+    high6Series: number;
   } {
     const seriesScores: number[] = [];
     const series3Scores: number[] = [];
     const series4Scores: number[] = [];
     const series5Scores: number[] = [];
+    const series6Scores: number[] = [];
     let totalPins = 0;
     let totalStrikes = 0;
     let totalSpares = 0;
@@ -277,6 +280,8 @@ export class GameStatsService {
         series4Scores.push(seriesScore);
       } else if (seriesGames.length === 5) {
         series5Scores.push(seriesScore);
+      } else if (seriesGames.length === 6) {
+        series6Scores.push(seriesScore);
       }
     });
 
@@ -294,6 +299,8 @@ export class GameStatsService {
     const high4Series = Math.max(0, ...series4Scores);
     const average5SeriesScore = series5Scores.reduce((sum, score) => sum + score, 0) / series5Scores.length || 0;
     const high5Series = Math.max(0, ...series5Scores);
+    const average6SeriesScore = series6Scores.reduce((sum, score) => sum + score, 0) / series6Scores.length || 0;
+    const high6Series = Math.max(0, ...series6Scores);
 
     this.seriesStats = {
       totalSeries,
@@ -317,6 +324,8 @@ export class GameStatsService {
       high4Series,
       average5SeriesScore,
       high5Series,
+      average6SeriesScore,
+      high6Series,
     };
   }
 
@@ -432,6 +441,8 @@ export class GameStatsService {
     const high4Series = this.calculateSeriesStats(gameHistory).high4Series;
     const average5SeriesScore = this.calculateSeriesStats(gameHistory).average5SeriesScore;
     const high5Series = this.calculateSeriesStats(gameHistory).high5Series;
+    const average6SeriesScore = this.calculateSeriesStats(gameHistory).average6SeriesScore;
+    const high6Series = this.calculateSeriesStats(gameHistory).high6Series;
 
     return {
       totalStrikes,
@@ -465,6 +476,8 @@ export class GameStatsService {
       high4Series,
       average5SeriesScore,
       high5Series,
+      average6SeriesScore,
+      high6Series,
     };
   }
 
