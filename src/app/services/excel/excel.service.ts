@@ -30,57 +30,23 @@ export class ExcelService {
   async exportToExcel(): Promise<boolean> {
     // Get the data objects for games and stats.
     const gameData: Record<string, ExcelCellValue>[] = this.getGameDataForExport(this.storageService.games());
-    const statsData: Record<string, ExcelCellValue>[] = this.getStatsForExport(this.statsService.currentStats());
+    const { overall, spares, series } = this.getStatsTablesForExport(this.statsService.currentStats());
 
     const workbook = new ExcelJS.Workbook();
     const gameWorksheet = workbook.addWorksheet('Game History');
     const statsWorksheet = workbook.addWorksheet('Statistics');
 
-    // Get headers from the first object of each export data array.
-    const gameHeaders = Object.keys(gameData[0]);
-    const statsHeaders = Object.keys(statsData[0]);
+    // Add tables
+    this.addTable(gameWorksheet, 'GameHistoryTable', 'A1', Object.keys(gameData[0]), gameData);
+    this.addTable(statsWorksheet, 'OverallStats', 'A1', ['Overall', 'Value'], overall);
+    this.addTable(statsWorksheet, 'SparesStats', 'D1', ['Spares', 'Value'], spares);
+    this.addTable(statsWorksheet, 'SeriesStats', 'G1', ['Series', 'Value'], series);
 
-    // Create tables in each worksheet.
-    gameWorksheet.addTable({
-      name: 'GameHistoryTable',
-      ref: 'A1',
-      headerRow: true,
-      totalsRow: false,
-      style: { theme: 'TableStyleMedium1', showRowStripes: true },
-      columns: gameHeaders.map((header) => ({
-        name: header,
-        filterButton: ['League', 'Practice', 'Clean', 'Perfect', 'Series', 'Balls', 'Notes', 'Date', 'Total Score'].includes(header),
-      })),
-      rows: gameData.map((row) => gameHeaders.map((header) => row[header])),
-    });
-
-    statsWorksheet.addTable({
-      name: 'StatisticsTable',
-      ref: 'A1',
-      headerRow: true,
-      totalsRow: false,
-      style: { theme: 'TableStyleMedium1', showRowStripes: true },
-      columns: statsHeaders.map((header) => ({ name: header })),
-      rows: statsData.map((row) => statsHeaders.map((header) => row[header])),
-    });
-
-    gameWorksheet.columns = gameHeaders.map((header) => {
-      const maxContentLength = Math.max(header.length, ...gameData.map((row) => (row[header] ?? '').toString().length));
-      return {
-        header,
-        key: header,
-        width: maxContentLength + 1,
-      };
-    });
-
-    statsWorksheet.columns = statsHeaders.map((header) => {
-      const maxContentLength = Math.max(header.length, ...statsData.map((row) => (row[header] ?? '').toString().length));
-      return {
-        header,
-        key: header,
-        width: maxContentLength + 1,
-      };
-    });
+    // Set column widths
+    this.setColumnWidths(gameWorksheet, Object.keys(gameData[0]), gameData, 1);
+    this.setColumnWidths(statsWorksheet, Object.keys(overall[0]), overall, 1);
+    this.setColumnWidths(statsWorksheet, Object.keys(spares[0]), spares, Object.keys(overall[0]).length + 2);
+    this.setColumnWidths(statsWorksheet, Object.keys(series[0]), series, Object.keys(overall[0]).length + Object.keys(spares[0]).length + 3);
 
     const date = new Date();
     const formattedDate = date.toLocaleString('de-DE', {
@@ -171,10 +137,10 @@ export class ExcelService {
 
       const game: Game = {
         gameId: row['Game'] as string,
-        date: parseInt(row['Date'] as string),
+        date: new Date(row['Date'] as string).getTime(),
         frames: frames,
         totalScore: parseInt(row['Total Score'] as string),
-        frameScores: (row['Frame scores'] as string).split(', ').map((score: string) => parseInt(score)),
+        frameScores: (row['Frame Scores'] as string).split(', ').map((score: string) => parseInt(score)),
         league: row['League'] as string,
         isPractice: (row['Practice'] as string)?.trim().toLowerCase() === 'true',
         isClean: (row['Clean'] as string)?.trim().toLowerCase() === 'true',
@@ -204,7 +170,7 @@ export class ExcelService {
 
     for (const ball of ballMap.values()) {
       const ballToAdd = this.storageService.allBalls().find((b) => b.ball_name === ball);
-      if (ballToAdd !== undefined) {
+      if (ballToAdd !== undefined && !this.storageService.arsenal().some((b) => b.ball_name === ball)) {
         await this.storageService.saveBallToArsenal(ballToAdd);
       }
     }
@@ -256,7 +222,7 @@ export class ExcelService {
       'Date',
       ...Array.from({ length: 10 }, (_, i) => `Frame ${i + 1}`),
       'Total Score',
-      'Frame scores',
+      'Frame Scores',
       'League',
       'Practice',
       'Clean',
@@ -284,7 +250,7 @@ export class ExcelService {
 
       const rowData = [
         game.gameId.toString(),
-        game.date.toString(),
+        new Date(game.date).toLocaleDateString('en-US'),
         ...frameValues,
         game.totalScore.toString(),
         game.frameScores.map((s) => s.toString()).join(', '),
@@ -308,82 +274,92 @@ export class ExcelService {
     });
   }
 
-  // TODO maybe optimize so the layout is better for spares etc
-  private getStatsForExport(stats: Stats): Record<string, ExcelCellValue>[] {
-    const headerRow = [
-      'Total Games',
-      'Total Pins',
-      'Perfect Game Count',
-      'Clean Game Count',
-      'Clean Game Percentage',
-      'Total Strikes',
-      'Total Spares',
-      'Total Spares Missed',
-      'Total Spares Converted',
-      'Hit Pin Counts',
-      'Missed Counts',
-      'Average Strikes Per Game',
-      'Average Spares Per Game',
-      'Average Opens Per Game',
-      'Strike Percentage',
-      'Spare Percentage',
-      'Open Percentage',
-      'Spare Conversion Percentage',
-      'Average First Count',
-      'Average Score',
-      'High Game',
-      'Spare Rates',
-      'Overall Spare Rate',
-      'Overall Missed Rate',
-      'Average 3 Series Score',
-      'High 3 Series',
-      'Average 4 Series Score',
-      'High 4 Series',
-      'Average 5 Series Score',
-      'High 5 Series',
-      'Average 6 Series Score',
-      'High 6 Series',
-    ];
+  private getStatsTablesForExport(stats: Stats): {
+    overall: Record<string, ExcelCellValue>[];
+    spares: Record<string, ExcelCellValue>[];
+    series: Record<string, ExcelCellValue>[];
+  } {
+    const formatPercent = (value: number): string => `${value.toFixed(2)}%`;
+    const formatFixed = (value: number): string => value.toFixed(2);
 
-    const dataRow = [
-      stats.totalGames.toString(),
-      stats.totalPins.toString(),
-      stats.perfectGameCount.toString(),
-      stats.cleanGameCount.toString(),
-      `${stats.cleanGamePercentage.toFixed(2)}%`,
-      stats.totalStrikes.toString(),
-      stats.totalSpares.toString(),
-      stats.totalSparesMissed.toString(),
-      stats.totalSparesConverted.toString(),
-      stats.pinCounts.slice(1).join(', '),
-      stats.missedCounts.slice(1).join(', '),
-      stats.averageStrikesPerGame.toFixed(2),
-      stats.averageSparesPerGame.toFixed(2),
-      stats.averageOpensPerGame.toFixed(2),
-      `${stats.strikePercentage.toFixed(2)}%`,
-      `${stats.sparePercentage.toFixed(2)}%`,
-      `${stats.openPercentage.toFixed(2)}%`,
-      `${stats.spareConversionPercentage.toFixed(2)}%`,
-      stats.averageFirstCount.toFixed(2),
-      stats.averageScore.toFixed(2),
-      stats.highGame.toString(),
-      stats.spareRates
-        .slice(1)
-        .map((rate) => `${rate.toFixed(2)}%`)
-        .join(', '),
-      `${stats.overallSpareRate.toFixed(2)}%`,
-      `${stats.overallMissedRate.toFixed(2)}%`,
-      stats.average3SeriesScore !== undefined ? stats.average3SeriesScore.toFixed(2) : '',
-      stats.high3Series !== undefined ? stats.high3Series.toString() : '',
-      stats.average4SeriesScore !== undefined ? stats.average4SeriesScore.toFixed(2) : '',
-      stats.high4Series !== undefined ? stats.high4Series.toString() : '',
-      stats.average5SeriesScore !== undefined ? stats.average5SeriesScore.toFixed(2) : '',
-      stats.high5Series !== undefined ? stats.high5Series.toString() : '',
-      stats.average6SeriesScore !== undefined ? stats.average6SeriesScore.toFixed(2) : '',
-      stats.high6Series !== undefined ? stats.high6Series.toString() : '',
+    // Overall Table
+    const overallEntries: [string, ExcelCellValue][] = [
+      ['Total Games', stats.totalGames.toString()],
+      ['Perfect Game Count', stats.perfectGameCount.toString()],
+      ['Clean Game Count', stats.cleanGameCount.toString()],
+      ['Clean Game Percentage', formatPercent(stats.cleanGamePercentage)],
+      ['Average First Count', formatFixed(stats.averageFirstCount)],
+      ['Average Score', formatFixed(stats.averageScore)],
+      ['High Game', stats.highGame.toString()],
+      ['Total Pins', stats.totalPins.toString()],
+      ['Total Strikes', stats.totalStrikes.toString()],
+      ['Average Strikes Per Game', formatFixed(stats.averageStrikesPerGame)],
+      ['Average Spares Per Game', formatFixed(stats.averageSparesPerGame)],
+      ['Average Opens Per Game', formatFixed(stats.averageOpensPerGame)],
+      ['Strike Percentage', formatPercent(stats.strikePercentage)],
+      ['Spare Percentage', formatPercent(stats.sparePercentage)],
+      ['Open Percentage', formatPercent(stats.openPercentage)],
     ];
+    const overallTable = overallEntries.map(([metric, value]) => ({
+      Overall: metric,
+      Value: value,
+    }));
 
-    return [Object.fromEntries(dataRow.map((value, index) => [headerRow[index], value]))];
+    // Spares Table
+    const sparesEntries: [string, ExcelCellValue][] = [
+      ['Total Spares Converted', stats.totalSpares.toString()],
+      ['Total Spares Missed', stats.totalSparesMissed.toString()],
+      ...stats.pinCounts.slice(1).map((count, index): [string, ExcelCellValue] => {
+        const hit = count.toString();
+        const miss = stats.missedCounts.slice(1)[index]?.toString() || '0';
+        const rate = stats.spareRates.slice(1)[index] !== undefined ? formatPercent(stats.spareRates.slice(1)[index]) : '0%';
+
+        return [`${index + 1} ${index + 1 === 1 ? 'Pin' : 'Pins'} Hit / Miss / Rate`, `${hit} / ${miss} / ${rate}`];
+      }),
+      ['Overall Spare Rate', formatPercent(stats.overallSpareRate)],
+      ['Overall Missed Rate', formatPercent(stats.overallMissedRate)],
+    ];
+    const sparesTable = sparesEntries.map(([metric, value]) => ({
+      Spares: metric,
+      Value: value,
+    }));
+
+    // Series Table
+    const seriesEntries: [string, ExcelCellValue][] = [
+      ['Average 3 Series Score', stats.average3SeriesScore !== undefined ? formatFixed(stats.average3SeriesScore) : ''],
+      ['High 3 Series', stats.high3Series !== undefined ? stats.high3Series.toString() : ''],
+      ['Average 4 Series Score', stats.average4SeriesScore !== undefined ? formatFixed(stats.average4SeriesScore) : ''],
+      ['High 4 Series', stats.high4Series !== undefined ? stats.high4Series.toString() : ''],
+      ['Average 5 Series Score', stats.average5SeriesScore !== undefined ? formatFixed(stats.average5SeriesScore) : ''],
+      ['High 5 Series', stats.high5Series !== undefined ? stats.high5Series.toString() : ''],
+      ['Average 6 Series Score', stats.average6SeriesScore !== undefined ? formatFixed(stats.average6SeriesScore) : ''],
+      ['High 6 Series', stats.high6Series !== undefined ? stats.high6Series.toString() : ''],
+    ];
+    const seriesTable = seriesEntries.map(([metric, value]) => ({
+      Series: metric,
+      Value: value,
+    }));
+
+    return { overall: overallTable, spares: sparesTable, series: seriesTable };
+  }
+
+  private addTable(worksheet: ExcelJS.Worksheet, name: string, ref: string, headers: string[], rows: Record<string, ExcelCellValue>[]): void {
+    worksheet.addTable({
+      name,
+      ref,
+      headerRow: true,
+      totalsRow: false,
+      style: { theme: 'TableStyleMedium1', showRowStripes: true },
+      columns: headers.map((header) => ({ name: header })),
+      rows: rows.map((row) => headers.map((header) => row[header])),
+    });
+  }
+
+  private setColumnWidths(worksheet: ExcelJS.Worksheet, headers: string[], data: Record<string, ExcelCellValue>[], startIndex: number): void {
+    headers.forEach((header, index) => {
+      const maxContentLength = Math.max(header.length, ...data.map((row) => (row[header] ?? '').toString().length));
+      worksheet.getColumn(startIndex + index).width = maxContentLength + 1;
+    });
   }
 
   private async fileExists(path: string): Promise<boolean> {
