@@ -215,7 +215,7 @@ export class StatsPage implements OnInit, AfterViewInit {
   }
 
   async exportToExcel(): Promise<void> {
-    const gotPermission = await this.excelService.exportToExcel(this.storageService.games());
+    const gotPermission = await this.excelService.exportToExcel();
     if (!gotPermission) {
       this.showPermissionDeniedAlert();
     }

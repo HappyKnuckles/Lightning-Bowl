@@ -81,7 +81,6 @@ export class BallFilterComponent {
 
   async updateFilter<T extends keyof BallFilter>(key: T, value: unknown): Promise<void> {
     if (key === 'weight') {
-      console.log(true);
       await this.changeWeight(value as number);
     }
     this.ballFilterService.filters.update((filters) => ({

@@ -31,6 +31,8 @@ export interface Stats {
   high4Series?: number;
   average5SeriesScore?: number;
   high5Series?: number;
+  average6SeriesScore?: number;
+  high6Series?: number;
   [key: string]: StatValue | undefined;
 }
 export interface SessionStats extends Stats {

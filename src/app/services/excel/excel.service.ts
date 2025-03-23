@@ -9,8 +9,9 @@ import { Game } from 'src/app/models/game.model';
 import { StorageService } from 'src/app/services/storage/storage.service';
 import { SortUtilsService } from '../sort-utils/sort-utils.service';
 import { GameFilterService } from '../game-filter/game-filter.service';
+import { GameStatsService } from '../game-stats/game-stats.service';
+import { Stats } from 'src/app/models/stats.model';
 type ExcelCellValue = string | number | boolean | Date | null;
-
 type ExcelRow = Record<string, ExcelCellValue>;
 
 @Injectable({
@@ -23,18 +24,63 @@ export class ExcelService {
     private storageService: StorageService,
     private sortUtils: SortUtilsService,
     private gameFilterService: GameFilterService,
+    private statsService: GameStatsService,
   ) {}
 
-  async exportToExcel(gameHistory: Game[]): Promise<boolean> {
-    const gameData = this.getGameDataForExport(gameHistory);
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet('Game History');
+  async exportToExcel(): Promise<boolean> {
+    // Get the data objects for games and stats.
+    const gameData: Record<string, ExcelCellValue>[] = this.getGameDataForExport(this.storageService.games());
+    const statsData: Record<string, ExcelCellValue>[] = this.getStatsForExport(this.statsService.currentStats());
 
-    worksheet.columns = Object.keys(gameData[0]).map((key) => ({
-      header: key,
-      key,
-    }));
-    worksheet.addRows(gameData);
+    const workbook = new ExcelJS.Workbook();
+    const gameWorksheet = workbook.addWorksheet('Game History');
+    const statsWorksheet = workbook.addWorksheet('Statistics');
+
+    // Get headers from the first object of each export data array.
+    const gameHeaders = Object.keys(gameData[0]);
+    const statsHeaders = Object.keys(statsData[0]);
+
+    // Create tables in each worksheet.
+    gameWorksheet.addTable({
+      name: 'GameHistoryTable',
+      ref: 'A1',
+      headerRow: true,
+      totalsRow: false,
+      style: { theme: 'TableStyleMedium1', showRowStripes: true },
+      columns: gameHeaders.map((header) => ({
+        name: header,
+        filterButton: ['League', 'Practice', 'Clean', 'Perfect', 'Series', 'Balls', 'Notes', 'Date', 'Total Score'].includes(header),
+      })),
+      rows: gameData.map((row) => gameHeaders.map((header) => row[header])),
+    });
+
+    statsWorksheet.addTable({
+      name: 'StatisticsTable',
+      ref: 'A1',
+      headerRow: true,
+      totalsRow: false,
+      style: { theme: 'TableStyleMedium1', showRowStripes: true },
+      columns: statsHeaders.map((header) => ({ name: header })),
+      rows: statsData.map((row) => statsHeaders.map((header) => row[header])),
+    });
+
+    gameWorksheet.columns = gameHeaders.map((header) => {
+      const maxContentLength = Math.max(header.length, ...gameData.map((row) => (row[header] ?? '').toString().length));
+      return {
+        header,
+        key: header,
+        width: maxContentLength + 1,
+      };
+    });
+
+    statsWorksheet.columns = statsHeaders.map((header) => {
+      const maxContentLength = Math.max(header.length, ...statsData.map((row) => (row[header] ?? '').toString().length));
+      return {
+        header,
+        key: header,
+        width: maxContentLength + 1,
+      };
+    });
 
     const date = new Date();
     const formattedDate = date.toLocaleString('de-DE', {
@@ -57,7 +103,6 @@ export class ExcelService {
     let suffix = '';
     const fileName = `game_data_${formattedDate}`;
     let i = 1;
-
     const existingFiles = JSON.parse(localStorage.getItem('savedFilenames') || '[]');
 
     if (isPlatform('mobileweb')) {
@@ -102,22 +147,22 @@ export class ExcelService {
     const ballMap = new Set<string>();
 
     for (let i = 1; i < data.length; i++) {
+      const row = data[i];
       const frames = [];
-      for (let j = 2; j <= 11; j++) {
-        const frame = {
+      for (let j = 1; j <= 10; j++) {
+        const frame: { frameIndex: number; throws: { value: number; throwIndex: number }[] } = {
           frameIndex: j,
-          throws: [] as { value: number; throwIndex: number }[],
+          throws: [],
         };
 
-        const throwsData = data[i][j.toString()];
-        if (typeof throwsData === 'string') {
+        const throwsData = row[`Frame ${j}`];
+        if (typeof throwsData === 'string' && throwsData.trim() !== '') {
           if (throwsData.includes('/')) {
             const throws = throwsData.split(' / ').map((value) => parseInt(value));
             for (let k = 0; k < throws.length; k++) {
               frame.throws.push({ value: throws[k], throwIndex: k + 1 });
             }
           } else {
-            // Handle case when only one throw is present
             frame.throws.push({ value: parseInt(throwsData), throwIndex: 1 });
           }
         }
@@ -125,19 +170,19 @@ export class ExcelService {
       }
 
       const game: Game = {
-        gameId: data[i]['0'] as string,
-        date: parseInt(data[i]['1'] as string),
+        gameId: row['Game'] as string,
+        date: parseInt(row['Date'] as string),
         frames: frames,
-        totalScore: parseInt(data[i]['12'] as string),
-        frameScores: (data[i]['13'] as string).split(', ').map((score: string) => parseInt(score)),
-        league: data[i]['14'] as string,
-        isPractice: (data[i]['15'] as string)?.trim().toLowerCase() === 'true',
-        isClean: (data[i]['16'] as string)?.trim().toLowerCase() === 'true',
-        isPerfect: (data[i]['17'] as string)?.trim().toLowerCase() === 'true',
-        isSeries: (data[i]['18'] as string)?.trim().toLowerCase() === 'true',
-        seriesId: data[i]['19'] as string,
-        balls: (data[i]['20'] as string)?.trim() ? (data[i]['20'] as string).split(', ') : [],
-        note: data[i]['21'] as string,
+        totalScore: parseInt(row['Total Score'] as string),
+        frameScores: (row['Frame scores'] as string).split(', ').map((score: string) => parseInt(score)),
+        league: row['League'] as string,
+        isPractice: (row['Practice'] as string)?.trim().toLowerCase() === 'true',
+        isClean: (row['Clean'] as string)?.trim().toLowerCase() === 'true',
+        isPerfect: (row['Perfect'] as string)?.trim().toLowerCase() === 'true',
+        isSeries: (row['Series'] as string)?.trim().toLowerCase() === 'true',
+        seriesId: row['Series ID'] as string,
+        balls: (row['Balls'] as string)?.trim() ? (row['Balls'] as string).split(', ') : [],
+        note: row['Notes'] as string,
       };
 
       if (game.league !== undefined && game.league !== '') {
@@ -205,70 +250,140 @@ export class ExcelService {
     }
   }
 
-  private getGameDataForExport(gameHistory: Game[]): string[][] {
-    const gameData: string[][] = [];
+  private getGameDataForExport(gameHistory: Game[]): Record<string, ExcelCellValue>[] {
+    const headers = [
+      'Game',
+      'Date',
+      ...Array.from({ length: 10 }, (_, i) => `Frame ${i + 1}`),
+      'Total Score',
+      'Frame scores',
+      'League',
+      'Practice',
+      'Clean',
+      'Perfect',
+      'Series',
+      'Series ID',
+      'Balls',
+      'Notes',
+    ];
 
-    // Add header row
-    const headerRow = ['Game', 'Date'];
-    for (let i = 1; i <= 10; i++) {
-      headerRow.push(`Frame ${i}`);
-    }
-    headerRow.push('Total Score');
-    headerRow.push('FrameScores');
-    headerRow.push('League');
-    headerRow.push('Practice');
-    headerRow.push('Clean');
-    headerRow.push('Perfect');
-    headerRow.push('Series');
-    headerRow.push('Series ID');
-    headerRow.push('Balls');
-    headerRow.push('Notes');
-    gameData.push(headerRow);
-
-    // Iterate through game history and format data for export
-    gameHistory.forEach((game: Game) => {
-      const gameId = game.gameId;
-      const gameDate = game.date;
-
-      const rowData: string[] = [gameId.toString(), gameDate.toString()];
-      const frames = game.frames;
-      frames.forEach((frame: any) => {
-        const throws = frame.throws.map((throwData: any) => throwData.value);
-        const firstThrow = throws.length > 0 ? throws[0] : '';
-        const secondThrow = throws.length > 1 ? throws[1] : '';
-        const thirdThrow = throws.length > 2 ? throws[2] : '';
-
-        if (throws.length === 1) {
-          rowData.push(`${firstThrow}`);
+    return gameHistory.map((game) => {
+      const frameValues = Array.from({ length: 10 }, (_, i) => {
+        if (game.frames[i]) {
+          const throws = game.frames[i].throws.map((t: any) => t.value);
+          if (throws.length === 1) {
+            return `${throws[0]}`;
+          } else if (throws.length === 2) {
+            return `${throws[0]} / ${throws[1]}`;
+          } else if (throws.length === 3) {
+            return `${throws[0]} / ${throws[1]} / ${throws[2]}`;
+          }
         }
-        if (throws.length === 2) {
-          rowData.push(`${firstThrow} / ${secondThrow}`);
-        }
-        if (throws.length === 3) {
-          rowData.push(`${firstThrow} / ${secondThrow} / ${thirdThrow}`);
-        }
+        return '';
       });
 
-      // Pad missing frames with empty values
-      const numFrames = frames.length;
-      for (let i = numFrames; i < 10; i++) {
-        rowData.push('', '');
-      }
+      const rowData = [
+        game.gameId.toString(),
+        game.date.toString(),
+        ...frameValues,
+        game.totalScore.toString(),
+        game.frameScores.map((s) => s.toString()).join(', '),
+        game.league || '',
+        game.isPractice ? 'true' : 'false',
+        game.isClean ? 'true' : 'false',
+        game.isPerfect ? 'true' : 'false',
+        game.isSeries ? 'true' : 'false',
+        game.seriesId || '',
+        game.balls?.join(', ') || '',
+        game.note || '',
+      ];
 
-      rowData.push(game.totalScore.toString());
-      rowData.push(game.frameScores.map((score) => score.toString()).join(', '));
-      rowData.push(game.league || '');
-      rowData.push(game.isPractice ? 'true' : 'false');
-      rowData.push(game.isClean ? 'true' : 'false');
-      rowData.push(game.isPerfect ? 'true' : 'false');
-      rowData.push(game.isSeries ? 'true' : 'false');
-      rowData.push(game.seriesId || '');
-      rowData.push(game.balls?.join(', ') || '');
-      rowData.push(game.note || '');
-      gameData.push(rowData);
+      return headers.reduce(
+        (obj, header, idx) => {
+          obj[header] = rowData[idx];
+          return obj;
+        },
+        {} as Record<string, ExcelCellValue>,
+      );
     });
+  }
 
-    return gameData;
+  // TODO maybe optimize so the layout is better for spares etc
+  private getStatsForExport(stats: Stats): Record<string, ExcelCellValue>[] {
+    const headerRow = [
+      'Total Games',
+      'Total Pins',
+      'Perfect Game Count',
+      'Clean Game Count',
+      'Clean Game Percentage',
+      'Total Strikes',
+      'Total Spares',
+      'Total Spares Missed',
+      'Total Spares Converted',
+      'Hit Pin Counts',
+      'Missed Counts',
+      'Average Strikes Per Game',
+      'Average Spares Per Game',
+      'Average Opens Per Game',
+      'Strike Percentage',
+      'Spare Percentage',
+      'Open Percentage',
+      'Spare Conversion Percentage',
+      'Average First Count',
+      'Average Score',
+      'High Game',
+      'Spare Rates',
+      'Overall Spare Rate',
+      'Overall Missed Rate',
+      'Average 3 Series Score',
+      'High 3 Series',
+      'Average 4 Series Score',
+      'High 4 Series',
+      'Average 5 Series Score',
+      'High 5 Series',
+      'Average 6 Series Score',
+      'High 6 Series',
+    ];
+
+    const dataRow = [
+      stats.totalGames.toString(),
+      stats.totalPins.toString(),
+      stats.perfectGameCount.toString(),
+      stats.cleanGameCount.toString(),
+      `${stats.cleanGamePercentage.toFixed(2)}%`,
+      stats.totalStrikes.toString(),
+      stats.totalSpares.toString(),
+      stats.totalSparesMissed.toString(),
+      stats.totalSparesConverted.toString(),
+      stats.pinCounts.slice(1).join(', '),
+      stats.missedCounts.slice(1).join(', '),
+      stats.averageStrikesPerGame.toFixed(2),
+      stats.averageSparesPerGame.toFixed(2),
+      stats.averageOpensPerGame.toFixed(2),
+      `${stats.strikePercentage.toFixed(2)}%`,
+      `${stats.sparePercentage.toFixed(2)}%`,
+      `${stats.openPercentage.toFixed(2)}%`,
+      `${stats.spareConversionPercentage.toFixed(2)}%`,
+      stats.averageFirstCount.toFixed(2),
+      stats.averageScore.toFixed(2),
+      stats.highGame.toString(),
+      stats.spareRates
+        .slice(1)
+        .map((rate) => `${rate.toFixed(2)}%`)
+        .join(', '),
+      `${stats.overallSpareRate.toFixed(2)}%`,
+      `${stats.overallMissedRate.toFixed(2)}%`,
+      stats.average3SeriesScore !== undefined ? stats.average3SeriesScore.toFixed(2) : '',
+      stats.high3Series !== undefined ? stats.high3Series.toString() : '',
+      stats.average4SeriesScore !== undefined ? stats.average4SeriesScore.toFixed(2) : '',
+      stats.high4Series !== undefined ? stats.high4Series.toString() : '',
+      stats.average5SeriesScore !== undefined ? stats.average5SeriesScore.toFixed(2) : '',
+      stats.high5Series !== undefined ? stats.high5Series.toString() : '',
+      stats.average6SeriesScore !== undefined ? stats.average6SeriesScore.toFixed(2) : '',
+      stats.high6Series !== undefined ? stats.high6Series.toString() : '',
+    ];
+
+    return [Object.fromEntries(dataRow.map((value, index) => [headerRow[index], value]))];
   }
 
   private async fileExists(path: string): Promise<boolean> {
