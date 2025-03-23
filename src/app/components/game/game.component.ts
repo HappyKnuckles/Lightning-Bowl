@@ -27,6 +27,7 @@ import {
   IonList,
   IonItemDivider,
   IonLabel,
+  IonBadge,
 } from '@ionic/angular/standalone';
 import { toPng } from 'html-to-image';
 import { addIcons } from 'ionicons';
@@ -55,6 +56,7 @@ import { UtilsService } from 'src/app/services/utils/utils.service';
   styleUrls: ['./game.component.scss'],
   providers: [DatePipe, ModalController],
   imports: [
+    IonBadge,
     IonLabel,
     IonItemDivider,
     IonList,
@@ -194,6 +196,10 @@ export class GameComponent implements OnChanges {
     const date = new Date(timestamp);
     const options: Intl.DateTimeFormatOptions = { month: 'long', year: 'numeric' };
     return date.toLocaleDateString(undefined, options);
+  }
+
+  getMonthGameCount(date: number): number {
+    return this.showingGames.filter((game) => new Date(game.date).getMonth() === new Date(date).getMonth()).length;
   }
 
   // Hides the accordion content so it renders faster
