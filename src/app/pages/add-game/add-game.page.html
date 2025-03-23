@@ -199,7 +199,13 @@
         </ion-item> -->
         <app-league-selector [isAddPage]="true" (leagueChanged)="onLeagueChange($event, true)" #leagueSelector></app-league-selector>
         <ion-item>
-          <ion-select [(ngModel)]="gameData.balls" multiple="true" name="balls" placeholder="None" label="Balls">
+          <ion-select
+            [(ngModel)]="gameData.balls"
+            multiple="true"
+            name="balls"
+            placeholder="None"
+            label="Balls"
+            (ionChange)="gameData.balls = $event.target.value">
             <ion-select-option *ngFor="let ball of storageService.arsenal()" [value]="ball.ball_name"> {{ball.ball_name}} </ion-select-option>
           </ion-select>
         </ion-item>
