@@ -134,6 +134,7 @@ export class StorageService {
 
   async removeFromArsenal(ball: Ball) {
     const key = 'arsenal' + '_' + ball.ball_id + '_' + ball.core_weight;
+    await this.delete('arsenal' + '_' + ball.ball_id)
     await this.delete(key);
     this.arsenal.update((balls) => balls.filter((b) => !(b.ball_id === ball.ball_id && b.core_weight === ball.core_weight)));
   }

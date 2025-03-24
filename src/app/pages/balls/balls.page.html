@@ -23,9 +23,8 @@
   <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
-  <div class="filter-info">
-    <app-ball-filter-active></app-ball-filter-active>
-  </div>
+  <app-ball-filter-active></app-ball-filter-active>
+
   <ng-container *ngIf="(displayedBalls.length <= 0) && !loadingService.isLoading(); else content">
     <ion-text class="no-game-text"> No balls found. </ion-text>
   </ng-container>

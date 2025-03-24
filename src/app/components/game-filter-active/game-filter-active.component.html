@@ -1,9 +1,14 @@
-<ion-chip *ngIf="isFilterActive('excludePractice')">Exclude Practice: {{ getFilterValue("excludePractice") }}</ion-chip>
-<ion-chip *ngIf="isFilterActive('minScore') || isFilterActive('maxScore')"
-  >Score: {{ getFilterValue("minScore") }} - {{ getFilterValue("maxScore") }}</ion-chip
->
-<ion-chip *ngIf="isFilterActive('isClean')">Only Clean: {{ getFilterValue("isClean") }}</ion-chip>
-<ion-chip *ngIf="isFilterActive('isPerfect')">Only Perfect: {{ getFilterValue("isPerfect") }}</ion-chip>
-<ion-chip *ngIf="isFilterActive('leagues')">Leagues: {{ getFilterValue("leagues").join(", ") }}</ion-chip>
-<ion-chip *ngIf="isFilterActive('balls')">Balls: {{ getFilterValue("balls").join(", ") }}</ion-chip>
+<div class="filter-info">
+
+<ion-chip *ngIf="isFilterActive('excludePractice')">Exclude Practice Games</ion-chip>
+<ion-chip *ngIf="isFilterActive('minScore') || isFilterActive('maxScore')">Score: {{ getFilterValue("minScore") }} - {{ getFilterValue("maxScore") }}</ion-chip>
+<ion-chip *ngIf="isFilterActive('isClean')">Only Clean Games</ion-chip>
+<ion-chip *ngIf="isFilterActive('isPerfect')">Only Perfect Games</ion-chip>
+<ion-chip *ngIf="isFilterActive('leagues')">
+ {{ getFilterValue("leagues") === 'None' ? 'Leagues: ' + getFilterValue("leagues").join(", ") : 'No Leagues' }}
+</ion-chip>
+<ion-chip *ngIf="isFilterActive('balls')">
+ {{'Balls: ' + getFilterValue("balls").join(", ")}}
+</ion-chip>
 <ion-chip *ngIf="isFilterActive('timeRange')">Time Range: {{ getFilterValue("startDate") | date }} - {{ getFilterValue("endDate") | date }}</ion-chip>
+</div>

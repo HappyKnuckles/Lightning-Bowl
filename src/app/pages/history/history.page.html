@@ -26,6 +26,7 @@
   <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
+  <app-game-filter-active></app-game-filter-active>
   <!-- Show this message if there are no game history items and it's not loading -->
   <ng-container *ngIf="storageService.games().length <= 0 && !loadingService.isLoading(); else checkFilteredGames">
     <ion-text class="no-game-text"> Start playing a few games to see your history here! </ion-text>

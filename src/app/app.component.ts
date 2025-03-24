@@ -10,6 +10,7 @@ import { SwUpdate } from '@angular/service-worker';
 import { ThemeChangerService } from './services/theme-changer/theme-changer.service';
 import { HttpClient } from '@angular/common/http';
 import { DomSanitizer } from '@angular/platform-browser';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-root',
@@ -130,10 +131,12 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   private async greetUser(): Promise<void> {
-    if (!this.username) {
-      await this.showEnterNameAlert();
-    } else {
-      this.presentGreetingAlert(this.username);
+    if (environment.production) {
+      if (!this.username) {
+        await this.showEnterNameAlert();
+      } else {
+        this.presentGreetingAlert(this.username);
+      }
     }
   }
 

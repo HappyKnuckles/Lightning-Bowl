@@ -1,3 +1,5 @@
+<div class="filter-info">
+
 <ion-chip *ngIf="isFilterActive('weight')"> Weight: {{ getFilterValue("weight") }}lbs </ion-chip>
 
 <ion-chip *ngIf="isFilterActive('coreType')"> Core Type: {{ getFilterValue("coreType") }} </ion-chip>
@@ -25,3 +27,4 @@
 <ion-chip *ngIf="isFilterActive('minDiff') || isFilterActive('maxDiff')">
   Diff: {{ getFilterValue("minDiff") }} - {{ getFilterValue("maxDiff") }}
 </ion-chip>
+</div>
