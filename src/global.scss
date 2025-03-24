@@ -224,8 +224,8 @@ ion-button {
   --background-focused: none;
 }
 
-:root {
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+ion-content::part(scroll) {
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
 .segment-label {
