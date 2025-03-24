@@ -75,7 +75,7 @@ export class ExcelService {
       while (existingFiles.includes(fileName + suffix + '.xlsx')) {
         suffix = `(${i++})`;
       }
-    } else {
+    } else if (isPlatform('android') || isPlatform('ios')) {
       while (await this.fileExists(fileName + suffix)) {
         suffix = `(${i++})`;
       }
