@@ -327,6 +327,20 @@ export class ChartGenerationService {
               legend: {
                 display: false,
               },
+              tooltip: {
+                callbacks: {
+                  label: function (context) {
+                    let label = context.dataset.label || '';
+                    if (label) {
+                      label += ': ';
+                    }
+                    if (context.parsed.r !== null) {
+                      label += context.parsed.r + '%';
+                    }
+                    return label;
+                  },
+                },
+              },
             },
             layout: {
               padding: {
