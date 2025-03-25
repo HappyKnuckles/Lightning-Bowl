@@ -22,7 +22,7 @@ import {
   IonSegmentView,
   IonSegmentContent,
 } from '@ionic/angular/standalone';
-import { StorageService } from 'src/app/services/storage/storage.service';
+import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { addIcons } from 'ionicons';
 import {
   chevronForward,
@@ -35,21 +35,22 @@ import {
   addOutline,
   chevronBack,
 } from 'ionicons/icons';
-import { Game } from 'src/app/models/game.model';
-import { GameComponent } from '../../components/game/game.component';
-import { ToastService } from 'src/app/services/toast/toast.service';
+import { Game } from 'src/app/core/models/game.model';
+import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { AlertController, RefresherCustomEvent, SegmentCustomEvent } from '@ionic/angular';
-import { LoadingService } from 'src/app/services/loader/loading.service';
-import { Stats } from 'src/app/models/stats.model';
-import { GameStatsService } from 'src/app/services/game-stats/game-stats.service';
-import { HapticService } from 'src/app/services/haptic/haptic.service';
+import { LoadingService } from 'src/app/core/services/loader/loading.service';
+import { Stats } from 'src/app/core/models/stats.model';
+import { GameStatsService } from 'src/app/core/services/game-stats/game-stats.service';
+import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { ImpactStyle } from '@capacitor/haptics';
-import { StatDisplayComponent } from 'src/app/components/stat-display/stat-display.component';
-import { SpareDisplayComponent } from 'src/app/components/spare-display/spare-display.component';
-import { SortUtilsService } from 'src/app/services/sort-utils/sort-utils.service';
+import { SortUtilsService } from 'src/app/core/services/sort-utils/sort-utils.service';
 import Chart from 'chart.js/auto';
-import { ChartGenerationService } from 'src/app/services/chart/chart-generation.service';
+import { ChartGenerationService } from 'src/app/core/services/chart/chart-generation.service';
 import { leagueStatDefinitions } from '../stats/stats.definitions';
+import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
+import { GameComponent } from 'src/app/shared/components/game/game.component';
+import { SpareDisplayComponent } from 'src/app/shared/components/spare-display/spare-display.component';
+import { StatDisplayComponent } from 'src/app/shared/components/stat-display/stat-display.component';
 
 @Component({
   selector: 'app-league',
@@ -160,6 +161,7 @@ export class LeaguePage {
       await this.storageService.loadGameHistory();
     } catch (error) {
       console.error(error);
+      this.toastService.showToast(ToastMessages.gameLoadError, 'bug', true);
     } finally {
       event.target.complete();
     }
@@ -197,8 +199,13 @@ export class LeaguePage {
   }
 
   async saveLeague(league: string): Promise<void> {
-    await this.storageService.addLeague(league);
-    this.toastService.showToast('League saved sucessfully.', 'add');
+    try {
+      await this.storageService.addLeague(league);
+      this.toastService.showToast(ToastMessages.leagueSaveSuccess, 'add');
+    } catch (error) {
+      this.toastService.showToast(ToastMessages.leagueSaveError, 'bug', true);
+      console.error('Error saving league:', error);
+    }
   }
 
   async addLeague() {
@@ -221,7 +228,13 @@ export class LeaguePage {
         {
           text: 'Add',
           handler: async (data: { league: string }) => {
-            await this.saveLeague(data.league);
+            try {
+              await this.storageService.addLeague(data.league);
+              this.toastService.showToast(ToastMessages.leagueSaveSuccess, 'add');
+            } catch (error) {
+              this.toastService.showToast(ToastMessages.leagueSaveError, 'bug', true);
+              console.error('Error saving league:', error);
+            }
           },
         },
       ],
@@ -243,8 +256,13 @@ export class LeaguePage {
         {
           text: 'Delete',
           handler: async () => {
-            await this.storageService.deleteLeague(league);
-            this.toastService.showToast('League deleted sucessfully.', 'remove-outline');
+            try {
+              await this.storageService.deleteLeague(league);
+              this.toastService.showToast(ToastMessages.leagueDeleteSuccess, 'remove-outline');
+            } catch (error) {
+              this.toastService.showToast(ToastMessages.leagueDeleteError, 'bug', true);
+              console.error('Error deleting league:', error);
+            }
           },
         },
       ],
@@ -274,8 +292,13 @@ export class LeaguePage {
         {
           text: 'Edit',
           handler: async (data: { league: string }) => {
-            await this.storageService.editLeague(data.league, league);
-            this.toastService.showToast('League edited sucessfully.', 'checkmark-outline');
+            try {
+              await this.storageService.editLeague(data.league, league);
+              this.toastService.showToast(ToastMessages.leagueEditSuccess, 'checkmark-outline');
+            } catch (error) {
+              this.toastService.showToast(ToastMessages.leagueEditError, 'bug', true);
+              console.error('Error editing league:', error);
+            }
           },
         },
       ],
@@ -285,28 +308,38 @@ export class LeaguePage {
   }
 
   private generateScoreChart(league: string, isReload?: boolean): void {
-    if (!this.scoreChart) {
-      return;
-    }
+    try {
+      if (!this.scoreChart) {
+        return;
+      }
 
-    this.scoreChartInstances[league] = this.chartService.generateScoreChart(
-      this.scoreChart,
-      this.gamesByLeagueReverse()[league],
-      this.scoreChartInstances[league]!,
-      isReload,
-    );
+      this.scoreChartInstances[league] = this.chartService.generateScoreChart(
+        this.scoreChart,
+        this.gamesByLeagueReverse()[league],
+        this.scoreChartInstances[league]!,
+        isReload,
+      );
+    } catch (error) {
+      this.toastService.showToast(ToastMessages.chartGenerationError, 'bug', true);
+      console.error('Error generating score chart:', error);
+    }
   }
 
   private generatePinChart(league: string, isReload?: boolean): void {
-    if (!this.pinChart) {
-      return;
-    }
+    try {
+      if (!this.pinChart) {
+        return;
+      }
 
-    this.pinChartInstances[league] = this.chartService.generatePinChart(
-      this.pinChart,
-      this.statsByLeague()[league],
-      this.pinChartInstances[league]!,
-      isReload,
-    );
+      this.pinChartInstances[league] = this.chartService.generatePinChart(
+        this.pinChart,
+        this.statsByLeague()[league],
+        this.pinChartInstances[league]!,
+        isReload,
+      );
+    } catch (error) {
+      this.toastService.showToast(ToastMessages.chartGenerationError, 'bug', true);
+      console.error('Error generating pin chart:', error);
+    }
   }
 }

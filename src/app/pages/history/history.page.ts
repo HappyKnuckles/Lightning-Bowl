@@ -28,17 +28,18 @@ import {
 } from 'ionicons/icons';
 import { NgIf, DatePipe } from '@angular/common';
 import { ImpactStyle } from '@capacitor/haptics';
-import { HapticService } from 'src/app/services/haptic/haptic.service';
-import { LoadingService } from 'src/app/services/loader/loading.service';
-import { ToastService } from 'src/app/services/toast/toast.service';
+import { HapticService } from 'src/app/core/services/haptic/haptic.service';
+import { LoadingService } from 'src/app/core/services/loader/loading.service';
+import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { ModalController, RefresherCustomEvent } from '@ionic/angular';
-import { StorageService } from 'src/app/services/storage/storage.service';
+import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { GameComponent } from 'src/app/components/game/game.component';
-import { ExcelService } from 'src/app/services/excel/excel.service';
-import { GameFilterService } from 'src/app/services/game-filter/game-filter.service';
-import { GameFilterComponent } from 'src/app/components/game-filter/game-filter.component';
-import { GameFilterActiveComponent } from 'src/app/components/game-filter-active/game-filter-active.component';
+import { ExcelService } from 'src/app/core/services/excel/excel.service';
+import { GameFilterService } from 'src/app/core/services/game-filter/game-filter.service';
+import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
+import { GameFilterActiveComponent } from 'src/app/shared/components/game-filter-active/game-filter-active.component';
+import { GameFilterComponent } from 'src/app/shared/components/game-filter/game-filter.component';
+import { GameComponent } from 'src/app/shared/components/game/game.component';
 
 @Component({
   selector: 'app-history',
@@ -103,6 +104,7 @@ export class HistoryPage {
       await this.storageService.loadGameHistory();
     } catch (error) {
       console.error(error);
+      this.toastService.showToast(ToastMessages.gameLoadError, 'bug', true);
     } finally {
       event.target.complete();
     }
@@ -116,9 +118,10 @@ export class HistoryPage {
       const file = input.files[0];
       const gameData = await this.excelService.readExcelData(file);
       await this.excelService.transformData(gameData);
-      this.toastService.showToast('Uploaded Excel file successfully.', 'checkmark-outline');
+      this.toastService.showToast(ToastMessages.excelFileUploadSuccess, 'checkmark-outline');
     } catch (error) {
-      this.toastService.showToast(`Error: ${error}`, 'bug', true);
+      this.toastService.showToast(ToastMessages.excelFileUploadError, 'bug', true);
+      console.error(error);
     } finally {
       const input = event.target as HTMLInputElement;
       input.value = '';
@@ -134,9 +137,16 @@ export class HistoryPage {
   }
 
   async exportToExcel(): Promise<void> {
-    const gotPermission = await this.excelService.exportToExcel();
-    if (!gotPermission) {
-      this.showPermissionDeniedAlert();
+    try {
+      const gotPermission = await this.excelService.exportToExcel();
+      if (gotPermission) {
+        this.toastService.showToast(ToastMessages.excelFileDownloadSuccess, 'checkmark-outline');
+      } else {
+        await this.showPermissionDeniedAlert();
+      }
+    } catch (error) {
+      this.toastService.showToast(ToastMessages.excelFileDownloadError, 'bug', true);
+      console.error('Error exporting to Excel:', error);
     }
   }
 
@@ -154,7 +164,7 @@ export class HistoryPage {
           handler: async () => {
             const permissionRequestResult = await Filesystem.requestPermissions();
             if (permissionRequestResult.publicStorage === 'granted') {
-              this.exportToExcel();
+              await this.exportToExcel();
             }
           },
         },
@@ -163,8 +173,8 @@ export class HistoryPage {
     await alert.present();
   }
 
-  deleteAll(): void {
-    this.storageService.deleteAllData();
+  async deleteAll(): Promise<void> {
+    await this.storageService.deleteAllData();
     window.dispatchEvent(new Event('dataDeleted'));
   }
 }

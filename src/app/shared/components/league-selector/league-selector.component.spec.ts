@@ -1,25 +1,25 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { StatsPage } from './stats.page';
-import { StorageService } from 'src/app/core/services/storage/storage.service';
-import { AngularDelegate } from '@ionic/angular';
 
+import { LeagueSelectorComponent } from './league-selector.component';
+import { StorageService } from 'src/app/core/services/storage/storage.service';
 const mockStorageService = {
   getItem: jasmine.createSpy('getItem').and.returnValue(Promise.resolve(null)),
   setItem: jasmine.createSpy('setItem').and.returnValue(Promise.resolve()),
 };
 
-describe('StatsPage', () => {
-  let component: StatsPage;
-  let fixture: ComponentFixture<StatsPage>;
+describe('LeagueSelectorComponent', () => {
+  let component: LeagueSelectorComponent;
+  let fixture: ComponentFixture<LeagueSelectorComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [StatsPage],
-      providers: [{ provide: StorageService, useValue: mockStorageService }, AngularDelegate],
+      imports: [LeagueSelectorComponent],
+      providers: [{ provide: StorageService, useValue: mockStorageService }],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(StatsPage);
+    fixture = TestBed.createComponent(LeagueSelectorComponent);
     component = fixture.componentInstance;
+    component.isAddPage = false;
     fixture.detectChanges();
   });
 

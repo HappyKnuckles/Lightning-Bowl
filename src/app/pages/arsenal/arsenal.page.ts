@@ -28,18 +28,19 @@ import {
   IonItemOptions,
   IonChip,
 } from '@ionic/angular/standalone';
-import { StorageService } from 'src/app/services/storage/storage.service';
-import { Ball } from 'src/app/models/ball.model';
-import { ToastService } from 'src/app/services/toast/toast.service';
+import { StorageService } from 'src/app/core/services/storage/storage.service';
+import { Ball } from 'src/app/core/models/ball.model';
+import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { addIcons } from 'ionicons';
 import { chevronBack, add, openOutline, trashOutline } from 'ionicons/icons';
 import { AlertController, ModalController } from '@ionic/angular';
-import { BallComboBoxComponent } from 'src/app/components/ball-combo-box/ball-combo-box.component';
-import { BallListComponent } from 'src/app/components/ball-list/ball-list.component';
-import { LoadingService } from 'src/app/services/loader/loading.service';
+import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import { ImpactStyle } from '@capacitor/haptics';
-import { HapticService } from 'src/app/services/haptic/haptic.service';
-import { BallService } from 'src/app/services/ball/ball.service';
+import { HapticService } from 'src/app/core/services/haptic/haptic.service';
+import { BallService } from 'src/app/core/services/ball/ball.service';
+import { BallComboBoxComponent } from 'src/app/shared/components/ball-combo-box/ball-combo-box.component';
+import { BallListComponent } from 'src/app/shared/components/ball-list/ball-list.component';
+import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 
 @Component({
   selector: 'app-arsenal',
@@ -108,35 +109,55 @@ export class ArsenalPage implements OnInit {
   }
 
   async removeFromArsenal(ball: Ball): Promise<void> {
-    this.hapticService.vibrate(ImpactStyle.Heavy, 300);
-    const alert = await this.alertController.create({
-      header: 'Confirm Deletion',
-      message: `Are you sure you want to remove ${ball.ball_name} from your arsenal?`,
-      buttons: [
-        {
-          text: 'Cancel',
-          role: 'cancel',
-          // handler: () => { },
-        },
-        {
-          text: 'Delete',
-          handler: async () => {
-            this.storageService.removeFromArsenal(ball);
-            this.toastService.showToast(`Ball removed from arsenal: ${ball.ball_name}`, 'checkmark-outline');
+    try {
+      this.hapticService.vibrate(ImpactStyle.Heavy, 300);
+      const alert = await this.alertController.create({
+        header: 'Confirm Deletion',
+        message: `Are you sure you want to remove ${ball.ball_name} from your arsenal?`,
+        buttons: [
+          {
+            text: 'Cancel',
+            role: 'cancel',
           },
-        },
-      ],
-    });
+          {
+            text: 'Delete',
+            handler: async () => {
+              try {
+                await this.storageService.removeFromArsenal(ball);
+                this.toastService.showToast(`Ball removed from arsenal: ${ball.ball_name}`, 'checkmark-outline');
+              } catch (error) {
+                console.error('Error removing ball from arsenal:', error);
+                this.toastService.showToast(ToastMessages.ballDeleteError, 'bug', true);
+              }
+            },
+          },
+        ],
+      });
 
-    await alert.present();
+      await alert.present();
+    } catch (error) {
+      console.error('Error displaying removal alert:', error);
+      this.toastService.showToast(ToastMessages.unexpectedError, 'warning', true);
+    }
   }
 
   saveBallToArsenal(ball: Ball[]): void {
-    ball.forEach((ball) => {
-      this.storageService.saveBallToArsenal(ball);
-    });
-    const ball_names = ball.map((ball) => ball.ball_name).join(', ');
-    this.toastService.showToast(`Balls added to arsenal: ${ball_names}`, 'checkmark-outline');
+    try {
+      ball.forEach(async (ball) => {
+        try {
+          await this.storageService.saveBallToArsenal(ball);
+        } catch (error) {
+          console.error(`Error saving ball ${ball.ball_name} to arsenal:`, error);
+          this.toastService.showToast(`Failed to add ${ball.ball_name}.`, 'bug', true);
+        }
+      });
+
+      const ball_names = ball.map((ball) => ball.ball_name).join(', ');
+      this.toastService.showToast(`Balls added to arsenal: ${ball_names}`, 'checkmark-outline');
+    } catch (error) {
+      console.error('Error saving balls to arsenal:', error);
+      this.toastService.showToast(ToastMessages.ballSaveError, 'bug', true);
+    }
   }
 
   async getSameCoreBalls(ball: Ball): Promise<void> {
@@ -153,7 +174,7 @@ export class ArsenalPage implements OnInit {
       }
     } catch (error) {
       console.error('Error fetching core balls:', error);
-      this.toastService.showToast(`Error fetching balls for core ${ball.core_name}: ${error}`, 'bug', true);
+      this.toastService.showToast(`Error fetching balls for core ${ball.core_name}`, 'bug', true);
     } finally {
       this.loadingService.setLoading(false);
     }
@@ -173,7 +194,7 @@ export class ArsenalPage implements OnInit {
       }
     } catch (error) {
       console.error('Error fetching coverstock balls:', error);
-      this.toastService.showToast(`Error fetching balls for coverstock ${ball.coverstock_name}: ${error}`, 'bug', true);
+      this.toastService.showToast(`Error fetching balls for coverstock ${ball.coverstock_name}`, 'bug', true);
     } finally {
       this.loadingService.setLoading(false);
     }

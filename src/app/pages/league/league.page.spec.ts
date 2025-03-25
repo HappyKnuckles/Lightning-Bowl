@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { LeaguePage } from './league.page';
-import { StorageService } from 'src/app/services/storage/storage.service';
+import { StorageService } from 'src/app/core/services/storage/storage.service';
 const mockStorageService = {
   getItem: jasmine.createSpy('getItem').and.returnValue(Promise.resolve(null)),
   setItem: jasmine.createSpy('setItem').and.returnValue(Promise.resolve()),

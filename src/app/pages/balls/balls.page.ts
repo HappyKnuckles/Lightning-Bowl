@@ -25,22 +25,23 @@ import {
   IonRefresherContent,
   IonRefresher,
 } from '@ionic/angular/standalone';
-import { Ball } from 'src/app/models/ball.model';
+import { Ball } from 'src/app/core/models/ball.model';
 import { addIcons } from 'ionicons';
 import { globeOutline, camera, addOutline, filterOutline, openOutline, closeCircle } from 'ionicons/icons';
 import { InfiniteScrollCustomEvent, ModalController, RefresherCustomEvent, SearchbarCustomEvent } from '@ionic/angular';
-import { BallFilterComponent } from 'src/app/components/ball-filter/ball-filter.component';
-import { StorageService } from 'src/app/services/storage/storage.service';
-import { ToastService } from 'src/app/services/toast/toast.service';
-import { LoadingService } from 'src/app/services/loader/loading.service';
+import { StorageService } from 'src/app/core/services/storage/storage.service';
+import { ToastService } from 'src/app/core/services/toast/toast.service';
+import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import Fuse from 'fuse.js';
 import { Subject } from 'rxjs';
-import { BallListComponent } from 'src/app/components/ball-list/ball-list.component';
-import { HapticService } from 'src/app/services/haptic/haptic.service';
+import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { ImpactStyle } from '@capacitor/haptics';
-import { BallService } from 'src/app/services/ball/ball.service';
-import { BallFilterService } from 'src/app/services/ball-filter/ball-filter.service';
-import { BallFilterActiveComponent } from '../../components/ball-filter-active/ball-filter-active.component';
+import { BallService } from 'src/app/core/services/ball/ball.service';
+import { BallFilterService } from 'src/app/core/services/ball-filter/ball-filter.service';
+import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
+import { BallFilterActiveComponent } from 'src/app/shared/components/ball-filter-active/ball-filter-active.component';
+import { BallFilterComponent } from 'src/app/shared/components/ball-filter/ball-filter.component';
+import { BallListComponent } from 'src/app/shared/components/ball-list/ball-list.component';
 
 @Component({
   selector: 'app-balls',
@@ -171,6 +172,7 @@ export class BallsPage implements OnInit {
       await this.storageService.loadArsenal();
     } catch (error) {
       console.error(error);
+      this.toastService.showToast(ToastMessages.ballLoadError, 'bug', true);
     } finally {
       event.target.complete();
       this.loadingService.setLoading(false);
@@ -183,19 +185,29 @@ export class BallsPage implements OnInit {
   }
 
   async removeFromArsenal(ball: Ball): Promise<void> {
-    this.hapticService.vibrate(ImpactStyle.Light, 100);
-    await this.storageService.removeFromArsenal(ball);
-    this.toastService.showToast(`${ball.ball_name} removed from Arsenal.`, 'checkmark-outline');
-  }
-
-  isInArsenal(ball: Ball): boolean {
-    return this.storageService.arsenal().some((b) => b.ball_id === ball.ball_id && b.core_weight === ball.core_weight);
+    try {
+      this.hapticService.vibrate(ImpactStyle.Light, 100);
+      await this.storageService.removeFromArsenal(ball);
+      this.toastService.showToast(`${ball.ball_name} removed from Arsenal.`, 'checkmark-outline');
+    } catch (error) {
+      console.error(`Fehler beim Entfernen von ${ball.ball_name} aus dem Arsenal:`, error);
+      this.toastService.showToast(ToastMessages.ballDeleteError, 'bug', true);
+    }
   }
 
   async saveBallToArsenal(ball: Ball): Promise<void> {
-    this.hapticService.vibrate(ImpactStyle.Light, 100);
-    await this.storageService.saveBallToArsenal(ball);
-    this.toastService.showToast(`${ball.ball_name} added to Arsenal.`, 'add');
+    try {
+      this.hapticService.vibrate(ImpactStyle.Light, 100);
+      await this.storageService.saveBallToArsenal(ball);
+      this.toastService.showToast(`${ball.ball_name} added to Arsenal.`, 'add');
+    } catch (error) {
+      console.error(`Fehler beim Speichern von ${ball.ball_name} im Arsenal:`, error);
+      this.toastService.showToast(ToastMessages.ballSaveError, 'bug', true);
+    }
+  }
+
+  isInArsenal(ball: Ball): boolean {
+    return this.storageService.arsenal().some((b: Ball) => b.ball_id === ball.ball_id && b.core_weight === ball.core_weight);
   }
 
   async openFilterModal(): Promise<void> {
@@ -238,7 +250,7 @@ export class BallsPage implements OnInit {
       }
     } catch (error) {
       console.error('Error fetching balls:', error);
-      this.toastService.showToast(`Error loading balls: ${error}`, 'bug', true);
+      this.toastService.showToast(ToastMessages.ballLoadError, 'bug', true);
     } finally {
       if (!event) {
         this.loadingService.setLoading(false);
@@ -261,7 +273,7 @@ export class BallsPage implements OnInit {
       }
     } catch (error) {
       console.error('Error fetching core balls:', error);
-      this.toastService.showToast(`Error fetching balls for core ${ball.core_name}: ${error}`, 'bug', true);
+      this.toastService.showToast(`Error fetching balls for core ${ball.core_name}`, 'bug', true);
     } finally {
       this.loadingService.setLoading(false);
     }
@@ -279,7 +291,7 @@ export class BallsPage implements OnInit {
       }
     } catch (error) {
       console.error('Error fetching coverstock balls:', error);
-      this.toastService.showToast(`Error fetching balls for coverstock ${ball.coverstock_name}: ${error}`, 'bug', true);
+      this.toastService.showToast(`Error fetching balls for coverstock ${ball.coverstock_name}`, 'bug', true);
     } finally {
       this.loadingService.setLoading(false);
     }

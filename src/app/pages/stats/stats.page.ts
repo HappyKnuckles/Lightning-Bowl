@@ -29,27 +29,28 @@ import {
 } from '@ionic/angular/standalone';
 import { NgIf, NgFor, DecimalPipe, DatePipe } from '@angular/common';
 import { ImpactStyle } from '@capacitor/haptics';
-import { GameStatsService } from 'src/app/services/game-stats/game-stats.service';
-import { HapticService } from 'src/app/services/haptic/haptic.service';
-import { LoadingService } from 'src/app/services/loader/loading.service';
+import { GameStatsService } from 'src/app/core/services/game-stats/game-stats.service';
+import { HapticService } from 'src/app/core/services/haptic/haptic.service';
+import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import { FormsModule } from '@angular/forms';
 import { addIcons } from 'ionicons';
 import { calendarNumber, calendarNumberOutline, filterOutline, cloudUploadOutline, cloudDownloadOutline } from 'ionicons/icons';
-import { StatDisplayComponent } from 'src/app/components/stat-display/stat-display.component';
-import { SessionStats } from 'src/app/models/stats.model';
-import { SpareDisplayComponent } from '../../components/spare-display/spare-display.component';
-import { StorageService } from 'src/app/services/storage/storage.service';
+import { SessionStats } from 'src/app/core/models/stats.model';
+import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { AlertController, ModalController, RefresherCustomEvent, SegmentCustomEvent } from '@ionic/angular';
-import { SortUtilsService } from 'src/app/services/sort-utils/sort-utils.service';
-import { ChartGenerationService } from 'src/app/services/chart/chart-generation.service';
+import { SortUtilsService } from 'src/app/core/services/sort-utils/sort-utils.service';
+import { ChartGenerationService } from 'src/app/core/services/chart/chart-generation.service';
 import { overallStatDefinitions, seriesStatDefinitions, sessionStatDefinitions, throwStatDefinitions } from './stats.definitions';
-import { GameFilterService } from 'src/app/services/game-filter/game-filter.service';
-import { GameFilterComponent } from 'src/app/components/game-filter/game-filter.component';
-import { UtilsService } from 'src/app/services/utils/utils.service';
-import { GameFilterActiveComponent } from 'src/app/components/game-filter-active/game-filter-active.component';
-import { ToastService } from 'src/app/services/toast/toast.service';
-import { ExcelService } from 'src/app/services/excel/excel.service';
+import { GameFilterService } from 'src/app/core/services/game-filter/game-filter.service';
+import { UtilsService } from 'src/app/core/services/utils/utils.service';
+import { ToastService } from 'src/app/core/services/toast/toast.service';
+import { ExcelService } from 'src/app/core/services/excel/excel.service';
 import { Filesystem } from '@capacitor/filesystem';
+import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
+import { GameFilterActiveComponent } from 'src/app/shared/components/game-filter-active/game-filter-active.component';
+import { GameFilterComponent } from 'src/app/shared/components/game-filter/game-filter.component';
+import { SpareDisplayComponent } from 'src/app/shared/components/spare-display/spare-display.component';
+import { StatDisplayComponent } from 'src/app/shared/components/stat-display/stat-display.component';
 
 @Component({
   selector: 'app-stats',
@@ -178,6 +179,7 @@ export class StatsPage implements OnInit, AfterViewInit {
       this.generateCharts(true);
     } catch (error) {
       console.error(error);
+      this.toastService.showToast(ToastMessages.gameLoadError, 'bug', true);
     } finally {
       event.target.complete();
     }
@@ -197,9 +199,10 @@ export class StatsPage implements OnInit, AfterViewInit {
       const file = input.files[0];
       const gameData = await this.excelService.readExcelData(file);
       await this.excelService.transformData(gameData);
-      this.toastService.showToast('Uploaded Excel file successfully.', 'checkmark-outline');
+      this.toastService.showToast(ToastMessages.excelFileUploadSuccess, 'checkmark-outline');
     } catch (error) {
-      this.toastService.showToast(`Error: ${error}`, 'bug', true);
+      this.toastService.showToast(ToastMessages.excelFileUploadError, 'bug', true);
+      console.error(error);
     } finally {
       const input = event.target as HTMLInputElement;
       input.value = '';
@@ -215,11 +218,19 @@ export class StatsPage implements OnInit, AfterViewInit {
   }
 
   async exportToExcel(): Promise<void> {
-    const gotPermission = await this.excelService.exportToExcel();
-    if (!gotPermission) {
-      this.showPermissionDeniedAlert();
+    try {
+      const gotPermission = await this.excelService.exportToExcel();
+      if (gotPermission) {
+        this.toastService.showToast(ToastMessages.excelFileDownloadSuccess, 'checkmark-outline');
+      } else {
+        await this.showPermissionDeniedAlert();
+      }
+    } catch (error) {
+      this.toastService.showToast(ToastMessages.excelFileDownloadError, 'bug', true);
+      console.error('Error exporting to Excel:', error);
     }
   }
+
   private async showPermissionDeniedAlert(): Promise<void> {
     const alert = await this.alertController.create({
       header: 'Permission Denied',
@@ -257,36 +268,51 @@ export class StatsPage implements OnInit, AfterViewInit {
   }
 
   private generateScoreChart(isReload?: boolean): void {
-    if (!this.scoreChart) {
-      return;
-    }
+    try {
+      if (!this.scoreChart) {
+        return;
+      }
 
-    this.scoreChartInstance = this.chartService.generateScoreChart(
-      this.scoreChart,
-      this.sortUtilsService.sortGameHistoryByDate([...this.gameFilterService.filteredGames()], true),
-      this.scoreChartInstance!,
-      isReload,
-    );
+      this.scoreChartInstance = this.chartService.generateScoreChart(
+        this.scoreChart,
+        this.sortUtilsService.sortGameHistoryByDate([...this.gameFilterService.filteredGames()], true),
+        this.scoreChartInstance!,
+        isReload,
+      );
+    } catch (error) {
+      this.toastService.showToast(ToastMessages.chartGenerationError, 'bug', true);
+      console.error('Error generating score chart:', error);
+    }
   }
 
   private generatePinChart(isReload?: boolean): void {
-    if (!this.pinChart) {
-      return;
-    }
+    try {
+      if (!this.pinChart) {
+        return;
+      }
 
-    this.pinChartInstance = this.chartService.generatePinChart(this.pinChart, this.statsService.currentStats(), this.pinChartInstance!, isReload);
+      this.pinChartInstance = this.chartService.generatePinChart(this.pinChart, this.statsService.currentStats(), this.pinChartInstance!, isReload);
+    } catch (error) {
+      this.toastService.showToast(ToastMessages.chartGenerationError, 'bug', true);
+      console.error('Error generating pin chart:', error);
+    }
   }
 
   private generateThrowChart(isReload?: boolean): void {
-    if (!this.throwChart) {
-      return;
-    }
+    try {
+      if (!this.throwChart) {
+        return;
+      }
 
-    this.throwChartInstance = this.chartService.generateThrowChart(
-      this.throwChart,
-      this.statsService.currentStats(),
-      this.throwChartInstance!,
-      isReload,
-    );
+      this.throwChartInstance = this.chartService.generateThrowChart(
+        this.throwChart,
+        this.statsService.currentStats(),
+        this.throwChartInstance!,
+        isReload,
+      );
+    } catch (error) {
+      this.toastService.showToast(ToastMessages.chartGenerationError, 'bug', true);
+      console.error('Error generating throw chart:', error);
+    }
   }
 }

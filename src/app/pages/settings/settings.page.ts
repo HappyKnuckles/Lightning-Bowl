@@ -33,13 +33,14 @@ import {
   refreshCircleOutline,
 } from 'ionicons/icons';
 import { NgClass, NgFor } from '@angular/common';
-import { ToastService } from 'src/app/services/toast/toast.service';
-import { UserService } from 'src/app/services/user/user.service';
-import { ThemeChangerService } from 'src/app/services/theme-changer/theme-changer.service';
+import { ToastService } from 'src/app/core/services/toast/toast.service';
+import { UserService } from 'src/app/core/services/user/user.service';
+import { ThemeChangerService } from 'src/app/core/services/theme-changer/theme-changer.service';
 import { environment } from 'src/environments/environment';
 import emailjs from '@emailjs/browser';
-import { LoadingService } from 'src/app/services/loader/loading.service';
-import { LeagueSelectorComponent } from '../../components/league-selector/league-selector.component';
+import { LoadingService } from 'src/app/core/services/loader/loading.service';
+import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
+import { LeagueSelectorComponent } from 'src/app/shared/components/league-selector/league-selector.component';
 
 @Component({
   selector: 'app-settings',
@@ -130,11 +131,11 @@ export class SettingsPage implements OnInit {
         await emailjs.send(environment.emailServiceID, environment.emailTemplateID, templateParams, environment.emailUserID);
         this.userEmail = '';
         this.feedbackMessage = '';
-        this.toastService.showToast('Feedback sent successfully.', 'checkmark-outline');
+        this.toastService.showToast(ToastMessages.feedbackUploadSuccess, 'checkmark-outline');
         form.resetForm();
       } catch (error) {
         console.error('ERROR...', error);
-        this.toastService.showToast('Error sending feedback.', 'bug-outline', true);
+        this.toastService.showToast(ToastMessages.feedbackUploadError, 'bug-outline', true);
       } finally {
         this.loadingService.setLoading(false);
       }

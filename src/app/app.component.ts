@@ -1,16 +1,16 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { AlertController, IonApp, IonBackdrop, IonSpinner, IonRouterOutlet } from '@ionic/angular/standalone';
-import { ToastService } from './services/toast/toast.service';
-import { LoadingService } from './services/loader/loading.service';
-import { UserService } from './services/user/user.service';
 import { Subscription } from 'rxjs';
 import { NgIf } from '@angular/common';
-import { ToastComponent } from './components/toast/toast.component';
 import { SwUpdate } from '@angular/service-worker';
-import { ThemeChangerService } from './services/theme-changer/theme-changer.service';
 import { HttpClient } from '@angular/common/http';
 import { DomSanitizer } from '@angular/platform-browser';
 import { environment } from 'src/environments/environment';
+import { LoadingService } from './core/services/loader/loading.service';
+import { ToastService } from './core/services/toast/toast.service';
+import { UserService } from './core/services/user/user.service';
+import { ToastComponent } from './shared/components/toast/toast.component';
+import { ThemeChangerService } from './core/services/theme-changer/theme-changer.service';
 
 @Component({
   selector: 'app-root',

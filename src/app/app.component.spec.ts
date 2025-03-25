@@ -3,8 +3,8 @@ import { TestBed } from '@angular/core/testing';
 import { AppComponent } from './app.component';
 import { SwUpdate } from '@angular/service-worker';
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
-import { StorageService } from './services/storage/storage.service';
 import { Observable } from 'rxjs'; // Import `of` to create observables
+import { StorageService } from './core/services/storage/storage.service';
 
 const mockStorageService = {
   getItem: jasmine.createSpy('getItem').and.returnValue(Promise.resolve(null)),

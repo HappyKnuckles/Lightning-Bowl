@@ -23,26 +23,27 @@ import {
   IonCheckbox,
 } from '@ionic/angular/standalone';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
-import { Game } from 'src/app/models/game.model';
+import { Game } from 'src/app/core/models/game.model';
 import { addIcons } from 'ionicons';
 import { add, chevronDown, chevronUp, cameraOutline, documentTextOutline, medalOutline } from 'ionicons/icons';
 import { NgIf, NgFor } from '@angular/common';
 import { ImpactStyle } from '@capacitor/haptics';
-import { AdService } from 'src/app/services/ad/ad.service';
-import { HapticService } from 'src/app/services/haptic/haptic.service';
-import { ImageProcesserService } from 'src/app/services/image-processer/image-processer.service';
-import { LoadingService } from 'src/app/services/loader/loading.service';
-import { ToastService } from 'src/app/services/toast/toast.service';
-import { UserService } from 'src/app/services/user/user.service';
+import { AdService } from 'src/app/core/services/ad/ad.service';
+import { HapticService } from 'src/app/core/services/haptic/haptic.service';
+import { ImageProcesserService } from 'src/app/core/services/image-processer/image-processer.service';
+import { LoadingService } from 'src/app/core/services/loader/loading.service';
+import { ToastService } from 'src/app/core/services/toast/toast.service';
+import { UserService } from 'src/app/core/services/user/user.service';
 import { defineCustomElements } from '@teamhive/lottie-player/loader';
 import { Device } from '@capacitor/device';
-import { StorageService } from 'src/app/services/storage/storage.service';
-import { GameUtilsService } from 'src/app/services/game-utils/game-utils.service';
-import { LeagueSelectorComponent } from 'src/app/components/league-selector/league-selector.component';
-import { GameGridComponent } from 'src/app/components/game-grid/game-grid.component';
-import { GameScoreCalculatorService } from 'src/app/services/game-score-calculator/game-score-calculator.service';
-import { GameDataTransformerService } from 'src/app/services/game-transform/game-data-transform.service';
+import { StorageService } from 'src/app/core/services/storage/storage.service';
+import { GameUtilsService } from 'src/app/core/services/game-utils/game-utils.service';
+import { GameScoreCalculatorService } from 'src/app/core/services/game-score-calculator/game-score-calculator.service';
+import { GameDataTransformerService } from 'src/app/core/services/game-transform/game-data-transform.service';
 import { InputCustomEvent } from '@ionic/angular';
+import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
+import { GameGridComponent } from 'src/app/shared/components/game-grid/game-grid.component';
+import { LeagueSelectorComponent } from 'src/app/shared/components/league-selector/league-selector.component';
 
 const enum SeriesMode {
   Single = 'Single',
@@ -160,10 +161,11 @@ export class AddGamePage implements OnInit {
             const gameText = await this.imageProcessingService.performOCR(imageUrl);
             this.parseBowlingScores(gameText!);
           } else {
-            this.toastService.showToast('No image uploaded.', 'bug', true);
+            this.toastService.showToast(ToastMessages.noImage, 'bug', true);
           }
         } catch (error) {
-          this.toastService.showToast(`Error uploading image: ${error}`, 'bug', true);
+          this.toastService.showToast(ToastMessages.imageUploadError, 'bug', true);
+          console.error(error);
         } finally {
           this.loadingService.setLoading(false);
         }
@@ -204,19 +206,20 @@ export class AddGamePage implements OnInit {
     });
   }
 
-  confirm(): void {
+  async confirm(): Promise<void> {
     try {
       if (!this.isGameValid(this.gameData)) {
         this.hapticService.vibrate(ImpactStyle.Heavy, 300);
-        this.toastService.showToast('Invalid input.', 'bug', true);
+        this.toastService.showToast(ToastMessages.invalidInput, 'bug', true);
         return;
       } else {
-        this.storageService.saveGameToLocalStorage(this.gameData);
-        this.toastService.showToast('Game saved successfully.', 'add');
+        await this.storageService.saveGameToLocalStorage(this.gameData);
+        this.toastService.showToast(ToastMessages.gameSaveSuccess, 'add');
         this.modal.dismiss(null, 'confirm');
       }
     } catch (error) {
-      this.toastService.showToast(`Error saving game data to local storage: ${error}`, 'bug', true);
+      this.toastService.showToast(ToastMessages.gameSaveError, 'bug', true);
+      console.error(error);
     }
   }
 
@@ -238,7 +241,7 @@ export class AddGamePage implements OnInit {
         trackGrid.clearFrames(false);
       });
     }
-    this.toastService.showToast('Game reset successfully.', 'refresh-outline');
+    this.toastService.showToast(ToastMessages.gameResetSuccess, 'refresh-outline');
   }
 
   calculateScore(): void {
@@ -258,7 +261,7 @@ export class AddGamePage implements OnInit {
       const perfectGame = gameGridArray.some((grid: GameGridComponent) => grid.totalScore === 300);
 
       gameGridArray.forEach((grid: GameGridComponent) => {
-        setTimeout(() => grid.saveGameToLocalStorage(isSeries, this.seriesId), 5);
+        setTimeout(async () => await grid.saveGameToLocalStorage(isSeries, this.seriesId), 5);
       });
 
       if (perfectGame) {
@@ -267,10 +270,10 @@ export class AddGamePage implements OnInit {
       }
 
       this.hapticService.vibrate(ImpactStyle.Medium, 200);
-      this.toastService.showToast('Game saved successfully.', 'add');
+      this.toastService.showToast(ToastMessages.gameSaveSuccess, 'add');
     } catch (error) {
       console.error(error);
-      this.toastService.showToast(`Error saving game data to local storage: ${error}`, 'bug', true);
+      this.toastService.showToast(ToastMessages.gameSaveError, 'bug', true);
     }
   }
 
@@ -439,20 +442,28 @@ export class AddGamePage implements OnInit {
         this.isModalOpen = true;
       }
     } catch (error) {
-      this.toastService.showToast(`${error}`, 'bug', true);
+      this.toastService.showToast(ToastMessages.unexpectedError, 'bug', true);
+      console.error(error);
     }
   }
 
   private async openFileInput(): Promise<File | undefined> {
     return new Promise((resolve) => {
-      const fileInput = document.getElementById('upload') as HTMLInputElement;
-      fileInput.value = '';
+      try {
+        const fileInput = document.getElementById('upload') as HTMLInputElement;
+        fileInput.value = '';
 
-      fileInput.addEventListener('change', () => {
-        const selectedFile = fileInput.files?.[0];
-        resolve(selectedFile);
-      });
-      fileInput.click();
+        fileInput.addEventListener('change', () => {
+          const selectedFile = fileInput.files?.[0];
+          resolve(selectedFile);
+        });
+
+        fileInput.click();
+      } catch (error) {
+        console.error('Fehler beim Öffnen des Datei-Uploads:', error);
+        this.toastService.showToast(ToastMessages.unexpectedError, 'bug', true);
+        resolve(undefined);
+      }
     });
   }
 
