@@ -104,12 +104,12 @@ export class ExcelService {
       await workbook.xlsx.load(buffer);
       const worksheet = workbook.worksheets[0];
       const gameData: ExcelRow[] = [];
-      worksheet.eachRow((row, rowNumber) => {
+      worksheet.eachRow((row) => {
         const rowData: Record<string, any> = {};
         row.eachCell((cell, colNumber) => {
           rowData[worksheet.getRow(1).getCell(colNumber).value as string] = cell.value;
         });
-        if (rowNumber !== 1) gameData.push(rowData);
+        gameData.push(rowData);
       });
       return gameData;
     } catch (error) {
