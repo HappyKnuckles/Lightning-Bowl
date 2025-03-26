@@ -102,7 +102,7 @@ export class ExcelService {
       row.eachCell((cell, colNumber) => {
         rowData[worksheet.getRow(1).getCell(colNumber).value as string] = cell.value;
       });
-      if (rowNumber !== 1) gameData.push(rowData);
+      gameData.push(rowData);
     });
     return gameData;
   }
