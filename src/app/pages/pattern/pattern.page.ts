@@ -12,8 +12,21 @@ import {
   IonCardHeader,
   IonCardContent,
   IonChip,
+  IonInfiniteScroll,
+  IonInfiniteScrollContent,
+  IonRefresher,
+  IonSkeletonText,
+  IonSearchbar,
+  IonRefresherContent,
 } from '@ionic/angular/standalone';
 import { Pattern } from 'src/app/core/models/pattern.model';
+import { PatternService } from 'src/app/core/services/pattern/pattern.service';
+import { LoadingService } from 'src/app/core/services/loader/loading.service';
+import { ToastService } from 'src/app/core/services/toast/toast.service';
+import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
+import { InfiniteScrollCustomEvent, RefresherCustomEvent } from '@ionic/angular';
+import { ImpactStyle } from '@capacitor/haptics';
+import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 // npm install chartjs-chart-matrix
 // Chart.register(...registerables, MatrixController, MatrixElement);
 // const LanePlugin = {
@@ -53,6 +66,12 @@ import { Pattern } from 'src/app/core/models/pattern.model';
   styleUrls: ['./pattern.page.scss'],
   standalone: true,
   imports: [
+    IonRefresherContent,
+    IonSearchbar,
+    IonSkeletonText,
+    IonRefresher,
+    IonInfiniteScrollContent,
+    IonInfiniteScroll,
     IonChip,
     IonCardContent,
     IonCardHeader,
@@ -69,637 +88,78 @@ import { Pattern } from 'src/app/core/models/pattern.model';
 })
 export class PatternPage implements OnInit {
   patterns: Pattern[] = [];
+  currentPage = 1;
+  hasMoreData = true;
 
-  ngOnInit() {
-    this.patterns.push(
-      {
-        url: 'https://patternlibrary.kegel.net/pattern/0404b357-cf52-ec11-8c62-000d3a5afd36',
-        title: 'Kegel Kode 4137 (40 uL TR)',
-        category: 'Kode Series',
-        details: {
-          distance: "37'",
-          ratio: '9.55:1',
-          volume: '23.24',
-          forward: '15.8',
-          reverse: '7.44',
-          pump: '40µL',
-          tanks: 'KEGEL',
-        },
-        forwards_data: [
-          {
-            '#': '1',
-            start: '2L',
-            stop: '2R',
-            load: '3',
-            mics: '40',
-            speed: '10',
-            buf: '3',
-            tank: 'A - KEGEL',
-            total_oil: '4.440',
-            distance_start: '0.00',
-            distance_end: '2.80',
-          },
-          {
-            '#': '2',
-            start: '4L',
-            stop: '4R',
-            load: '1',
-            mics: '40',
-            speed: '14',
-            buf: '3',
-            tank: 'A - KEGEL',
-            total_oil: '1.320',
-            distance_start: '2.80',
-            distance_end: '4.76',
-          },
-          {
-            '#': '3',
-            start: '5L',
-            stop: '5R',
-            load: '1',
-            mics: '40',
-            speed: '14',
-            buf: '3',
-            tank: 'A - KEGEL',
-            total_oil: '1.240',
-            distance_start: '4.76',
-            distance_end: '6.72',
-          },
-          {
-            '#': '4',
-            start: '7L',
-            stop: '7R',
-            load: '2',
-            mics: '40',
-            speed: '14',
-            buf: '3',
-            tank: 'A - KEGEL',
-            total_oil: '2.160',
-            distance_start: '6.72',
-            distance_end: '10.64',
-          },
-          {
-            '#': '5',
-            start: '9L',
-            stop: '8R',
-            load: '2',
-            mics: '40',
-            speed: '14',
-            buf: '3',
-            tank: 'A - KEGEL',
-            total_oil: '1.920',
-            distance_start: '10.64',
-            distance_end: '14.56',
-          },
-          {
-            '#': '6',
-            start: '10L',
-            stop: '9R',
-            load: '2',
-            mics: '40',
-            speed: '14',
-            buf: '3',
-            tank: 'A - KEGEL',
-            total_oil: '1.760',
-            distance_start: '14.56',
-            distance_end: '18.48',
-          },
-          {
-            '#': '7',
-            start: '11L',
-            stop: '10R',
-            load: '2',
-            mics: '40',
-            speed: '18',
-            buf: '3',
-            tank: 'A - KEGEL',
-            total_oil: '1.600',
-            distance_start: '18.48',
-            distance_end: '23.52',
-          },
-          {
-            '#': '8',
-            start: '12L',
-            stop: '11R',
-            load: '1',
-            mics: '40',
-            speed: '18',
-            buf: '3',
-            tank: 'A - KEGEL',
-            total_oil: '720',
-            distance_start: '23.52',
-            distance_end: '26.04',
-          },
-          {
-            '#': '9',
-            start: '13L',
-            stop: '12R',
-            load: '1',
-            mics: '40',
-            speed: '18',
-            buf: '3',
-            tank: 'A - KEGEL',
-            total_oil: '640',
-            distance_start: '26.04',
-            distance_end: '28.56',
-          },
-          {
-            '#': '10',
-            start: '2L',
-            stop: '2R',
-            load: '0',
-            mics: '40',
-            speed: '22',
-            buf: '3',
-            tank: 'A - KEGEL',
-            total_oil: '0',
-            distance_start: '28.56',
-            distance_end: '37.00',
-          },
-        ],
-        backwards_data: [
-          {
-            '#': '1',
-            start: '2L',
-            stop: '2R',
-            load: '0',
-            mics: '40',
-            speed: '26',
-            buf: '3',
-            tank: 'A - KEGEL',
-            total_oil: '0',
-            distance_start: '37.00',
-            distance_end: '18.00',
-          },
-          {
-            '#': '2',
-            start: '10L',
-            stop: '9R',
-            load: '1',
-            mics: '40',
-            speed: '18',
-            buf: '3',
-            tank: 'A - KEGEL',
-            total_oil: '880',
-            distance_start: '18.00',
-            distance_end: '15.48',
-          },
-          {
-            '#': '3',
-            start: '8L',
-            stop: '8R',
-            load: '2',
-            mics: '40',
-            speed: '14',
-            buf: '3',
-            tank: 'A - KEGEL',
-            total_oil: '2.000',
-            distance_start: '15.48',
-            distance_end: '11.56',
-          },
-          {
-            '#': '4',
-            start: '7L',
-            stop: '7R',
-            load: '2',
-            mics: '40',
-            speed: '14',
-            buf: '3',
-            tank: 'A - KEGEL',
-            total_oil: '2.160',
-            distance_start: '11.56',
-            distance_end: '7.64',
-          },
-          {
-            '#': '5',
-            start: '6L',
-            stop: '6R',
-            load: '1',
-            mics: '40',
-            speed: '14',
-            buf: '3',
-            tank: 'A - KEGEL',
-            total_oil: '1.160',
-            distance_start: '7.64',
-            distance_end: '5.68',
-          },
-          {
-            '#': '6',
-            start: '5L',
-            stop: '5R',
-            load: '1',
-            mics: '40',
-            speed: '10',
-            buf: '3',
-            tank: 'A - KEGEL',
-            total_oil: '1.240',
-            distance_start: '5.68',
-            distance_end: '4.28',
-          },
-          {
-            '#': '7',
-            start: '2L',
-            stop: '2R',
-            load: '0',
-            mics: '40',
-            speed: '10',
-            buf: '3',
-            tank: 'A - KEGEL',
-            total_oil: '0',
-            distance_start: '4.28',
-            distance_end: '0.00',
-          },
-        ],
-      },
-      {
-        url: 'https://patternlibrary.kegel.net/pattern/b945a1e1-94b6-ec11-983f-0022480404ba',
-        title: '2021 SYC Super Slam Championship',
-        category: 'Storm Youth Championship',
-        details: {
-          distance: "40'",
-          ratio: '3.57:1',
-          volume: '26',
-          forward: '18.8',
-          reverse: '7.2',
-          pump: '50µL',
-          tanks: 'KEGEL & KEGEL',
-        },
-        forwards_data: [
-          {
-            '#': '1',
-            start: '2L',
-            stop: '2R',
-            load: '3',
-            mics: '50',
-            speed: '18',
-            buf: '3',
-            tank: 'A - KEGEL',
-            total_oil: '5.550',
-            distance_start: '0.00',
-            distance_end: '5.04',
-          },
-          {
-            '#': '2',
-            start: '4L',
-            stop: '4R',
-            load: '1',
-            mics: '50',
-            speed: '18',
-            buf: '3',
-            tank: 'B - KEGEL',
-            total_oil: '1.650',
-            distance_start: '5.04',
-            distance_end: '7.56',
-          },
-          {
-            '#': '3',
-            start: '6L',
-            stop: '6R',
-            load: '1',
-            mics: '50',
-            speed: '18',
-            buf: '3',
-            tank: 'A - KEGEL',
-            total_oil: '1.450',
-            distance_start: '7.56',
-            distance_end: '10.08',
-          },
-          {
-            '#': '4',
-            start: '7L',
-            stop: '7R',
-            load: '2',
-            mics: '50',
-            speed: '18',
-            buf: '3',
-            tank: 'B - KEGEL',
-            total_oil: '2.700',
-            distance_start: '10.08',
-            distance_end: '15.12',
-          },
-          {
-            '#': '5',
-            start: '8L',
-            stop: '8R',
-            load: '2',
-            mics: '50',
-            speed: '18',
-            buf: '3',
-            tank: 'A - KEGEL',
-            total_oil: '2.500',
-            distance_start: '15.12',
-            distance_end: '20.16',
-          },
-          {
-            '#': '6',
-            start: '10L',
-            stop: '10R',
-            load: '2',
-            mics: '50',
-            speed: '18',
-            buf: '3',
-            tank: 'B - KEGEL',
-            total_oil: '2.100',
-            distance_start: '20.16',
-            distance_end: '25.20',
-          },
-          {
-            '#': '7',
-            start: '11L',
-            stop: '11R',
-            load: '3',
-            mics: '50',
-            speed: '22',
-            buf: '3',
-            tank: 'A - KEGEL',
-            total_oil: '2.850',
-            distance_start: '25.20',
-            distance_end: '34.44',
-          },
-          {
-            '#': '8',
-            start: '2L',
-            stop: '2R',
-            load: '0',
-            mics: '50',
-            speed: '26',
-            buf: '3',
-            tank: 'B - KEGEL',
-            total_oil: '0',
-            distance_start: '34.44',
-            distance_end: '40.00',
-          },
-        ],
-        backwards_data: [
-          {
-            '#': '1',
-            start: '2L',
-            stop: '2R',
-            load: '0',
-            mics: '50',
-            speed: '30',
-            buf: '3',
-            tank: 'A - KEGEL',
-            total_oil: '0',
-            distance_start: '34.00',
-            distance_end: '26.00',
-          },
-          {
-            '#': '2',
-            start: '12L',
-            stop: '10R',
-            load: '1',
-            mics: '50',
-            speed: '22',
-            buf: '3',
-            tank: 'B - KEGEL',
-            total_oil: '950',
-            distance_start: '26.00',
-            distance_end: '22.92',
-          },
-          {
-            '#': '3',
-            start: '11L',
-            stop: '9R',
-            load: '2',
-            mics: '50',
-            speed: '18',
-            buf: '3',
-            tank: 'A - KEGEL',
-            total_oil: '2.100',
-            distance_start: '22.92',
-            distance_end: '17.88',
-          },
-          {
-            '#': '4',
-            start: '10L',
-            stop: '8R',
-            load: '2',
-            mics: '50',
-            speed: '18',
-            buf: '3',
-            tank: 'B - KEGEL',
-            total_oil: '2.300',
-            distance_start: '17.88',
-            distance_end: '12.84',
-          },
-          {
-            '#': '5',
-            start: '2L',
-            stop: '2R',
-            load: '1',
-            mics: '50',
-            speed: '14',
-            buf: '3',
-            tank: 'A - KEGEL',
-            total_oil: '1.850',
-            distance_start: '12.84',
-            distance_end: '10.88',
-          },
-          {
-            '#': '6',
-            start: '2L',
-            stop: '2R',
-            load: '0',
-            mics: '50',
-            speed: '14',
-            buf: '3',
-            tank: 'B - KEGEL',
-            total_oil: '0',
-            distance_start: '10.88',
-            distance_end: '0.00',
-          },
-        ],
-      },
-      {
-        url: 'https://patternlibrary.kegel.net/pattern/c34590f0-93b6-ec11-983f-0022480404ba',
-        title: '2016 IB Open',
-        category: 'Various Patterns',
-        details: {
-          distance: "46'",
-          ratio: '2.02:1',
-          volume: '30.25',
-          forward: '19.25',
-          reverse: '11',
-          pump: '50µL',
-          tanks: 'KEGEL',
-        },
-        forwards_data: [
-          {
-            '#': '1',
-            start: '2L',
-            stop: '2R',
-            load: '5',
-            mics: '50',
-            speed: '14',
-            buf: '3',
-            tank: 'A - KEGEL',
-            total_oil: '9.250',
-            distance_start: '0.00',
-            distance_end: '7.84',
-          },
-          {
-            '#': '2',
-            start: '5L',
-            stop: '5R',
-            load: '2',
-            mics: '50',
-            speed: '14',
-            buf: '3',
-            tank: 'A - KEGEL',
-            total_oil: '3.100',
-            distance_start: '7.84',
-            distance_end: '11.76',
-          },
-          {
-            '#': '3',
-            start: '8L',
-            stop: '8R',
-            load: '3',
-            mics: '50',
-            speed: '18',
-            buf: '3',
-            tank: 'A - KEGEL',
-            total_oil: '3.750',
-            distance_start: '11.76',
-            distance_end: '19.32',
-          },
-          {
-            '#': '4',
-            start: '14L',
-            stop: '14R',
-            load: '2',
-            mics: '50',
-            speed: '22',
-            buf: '3',
-            tank: 'A - KEGEL',
-            total_oil: '1.300',
-            distance_start: '19.32',
-            distance_end: '25.48',
-          },
-          {
-            '#': '5',
-            start: '2L',
-            stop: '2R',
-            load: '1',
-            mics: '50',
-            speed: '22',
-            buf: '3',
-            tank: 'A - KEGEL',
-            total_oil: '1.850',
-            distance_start: '25.48',
-            distance_end: '28.56',
-          },
-          {
-            '#': '6',
-            start: '2L',
-            stop: '2R',
-            load: '0',
-            mics: '50',
-            speed: '26',
-            buf: '3',
-            tank: 'A - KEGEL',
-            total_oil: '0',
-            distance_start: '28.56',
-            distance_end: '39.00',
-          },
-          {
-            '#': '7',
-            start: '2L',
-            stop: '2R',
-            load: '0',
-            mics: '50',
-            speed: '26',
-            buf: '3',
-            tank: 'A - KEGEL',
-            total_oil: '0',
-            distance_start: '39.00',
-            distance_end: '46.00',
-          },
-        ],
-        backwards_data: [
-          {
-            '#': '1',
-            start: '2L',
-            stop: '2R',
-            load: '0',
-            mics: '50',
-            speed: '26',
-            buf: '3',
-            tank: 'A - KEGEL',
-            total_oil: '0',
-            distance_start: '36.00',
-            distance_end: '32.00',
-          },
-          {
-            '#': '2',
-            start: '12L',
-            stop: '12R',
-            load: '2',
-            mics: '50',
-            speed: '22',
-            buf: '3',
-            tank: 'A - KEGEL',
-            total_oil: '1.700',
-            distance_start: '32.00',
-            distance_end: '25.84',
-          },
-          {
-            '#': '3',
-            start: '6L',
-            stop: '6R',
-            load: '3',
-            mics: '50',
-            speed: '22',
-            buf: '3',
-            tank: 'A - KEGEL',
-            total_oil: '4.350',
-            distance_start: '25.84',
-            distance_end: '16.60',
-          },
-          {
-            '#': '4',
-            start: '8L',
-            stop: '8R',
-            load: '1',
-            mics: '50',
-            speed: '22',
-            buf: '3',
-            tank: 'A - KEGEL',
-            total_oil: '1.250',
-            distance_start: '16.60',
-            distance_end: '13.52',
-          },
-          {
-            '#': '5',
-            start: '2L',
-            stop: '2R',
-            load: '2',
-            mics: '50',
-            speed: '14',
-            buf: '3',
-            tank: 'A - KEGEL',
-            total_oil: '3.700',
-            distance_start: '13.52',
-            distance_end: '9.60',
-          },
-          {
-            '#': '6',
-            start: '2L',
-            stop: '2R',
-            load: '0',
-            mics: '50',
-            speed: '14',
-            buf: '3',
-            tank: 'A - KEGEL',
-            total_oil: '0',
-            distance_start: '9.60',
-            distance_end: '0.00',
-          },
-        ],
-      },
-    );
+  constructor(
+    private patternService: PatternService,
+    private hapticService: HapticService,
+    public loadingService: LoadingService,
+    private toastService: ToastService,
+  ) {}
+  async ngOnInit() {
+    await this.loadPatterns();
   }
+
+  async handleRefresh(event: RefresherCustomEvent): Promise<void> {
+    try {
+      this.hapticService.vibrate(ImpactStyle.Medium, 200);
+      this.loadingService.setLoading(true);
+      this.currentPage = 1;
+      this.hasMoreData = true;
+      this.patterns = [];
+      await this.loadPatterns();
+    } catch (error) {
+      console.error(error);
+      this.toastService.showToast(ToastMessages.ballLoadError, 'bug', true);
+    } finally {
+      event.target.complete();
+      this.loadingService.setLoading(false);
+    }
+  }
+
+  async loadPatterns(event?: InfiniteScrollCustomEvent): Promise<void> {
+    try {
+      if (!event) {
+        this.loadingService.setLoading(true);
+      }
+      const response = await this.patternService.getPatterns(this.currentPage);
+      if (response.length > 0) {
+        this.patterns = [...this.patterns, ...response];
+        this.currentPage++;
+      } else {
+        this.hasMoreData = false;
+      }
+    } catch (error) {
+      console.error('Error fetching balls:', error);
+      this.toastService.showToast(ToastMessages.patternLoadError, 'bug', true);
+    } finally {
+      if (!event) {
+        this.loadingService.setLoading(false);
+      }
+      if (event) {
+        event.target.complete();
+      }
+    }
+  }
+
+  async searchPatterns(event: CustomEvent): Promise<void> {
+    try {
+      if (event.detail.value === '') {
+        this.hasMoreData = true;
+        await this.loadPatterns();
+      } else {
+        const response = await this.patternService.searchPattern(event.detail.value);
+        this.patterns = response;
+        this.hasMoreData = false;
+        this.currentPage = 1;
+      }
+    } catch (error) {
+      console.error('Error searching patterns:', error);
+      this.toastService.showToast(ToastMessages.patternLoadError, 'bug', true);
+    }
+  }
+
   getRatioValue(ratio: string): number {
     const numericPart = ratio.split(':')[0];
     return parseFloat(numericPart);

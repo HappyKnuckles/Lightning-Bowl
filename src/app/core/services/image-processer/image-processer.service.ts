@@ -10,7 +10,7 @@ export class ImageProcesserService {
 
     return new Promise((resolve, reject) => {
       reader.onloadend = async () => {
-        const base64Image = reader.result?.toString().split(',')[1]; // Remove the data URL prefix
+        const base64Image = reader.result?.toString().split(',')[1];
 
         if (!base64Image) {
           reject(new Error('Failed to convert image to base64.'));
@@ -18,7 +18,7 @@ export class ImageProcesserService {
         }
 
         try {
-          const response = await fetch(environment.endPoint, {
+          const response = await fetch(environment.ocrEndpoint, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

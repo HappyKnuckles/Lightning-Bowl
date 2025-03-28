@@ -2,15 +2,21 @@
   <ion-toolbar>
     <ion-title>Pattern Library</ion-title>
   </ion-toolbar>
+  <ion-toolbar>
+    <ion-searchbar (ionInput)="searchPatterns($event)" placeholder="Search for a pattern" showCancelButton="focus" debounce="300"></ion-searchbar>
+  </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  @for(pattern of patterns; track pattern.url) {
+  <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+  @if(!loadingService.isLoading()) { @for(pattern of patterns; track pattern.url) {
   <ion-card
     [ngClass]="{
-          'red-card': getRatioValue(pattern.details.ratio) >= 1 && getRatioValue(pattern.details.ratio) < 4,
-          'yellow-card': getRatioValue(pattern.details.ratio) >= 4 && getRatioValue(pattern.details.ratio) < 8,
-          'green-card': getRatioValue(pattern.details.ratio) >= 8
+          'red-card': getRatioValue(pattern.details.ratio ?? '0') >= 1 && getRatioValue(pattern.details.ratio ?? '0') < 4,
+          'yellow-card': getRatioValue(pattern.details.ratio ?? '0') >= 4 && getRatioValue(pattern.details.ratio ?? '0') < 8,
+          'green-card': getRatioValue(pattern.details.ratio ?? '0') >= 8
         }"
     button>
     <ion-card-header>
@@ -19,7 +25,7 @@
     </ion-card-header>
     <ion-card-content>
       <ion-chip>Distance: {{pattern.details.distance}}</ion-chip>
-      <ion-chip>Ratio: {{pattern.details.ratio}}</ion-chip>
+      <ion-chip>Ratio: {{pattern.details.ratio ?? 0}}</ion-chip>
       <ion-chip>Volume: {{pattern.details.volume}}mL</ion-chip>
       <ion-chip>Oil Forward: {{pattern.details.forward}}mL</ion-chip>
       <ion-chip>Oil Reverse: {{pattern.details.reverse}}mL</ion-chip>
@@ -28,4 +34,44 @@
     </ion-card-content>
   </ion-card>
   }
+  <ion-infinite-scroll threshold="100px" (ionInfinite)="loadPatterns($event)" *ngIf="hasMoreData">
+    <ion-infinite-scroll-content loadingSpinner="crescent" loadingText="Loading more patterns..."></ion-infinite-scroll-content>
+  </ion-infinite-scroll>
+  } @else { @for(item of [1,2,3,4,5,6,7,8]; track item) {
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>
+        <ion-skeleton-text [animated]="true" style="width: 80%; height: 20px; border-radius: 7px"></ion-skeleton-text>
+      </ion-card-title>
+      <ion-card-subtitle>
+        <ion-skeleton-text [animated]="true" style="width: 50%"></ion-skeleton-text>
+      </ion-card-subtitle>
+    </ion-card-header>
+    <ion-card-content>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px">
+        <div style="display: inline-flex">
+          <ion-skeleton-text [animated]="true" style="width: 90px; height: 24px; border-radius: 10px"></ion-skeleton-text>
+        </div>
+        <div style="display: inline-flex">
+          <ion-skeleton-text [animated]="true" style="width: 70px; height: 24px; border-radius: 10px"></ion-skeleton-text>
+        </div>
+        <div style="display: inline-flex">
+          <ion-skeleton-text [animated]="true" style="width: 85px; height: 24px; border-radius: 10px"></ion-skeleton-text>
+        </div>
+        <div style="display: inline-flex">
+          <ion-skeleton-text [animated]="true" style="width: 100px; height: 24px; border-radius: 10px"></ion-skeleton-text>
+        </div>
+        <div style="display: inline-flex">
+          <ion-skeleton-text [animated]="true" style="width: 95px; height: 24px; border-radius: 10px"></ion-skeleton-text>
+        </div>
+        <div style="display: inline-flex">
+          <ion-skeleton-text [animated]="true" style="width: 75px; height: 24px; border-radius: 10px"></ion-skeleton-text>
+        </div>
+        <div style="display: inline-flex">
+          <ion-skeleton-text [animated]="true" style="width: 80px; height: 24px; border-radius: 10px"></ion-skeleton-text>
+        </div>
+      </div>
+    </ion-card-content>
+  </ion-card>
+  } }
 </ion-content>

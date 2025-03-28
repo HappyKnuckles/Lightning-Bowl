@@ -1,11 +1,11 @@
 interface PatternDetails {
   distance: string;
-  ratio: string;
+  ratio?: string;
   volume: string;
   forward: string;
   reverse: string;
   pump: string;
-  tanks: string;
+  tanks?: string;
 }
 
 interface ForwardsData {

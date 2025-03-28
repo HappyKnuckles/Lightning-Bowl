@@ -22,6 +22,7 @@ export const ToastMessages = {
   leagueDeleteError: 'Error deleting league.',
   leagueEditSuccess: 'League edited successfully.',
   leagueEditError: 'Error editing league.',
+  patternLoadError: 'Error loading patterns.',
   invalidInput: 'Invalid input.',
   excelFileUploadSuccess: 'Uploaded Excel file successfully.',
   excelFileUploadError: 'Error uploading Excel file.',
