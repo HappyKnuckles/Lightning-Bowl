@@ -1,0 +1,31 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>Pattern Library</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  @for(pattern of patterns; track pattern.url) {
+  <ion-card
+    [ngClass]="{
+          'red-card': getRatioValue(pattern.details.ratio) >= 1 && getRatioValue(pattern.details.ratio) < 4,
+          'yellow-card': getRatioValue(pattern.details.ratio) >= 4 && getRatioValue(pattern.details.ratio) < 8,
+          'green-card': getRatioValue(pattern.details.ratio) >= 8
+        }"
+    button>
+    <ion-card-header>
+      <ion-card-title>{{pattern.title}}</ion-card-title>
+      <ion-card-subtitle>{{pattern.category}}</ion-card-subtitle>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-chip>Distance: {{pattern.details.distance}}</ion-chip>
+      <ion-chip>Ratio: {{pattern.details.ratio}}</ion-chip>
+      <ion-chip>Volume: {{pattern.details.volume}}mL</ion-chip>
+      <ion-chip>Oil Forward: {{pattern.details.forward}}mL</ion-chip>
+      <ion-chip>Oil Reverse: {{pattern.details.reverse}}mL</ion-chip>
+      <ion-chip>Pump: {{pattern.details.pump}}</ion-chip>
+      <ion-chip>Tanks: {{pattern.details.tanks}}</ion-chip>
+    </ion-card-content>
+  </ion-card>
+  }
+</ion-content>

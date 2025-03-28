@@ -9,8 +9,8 @@ import { IonicStorageModule } from '@ionic/storage-angular';
 import { AppComponent } from './app/app.component';
 import { provideServiceWorker } from '@angular/service-worker';
 import { inject } from '@vercel/analytics';
-import { routes } from './app/tabs/tabs.routes';
 import { injectSpeedInsights } from '@vercel/speed-insights';
+import { routes } from './app/app.routes';
 
 if (environment.production) {
   enableProdMode();
