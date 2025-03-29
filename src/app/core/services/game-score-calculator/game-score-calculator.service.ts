@@ -4,6 +4,12 @@ import { Injectable } from '@angular/core';
   providedIn: 'root',
 })
 export class GameScoreCalculatorService {
+  private seriesConfig: Record<number, number[]> = {
+    1: [1, 2, 3],
+    2: [4, 5, 6, 7],
+    3: [8, 9, 10, 11, 12],
+    4: [13, 14, 15, 16, 17, 18],
+  };
   calculateScore(frames: number[][]): { totalScore: number; frameScores: number[] } {
     const rolls: number[] = [];
     frames.forEach((frame) => {
@@ -136,30 +142,21 @@ export class GameScoreCalculatorService {
     return maxScore;
   }
 
+  getSeriesScore(index: number, scores: number[], defaultValue = 0): number {
+    const indices = this.seriesConfig[index];
+    if (!indices) {
+      return defaultValue;
+    }
+
+    return indices.reduce((sum: number, gameIndex: number) => sum + (scores[gameIndex] || 0), 0);
+  }
+
   getSeriesMaxScore(index: number, maxScores: number[]): number {
-    if (index === 1) {
-      return maxScores[1] + maxScores[2] + maxScores[3];
-    }
-    if (index === 2) {
-      return maxScores[4] + maxScores[5] + maxScores[6] + maxScores[7];
-    }
-    if (index === 3) {
-      return maxScores[8] + maxScores[9] + maxScores[10] + maxScores[11] + maxScores[12];
-    }
-    return 900;
+    return this.getSeriesScore(index, maxScores, 900);
   }
 
   getSeriesCurrentScore(index: number, totalScores: number[]): number {
-    if (index === 1) {
-      return totalScores[1] + totalScores[2] + totalScores[3];
-    }
-    if (index === 2) {
-      return totalScores[4] + totalScores[5] + totalScores[6] + totalScores[7];
-    }
-    if (index === 3) {
-      return totalScores[8] + totalScores[9] + totalScores[10] + totalScores[11] + totalScores[12];
-    }
-    return 0;
+    return this.getSeriesScore(index, totalScores, 0);
   }
 
   private isStrike(roll: number): boolean {

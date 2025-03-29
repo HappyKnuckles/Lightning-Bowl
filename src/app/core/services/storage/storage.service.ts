@@ -6,6 +6,8 @@ import { Ball } from 'src/app/core/models/ball.model';
 import { signal } from '@angular/core';
 import { LoadingService } from '../loader/loading.service';
 import { BallService } from '../ball/ball.service';
+import { Pattern } from '../../models/pattern.model';
+import { PatternService } from '../pattern/pattern.service';
 
 @Injectable({
   providedIn: 'root',
@@ -16,6 +18,7 @@ export class StorageService {
   #games = signal<Game[]>([]);
   #arsenal = signal<Ball[]>([]);
   #allBalls = signal<Ball[]>([]);
+  #allPatterns = signal<Partial<Pattern>[]>([]);
 
   get leagues() {
     return this.#leagues;
@@ -29,12 +32,16 @@ export class StorageService {
   get allBalls() {
     return this.#allBalls;
   }
+  get allPatterns() {
+    return this.#allPatterns;
+  }
 
   constructor(
     private storage: Storage,
     private sortUtilsService: SortUtilsService,
     private loadingService: LoadingService,
     private ballService: BallService,
+    private patternService: PatternService,
   ) {
     this.init();
   }
@@ -94,6 +101,15 @@ export class StorageService {
     } catch (error) {
       console.error('Failed to load all balls:', error);
       throw error;
+    }
+  }
+
+  async loadAllPatterns(): Promise<void> {
+    try {
+      const patterns = await this.patternService.getAllPatterns();
+      this.allPatterns.set(patterns);
+    } catch (error) {
+      console.error('Error fetching patterns:', error);
     }
   }
 
@@ -258,6 +274,7 @@ export class StorageService {
       await this.loadGameHistory();
       await this.loadArsenal();
       await this.loadAllBalls(undefined, weight);
+      await this.loadAllPatterns();
       await this.ballService.getBrands();
       await this.ballService.getCores();
       await this.ballService.getCoverstocks();

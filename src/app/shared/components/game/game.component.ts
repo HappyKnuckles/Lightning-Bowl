@@ -41,6 +41,7 @@ import {
   documentTextOutline,
   medalOutline,
   bowlingBallOutline,
+  gridOutline,
 } from 'ionicons/icons';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { Game } from 'src/app/core/models/game.model';
@@ -132,9 +133,10 @@ export class GameComponent implements OnChanges {
       trashOutline,
       createOutline,
       shareOutline,
+      bowlingBallOutline,
+      gridOutline,
       documentTextOutline,
       medalOutline,
-      bowlingBallOutline,
       cloudUploadOutline,
       cloudDownloadOutline,
       filterOutline,

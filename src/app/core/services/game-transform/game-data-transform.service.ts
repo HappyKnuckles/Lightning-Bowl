@@ -14,6 +14,7 @@ export class GameDataTransformerService {
     isSeries?: boolean,
     seriesId?: string,
     note?: string,
+    pattern?: string,
     balls?: string[],
   ): Game {
     try {
@@ -43,6 +44,7 @@ export class GameDataTransformerService {
         league: league,
         isClean: isClean,
         isPerfect: isPerfect,
+        pattern: pattern!,
         balls: balls,
       };
     } catch (error) {

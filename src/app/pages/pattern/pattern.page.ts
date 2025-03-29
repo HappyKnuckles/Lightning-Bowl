@@ -18,6 +18,7 @@ import {
   IonSkeletonText,
   IonSearchbar,
   IonRefresherContent,
+  IonText,
 } from '@ionic/angular/standalone';
 import { Pattern } from 'src/app/core/models/pattern.model';
 import { PatternService } from 'src/app/core/services/pattern/pattern.service';
@@ -66,6 +67,7 @@ import { HapticService } from 'src/app/core/services/haptic/haptic.service';
   styleUrls: ['./pattern.page.scss'],
   standalone: true,
   imports: [
+    IonText,
     IonRefresherContent,
     IonSearchbar,
     IonSkeletonText,

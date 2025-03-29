@@ -39,7 +39,7 @@ ion-row {
     --inner-border-width: 0;
   }
 
-  ion-item:not(.note, .league, .arsenal) {
+  ion-item:not(.note, .league, .arsenal, .pattern) {
     --padding-start: 0;
     --inner-padding-end: 0;
   }

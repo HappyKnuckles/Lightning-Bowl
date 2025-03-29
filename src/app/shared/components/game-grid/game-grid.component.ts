@@ -1,6 +1,6 @@
 import { Component, OnInit, EventEmitter, Output, QueryList, ViewChildren, ViewChild, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
-import { NgFor, NgIf } from '@angular/common';
+import { AsyncPipe, NgFor, NgIf } from '@angular/common';
 import { IonGrid, IonSelect, IonSelectOption, IonRow, IonCol, IonInput, IonItem, IonTextarea, IonCheckbox, IonList } from '@ionic/angular/standalone';
 import { FormsModule } from '@angular/forms';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
@@ -36,6 +36,7 @@ import { UtilsService } from 'src/app/core/services/utils/utils.service';
     NgIf,
     NgFor,
     LeagueSelectorComponent,
+    AsyncPipe,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
@@ -52,9 +53,10 @@ export class GameGridComponent implements OnInit {
   maxScore = 300;
   note = '';
   balls: string[] = [];
+  pattern!: string;
   selectedLeague = '';
   isPractice = true;
-  frames: number[][] = Array.from({ length: 10 }, () => []); // 10 frames
+  frames: number[][] = Array.from({ length: 10 }, () => []);
   frameScores: number[] = [];
 
   constructor(
@@ -67,7 +69,7 @@ export class GameGridComponent implements OnInit {
     private utilsService: UtilsService,
   ) {}
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     this.updateScores();
     this.maxScoreChanged.emit(this.maxScore);
     this.totalScoreChanged.emit(this.totalScore);
@@ -120,6 +122,8 @@ export class GameGridComponent implements OnInit {
       this.note = '';
       this.selectedLeague = '';
       this.leagueSelector.selectedLeague = '';
+      this.pattern = '';
+      this.isPractice = true;
       this.balls = [];
     }
 
@@ -154,6 +158,7 @@ export class GameGridComponent implements OnInit {
         isSeries,
         seriesId,
         this.note,
+        this.pattern,
         this.balls,
       );
 

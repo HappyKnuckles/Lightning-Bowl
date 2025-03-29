@@ -11,6 +11,7 @@ export interface Game {
   seriesId?: string;
   note?: string;
   league?: string;
+  pattern: string;
   balls?: string[];
 }
 

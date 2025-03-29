@@ -6,6 +6,7 @@ export interface GameFilter {
   isPerfect: boolean;
   leagues: string[];
   balls: string[];
+  patterns: string[];
   timeRange: TimeRange;
   startDate?: string;
   endDate?: string;

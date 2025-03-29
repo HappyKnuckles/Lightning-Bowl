@@ -330,6 +330,7 @@ export class AddGamePage implements OnInit {
         league: gameGrid.selectedLeague,
         note: gameGrid.note,
         balls: gameGrid.balls,
+        patterns: gameGrid.pattern,
         isPractice: gameGrid.isPractice,
       }));
 
@@ -338,7 +339,7 @@ export class AddGamePage implements OnInit {
       this.sheetOpen = false;
       this.updateSegments();
     });
-
+    // TODO add patterns
     actionSheet.onDidDismiss().then(() => {
       this.gameGrids.forEach((gameGrid: GameGridComponent, index: number) => {
         const data = gameData[index];
@@ -347,6 +348,7 @@ export class AddGamePage implements OnInit {
         gameGrid.note = data.note!;
         gameGrid.balls = data.balls!;
         gameGrid.isPractice = data.isPractice!;
+        gameGrid.pattern = data.pattern!;
         gameGrid.onLeagueChanged(data.league!);
         gameGrid.updateScores();
       });
@@ -433,7 +435,7 @@ export class AddGamePage implements OnInit {
   private parseBowlingScores(input: string): void {
     try {
       const { frames, frameScores, totalScore } = this.gameUtilsService.parseBowlingScores(input, this.username!);
-      this.gameData = this.transformGameService.transformGameData(frames, frameScores, totalScore, false, '', false, '', '', []);
+      this.gameData = this.transformGameService.transformGameData(frames, frameScores, totalScore, false, '', false, '', '', '', []);
       this.gameData.isPractice = true;
       if (this.gameData.frames.length === 10 && this.gameData.frameScores.length === 10 && this.gameData.totalScore <= 300) {
         this.isModalOpen = true;

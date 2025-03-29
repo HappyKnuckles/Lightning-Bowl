@@ -200,6 +200,16 @@
         <app-league-selector [isAddPage]="true" (leagueChanged)="onLeagueChange($event, true)" #leagueSelector></app-league-selector>
         <ion-item>
           <ion-select
+            [(ngModel)]="gameData.pattern"
+            name="pattern"
+            placeholder="None"
+            label="Pattern"
+            (ionChange)="gameData.pattern = $event.target.value">
+            <ion-select-option *ngFor="let pattern of storageService.allPatterns()" [value]="pattern.title"> {{ pattern.title }} </ion-select-option>
+          </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-select
             [(ngModel)]="gameData.balls"
             multiple="true"
             name="balls"

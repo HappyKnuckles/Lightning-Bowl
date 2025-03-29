@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, CUSTOM_ELEMENTS_SCHEMA, Input, OnInit } from '@angular/core';
+import { Component, computed, CUSTOM_ELEMENTS_SCHEMA, Input, OnInit } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ModalController } from '@ionic/angular';
 import {
@@ -62,6 +62,12 @@ export class GameFilterComponent implements OnInit {
   defaultFilters = this.gameFilterService.defaultFilters;
   highlightedDates: { date: string; textColor: string; backgroundColor: string }[] = [];
   leagues: string[] = [];
+  patterns = computed<string[]>(() => {
+    return this.storageService
+      .games()
+      .map((game) => game.pattern)
+      .filter((pattern, index, self) => pattern && self.indexOf(pattern) === index);
+  });
 
   constructor(
     private modalCtrl: ModalController,

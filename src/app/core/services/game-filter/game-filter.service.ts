@@ -16,6 +16,7 @@ export class GameFilterService {
     isPerfect: false,
     leagues: ['all'],
     balls: ['all'],
+    patterns: ['all'],
     timeRange: TimeRange.ALL,
     startDate: '',
     endDate: '',
@@ -78,6 +79,7 @@ export class GameFilterService {
         (!filters.isPerfect || game.isPerfect) &&
         (!filters.isClean || game.isClean) &&
         (filters.leagues.includes('all') || filters.leagues.length === 0 || filters.leagues.includes(game.league || '')) &&
+        (filters.patterns.includes('all') || filters.patterns.length === 0 || filters.patterns.includes(game.pattern)) &&
         (filters.balls.includes('all') || filters.balls.length === 0 || game.balls!.some((ball) => filters.balls.includes(ball)))
       );
     });

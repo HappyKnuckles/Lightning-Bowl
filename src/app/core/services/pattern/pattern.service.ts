@@ -20,6 +20,16 @@ export class PatternService {
     }
   }
 
+  async getAllPatterns(): Promise<any[]> {
+    try {
+      const response: any = await firstValueFrom(this.http.get(`${environment.patternEndpoint}patterns/all`));
+      return response;
+    } catch (error) {
+      console.error('Error fetching all patterns:', error);
+      return [];
+    }
+  }
+
   async getPatternCategories(): Promise<string[]> {
     try {
       const response = await firstValueFrom(this.http.get<string[]>(`${environment.patternEndpoint}categories`));
