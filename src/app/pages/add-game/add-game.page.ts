@@ -330,7 +330,7 @@ export class AddGamePage implements OnInit {
         league: gameGrid.selectedLeague,
         note: gameGrid.note,
         balls: gameGrid.balls,
-        patterns: gameGrid.pattern,
+        pattern: gameGrid.pattern,
         isPractice: gameGrid.isPractice,
       }));
 
@@ -339,7 +339,6 @@ export class AddGamePage implements OnInit {
       this.sheetOpen = false;
       this.updateSegments();
     });
-    // TODO add patterns
     actionSheet.onDidDismiss().then(() => {
       this.gameGrids.forEach((gameGrid: GameGridComponent, index: number) => {
         const data = gameData[index];

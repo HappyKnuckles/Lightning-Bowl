@@ -198,6 +198,7 @@
           </ion-select>
         </ion-item> -->
         <app-league-selector [isAddPage]="true" (leagueChanged)="onLeagueChange($event, true)" #leagueSelector></app-league-selector>
+        <!-- TODO make it typeahead-->
         <ion-item>
           <ion-select
             [(ngModel)]="gameData.pattern"

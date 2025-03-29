@@ -79,7 +79,7 @@
     </ion-item>
     <!-- TODO make this reset on save-->
     <app-league-selector [isAddPage]="true" (leagueChanged)="onLeagueChanged($event)" #leagueSelector></app-league-selector>
-    <!-- TODO add patterns-->
+    <!-- TODO make it typeahead-->
     <ion-item>
       <ion-select [(ngModel)]="pattern" name="pattern" placeholder="None" label="Pattern">
         <ion-select-option *ngFor="let pattern of storageService.allPatterns()" [value]="pattern.title">

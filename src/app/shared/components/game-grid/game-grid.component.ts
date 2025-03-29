@@ -53,7 +53,7 @@ export class GameGridComponent implements OnInit {
   maxScore = 300;
   note = '';
   balls: string[] = [];
-  pattern!: string;
+  pattern = '';
   selectedLeague = '';
   isPractice = true;
   frames: number[][] = Array.from({ length: 10 }, () => []);

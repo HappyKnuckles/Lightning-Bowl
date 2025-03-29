@@ -59,7 +59,6 @@
                     <ion-textarea type="text" readonly="true" [value]="game.note" [autoGrow]="true"></ion-textarea>
                   </ion-item>
                 }
-                <!-- TODO adjust to have patterns-->
                 <div *ngIf="!isEditMode[game.gameId]" class="grid-container" #scoreTemplate>
                   <ion-grid fixed="true" *ngFor="let frame of game.frames; let j = index">
                     <ion-row>
@@ -145,6 +144,7 @@
                     <ion-select-option *ngFor="let league of leagues()" [value]="league">{{ league }}</ion-select-option>
                   </ion-select>
                 </ion-item>
+                <!-- TODO make it typeahead-->
                 <ion-item class="pattern">
                   <ion-icon src="assets/svg/lane.svg" slot="start"></ion-icon>
                   <ion-select [(ngModel)]="game.pattern" name="pattern" placeholder="None" label="Pattern">
