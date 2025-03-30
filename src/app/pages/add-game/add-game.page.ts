@@ -44,6 +44,7 @@ import { InputCustomEvent } from '@ionic/angular';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { GameGridComponent } from 'src/app/shared/components/game-grid/game-grid.component';
 import { LeagueSelectorComponent } from 'src/app/shared/components/league-selector/league-selector.component';
+import { PatternTypeaheadComponent } from 'src/app/shared/components/pattern-typeahead/pattern-typeahead.component';
 
 const enum SeriesMode {
   Single = 'Single',
@@ -83,6 +84,7 @@ defineCustomElements(window);
     NgFor,
     GameGridComponent,
     LeagueSelectorComponent,
+    PatternTypeaheadComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
@@ -106,6 +108,7 @@ export class AddGamePage implements OnInit {
   @ViewChild('modalCheckbox') modalCheckbox!: IonCheckbox;
   selectedSegment = 'Game 1';
   segments: string[] = ['Game 1'];
+  presentingElement!: HTMLElement;
   private allowedDeviceIds = [
     '820fabe8-d29b-45c2-89b3-6bcc0e149f2b',
     '21330a3a-9cff-41ce-981a-00208c21d883',
@@ -136,6 +139,7 @@ export class AddGamePage implements OnInit {
     });
     this.deviceId = (await Device.getId()).identifier;
     this.leagues = await this.storageService.loadLeagues();
+    this.presentingElement = document.querySelector('.ion-page')!;
   }
 
   async handleImageUpload(): Promise<void> {

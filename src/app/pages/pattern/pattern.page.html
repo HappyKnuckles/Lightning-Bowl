@@ -29,7 +29,7 @@
         <ion-card-subtitle>{{pattern.category}}</ion-card-subtitle>
       </ion-card-header>
       <ion-card-content>
-        <ion-chip>Distance: {{pattern.details.distance}}</ion-chip>
+        <ion-chip>Distance: {{formatDistance(pattern.details.distance)}}</ion-chip>
         <ion-chip>Ratio: {{pattern.details.ratio ?? 0}}</ion-chip>
         <ion-chip>Volume: {{pattern.details.volume}}mL</ion-chip>
         <ion-chip>Oil Forward: {{pattern.details.forward}}mL</ion-chip>

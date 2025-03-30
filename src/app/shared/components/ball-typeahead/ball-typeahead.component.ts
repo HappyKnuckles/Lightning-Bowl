@@ -20,9 +20,9 @@ import { InfiniteScrollCustomEvent, SearchbarCustomEvent } from '@ionic/angular'
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 
 @Component({
-  selector: 'app-ball-combo-box',
-  templateUrl: './ball-combo-box.component.html',
-  styleUrls: ['./ball-combo-box.component.scss'],
+  selector: 'app-ball-typeahead',
+  templateUrl: './ball-typeahead.component.html',
+  styleUrls: ['./ball-typeahead.component.scss'],
   standalone: true,
   imports: [
     IonTitle,
@@ -47,7 +47,7 @@ import { StorageService } from 'src/app/core/services/storage/storage.service';
     IonList,
   ],
 })
-export class BallComboBoxComponent implements OnInit, OnDestroy {
+export class BallTypeaheadComponent implements OnInit, OnDestroy {
   @Input() balls: Ball[] = [];
   @Output() selectedBallsChange = new EventEmitter<Ball[]>();
   @ViewChild('infiniteScroll') infiniteScroll!: IonInfiniteScroll;

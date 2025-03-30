@@ -79,14 +79,18 @@
     </ion-item>
     <!-- TODO make this reset on save-->
     <app-league-selector [isAddPage]="true" (leagueChanged)="onLeagueChanged($event)" #leagueSelector></app-league-selector>
-    <!-- TODO make it typeahead-->
-    <ion-item>
-      <ion-select [(ngModel)]="pattern" name="pattern" placeholder="None" label="Pattern">
-        <ion-select-option *ngFor="let pattern of storageService.allPatterns()" [value]="pattern.title">
-          {{ pattern.title }}
-        </ion-select-option>
-      </ion-select>
+    <ion-item id="selectPattern" button>
+      <ion-label>Pattern</ion-label>
+      {{ pattern }}
     </ion-item>
+    <ion-modal [presentingElement]="presentingElement" trigger="selectPattern">
+      <ng-template>
+        <app-pattern-typeahead
+          [patterns]="storageService.allPatterns()"
+          [prevSelectedPattern]="pattern"
+          (selectedPatternsChange)="selectPattern($event)"></app-pattern-typeahead>
+      </ng-template>
+    </ion-modal>
     <ion-item>
       <ion-select [(ngModel)]="balls" multiple="true" name="balls" placeholder="None" label="Balls">
         <ion-select-option *ngFor="let ball of storageService.arsenal()" [value]="ball.ball_name">

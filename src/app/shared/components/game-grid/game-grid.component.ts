@@ -1,7 +1,19 @@
 import { Component, OnInit, EventEmitter, Output, QueryList, ViewChildren, ViewChild, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
-import { AsyncPipe, NgFor, NgIf } from '@angular/common';
-import { IonGrid, IonSelect, IonSelectOption, IonRow, IonCol, IonInput, IonItem, IonTextarea, IonCheckbox, IonList } from '@ionic/angular/standalone';
+import { NgFor, NgIf } from '@angular/common';
+import {
+  IonGrid,
+  IonModal,
+  IonSelect,
+  IonSelectOption,
+  IonRow,
+  IonCol,
+  IonInput,
+  IonItem,
+  IonTextarea,
+  IonCheckbox,
+  IonList,
+} from '@ionic/angular/standalone';
 import { FormsModule } from '@angular/forms';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { ImpactStyle } from '@capacitor/haptics';
@@ -13,6 +25,7 @@ import { GameDataTransformerService } from 'src/app/core/services/game-transform
 import { InputCustomEvent } from '@ionic/angular';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { UtilsService } from 'src/app/core/services/utils/utils.service';
+import { PatternTypeaheadComponent } from '../pattern-typeahead/pattern-typeahead.component';
 
 @Component({
   selector: 'app-game-grid',
@@ -36,7 +49,8 @@ import { UtilsService } from 'src/app/core/services/utils/utils.service';
     NgIf,
     NgFor,
     LeagueSelectorComponent,
-    AsyncPipe,
+    IonModal,
+    PatternTypeaheadComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
@@ -58,6 +72,7 @@ export class GameGridComponent implements OnInit {
   isPractice = true;
   frames: number[][] = Array.from({ length: 10 }, () => []);
   frameScores: number[] = [];
+  presentingElement?: HTMLElement;
 
   constructor(
     private gameScoreCalculatorService: GameScoreCalculatorService,
@@ -73,11 +88,16 @@ export class GameGridComponent implements OnInit {
     this.updateScores();
     this.maxScoreChanged.emit(this.maxScore);
     this.totalScoreChanged.emit(this.totalScore);
+    this.presentingElement = document.querySelector('.ion-page')!;
   }
 
   onLeagueChanged(league: string): void {
     this.selectedLeague = league;
     this.leagueChanged.emit(this.selectedLeague);
+  }
+
+  selectPattern(pattern: string): void {
+    this.pattern = pattern;
   }
 
   getFrameValue(frameIndex: number, inputIndex: number): string {

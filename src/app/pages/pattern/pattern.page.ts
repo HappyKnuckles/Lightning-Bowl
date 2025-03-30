@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -89,6 +89,7 @@ import { HapticService } from 'src/app/core/services/haptic/haptic.service';
   ],
 })
 export class PatternPage implements OnInit {
+  @ViewChild(IonContent, { static: false }) content!: IonContent;
   patterns: Pattern[] = [];
   currentPage = 1;
   hasMoreData = true;
@@ -156,10 +157,22 @@ export class PatternPage implements OnInit {
         this.hasMoreData = false;
         this.currentPage = 1;
       }
+      this.content.scrollToTop(300);
     } catch (error) {
       console.error('Error searching patterns:', error);
       this.toastService.showToast(ToastMessages.patternLoadError, 'bug', true);
     }
+  }
+
+  formatDistance(distance: string | number): string {
+    if (!distance) return '0';
+
+    const distStr = String(distance);
+    if (distStr.endsWith("'")) {
+      return distStr.slice(0, -1) + 'ft';
+    }
+
+    return distStr;
   }
 
   getRatioValue(ratio: string): number {

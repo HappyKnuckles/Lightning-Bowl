@@ -144,15 +144,19 @@
                     <ion-select-option *ngFor="let league of leagues()" [value]="league">{{ league }}</ion-select-option>
                   </ion-select>
                 </ion-item>
-                <!-- TODO make it typeahead-->
-                <ion-item class="pattern">
+                <ion-item class="pattern" button id="selectPattern">
                   <ion-icon src="assets/svg/lane.svg" slot="start"></ion-icon>
-                  <ion-select [(ngModel)]="game.pattern" name="pattern" placeholder="None" label="Pattern">
-                    <ion-select-option *ngFor="let pattern of storageService.allPatterns()" [value]="pattern.title">
-                      {{ pattern.title }}
-                    </ion-select-option>
-                  </ion-select>
+                  <ion-label>Pattern</ion-label>
+                  {{ game.pattern }}
                 </ion-item>
+                <ion-modal [presentingElement]="presentingElement" trigger="selectPattern">
+                  <ng-template>
+                    <app-pattern-typeahead
+                      [patterns]="storageService.allPatterns()"
+                      [prevSelectedPattern]="game.pattern"
+                      (selectedPatternsChange)="game.pattern = $event"></app-pattern-typeahead>
+                  </ng-template>
+                </ion-modal>
                 <ion-item class="arsenal">
                   <ion-icon name="bowling-ball-outline" slot="start"></ion-icon>
                   <ion-select [(ngModel)]="game.balls" multiple="true" name="balls" label="Balls">

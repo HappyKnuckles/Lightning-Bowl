@@ -1,5 +1,5 @@
 import { NgIf, NgFor, NgClass, DatePipe } from '@angular/common';
-import { Component, Input, Renderer2, ViewChild, OnChanges, SimpleChanges, computed } from '@angular/core';
+import { Component, Input, Renderer2, ViewChild, OnChanges, SimpleChanges, computed, OnInit } from '@angular/core';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { ImpactStyle } from '@capacitor/haptics';
@@ -28,6 +28,7 @@ import {
   IonItemDivider,
   IonLabel,
   IonBadge,
+  IonModal,
 } from '@ionic/angular/standalone';
 import { toPng } from 'html-to-image';
 import { addIcons } from 'ionicons';
@@ -51,6 +52,7 @@ import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { UtilsService } from 'src/app/core/services/utils/utils.service';
+import { PatternTypeaheadComponent } from '../pattern-typeahead/pattern-typeahead.component';
 
 @Component({
   selector: 'app-game',
@@ -58,6 +60,7 @@ import { UtilsService } from 'src/app/core/services/utils/utils.service';
   styleUrls: ['./game.component.scss'],
   providers: [DatePipe, ModalController],
   imports: [
+    IonModal,
     IonBadge,
     IonLabel,
     IonItemDivider,
@@ -92,10 +95,11 @@ import { UtilsService } from 'src/app/core/services/utils/utils.service';
     IonSelectOption,
     ReactiveFormsModule,
     FormsModule,
+    PatternTypeaheadComponent,
   ],
   standalone: true,
 })
-export class GameComponent implements OnChanges {
+export class GameComponent implements OnChanges, OnInit {
   @Input() games!: Game[];
   @Input() isLeaguePage?: boolean = false;
   @Input() gameCount?: number;
@@ -112,6 +116,8 @@ export class GameComponent implements OnChanges {
   });
   sortedGames: Game[] = [];
   showingGames: Game[] = [];
+  presentingElement?: HTMLElement;
+
   private batchSize = 100;
   public loadedCount = 0;
   isEditMode: Record<string, boolean> = {};
@@ -141,6 +147,10 @@ export class GameComponent implements OnChanges {
       cloudDownloadOutline,
       filterOutline,
     });
+  }
+
+  ngOnInit(): void {
+    this.presentingElement = document.querySelector('.ion-page')!;
   }
 
   ngOnChanges(changes: SimpleChanges): void {

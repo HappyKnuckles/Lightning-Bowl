@@ -1,17 +1,16 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-
-import { BallComboBoxComponent } from './ball-combo-box.component';
+import { BallTypeaheadComponent } from './ball-typeahead.component';
 
 describe('BallComboBoxComponent', () => {
-  let component: BallComboBoxComponent;
-  let fixture: ComponentFixture<BallComboBoxComponent>;
+  let component: BallTypeaheadComponent;
+  let fixture: ComponentFixture<BallTypeaheadComponent>;
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      imports: [BallComboBoxComponent],
+      imports: [BallTypeaheadComponent],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(BallComboBoxComponent);
+    fixture = TestBed.createComponent(BallTypeaheadComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   }));

@@ -138,6 +138,6 @@
 
 <ion-modal [presentingElement]="presentingElement" trigger="addBall">
   <ng-template>
-    <app-ball-combo-box [balls]="ballsWithoutArsenal()" (selectedBallsChange)="saveBallToArsenal($event)"> </app-ball-combo-box>
+    <app-ball-typeahead [balls]="ballsWithoutArsenal()" (selectedBallsChange)="saveBallToArsenal($event)"></app-ball-typeahead>
   </ng-template>
 </ion-modal>

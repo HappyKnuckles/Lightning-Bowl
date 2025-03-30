@@ -209,6 +209,17 @@
             <ion-select-option *ngFor="let pattern of storageService.allPatterns()" [value]="pattern.title"> {{ pattern.title }} </ion-select-option>
           </ion-select>
         </ion-item>
+        <!-- TODO currently does not open modal-->
+        <!-- <ion-item class="pattern" button id="selectPattern">
+          <ion-label>Pattern</ion-label>
+          {{gameData.pattern}}
+        </ion-item>
+        <ion-modal [presentingElement]="presentingElement" trigger="selectPattern">
+          <ng-template>
+            <app-pattern-typeahead [patterns]="storageService.allPatterns()" [prevSelectedPattern]="gameData.pattern"
+              (selectedPatternsChange)="gameData.pattern = $event"></app-pattern-typeahead>
+          </ng-template>
+        </ion-modal> -->
         <ion-item>
           <ion-select
             [(ngModel)]="gameData.balls"

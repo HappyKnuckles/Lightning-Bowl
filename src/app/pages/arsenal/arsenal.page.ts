@@ -38,9 +38,9 @@ import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import { ImpactStyle } from '@capacitor/haptics';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { BallService } from 'src/app/core/services/ball/ball.service';
-import { BallComboBoxComponent } from 'src/app/shared/components/ball-combo-box/ball-combo-box.component';
 import { BallListComponent } from 'src/app/shared/components/ball-list/ball-list.component';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
+import { BallTypeaheadComponent } from 'src/app/shared/components/ball-typeahead/ball-typeahead.component';
 
 @Component({
   selector: 'app-arsenal',
@@ -76,8 +76,8 @@ import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
     IonToolbar,
     CommonModule,
     FormsModule,
-    BallComboBoxComponent,
     BallListComponent,
+    BallTypeaheadComponent,
   ],
 })
 export class ArsenalPage implements OnInit {
