@@ -20,7 +20,7 @@ import { InfiniteScrollCustomEvent } from '@ionic/angular';
   standalone: true,
   imports: [IonRadioGroup, IonRadio, IonItem, IonInfiniteScrollContent, IonInfiniteScroll, IonContent, IonToolbar, IonSearchbar, IonTitle, IonHeader],
   templateUrl: './pattern-typeahead.component.html',
-  styleUrl: './pattern-typeahead.component.css',
+  styleUrl: './pattern-typeahead.component.scss',
 })
 export class PatternTypeaheadComponent implements OnInit, OnDestroy {
   patterns = input<Partial<Pattern>[]>([]);
@@ -38,16 +38,31 @@ export class PatternTypeaheadComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.filteredPatterns.set([...this.patterns()]);
+    this.selectedPattern = this.prevSelectedPattern() || '';
+
+    // If there's a previously selected pattern, put it at the top
+    if (this.selectedPattern) {
+      this.reorderPatterns(this.selectedPattern);
+    }
+
     this.loadedCount.set(Math.min(this.batchSize, this.filteredPatterns().length));
   }
 
   async searchPatterns(event: CustomEvent) {
-    if (event.detail.value === '') {
+    const searchTerm = event.detail.value;
+
+    if (searchTerm === '') {
       this.filteredPatterns.set([...this.patterns()]);
     } else {
-      const patterns = await this.patternService.searchPattern(event.detail.value);
+      const patterns = await this.patternService.searchPattern(searchTerm);
       this.filteredPatterns.set(patterns);
     }
+
+    // If there's a selected pattern and it's in the filtered results, move it to the top
+    if (this.selectedPattern && this.filteredPatterns().some((p) => p.title === this.selectedPattern)) {
+      this.reorderPatterns(this.selectedPattern);
+    }
+
     this.loadedCount.set(Math.min(this.batchSize, this.filteredPatterns().length));
 
     if (this.infiniteScroll) {
@@ -71,6 +86,18 @@ export class PatternTypeaheadComponent implements OnInit, OnDestroy {
 
   radioGroupChange(event: CustomEvent): void {
     this.selectedPattern = event.detail.value;
+    this.reorderPatterns(this.selectedPattern);
+  }
+
+  private reorderPatterns(selectedPatternTitle: string): void {
+    if (!selectedPatternTitle) return;
+
+    // Create a new array with the selected pattern first, followed by all other patterns
+    const selectedPattern = this.filteredPatterns().find((p) => p.title === selectedPatternTitle);
+    if (selectedPattern) {
+      const otherPatterns = this.filteredPatterns().filter((p) => p.title !== selectedPatternTitle);
+      this.filteredPatterns.set([selectedPattern, ...otherPatterns]);
+    }
   }
 
   ngOnDestroy(): void {

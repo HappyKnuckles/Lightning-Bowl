@@ -144,12 +144,12 @@
                     <ion-select-option *ngFor="let league of leagues()" [value]="league">{{ league }}</ion-select-option>
                   </ion-select>
                 </ion-item>
-                <ion-item class="pattern" button id="selectPattern">
+                <ion-item class="pattern" button id="selectPatternHistory">
                   <ion-icon src="assets/svg/lane.svg" slot="start"></ion-icon>
                   <ion-label>Pattern</ion-label>
                   {{ game.pattern }}
                 </ion-item>
-                <ion-modal [presentingElement]="presentingElement" trigger="selectPattern">
+                <ion-modal [presentingElement]="presentingElement" trigger="selectPatternHistory">
                   <ng-template>
                     <app-pattern-typeahead
                       [patterns]="storageService.allPatterns()"

@@ -79,11 +79,11 @@
     </ion-item>
     <!-- TODO make this reset on save-->
     <app-league-selector [isAddPage]="true" (leagueChanged)="onLeagueChanged($event)" #leagueSelector></app-league-selector>
-    <ion-item id="selectPattern" button>
+    <ion-item id="selectPatternAdd" button>
       <ion-label>Pattern</ion-label>
       {{ pattern }}
     </ion-item>
-    <ion-modal [presentingElement]="presentingElement" trigger="selectPattern">
+    <ion-modal [presentingElement]="presentingElement" trigger="selectPatternAdd">
       <ng-template>
         <app-pattern-typeahead
           [patterns]="storageService.allPatterns()"
