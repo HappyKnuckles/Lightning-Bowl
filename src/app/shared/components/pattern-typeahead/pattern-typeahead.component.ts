@@ -1,4 +1,4 @@
-import { Component, effect, EventEmitter, input, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
+import { Component, computed, EventEmitter, input, OnDestroy, OnInit, Output, ViewChild, signal } from '@angular/core';
 import { Pattern } from 'src/app/core/models/pattern.model';
 import { PatternService } from 'src/app/core/services/pattern/pattern.service';
 import {
@@ -28,53 +28,42 @@ export class PatternTypeaheadComponent implements OnInit, OnDestroy {
   @Output() selectedPatternsChange = new EventEmitter<string>();
   @ViewChild(IonContent, { static: false }) content!: IonContent;
   @ViewChild('infiniteScroll') infiniteScroll!: IonInfiniteScroll;
-
-  filteredPatterns: Partial<Pattern>[] = [];
-  displayedPatterns: Partial<Pattern>[] = [];
+  filteredPatterns = signal<Partial<Pattern>[]>([]);
   selectedPattern = '';
+  displayedPatterns = computed(() => this.filteredPatterns().slice(0, this.loadedCount()));
   private batchSize = 100;
-  public loadedCount = 0;
+  public loadedCount = signal(0);
 
-  constructor(private patternService: PatternService) {
-    effect(() => {
-      this.patterns();
-      this.filteredPatterns = [...this.patterns()];
-      this.displayedPatterns = this.filteredPatterns.slice(0, this.batchSize);
-      this.loadedCount = this.displayedPatterns.length;
-    });
-  }
+  constructor(private patternService: PatternService) {}
 
   ngOnInit() {
-    this.filteredPatterns = [...this.patterns()];
-    this.displayedPatterns = this.filteredPatterns.slice(0, this.batchSize);
-    this.loadedCount = this.displayedPatterns.length;
+    this.filteredPatterns.set([...this.patterns()]);
+    this.loadedCount.set(Math.min(this.batchSize, this.filteredPatterns().length));
   }
 
   async searchPatterns(event: CustomEvent) {
     if (event.detail.value === '') {
-      this.filteredPatterns = [...this.patterns()];
-      this.displayedPatterns = this.filteredPatterns.slice(0, this.batchSize);
-      this.loadedCount = this.displayedPatterns.length;
-      return;
+      this.filteredPatterns.set([...this.patterns()]);
     } else {
       const patterns = await this.patternService.searchPattern(event.detail.value);
-      this.filteredPatterns = patterns;
-      this.loadedCount = this.batchSize;
-      this.displayedPatterns = this.filteredPatterns.slice(0, this.batchSize);
+      this.filteredPatterns.set(patterns);
     }
-    this.infiniteScroll.disabled = this.loadedCount >= this.filteredPatterns.length;
+    this.loadedCount.set(Math.min(this.batchSize, this.filteredPatterns().length));
+
+    if (this.infiniteScroll) {
+      this.infiniteScroll.disabled = this.loadedCount() >= this.filteredPatterns().length;
+    }
     this.content.scrollToTop(300);
   }
 
   loadData(event: InfiniteScrollCustomEvent): void {
     setTimeout(() => {
-      if (this.loadedCount < this.filteredPatterns.length) {
-        this.displayedPatterns = this.filteredPatterns.slice(0, this.loadedCount + this.batchSize);
-        this.loadedCount += this.batchSize;
+      if (this.loadedCount() < this.filteredPatterns().length) {
+        this.loadedCount.update((count) => Math.min(count + this.batchSize, this.filteredPatterns().length));
       }
       event.target.complete();
 
-      if (this.loadedCount >= this.filteredPatterns.length) {
+      if (this.loadedCount() >= this.filteredPatterns().length) {
         event.target.disabled = true;
       }
     }, 50);
