@@ -10,6 +10,7 @@ interface PatternDetails {
 
 interface ForwardsData {
   '#': string;
+  // start is the starting board 1L first left board, 1R first right board, 39 total boards; x axis
   start: string;
   stop: string;
   load: string;
@@ -18,6 +19,7 @@ interface ForwardsData {
   buf: string;
   tank: string;
   total_oil: string;
+  // this is the y-axis, start from foul line and end 60ft total
   distance_start: string;
   distance_end: string;
 }
