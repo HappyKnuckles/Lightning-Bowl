@@ -107,7 +107,7 @@ export class StorageService {
   async loadAllPatterns(): Promise<void> {
     try {
       const response = await this.patternService.getAllPatterns();
-      const patterns = response.patterns;
+      const patterns = response;
       this.allPatterns.set(patterns);
     } catch (error) {
       console.error('Error fetching patterns:', error);

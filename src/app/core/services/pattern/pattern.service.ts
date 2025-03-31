@@ -35,13 +35,13 @@ export class PatternService {
     }
   }
 
-  async getAllPatterns(): Promise<AllPatternsResult> {
+  async getAllPatterns(): Promise<Pattern[]> {
     try {
-      const response = await firstValueFrom(this.http.get<AllPatternsResult>(`${environment.patternEndpoint}patterns/all`));
+      const response = await firstValueFrom(this.http.get<Pattern[]>(`${environment.patternEndpoint}patterns/all`));
       return response;
     } catch (error) {
       console.error('Error fetching all patterns:', error);
-      return { total: 0, patterns: [] };
+      return [];
     }
   }
 
