@@ -8,7 +8,7 @@
 </ion-header>
 <ion-content [fullscreen]="true" role="feed">
   @if (!loadingService.isLoading()) {
-    <ng-container *ngIf="patterns.length <= 0 && !loadingService.isLoading(); else allPatterns">
+    <ng-container *ngIf="displayedPatterns().length <= 0 && !loadingService.isLoading(); else allPatterns">
       <ion-text class="no-game-text"> No patterns found! </ion-text>
     </ng-container>
     <ng-template #allPatterns>
