@@ -4,29 +4,44 @@ import { Pattern } from '../../models/pattern.model';
 import { firstValueFrom } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
+interface SearchResult {
+  results: Pattern[];
+  count: number;
+  query: string;
+  numeric_query: boolean;
+  threshold: number;
+}
+
+interface AllPatternsResult {
+  total: number;
+  patterns: Pattern[];
+  page?: number;
+  per_page?: number;
+}
+
 @Injectable({
   providedIn: 'root',
 })
 export class PatternService {
   constructor(private http: HttpClient) {}
 
-  async getPatterns(page: number): Promise<Pattern[]> {
+  async getPatterns(page: number): Promise<AllPatternsResult> {
     try {
-      const response: any = await firstValueFrom(this.http.get(`${environment.patternEndpoint}patterns?page=${page}`));
-      return response.patterns;
+      const response = await firstValueFrom(this.http.get<AllPatternsResult>(`${environment.patternEndpoint}patterns?page=${page}`));
+      return response;
     } catch (error) {
       console.error('Error fetching patterns:', error);
-      return [];
+      return { total: 0, patterns: [] };
     }
   }
 
-  async getAllPatterns(): Promise<any[]> {
+  async getAllPatterns(): Promise<AllPatternsResult> {
     try {
-      const response: any = await firstValueFrom(this.http.get(`${environment.patternEndpoint}patterns/all`));
+      const response = await firstValueFrom(this.http.get<AllPatternsResult>(`${environment.patternEndpoint}patterns/all`));
       return response;
     } catch (error) {
       console.error('Error fetching all patterns:', error);
-      return [];
+      return { total: 0, patterns: [] };
     }
   }
 
@@ -60,13 +75,13 @@ export class PatternService {
     }
   }
 
-  async searchPattern(searchTerm: string): Promise<Pattern[]> {
+  async searchPattern(searchTerm: string): Promise<SearchResult> {
     try {
-      const response = await firstValueFrom(this.http.get<Pattern[]>(`${environment.patternEndpoint}search?q=${searchTerm}`));
+      const response = await firstValueFrom(this.http.get<SearchResult>(`${environment.patternEndpoint}search?q=${searchTerm}`));
       return response;
     } catch (error) {
       console.error('Error searching patterns:', error);
-      return [];
+      return { results: [], count: 0, query: '', numeric_query: false, threshold: 0 };
     }
   }
 }

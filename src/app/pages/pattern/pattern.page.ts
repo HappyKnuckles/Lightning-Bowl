@@ -127,8 +127,9 @@ export class PatternPage implements OnInit {
         this.loadingService.setLoading(true);
       }
       const response = await this.patternService.getPatterns(this.currentPage);
-      if (response.length > 0) {
-        this.patterns = [...this.patterns, ...response];
+      const patterns = response.patterns;
+      if (response.total > 0) {
+        this.patterns = [...this.patterns, ...patterns];
         this.currentPage++;
       } else {
         this.hasMoreData = false;
@@ -148,12 +149,13 @@ export class PatternPage implements OnInit {
 
   async searchPatterns(event: CustomEvent): Promise<void> {
     try {
+      this.loadingService.setLoading(true);
       if (event.detail.value === '') {
         this.hasMoreData = true;
         await this.loadPatterns();
       } else {
         const response = await this.patternService.searchPattern(event.detail.value);
-        this.patterns = response;
+        this.patterns = response.results;
         this.hasMoreData = false;
         this.currentPage = 1;
       }
@@ -161,6 +163,8 @@ export class PatternPage implements OnInit {
     } catch (error) {
       console.error('Error searching patterns:', error);
       this.toastService.showToast(ToastMessages.patternLoadError, 'bug', true);
+    } finally {
+      this.loadingService.setLoading(false);
     }
   }
 

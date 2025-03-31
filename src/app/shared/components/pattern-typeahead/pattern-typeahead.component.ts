@@ -11,14 +11,15 @@ import {
   IonInfiniteScrollContent,
   IonItem,
   IonRadio,
-  IonRadioGroup,
-} from '@ionic/angular/standalone';
+  IonRadioGroup, IonText, IonSkeletonText } from '@ionic/angular/standalone';
 import { InfiniteScrollCustomEvent } from '@ionic/angular';
+import { LoadingService } from 'src/app/core/services/loader/loading.service';
+import { NgIf } from '@angular/common';
 
 @Component({
   selector: 'app-pattern-typeahead',
   standalone: true,
-  imports: [IonRadioGroup, IonRadio, IonItem, IonInfiniteScrollContent, IonInfiniteScroll, IonContent, IonToolbar, IonSearchbar, IonTitle, IonHeader],
+  imports: [NgIf, IonSkeletonText, IonText, IonRadioGroup, IonRadio, IonItem, IonInfiniteScrollContent, IonInfiniteScroll, IonContent, IonToolbar, IonSearchbar, IonTitle, IonHeader],
   templateUrl: './pattern-typeahead.component.html',
   styleUrl: './pattern-typeahead.component.scss',
 })
@@ -34,7 +35,7 @@ export class PatternTypeaheadComponent implements OnInit, OnDestroy {
   private batchSize = 100;
   public loadedCount = signal(0);
 
-  constructor(private patternService: PatternService) {}
+  constructor(private patternService: PatternService, public loadingService: LoadingService) {}
 
   ngOnInit() {
     this.filteredPatterns.set([...this.patterns()]);
@@ -51,24 +52,31 @@ export class PatternTypeaheadComponent implements OnInit, OnDestroy {
   async searchPatterns(event: CustomEvent) {
     const searchTerm = event.detail.value;
 
-    if (searchTerm === '') {
-      this.filteredPatterns.set([...this.patterns()]);
-    } else {
-      const patterns = await this.patternService.searchPattern(searchTerm);
-      this.filteredPatterns.set(patterns);
-    }
+    try {
+      this.loadingService.setLoading(true)
+      if (searchTerm === '') {
+        this.filteredPatterns.set([...this.patterns()]);
+      } else {
+        const response = await this.patternService.searchPattern(searchTerm);
+        const patterns = response.results;
+        this.filteredPatterns.set(patterns);
+      }
 
-    // If there's a selected pattern and it's in the filtered results, move it to the top
-    if (this.selectedPattern && this.filteredPatterns().some((p) => p.title === this.selectedPattern)) {
-      this.reorderPatterns(this.selectedPattern);
-    }
+      if (this.selectedPattern && this.filteredPatterns().some((p) => p.title === this.selectedPattern)) {
+        this.reorderPatterns(this.selectedPattern);
+      }
 
-    this.loadedCount.set(Math.min(this.batchSize, this.filteredPatterns().length));
+      this.loadedCount.set(Math.min(this.batchSize, this.filteredPatterns().length));
 
-    if (this.infiniteScroll) {
-      this.infiniteScroll.disabled = this.loadedCount() >= this.filteredPatterns().length;
+      if (this.infiniteScroll) {
+        this.infiniteScroll.disabled = this.loadedCount() >= this.filteredPatterns().length;
+      }
+      this.content.scrollToTop(300);
+    } catch (error) {
+      console.error('Error searching patterns:', error);
+    } finally {
+      this.loadingService.setLoading(false)
     }
-    this.content.scrollToTop(300);
   }
 
   loadData(event: InfiniteScrollCustomEvent): void {
@@ -92,7 +100,6 @@ export class PatternTypeaheadComponent implements OnInit, OnDestroy {
   private reorderPatterns(selectedPatternTitle: string): void {
     if (!selectedPatternTitle) return;
 
-    // Create a new array with the selected pattern first, followed by all other patterns
     const selectedPattern = this.filteredPatterns().find((p) => p.title === selectedPatternTitle);
     if (selectedPattern) {
       const otherPatterns = this.filteredPatterns().filter((p) => p.title !== selectedPatternTitle);
