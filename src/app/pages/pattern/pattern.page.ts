@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -28,39 +28,8 @@ import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { InfiniteScrollCustomEvent, RefresherCustomEvent } from '@ionic/angular';
 import { ImpactStyle } from '@capacitor/haptics';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
-// npm install chartjs-chart-matrix
-// Chart.register(...registerables, MatrixController, MatrixElement);
-// const LanePlugin = {
-//   id: 'lanePlugin',
-//   afterDraw(chart: Chart, _args: any, options: any) {
-//     const { ctx, chartArea, scales } = chart;
-//     if (!ctx) return;
+import * as d3 from 'd3';
 
-//     // Lane outline
-//     ctx.save();
-//     ctx.strokeStyle = '#000';
-//     ctx.lineWidth = 2;
-//     ctx.strokeRect(chartArea.left, chartArea.top, chartArea.width, chartArea.height);
-//     ctx.restore();
-
-//     // Draw pins at the top (above y=0)
-//     // We treat y= -2 as "above" the lane so pins show up outside the chart area.
-//     const pinCount = 10;
-//     for (let i = 0; i < pinCount; i++) {
-//       const xData = 10 + i * 2; // e.g. boards from 10..28
-//       const yData = -2; // a bit above the lane
-//       const xPx = scales.x.getPixelForValue(xData);
-//       const yPx = scales.y.getPixelForValue(yData);
-
-//       ctx.save();
-//       ctx.beginPath();
-//       ctx.fillStyle = '#666';
-//       ctx.arc(xPx, yPx, 5, 0, 2 * Math.PI);
-//       ctx.fill();
-//       ctx.restore();
-//     }
-//   }
-// };
 @Component({
   selector: 'app-pattern',
   templateUrl: './pattern.page.html',
@@ -93,6 +62,248 @@ export class PatternPage implements OnInit {
   patterns: Pattern[] = [];
   currentPage = 1;
   hasMoreData = true;
+  testPattern = {
+    url: 'https://patternlibrary.kegel.net/pattern/0404b357-cf52-ec11-8c62-000d3a5afd36',
+    title: 'Kegel Kode 4137 (40 uL TR)',
+    category: 'Kode Series',
+    details: {
+      distance: "37'",
+      ratio: '3.55:1',
+      volume: '23.24',
+      forward: '15.8',
+      reverse: '7.44',
+      pump: '40µL',
+      tanks: 'KEGEL',
+    },
+    forwards_data: [
+      {
+        '#': '1',
+        start: '2L',
+        stop: '2R',
+        load: '3',
+        mics: '40',
+        speed: '10',
+        buf: '3',
+        tank: 'A - KEGEL',
+        total_oil: '4.440',
+        distance_start: '0.00',
+        distance_end: '2.80',
+      },
+      {
+        '#': '2',
+        start: '4L',
+        stop: '4R',
+        load: '1',
+        mics: '40',
+        speed: '14',
+        buf: '3',
+        tank: 'A - KEGEL',
+        total_oil: '1.320',
+        distance_start: '2.80',
+        distance_end: '4.76',
+      },
+      {
+        '#': '3',
+        start: '5L',
+        stop: '5R',
+        load: '1',
+        mics: '40',
+        speed: '14',
+        buf: '3',
+        tank: 'A - KEGEL',
+        total_oil: '1.240',
+        distance_start: '4.76',
+        distance_end: '6.72',
+      },
+      {
+        '#': '4',
+        start: '7L',
+        stop: '7R',
+        load: '2',
+        mics: '40',
+        speed: '14',
+        buf: '3',
+        tank: 'A - KEGEL',
+        total_oil: '2.160',
+        distance_start: '6.72',
+        distance_end: '10.64',
+      },
+      {
+        '#': '5',
+        start: '9L',
+        stop: '8R',
+        load: '2',
+        mics: '40',
+        speed: '14',
+        buf: '3',
+        tank: 'A - KEGEL',
+        total_oil: '1.920',
+        distance_start: '10.64',
+        distance_end: '14.56',
+      },
+      {
+        '#': '6',
+        start: '10L',
+        stop: '9R',
+        load: '2',
+        mics: '40',
+        speed: '14',
+        buf: '3',
+        tank: 'A - KEGEL',
+        total_oil: '1.760',
+        distance_start: '14.56',
+        distance_end: '18.48',
+      },
+      {
+        '#': '7',
+        start: '11L',
+        stop: '10R',
+        load: '2',
+        mics: '40',
+        speed: '18',
+        buf: '3',
+        tank: 'A - KEGEL',
+        total_oil: '1.600',
+        distance_start: '18.48',
+        distance_end: '23.52',
+      },
+      {
+        '#': '8',
+        start: '12L',
+        stop: '11R',
+        load: '1',
+        mics: '40',
+        speed: '18',
+        buf: '3',
+        tank: 'A - KEGEL',
+        total_oil: '720',
+        distance_start: '23.52',
+        distance_end: '26.04',
+      },
+      {
+        '#': '9',
+        start: '13L',
+        stop: '12R',
+        load: '1',
+        mics: '40',
+        speed: '18',
+        buf: '3',
+        tank: 'A - KEGEL',
+        total_oil: '640',
+        distance_start: '26.04',
+        distance_end: '28.56',
+      },
+      {
+        '#': '10',
+        start: '2L',
+        stop: '2R',
+        load: '0',
+        mics: '40',
+        speed: '22',
+        buf: '3',
+        tank: 'A - KEGEL',
+        total_oil: '0',
+        distance_start: '28.56',
+        distance_end: '37.00',
+      },
+    ],
+    backwards_data: [
+      {
+        '#': '1',
+        start: '2L',
+        stop: '2R',
+        load: '0',
+        mics: '40',
+        speed: '26',
+        buf: '3',
+        tank: 'A - KEGEL',
+        total_oil: '0',
+        distance_start: '37.00',
+        distance_end: '18.00',
+      },
+      {
+        '#': '2',
+        start: '10L',
+        stop: '9R',
+        load: '1',
+        mics: '40',
+        speed: '18',
+        buf: '3',
+        tank: 'A - KEGEL',
+        total_oil: '880',
+        distance_start: '18.00',
+        distance_end: '15.48',
+      },
+      {
+        '#': '3',
+        start: '8L',
+        stop: '8R',
+        load: '2',
+        mics: '40',
+        speed: '14',
+        buf: '3',
+        tank: 'A - KEGEL',
+        total_oil: '2.000',
+        distance_start: '15.48',
+        distance_end: '11.56',
+      },
+      {
+        '#': '4',
+        start: '7L',
+        stop: '7R',
+        load: '2',
+        mics: '40',
+        speed: '14',
+        buf: '3',
+        tank: 'A - KEGEL',
+        total_oil: '2.160',
+        distance_start: '11.56',
+        distance_end: '7.64',
+      },
+      {
+        '#': '5',
+        start: '6L',
+        stop: '6R',
+        load: '1',
+        mics: '40',
+        speed: '14',
+        buf: '3',
+        tank: 'A - KEGEL',
+        total_oil: '1.160',
+        distance_start: '7.64',
+        distance_end: '5.68',
+      },
+      {
+        '#': '6',
+        start: '5L',
+        stop: '5R',
+        load: '1',
+        mics: '40',
+        speed: '10',
+        buf: '3',
+        tank: 'A - KEGEL',
+        total_oil: '1.240',
+        distance_start: '5.68',
+        distance_end: '4.28',
+      },
+      {
+        '#': '7',
+        start: '2L',
+        stop: '2R',
+        load: '0',
+        mics: '40',
+        speed: '10',
+        buf: '3',
+        tank: 'A - KEGEL',
+        total_oil: '0',
+        distance_start: '4.28',
+        distance_end: '0.00',
+      },
+    ],
+  };
+  yMax = 70; // Maximum y-axis value (distance in feet)
+  xMax = 39; // Maximum x-axis value (board number)
+  @ViewChild('svg', { static: true }) svgElement!: ElementRef;
 
   constructor(
     private patternService: PatternService,
@@ -102,6 +313,7 @@ export class PatternPage implements OnInit {
   ) {}
   async ngOnInit() {
     await this.loadPatterns();
+    this.drawChart(this.testPattern);
   }
 
   async handleRefresh(event: RefresherCustomEvent): Promise<void> {
@@ -184,155 +396,163 @@ export class PatternPage implements OnInit {
     return parseFloat(numericPart);
   }
 
-  // createLaneChart(pattern: Pattern) {
-  //   // Build matrix data
-  //   const matrixData = this.buildLaneMatrix(pattern);
+  drawChart(pattern: Pattern): void {
+    // Clear any previous content
+    d3.select(this.svgElement.nativeElement).selectAll('*').remove();
 
-  //   // Grab a unique canvas per pattern
-  //   const canvasId = `laneChart-${pattern.title}`;
-  //   const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
-  //   if (!canvas) return;
+    // Define margins
+    const margin = { top: 50, right: 30, bottom: 60, left: 60 };
 
-  //   new Chart(canvas, {
-  //     type: 'matrix',
-  //     data: {
-  //       datasets: [
-  //         {
-  //           label: 'Oil Distribution',
-  //           data: matrixData, // array of {x, y, v}
-  //           width: 10, // pixel width of each cell
-  //           height: 4, // pixel height of each cell
-  //           backgroundColor(ctx) {
-  //             // Use v to color the cell
-  //             const val = ctx.dataset.data[ctx.dataIndex].v;
-  //             // You can scale or clamp val as needed
-  //             const alpha = Math.min(val / 10, 1); // scale to [0..1]
-  //             return `rgba(200,0,0,${alpha})`;
-  //           }
-  //         }
-  //       ]
-  //     },
-  //     options: {
-  //       responsive: false, // or true, but then might need a dynamic approach
-  //       scales: {
-  //         x: {
-  //           type: 'linear',
-  //           min: 0,
-  //           max: 40, // 39 boards + 1 margin
-  //           reverse: false, // boards left->right
-  //           ticks: { stepSize: 5 },
-  //           grid: { display: true }
-  //         },
-  //         y: {
-  //           type: 'linear',
-  //           min: 0,
-  //           max: 60, // up to 60 feet
-  //           reverse: true, // 0 at bottom
-  //           ticks: { stepSize: 5 },
-  //           grid: { display: true }
-  //         }
-  //       },
-  //       plugins: {
-  //         legend: { display: false },
-  //         // Attach our custom plugin
-  //         lanePlugin: {}
-  //       }
-  //     },
-  //     plugins: [LanePlugin]
-  //   });
-  // }
+    // Select the SVG element
+    const svg = d3.select(this.svgElement.nativeElement).style('background-color', 'white');
 
-  // /**
-  //  * Merges forward + reverse data into a 2D matrix for boards [1..39]
-  //  * and distance [0..some max], storing total oil in each cell.
-  //  * Return an array of { x, y, v } for chartjs-chart-matrix.
-  //  */
-  // buildLaneMatrix(pattern: Pattern) {
-  //   const matrix: Record<string, number> = {};
+    // Get width and height from SVG element
+    const svgWidth = +svg.attr('width');
+    const svgHeight = +svg.attr('height');
 
-  //   // Helper to accumulate oil in matrix
-  //   const accumulate = (board: number, dist: number, oil: number) => {
-  //     const key = `${board},${dist}`;
-  //     matrix[key] = (matrix[key] || 0) + oil;
-  //   };
+    // Calculate the inner chart dimensions
+    const width = svgWidth - margin.left - margin.right;
+    const height = svgHeight - margin.top - margin.bottom;
 
-  //   // 1) Process forwards_data
-  //   pattern.forwards_data.forEach(row => {
-  //     const distStart = parseFloat(row.distance_start);
-  //     const distEnd = parseFloat(row.distance_end);
-  //     const totalOil = parseFloat(row.total_oil) || 0;
+    // Create a group element for the chart with margins
+    const g = svg.append('g').attr('transform', `translate(${margin.left}, ${margin.top})`);
 
-  //     // For simplicity, let's assume 'start' and 'stop' define board range
-  //     // e.g. "5L" means board 5 from the left, "2R" means board 2 from the right, etc.
-  //     // We'll parse them in a simplistic way.
-  //     // Real logic might be more advanced.
-  //     const [boardMin, boardMax] = this.getBoardRange(row.start, row.stop);
+    // Create scales with the adjusted dimensions
+    const xScale = d3.scaleLinear().domain([0, this.xMax]).range([0, width]);
+    const yScale = d3.scaleLinear().domain([0, this.yMax]).range([height, 0]);
 
-  //     // Distribute totalOil across that board range and distance range
-  //     // For a simple approach, we can just add totalOil equally to each board in [boardMin..boardMax]
-  //     for (let b = boardMin; b <= boardMax; b++) {
-  //       for (let d = Math.floor(distStart); d < distEnd; d++) {
-  //         accumulate(b, d, totalOil);
-  //       }
-  //     }
-  //   });
+    // Add vertical grid lines for x-axis, but only up to y=60
+    g.selectAll('.grid-line-x')
+      .data(d3.range(0, this.xMax + 1, 1))
+      .enter()
+      .append('line')
+      .attr('class', 'grid-line-x')
+      .attr('x1', (d) => xScale(d))
+      .attr('x2', (d) => xScale(d))
+      .attr('y1', yScale(0)) // Bottom of chart
+      .attr('y2', yScale(60)) // Only up to y=60, not full height
+      .attr('stroke', 'lightgray')
+      .attr('stroke-width', 0.5);
 
-  //   // 2) Process backwards_data
-  //   pattern.backwards_data.forEach(row => {
-  //     const distStart = parseFloat(row.distance_start);
-  //     const distEnd = parseFloat(row.distance_end);
-  //     const totalOil = parseFloat(row.total_oil) || 0;
+    // Add horizontal grid lines for y-axis, ending at 60 instead of yMax
+    g.selectAll('.grid-line-y')
+      .data(d3.range(0, 61, 10)) // Grid lines up to 60 in steps of 10
+      .enter()
+      .append('line')
+      .attr('class', 'grid-line-y')
+      .attr('x1', 0)
+      .attr('x2', width)
+      .attr('y1', (d) => yScale(d))
+      .attr('y2', (d) => yScale(d))
+      .attr('stroke', 'lightgray')
+      .attr('stroke-width', 0.5);
 
-  //     const [boardMin, boardMax] = this.getBoardRange(row.start, row.stop);
+    // Draw a stronger line at y=60 to visually cap the grid
+    g.append('line').attr('x1', 0).attr('x2', width).attr('y1', yScale(60)).attr('y2', yScale(60)).attr('stroke', 'black').attr('stroke-width', 1);
 
-  //     // The machine is applying oil in reverse, but the distribution approach is similar
-  //     // We'll iterate from distEnd..distStart if needed
-  //     const lower = Math.min(distStart, distEnd);
-  //     const upper = Math.max(distStart, distEnd);
+    // Helper function to parse x coordinates from string values like "2L" or "2R"
+    const parseX = (value: string): number => {
+      const num = parseFloat(value);
+      if (value.toUpperCase().endsWith('L')) {
+        return num - 1;
+      } else if (value.toUpperCase().endsWith('R')) {
+        return this.xMax - num;
+      }
+      return num;
+    };
 
-  //     for (let b = boardMin; b <= boardMax; b++) {
-  //       for (let d = Math.floor(lower); d < upper; d++) {
-  //         accumulate(b, d, totalOil);
-  //       }
-  //     }
-  //   });
+    // Function to compute rectangle dimensions from a data entry.
+    // It uses the "start" and "stop" values for the x position and "distance_start"/"distance_end" for the y.
+    const computeRect = (data: any) => {
+      // Parse x coordinates from the start and stop strings
+      const xStart = parseX(data.start);
+      const xEnd = parseX(data.stop);
+      // Use the smaller value as the left coordinate and compute the width as the difference
+      const rectX = Math.min(xStart, xEnd);
+      const rectWidth = Math.abs(xEnd - xStart);
 
-  //   // Convert matrix object to array
-  //   const result = [];
-  //   for (const key in matrix) {
-  //     const [bStr, dStr] = key.split(',');
-  //     result.push({
-  //       x: parseInt(bStr, 10),
-  //       y: parseInt(dStr, 10),
-  //       v: matrix[key]
-  //     });
-  //   }
-  //   return result;
-  // }
+      const yStartVal = parseFloat(data.distance_start);
+      const yEndVal = parseFloat(data.distance_end);
 
-  // /**
-  //  * Very simplified parser for "5L" or "3R" to board numbers.
-  //  * E.g. "5L" => board 5 from the left, "2R" => board 39 - 2 => 37
-  //  * (assuming 39 boards total).
-  //  */
-  // getBoardRange(start: string, stop: string): [number, number] {
-  //   // Board count example: 39
-  //   const maxBoard = 39;
-  //   const parseBoard = (str: string) => {
-  //     // e.g. "5L", "10L", "2R"
-  //     const match = str.match(/(\d+)(L|R)/);
-  //     if (!match) return 1;
-  //     const num = parseInt(match[1], 10);
-  //     const side = match[2];
-  //     if (side === 'L') {
-  //       return num; // board from left
-  //     } else {
-  //       return maxBoard - (num - 1); // from right
-  //     }
-  //   };
+      // Scale both values
+      const y1 = yScale(yStartVal);
+      const y2 = yScale(yEndVal);
 
-  //   const b1 = parseBoard(start);
-  //   const b2 = parseBoard(stop);
-  //   return [Math.min(b1, b2), Math.max(b1, b2)];
-  // }
+      // The top of the rectangle is the smaller of y1 and y2
+      const rectY = Math.min(y1, y2);
+      // The height is the absolute difference
+      const rectHeight = Math.abs(y2 - y1);
+
+      return {
+        x: xScale(rectX),
+        y: rectY,
+        width: xScale(rectWidth),
+        height: rectHeight,
+      };
+    };
+
+    // Draw rectangles for forward data (blue)
+    if (pattern.forwards_data) {
+      pattern.forwards_data.forEach((d: any) => {
+        const rect = computeRect(d);
+        g.append('rect')
+          .attr('x', rect.x)
+          .attr('y', rect.y)
+          .attr('width', rect.width)
+          .attr('height', rect.height)
+          .attr('fill', 'blue')
+          .attr('stroke', 'black');
+      });
+    }
+
+    // Draw rectangles for backwards data (red)
+    if (pattern.backwards_data) {
+      pattern.backwards_data.forEach((d: any) => {
+        const rect = computeRect(d);
+        g.append('rect')
+          .attr('x', rect.x)
+          .attr('y', rect.y)
+          .attr('width', rect.width)
+          .attr('height', rect.height)
+          .attr('fill', 'red')
+          .attr('fill-opacity', 0.3)
+          .attr('stroke', 'black');
+      });
+    }
+    // Create and append the x-axis
+    const xAxis = d3.axisBottom(xScale).tickValues(d3.range(0, this.xMax + 1, 1));
+    g.append('g')
+      .attr('transform', `translate(0, ${height})`)
+      .call(xAxis)
+      .selectAll('text, line, path') // Select all text, tick marks, and axis lines
+      .attr('fill', 'black') // Set text color to black
+      .attr('stroke', 'black'); // Set line color to black
+
+    // X-axis label - now positioned relative to the inner chart
+    g.append('text')
+      .attr('x', width / 2)
+      .attr('y', height + 40) // Still below the axis
+      .attr('text-anchor', 'middle')
+      .attr('fill', 'black')
+      .text('X Axis (0 to 39)');
+
+    // Create and append the y-axis
+    const yAxisScale = d3
+      .scaleLinear()
+      .domain([0, 60]) // Only up to 60
+      .range([height, yScale(60)]); // Map to the correct pixel range
+
+    // Create and append the y-axis with the custom scale
+    const yAxis = d3.axisLeft(yAxisScale).tickValues(d3.range(0, 61, 5));
+    g.append('g').call(yAxis).selectAll('text, line, path').attr('fill', 'black').attr('stroke', 'black');
+
+    // Y-axis label
+    g.append('text')
+      .attr('transform', 'rotate(-90)')
+      .attr('x', -height / 2)
+      .attr('y', -40)
+      .attr('text-anchor', 'middle')
+      .attr('fill', 'black')
+      .text('Y Axis (0 to 60)');
+  }
 }

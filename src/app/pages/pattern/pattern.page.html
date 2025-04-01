@@ -11,6 +11,7 @@
   <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
+  <svg #svg width="600" height="1400"></svg>
   @if(!loadingService.isLoading()) {
   <ng-container *ngIf="patterns.length <= 0 && !loadingService.isLoading(); else allPatterns">
     <ion-text class="no-game-text"> No patterns found! </ion-text>
