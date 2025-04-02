@@ -11,7 +11,6 @@
   <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
-  <svg #svg width="600" height="1400"></svg>
   @if(!loadingService.isLoading()) {
   <ng-container *ngIf="patterns.length <= 0 && !loadingService.isLoading(); else allPatterns">
     <ion-text class="no-game-text"> No patterns found! </ion-text>
@@ -24,7 +23,8 @@
           'yellow-card': getRatioValue(pattern.details.ratio ?? '0') >= 4 && getRatioValue(pattern.details.ratio ?? '0') < 8,
           'green-card': getRatioValue(pattern.details.ratio ?? '0') >= 8
         }"
-      button>
+      button
+      id="{{pattern.url}}">
       <ion-card-header>
         <ion-card-title>{{pattern.title}}</ion-card-title>
         <ion-card-subtitle>{{pattern.category}}</ion-card-subtitle>
@@ -82,3 +82,23 @@
   </ion-card>
   } }
 </ion-content>
+
+@for(pattern of patterns; track pattern.url) {
+<ion-modal trigger="{{pattern.url}}" #modal>
+  <ng-template>
+    <ion-header translucent="true">
+      <ion-toolbar>
+        <ion-buttons slot="start" style="padding: 4px">
+          <ion-button (click)="modal.dismiss()">
+            <ion-icon name="chevron-back" slot="icon-only"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+        <ion-title>{{pattern.title}}</ion-title>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content>
+      <app-pattern-info [pattern]="pattern"></app-pattern-info>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+}

@@ -1,0 +1,29 @@
+ion-grid {
+  background-color: var(--ion-card-background);
+  margin: 8px;
+  border-radius: 7px;
+  align-items: center;
+
+  ion-label {
+    padding: 4px;
+    font-size: 1.1375rem;
+    font-weight: 600;
+    text-align: center;
+  }
+
+  .header-row {
+    font-size: .875rem;
+    font-weight: 500;
+    letter-spacing: 0.01rem;
+  }
+
+  .data-row {
+    font-size: .75rem;
+    line-height: 1.2;
+
+    &:nth-child(even) {
+      background-color: var(--ion-color-light-tint);
+      border-radius: 7px;
+    }
+  }
+}
