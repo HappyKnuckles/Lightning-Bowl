@@ -118,32 +118,74 @@ export class PatternInfoComponent implements OnInit {
 
     // ----- Draw Rectangles for Forwards and Backwards Data -----
     // Now, each entry is checked for its total_oil value.
+    // Compute all total_oil values from both forwards and backwards data
+    console.log(pattern);
+    const parseOilValue = (oilStr: string): number => {
+      if (oilStr.includes('.')) {
+        const parts = oilStr.split('.');
+        // Determine the factor based on the number of digits after the decimal.
+        const factor = Math.pow(10, parts[1].length);
+        return parseFloat(oilStr) * factor;
+      }
+      return parseFloat(oilStr);
+    };
+    const allOilValues: number[] = [];
+    if (pattern.forwards_data) {
+      pattern.forwards_data.forEach((d: any) => {
+        const oilVal = parseOilValue(d.total_oil);
+        if (oilVal !== 0) {
+          allOilValues.push(oilVal);
+        }
+      });
+    }
+    if (pattern.backwards_data) {
+      pattern.backwards_data.forEach((d: any) => {
+        const oilVal = parseOilValue(d.total_oil);
+        if (oilVal !== 0) {
+          allOilValues.push(oilVal);
+        }
+      });
+    }
+    console.log(allOilValues);
+
+    // Determine min and max oil values with fallback values to prevent undefined
+    const oilMin = d3.min(allOilValues) ?? 0;
+    const oilMax = d3.max(allOilValues) ?? 1;
+
+    // Create a color scale. Adjust the color range as needed.
+    const colorScale = d3.scaleLinear<string>().domain([oilMin, oilMax]).range(['#ffcccc', '#990000']); // From light red to dark red
+
+    // Draw rectangles for forwards_data with color based on total_oil
     if (pattern.forwards_data) {
       pattern.forwards_data.forEach((d: any) => {
         if (d.total_oil !== '0') {
           const rect = computeRect(d);
+          const oilVal = parseOilValue(d.total_oil);
           g.append('rect')
             .attr('x', rect.x)
             .attr('y', rect.y)
             .attr('width', rect.width)
             .attr('height', rect.height)
-            .attr('fill', 'red')
-            .attr('fill-opacity', 0.3);
+            // Use the color scale to set the fill
+            .attr('fill', colorScale(oilVal))
+            .attr('fill-opacity', 0.8);
         }
       });
     }
 
+    // Draw rectangles for backwards_data with color based on total_oil
     if (pattern.backwards_data) {
       pattern.backwards_data.forEach((d: any) => {
         if (d.total_oil !== '0') {
           const rect = computeRect(d);
+          const oilVal = parseOilValue(d.total_oil);
           g.append('rect')
             .attr('x', rect.x)
             .attr('y', rect.y)
             .attr('width', rect.width)
             .attr('height', rect.height)
-            .attr('fill', 'red')
-            .attr('fill-opacity', 0.3);
+            .attr('fill', colorScale(oilVal))
+            .attr('fill-opacity', 0.8);
         }
       });
     }
@@ -159,6 +201,14 @@ export class PatternInfoComponent implements OnInit {
     g.append('g').call(yAxis).selectAll('line, path').attr('stroke', 'lightgray').attr('stroke-width', 0.5); // Added smaller stroke width
 
     g.append('g').call(yAxis).selectAll('text').attr('fill', 'black').attr('stroke-width', 0.5);
+
+    g.append('rect')
+      .attr('x', 0)
+      .attr('y', yScale(parseInt(pattern.details.distance))) // Top of rectangle starts at pattern.distance
+      .attr('width', width) // Full width of the chart
+      .attr('height', yScale(0) - yScale(parseInt(pattern.details.distance))) // Height from pattern.distance to 0
+      .attr('fill', 'red')
+      .attr('fill-opacity', 0.1);
     // ----- Add Bowling Pins in the Specified Formation -----
     // The formation should appear as:
     //    7  8  9 10

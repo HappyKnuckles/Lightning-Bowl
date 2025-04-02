@@ -16,13 +16,13 @@
 
   @for (data of pattern().forwards_data; track $index) {
     <ion-row class="data-row">
-      <ion-col size="2">{{ data.start }} - {{ data.stop }}</ion-col>
+      <ion-col size="2">{{ data.start }}-{{ data.stop }}</ion-col>
       <ion-col size="1.4">{{ data.load }}</ion-col>
       <ion-col size="1.4">{{ data.mics }}</ion-col>
       <ion-col size="1.6">{{ data.speed }}</ion-col>
       <ion-col size="1.6">{{ data.buf }}</ion-col>
       <ion-col size="1.5">{{ data.total_oil }}</ion-col>
-      <ion-col size="auto">{{ data.distance_start }} - {{ data.distance_end }}</ion-col>
+      <ion-col size="auto">{{ data.distance_start }}-{{ data.distance_end }}</ion-col>
     </ion-row>
   }
 </ion-grid>
@@ -43,13 +43,13 @@
 
   @for (data of pattern().backwards_data; track $index) {
     <ion-row class="data-row">
-      <ion-col size="2">{{ data.start }} - {{ data.stop }}</ion-col>
+      <ion-col size="2">{{ data.start }}-{{ data.stop }}</ion-col>
       <ion-col size="1.4">{{ data.load }}</ion-col>
       <ion-col size="1.4">{{ data.mics }}</ion-col>
       <ion-col size="1.6">{{ data.speed }}</ion-col>
       <ion-col size="1.6">{{ data.buf }}</ion-col>
       <ion-col size="1.5">{{ data.total_oil }}</ion-col>
-      <ion-col size="auto">{{ data.distance_start }} - {{ data.distance_end }}</ion-col>
+      <ion-col size="auto">{{ data.distance_start }}-{{ data.distance_end }}</ion-col>
     </ion-row>
   }
 </ion-grid>
