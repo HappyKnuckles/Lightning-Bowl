@@ -31,6 +31,8 @@ ion-grid {
 
 .pattern-container {
   display: flex;
+  gap: 8px;
+  margin: 8px;
 
   .pattern-info {
     display: grid;

@@ -1,10 +1,13 @@
 <div class="pattern-container">
-  <svg #svg style="width: 50%; height: auto;"></svg>
+  <svg #svg style="width: 50%; height: auto"></svg>
   <div class="pattern-info">
-  <ion-chip>Distance: {{pattern().details.distance}}</ion-chip>
-  <ion-chip>Volume: {{pattern().details.volume}}</ion-chip>
-  <ion-chip>Ratio: {{pattern().details.ratio}}</ion-chip>
-  <ion-chip>Difficulty: {{getDifficulty()}}</ion-chip></div>
+    <ion-chip>Distance: {{ formatDistance(pattern().details.distance) }}</ion-chip>
+    <ion-chip>Volume: {{ pattern().details.volume }}</ion-chip>
+    <ion-chip>Ratio: {{ pattern().details.ratio }}</ion-chip>
+    <ion-chip>{{ getLength() }} Length</ion-chip>
+    <ion-chip>{{ getVolume() }} Volume</ion-chip>
+    <ion-chip>{{ getDifficulty() }} Difficulty</ion-chip>
+  </div>
 </div>
 
 <ion-grid class="ion-padding-horizontal">
@@ -48,7 +51,7 @@
     <ion-col size="auto">Dist.</ion-col>
   </ion-row>
 
-  @for (data of pattern().backwards_data; track $index) {
+  @for (data of pattern().reverse_data; track $index) {
     <ion-row class="data-row">
       <ion-col size="2">{{ data.start }}-{{ data.stop }}</ion-col>
       <ion-col size="1.4">{{ data.load }}</ion-col>

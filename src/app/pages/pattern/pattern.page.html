@@ -83,7 +83,7 @@
   } }
 </ion-content>
 
-@for(pattern of patterns; track pattern.url) {
+@if(!loadingService.isLoading()) { @for(pattern of patterns; track pattern.url) {
 <ion-modal trigger="{{pattern.url}}" #modal>
   <ng-template>
     <ion-header translucent="true">
@@ -101,4 +101,4 @@
     </ion-content>
   </ng-template>
 </ion-modal>
-}
+} }

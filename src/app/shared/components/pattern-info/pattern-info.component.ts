@@ -1,30 +1,19 @@
 import { Component, ElementRef, input, OnInit, ViewChild } from '@angular/core';
-import { Pattern } from 'src/app/core/models/pattern.model';
+import { ReverseData, ForwardsData, Pattern } from 'src/app/core/models/pattern.model';
 import * as d3 from 'd3';
-import {
-  IonCard,
-  IonCol,
-  IonRow,
-  IonGrid,
-  IonCardContent,
-  IonCardTitle,
-  IonCardHeader,
-  IonTitle,
-  IonLabel,
-  IonChip,
-} from '@ionic/angular/standalone';
+import { IonCol, IonRow, IonGrid, IonLabel, IonChip } from '@ionic/angular/standalone';
 
 @Component({
   selector: 'app-pattern-info',
   standalone: true,
-  imports: [IonChip, IonLabel, IonTitle, IonCardHeader, IonCardTitle, IonCardContent, IonGrid, IonRow, IonCol, IonCard],
+  imports: [IonChip, IonLabel, IonGrid, IonRow, IonCol],
   templateUrl: './pattern-info.component.html',
   styleUrl: './pattern-info.component.scss',
 })
 export class PatternInfoComponent implements OnInit {
   @ViewChild('svg', { static: true }) svgElement!: ElementRef;
   pattern = input.required<Pattern>();
-  yMax = 72; // Maximum y-axis value (distance in feet)
+  yMax = 70; // Maximum y-axis value (distance in feet)
   xMax = 39; // Maximum x-axis value (board number)
 
   ngOnInit(): void {
@@ -43,16 +32,51 @@ export class PatternInfoComponent implements OnInit {
     }
   }
 
+  getLength() {
+    const length = parseInt(this.pattern().details.distance, 10);
+    if (length <= 35) {
+      return 'Short';
+    } else if (length < 41) {
+      return 'Medium';
+    } else {
+      return 'Long';
+    }
+  }
+
+  getVolume() {
+    const volume = parseInt(this.pattern().details.volume, 10);
+    if (volume < 22) {
+      return 'Light';
+    } else if (volume <= 26) {
+      return 'Medium';
+    } else if (volume < 30) {
+      return 'High';
+    } else {
+      return 'Very High';
+    }
+  }
+
+  formatDistance(distance: string | number): string {
+    if (!distance) return '0';
+
+    const distStr = String(distance);
+    if (distStr.endsWith("'")) {
+      return distStr.slice(0, -1) + 'ft';
+    }
+
+    return distStr;
+  }
+
   drawChart(pattern: Pattern): void {
     // Select the SVG element and set up a viewBox for responsiveness.
     const svg = d3
       .select(this.svgElement.nativeElement)
       .attr('preserveAspectRatio', 'xMidYMid meet')
-      .attr('viewBox', '0 0 400 1000')
-      .style('background-color', 'white')
-      .style('margin-top', '16px')
-      .style('margin-left', '8px')
-      .style('margin-right', '8px');
+      .attr('viewBox', '0 0 400 1500')
+      .style('background-color', 'white');
+    // .style('margin-top', '16px')
+    // .style('margin-left', '8px')
+    // .style('margin-right', '8px');
 
     // Clear any previous content.
     svg.selectAll('*').remove();
@@ -62,7 +86,7 @@ export class PatternInfoComponent implements OnInit {
 
     // Use the viewBox dimensions as the basis for our chart dimensions.
     const svgWidth = 375;
-    const svgHeight = 1000;
+    const svgHeight = 1500;
 
     // Calculate the inner chart dimensions.
     const width = svgWidth - margin.left - margin.right;
@@ -101,9 +125,6 @@ export class PatternInfoComponent implements OnInit {
       .attr('stroke', 'lightgray')
       .attr('stroke-width', 0.5);
 
-    // Draw a stronger line at y=60 to visually cap the grid.
-    g.append('line').attr('x1', 0).attr('x2', width).attr('y1', yScale(60)).attr('y2', yScale(60)).attr('stroke', 'black').attr('stroke-width', 1);
-
     // Helper function to parse x coordinates from string values like "2L" or "2R".
     const parseX = (value: string): number => {
       const num = parseFloat(value) - 1;
@@ -116,7 +137,7 @@ export class PatternInfoComponent implements OnInit {
     };
 
     // Function to compute rectangle dimensions from a data entry.
-    const computeRect = (data: any) => {
+    const computeRect = (data: ForwardsData | ReverseData) => {
       // Parse x coordinates from the start and stop strings.
       const xStart = parseX(data.start);
       const xEnd = parseX(data.stop);
@@ -139,10 +160,10 @@ export class PatternInfoComponent implements OnInit {
       };
     };
 
-    // ----- Draw Rectangles for Forwards and Backwards Data -----
+    // ----- Draw Rectangles for Forwards and Reverse Data -----
     // Now, each entry is checked for its total_oil value.
-    // Compute all total_oil values from both forwards and backwards data
-    let totalOil = 0 
+    // Compute all total_oil values from both forwards and reverse data
+    let totalOil = 0;
     const parseOilValue = (oilStr: string): number => {
       if (oilStr.includes('.')) {
         const parts = oilStr.split('.');
@@ -154,7 +175,7 @@ export class PatternInfoComponent implements OnInit {
     };
     const allOilValues: number[] = [];
     if (pattern.forwards_data) {
-      pattern.forwards_data.forEach((d: any) => {
+      pattern.forwards_data.forEach((d: ForwardsData) => {
         const oilVal = parseOilValue(d.total_oil);
         if (oilVal !== 0) {
           allOilValues.push(oilVal);
@@ -162,8 +183,8 @@ export class PatternInfoComponent implements OnInit {
         }
       });
     }
-    if (pattern.backwards_data) {
-      pattern.backwards_data.forEach((d: any) => {
+    if (pattern.reverse_data) {
+      pattern.reverse_data.forEach((d: ReverseData) => {
         const oilVal = parseOilValue(d.total_oil);
         if (oilVal !== 0) {
           allOilValues.push(oilVal);
@@ -171,18 +192,17 @@ export class PatternInfoComponent implements OnInit {
         }
       });
     }
-    
 
     // Determine min and max oil values with fallback values to prevent undefined
     // const oilMin = d3.min(allOilValues) ?? 0;
     // const oilMax = d3.max(allOilValues) ?? 1;
 
     // Create a color scale. Adjust the color range as needed.
-    const colorScale = d3.scaleLinear<string>().domain([0, totalOil]).range(['#ffcccc', '#990000']); // From light red to dark red
+    const colorScale = d3.scaleLinear<string>().domain([0, totalOil]).range(['#ff8888', '#990000']); // From light red to dark red
 
     // Draw rectangles for forwards_data with color based on total_oil
     if (pattern.forwards_data) {
-      pattern.forwards_data.forEach((d: any) => {
+      pattern.forwards_data.forEach((d: ForwardsData) => {
         if (d.total_oil !== '0') {
           const rect = computeRect(d);
           const oilVal = parseOilValue(d.total_oil);
@@ -198,9 +218,9 @@ export class PatternInfoComponent implements OnInit {
       });
     }
 
-    // Draw rectangles for backwards_data with color based on total_oil
-    if (pattern.backwards_data) {
-      pattern.backwards_data.forEach((d: any) => {
+    // Draw rectangles for reverse_data with color based on total_oil
+    if (pattern.reverse_data) {
+      pattern.reverse_data.forEach((d: ReverseData) => {
         if (d.total_oil !== '0') {
           const rect = computeRect(d);
           const oilVal = parseOilValue(d.total_oil);
@@ -227,13 +247,45 @@ export class PatternInfoComponent implements OnInit {
 
     g.append('g').call(yAxis).selectAll('text').attr('fill', 'black').attr('stroke-width', 0.5);
 
+    let forwardsMaxDistance = 0;
+    let reverseMaxDistance = 0;
+
+    if (pattern.forwards_data && pattern.forwards_data.length > 0) {
+      pattern.forwards_data.forEach((d) => {
+        const distanceStart = parseFloat(d.distance_start);
+        const distanceEnd = parseFloat(d.distance_end);
+        forwardsMaxDistance = Math.max(forwardsMaxDistance, distanceStart, distanceEnd);
+      });
+    }
+
+    if (pattern.reverse_data && pattern.reverse_data.length > 0) {
+      pattern.reverse_data.forEach((d) => {
+        const distanceStart = parseFloat(d.distance_start);
+        const distanceEnd = parseFloat(d.distance_end);
+        reverseMaxDistance = Math.max(reverseMaxDistance, distanceStart, distanceEnd);
+      });
+    }
+
+    // Draw forwards area background (lighter)
+    // Draw reverse area background (slightly darker)
+    if (reverseMaxDistance != forwardsMaxDistance) {
+      g.append('rect')
+        .attr('x', 0)
+        .attr('y', yScale(forwardsMaxDistance))
+        .attr('width', width)
+        .attr('height', yScale(0) - yScale(forwardsMaxDistance))
+        .attr('fill', 'red')
+        .attr('fill-opacity', 0.05);
+    }
+
     g.append('rect')
       .attr('x', 0)
-      .attr('y', yScale(parseInt(pattern.details.distance))) // Top of rectangle starts at pattern.distance
-      .attr('width', width) // Full width of the chart
-      .attr('height', yScale(0) - yScale(parseInt(pattern.details.distance))) // Height from pattern.distance to 0
+      .attr('y', yScale(reverseMaxDistance))
+      .attr('width', width)
+      .attr('height', yScale(0) - yScale(reverseMaxDistance))
       .attr('fill', 'red')
-      .attr('fill-opacity', 0.1);
+      .attr('fill-opacity', 0.1); // Higher opacity
+
     // ----- Add Bowling Pins in the Specified Formation -----
     // The formation should appear as:
     //    7  8  9 10
@@ -243,7 +295,7 @@ export class PatternInfoComponent implements OnInit {
     // where pin 1 is centered at y = 60.
     const centerX = this.xMax / 2;
     const baseY = 60; // Row 1 (pin 1)
-    const rowSpacing = 4; // Vertical spacing between rows (data units)
+    const rowSpacing = 3; // Vertical spacing between rows (data units)
     const offset = 12; // Base horizontal offset for positioning pins
 
     // Row definitions (data coordinates):
@@ -292,13 +344,13 @@ export class PatternInfoComponent implements OnInit {
       .attr('stroke-width', 1);
 
     const arrowPositions = [
-      { board: 5, distance: 13 },
-      { board: 10, distance: 14.5 },
-      { board: 15, distance: 16 },
-      { board: 20, distance: 17.5 },
-      { board: 25, distance: 16 },
-      { board: 30, distance: 14.5 },
-      { board: 35, distance: 13 },
+      { board: 4, distance: 12.5 }, // Was 13.5
+      { board: 9, distance: 13.5 }, // Was 14.5
+      { board: 14, distance: 14.5 }, // Was 15.5
+      { board: 19, distance: 15.5 }, // Was 16.5 (now at 15)
+      { board: 24, distance: 14.5 }, // Was 15.5
+      { board: 29, distance: 13.5 }, // Was 14.5
+      { board: 34, distance: 12.5 }, // Was 13.5
     ];
 
     // Create arrow shape as an upward-pointing triangle
@@ -308,14 +360,18 @@ export class PatternInfoComponent implements OnInit {
       .type(d3.symbolTriangle)
       .size(arrowSize * arrowSize);
 
-    // Add arrows at their respective positions
+    // Add arrows at their respective positions with vertical stretch
     g.selectAll('.lane-arrow')
       .data(arrowPositions)
       .enter()
       .append('path')
       .attr('class', 'lane-arrow')
       .attr('d', arrowShape)
-      .attr('transform', (d) => `translate(${xScale(d.board)}, ${yScale(d.distance)})`) // No rotation needed for upward arrows
+      .attr('transform', (d) => {
+        // Apply both translation and scaling in one transform
+        // Scale factor 1 for x (no horizontal stretch) and 1.7 for y (vertical stretch)
+        return `translate(${xScale(d.board)}, ${yScale(d.distance)}) scale(1, 2.5)`;
+      })
       .attr('fill', 'black')
       .attr('stroke', 'none');
   }
