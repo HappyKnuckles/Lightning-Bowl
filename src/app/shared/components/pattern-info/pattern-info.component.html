@@ -1,4 +1,11 @@
-<svg #svg></svg>
+<div class="pattern-container">
+  <svg #svg style="width: 50%; height: auto;"></svg>
+  <div class="pattern-info">
+  <ion-chip>Distance: {{pattern().details.distance}}</ion-chip>
+  <ion-chip>Volume: {{pattern().details.volume}}</ion-chip>
+  <ion-chip>Ratio: {{pattern().details.ratio}}</ion-chip>
+  <ion-chip>Difficulty: {{getDifficulty()}}</ion-chip></div>
+</div>
 
 <ion-grid class="ion-padding-horizontal">
   <ion-row

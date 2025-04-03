@@ -28,3 +28,16 @@ ion-grid {
     }
   }
 }
+
+.pattern-container {
+  display: flex;
+
+  .pattern-info {
+    display: grid;
+    width: 55%;
+  }
+}
+
+// .pattern-info{
+//   dis
+// }

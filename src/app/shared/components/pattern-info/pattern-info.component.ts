@@ -1,12 +1,23 @@
 import { Component, ElementRef, input, OnInit, ViewChild } from '@angular/core';
 import { Pattern } from 'src/app/core/models/pattern.model';
 import * as d3 from 'd3';
-import { IonCard, IonCol, IonRow, IonGrid, IonCardContent, IonCardTitle, IonCardHeader, IonTitle, IonLabel } from '@ionic/angular/standalone';
+import {
+  IonCard,
+  IonCol,
+  IonRow,
+  IonGrid,
+  IonCardContent,
+  IonCardTitle,
+  IonCardHeader,
+  IonTitle,
+  IonLabel,
+  IonChip,
+} from '@ionic/angular/standalone';
 
 @Component({
   selector: 'app-pattern-info',
   standalone: true,
-  imports: [IonLabel, IonTitle, IonCardHeader, IonCardTitle, IonCardContent, IonGrid, IonRow, IonCol, IonCard],
+  imports: [IonChip, IonLabel, IonTitle, IonCardHeader, IonCardTitle, IonCardContent, IonGrid, IonRow, IonCol, IonCard],
   templateUrl: './pattern-info.component.html',
   styleUrl: './pattern-info.component.scss',
 })
@@ -17,7 +28,19 @@ export class PatternInfoComponent implements OnInit {
   xMax = 39; // Maximum x-axis value (board number)
 
   ngOnInit(): void {
-    this.drawChart(this.pattern()); // Call the drawChart method with the pattern data.
+    this.drawChart(this.pattern());
+  }
+
+  getDifficulty() {
+    const numericPart = this.pattern().details.ratio!.split(':')[0];
+    const num = parseInt(numericPart, 10);
+    if (num <= 4) {
+      return 'Hard';
+    } else if (num <= 8) {
+      return 'Medium';
+    } else {
+      return 'Easy';
+    }
   }
 
   drawChart(pattern: Pattern): void {
@@ -25,7 +48,7 @@ export class PatternInfoComponent implements OnInit {
     const svg = d3
       .select(this.svgElement.nativeElement)
       .attr('preserveAspectRatio', 'xMidYMid meet')
-      .attr('viewBox', '0 0 400 800')
+      .attr('viewBox', '0 0 400 1000')
       .style('background-color', 'white')
       .style('margin-top', '16px')
       .style('margin-left', '8px')
@@ -39,7 +62,7 @@ export class PatternInfoComponent implements OnInit {
 
     // Use the viewBox dimensions as the basis for our chart dimensions.
     const svgWidth = 375;
-    const svgHeight = 800;
+    const svgHeight = 1000;
 
     // Calculate the inner chart dimensions.
     const width = svgWidth - margin.left - margin.right;
@@ -54,7 +77,7 @@ export class PatternInfoComponent implements OnInit {
 
     // Add vertical grid lines for x-axis, but only up to y=60.
     g.selectAll('.grid-line-x')
-      .data(d3.range(0, this.xMax + 1, 1))
+      .data(d3.range(-1, this.xMax + 1, 1))
       .enter()
       .append('line')
       .attr('class', 'grid-line-x')
@@ -119,7 +142,7 @@ export class PatternInfoComponent implements OnInit {
     // ----- Draw Rectangles for Forwards and Backwards Data -----
     // Now, each entry is checked for its total_oil value.
     // Compute all total_oil values from both forwards and backwards data
-    console.log(pattern);
+    let totalOil = 0 
     const parseOilValue = (oilStr: string): number => {
       if (oilStr.includes('.')) {
         const parts = oilStr.split('.');
@@ -135,6 +158,7 @@ export class PatternInfoComponent implements OnInit {
         const oilVal = parseOilValue(d.total_oil);
         if (oilVal !== 0) {
           allOilValues.push(oilVal);
+          totalOil += oilVal;
         }
       });
     }
@@ -143,17 +167,18 @@ export class PatternInfoComponent implements OnInit {
         const oilVal = parseOilValue(d.total_oil);
         if (oilVal !== 0) {
           allOilValues.push(oilVal);
+          totalOil += oilVal;
         }
       });
     }
-    console.log(allOilValues);
+    
 
     // Determine min and max oil values with fallback values to prevent undefined
-    const oilMin = d3.min(allOilValues) ?? 0;
-    const oilMax = d3.max(allOilValues) ?? 1;
+    // const oilMin = d3.min(allOilValues) ?? 0;
+    // const oilMax = d3.max(allOilValues) ?? 1;
 
     // Create a color scale. Adjust the color range as needed.
-    const colorScale = d3.scaleLinear<string>().domain([oilMin, oilMax]).range(['#ffcccc', '#990000']); // From light red to dark red
+    const colorScale = d3.scaleLinear<string>().domain([0, totalOil]).range(['#ffcccc', '#990000']); // From light red to dark red
 
     // Draw rectangles for forwards_data with color based on total_oil
     if (pattern.forwards_data) {
