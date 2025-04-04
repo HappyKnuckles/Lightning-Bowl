@@ -344,13 +344,13 @@ export class PatternInfoComponent implements OnInit {
       .attr('stroke-width', 1);
 
     const arrowPositions = [
-      { board: 4, distance: 12.5 }, // Was 13.5
-      { board: 9, distance: 13.5 }, // Was 14.5
-      { board: 14, distance: 14.5 }, // Was 15.5
-      { board: 19, distance: 15.5 }, // Was 16.5 (now at 15)
-      { board: 24, distance: 14.5 }, // Was 15.5
-      { board: 29, distance: 13.5 }, // Was 14.5
-      { board: 34, distance: 12.5 }, // Was 13.5
+      { board: 4, distance: 12.5 },
+      { board: 9, distance: 13.5 },
+      { board: 14, distance: 14.5 },
+      { board: 19, distance: 15.5 },
+      { board: 24, distance: 14.5 },
+      { board: 29, distance: 13.5 },
+      { board: 34, distance: 12.5 },
     ];
 
     // Create arrow shape as an upward-pointing triangle
