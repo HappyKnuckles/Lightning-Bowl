@@ -101,7 +101,7 @@ export class PatternInfoComponent implements OnInit {
 
     // Add vertical grid lines for x-axis, but only up to y=60.
     g.selectAll('.grid-line-x')
-      .data(d3.range(-1, this.xMax + 1, 1))
+      .data(d3.range(0, this.xMax + 1, 1))
       .enter()
       .append('line')
       .attr('class', 'grid-line-x')
@@ -127,7 +127,7 @@ export class PatternInfoComponent implements OnInit {
 
     // Helper function to parse x coordinates from string values like "2L" or "2R".
     const parseX = (value: string): number => {
-      const num = parseFloat(value) - 1;
+      const num = parseFloat(value);
       if (value.toUpperCase().endsWith('L')) {
         return num;
       } else if (value.toUpperCase().endsWith('R')) {
@@ -163,7 +163,7 @@ export class PatternInfoComponent implements OnInit {
     // ----- Draw Rectangles for Forwards and Reverse Data -----
     // Now, each entry is checked for its total_oil value.
     // Compute all total_oil values from both forwards and reverse data
-    let totalOil = 0;
+    // let totalOil = 0;
     const parseOilValue = (oilStr: string): number => {
       if (oilStr.includes('.')) {
         const parts = oilStr.split('.');
@@ -179,7 +179,7 @@ export class PatternInfoComponent implements OnInit {
         const oilVal = parseOilValue(d.total_oil);
         if (oilVal !== 0) {
           allOilValues.push(oilVal);
-          totalOil += oilVal;
+          // totalOil += oilVal;
         }
       });
     }
@@ -188,7 +188,7 @@ export class PatternInfoComponent implements OnInit {
         const oilVal = parseOilValue(d.total_oil);
         if (oilVal !== 0) {
           allOilValues.push(oilVal);
-          totalOil += oilVal;
+          // totalOil += oilVal;
         }
       });
     }
@@ -198,22 +198,22 @@ export class PatternInfoComponent implements OnInit {
     // const oilMax = d3.max(allOilValues) ?? 1;
 
     // Create a color scale. Adjust the color range as needed.
-    const colorScale = d3.scaleLinear<string>().domain([0, totalOil]).range(['#ff8888', '#990000']); // From light red to dark red
+    // const colorScale = d3.scaleLinear<string>().domain([0, totalOil]).range(['#ff8888', '#990000']); // From light red to dark red
 
     // Draw rectangles for forwards_data with color based on total_oil
     if (pattern.forwards_data) {
       pattern.forwards_data.forEach((d: ForwardsData) => {
         if (d.total_oil !== '0') {
           const rect = computeRect(d);
-          const oilVal = parseOilValue(d.total_oil);
+          // const oilVal = parseOilValue(d.total_oil);
           g.append('rect')
             .attr('x', rect.x)
             .attr('y', rect.y)
             .attr('width', rect.width)
             .attr('height', rect.height)
             // Use the color scale to set the fill
-            .attr('fill', colorScale(oilVal))
-            .attr('fill-opacity', 0.8);
+            .attr('fill', 'red')
+            .attr('fill-opacity', 0.5);
         }
       });
     }
@@ -223,14 +223,14 @@ export class PatternInfoComponent implements OnInit {
       pattern.reverse_data.forEach((d: ReverseData) => {
         if (d.total_oil !== '0') {
           const rect = computeRect(d);
-          const oilVal = parseOilValue(d.total_oil);
+          // const oilVal = parseOilValue(d.total_oil);
           g.append('rect')
             .attr('x', rect.x)
             .attr('y', rect.y)
             .attr('width', rect.width)
             .attr('height', rect.height)
-            .attr('fill', colorScale(oilVal))
-            .attr('fill-opacity', 0.8);
+            .attr('fill', 'red')
+            .attr('fill-opacity', 0.3);
         }
       });
     }
@@ -270,18 +270,18 @@ export class PatternInfoComponent implements OnInit {
     // Draw reverse area background (slightly darker)
     if (reverseMaxDistance != forwardsMaxDistance) {
       g.append('rect')
-        .attr('x', 0)
+        .attr('x', xScale(1)) // Start at board 1
         .attr('y', yScale(forwardsMaxDistance))
-        .attr('width', width)
+        .attr('width', xScale(38) - xScale(1)) // Width from board 1 to board 38
         .attr('height', yScale(0) - yScale(forwardsMaxDistance))
         .attr('fill', 'red')
         .attr('fill-opacity', 0.05);
     }
 
     g.append('rect')
-      .attr('x', 0)
+      .attr('x', xScale(1)) // Start at board 1
       .attr('y', yScale(reverseMaxDistance))
-      .attr('width', width)
+      .attr('width', xScale(38) - xScale(1)) // Width from board 1 to board 38
       .attr('height', yScale(0) - yScale(reverseMaxDistance))
       .attr('fill', 'red')
       .attr('fill-opacity', 0.1); // Higher opacity
