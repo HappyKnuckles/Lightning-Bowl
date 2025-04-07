@@ -19,9 +19,9 @@
     @for(pattern of patterns; track pattern.url) {
     <ion-card
       [ngClass]="{
-          'red-card': getRatioValue(pattern.details.ratio ?? '0') >= 1 && getRatioValue(pattern.details.ratio ?? '0') < 4,
-          'yellow-card': getRatioValue(pattern.details.ratio ?? '0') >= 4 && getRatioValue(pattern.details.ratio ?? '0') < 8,
-          'green-card': getRatioValue(pattern.details.ratio ?? '0') >= 8
+          'red-card': getRatioValue(pattern.ratio ?? '0') >= 1 && getRatioValue(pattern.ratio ?? '0') < 4,
+          'yellow-card': getRatioValue(pattern.ratio ?? '0') >= 4 && getRatioValue(pattern.ratio ?? '0') < 8,
+          'green-card': getRatioValue(pattern.ratio ?? '0') >= 8
         }"
       button
       id="{{pattern.url}}">
@@ -30,13 +30,13 @@
         <ion-card-subtitle>{{pattern.category}}</ion-card-subtitle>
       </ion-card-header>
       <ion-card-content>
-        <ion-chip>Distance: {{formatDistance(pattern.details.distance)}}</ion-chip>
-        <ion-chip>Ratio: {{pattern.details.ratio ?? 0}}</ion-chip>
-        <ion-chip>Volume: {{pattern.details.volume}}mL</ion-chip>
-        <ion-chip>Oil Forward: {{pattern.details.forward}}mL</ion-chip>
-        <ion-chip>Oil Reverse: {{pattern.details.reverse}}mL</ion-chip>
-        <ion-chip>Pump: {{pattern.details.pump}}</ion-chip>
-        <ion-chip>Tanks: {{pattern.details.tanks}}</ion-chip>
+        <ion-chip>Distance: {{formatDistance(pattern.distance)}}</ion-chip>
+        <ion-chip>Ratio: {{pattern.ratio ?? 0}}</ion-chip>
+        <ion-chip>Volume: {{pattern.volume}}mL</ion-chip>
+        <ion-chip>Oil Forward: {{pattern.forward}}mL</ion-chip>
+        <ion-chip>Oil Reverse: {{pattern.reverse}}mL</ion-chip>
+        <ion-chip>Pump: {{pattern.pump}}</ion-chip>
+        <ion-chip>Tanks: {{pattern.tanks}}</ion-chip>
       </ion-card-content>
     </ion-card>
     }

@@ -119,7 +119,7 @@ export class PatternPage implements OnInit {
         this.hasMoreData = false;
       }
     } catch (error) {
-      console.error('Error fetching balls:', error);
+      console.error('Error fetching patterns:', error);
       this.toastService.showToast(ToastMessages.patternLoadError, 'bug', true);
     } finally {
       if (!event) {
@@ -136,10 +136,12 @@ export class PatternPage implements OnInit {
       this.loadingService.setLoading(true);
       if (event.detail.value === '') {
         this.hasMoreData = true;
-        await this.loadPatterns();
+        const response = await this.patternService.getPatterns(this.currentPage);
+        this.patterns = response.patterns;
+        this.currentPage++;
       } else {
         const response = await this.patternService.searchPattern(event.detail.value);
-        this.patterns = response.results;
+        this.patterns = response.patterns;
         this.hasMoreData = false;
         this.currentPage = 1;
       }

@@ -21,7 +21,7 @@ export class PatternInfoComponent implements OnInit {
   }
 
   getDifficulty() {
-    const numericPart = this.pattern().details.ratio!.split(':')[0];
+    const numericPart = this.pattern().ratio?.split(':')[0] || '0';
     const num = parseInt(numericPart, 10);
     if (num <= 4) {
       return 'Hard';
@@ -33,7 +33,7 @@ export class PatternInfoComponent implements OnInit {
   }
 
   getLength() {
-    const length = parseInt(this.pattern().details.distance, 10);
+    const length = parseInt(this.pattern().distance, 10);
     if (length <= 35) {
       return 'Short';
     } else if (length < 41) {
@@ -44,7 +44,7 @@ export class PatternInfoComponent implements OnInit {
   }
 
   getVolume() {
-    const volume = parseInt(this.pattern().details.volume, 10);
+    const volume = parseInt(this.pattern().volume, 10);
     if (volume < 22) {
       return 'Light';
     } else if (volume <= 26) {
@@ -69,6 +69,7 @@ export class PatternInfoComponent implements OnInit {
 
   drawChart(pattern: Pattern): void {
     // Select the SVG element and set up a viewBox for responsiveness.
+    console.log('Drawing chart for pattern:', pattern);
     const svg = d3
       .select(this.svgElement.nativeElement)
       .attr('preserveAspectRatio', 'xMidYMid meet')
@@ -203,7 +204,7 @@ export class PatternInfoComponent implements OnInit {
     // Draw rectangles for forwards_data with color based on total_oil
     if (pattern.forwards_data) {
       pattern.forwards_data.forEach((d: ForwardsData) => {
-        if (d.total_oil !== '0') {
+        if (parseInt(d.total_oil) !== 0) {
           const rect = computeRect(d);
           // const oilVal = parseOilValue(d.total_oil);
           g.append('rect')
@@ -221,7 +222,7 @@ export class PatternInfoComponent implements OnInit {
     // Draw rectangles for reverse_data with color based on total_oil
     if (pattern.reverse_data) {
       pattern.reverse_data.forEach((d: ReverseData) => {
-        if (d.total_oil !== '0') {
+        if (parseInt(d.total_oil) !== 0) {
           const rect = computeRect(d);
           // const oilVal = parseOilValue(d.total_oil);
           g.append('rect')

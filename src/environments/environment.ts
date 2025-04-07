@@ -5,6 +5,6 @@ export const environment = {
   emailTemplateID: 'template_qwl4l46',
   emailServiceID: 'service_4zwqeji',
   emailUserID: 'mkI2Kqg6m34U7GL8m',
-  patternEndpoint: 'http://localhost:5000',
+  patternEndpoint: 'http://localhost:5000/api/',
 };
 //TODO add test adIds here
