@@ -14,12 +14,12 @@ import {
   IonRadioGroup, IonText, IonSkeletonText } from '@ionic/angular/standalone';
 import { InfiniteScrollCustomEvent } from '@ionic/angular';
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
-import { NgIf } from '@angular/common';
+import { NgClass, NgIf } from '@angular/common';
 
 @Component({
   selector: 'app-pattern-typeahead',
   standalone: true,
-  imports: [NgIf, IonSkeletonText, IonText, IonRadioGroup, IonRadio, IonItem, IonInfiniteScrollContent, IonInfiniteScroll, IonContent, IonToolbar, IonSearchbar, IonTitle, IonHeader],
+  imports: [NgIf, IonSkeletonText, IonText, IonRadioGroup, IonRadio, IonItem, IonInfiniteScrollContent, IonInfiniteScroll, IonContent, IonToolbar, IonSearchbar, IonTitle, IonHeader, NgClass],
   templateUrl: './pattern-typeahead.component.html',
   styleUrl: './pattern-typeahead.component.scss',
 })
@@ -95,6 +95,11 @@ export class PatternTypeaheadComponent implements OnInit, OnDestroy {
   radioGroupChange(event: CustomEvent): void {
     this.selectedPattern = event.detail.value;
     this.reorderPatterns(this.selectedPattern);
+  }
+
+  getRatioValue(ratio: string): number {
+    const numericPart = ratio.split(':')[0];
+    return parseFloat(numericPart);
   }
 
   private reorderPatterns(selectedPatternTitle: string): void {
