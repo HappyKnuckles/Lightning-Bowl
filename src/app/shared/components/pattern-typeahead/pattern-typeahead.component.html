@@ -12,15 +12,14 @@
       <ion-text class="no-game-text"> No patterns found! </ion-text>
     </ng-container>
     <ng-template #allPatterns>
-      <ion-radio-group
-     
-      (ionChange)="radioGroupChange($event)" [value]="prevSelectedPattern()" allowEmptySelection="true">
+      <ion-radio-group (ionChange)="radioGroupChange($event)" [value]="prevSelectedPattern()" allowEmptySelection="true">
         @for (pattern of displayedPatterns(); track pattern.url) {
-          <ion-item [ngClass]="{
-        'red-card': getRatioValue(pattern.details?.ratio ?? '0') >= 1 && getRatioValue(pattern.details?.ratio ?? '0') < 4,
-        'yellow-card': getRatioValue(pattern.details?.ratio ?? '0') >= 4 && getRatioValue(pattern.details?.ratio ?? '0') < 8,
-        'green-card': getRatioValue(pattern.details?.ratio ?? '0') >= 8
-      }">
+          <ion-item
+            [ngClass]="{
+              'red-card': getRatioValue(pattern?.ratio ?? '0') >= 1 && getRatioValue(pattern?.ratio ?? '0') < 4,
+              'yellow-card': getRatioValue(pattern?.ratio ?? '0') >= 4 && getRatioValue(pattern?.ratio ?? '0') < 8,
+              'green-card': getRatioValue(pattern?.ratio ?? '0') >= 8,
+            }">
             <ion-radio [value]="pattern.title" justify="space-between">{{ pattern.title }}</ion-radio>
           </ion-item>
         }
@@ -32,7 +31,7 @@
   } @else {
     @for (item of [1, 2, 3, 4, 5, 6, 7, 8]; track item) {
       <ion-item>
-        <ion-skeleton-text style="width: 70%; border-radius: 5px;"></ion-skeleton-text>
+        <ion-skeleton-text style="width: 70%; border-radius: 5px"></ion-skeleton-text>
       </ion-item>
     }
   }

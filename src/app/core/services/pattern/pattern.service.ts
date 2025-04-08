@@ -5,7 +5,7 @@ import { firstValueFrom, retry } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 interface SearchResult {
-  results: Pattern[];
+  patterns: Pattern[];
   count: number;
   query: string;
   numeric_query: boolean;
@@ -81,7 +81,7 @@ export class PatternService {
       return response;
     } catch (error) {
       console.error('Error searching patterns:', error);
-      return { results: [], count: 0, query: '', numeric_query: false, threshold: 0 };
+      return { patterns: [], count: 0, query: '', numeric_query: false, threshold: 0 };
     }
   }
 }

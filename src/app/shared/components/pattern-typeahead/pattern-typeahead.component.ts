@@ -11,7 +11,10 @@ import {
   IonInfiniteScrollContent,
   IonItem,
   IonRadio,
-  IonRadioGroup, IonText, IonSkeletonText } from '@ionic/angular/standalone';
+  IonRadioGroup,
+  IonText,
+  IonSkeletonText,
+} from '@ionic/angular/standalone';
 import { InfiniteScrollCustomEvent } from '@ionic/angular';
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import { NgClass, NgIf } from '@angular/common';
@@ -19,7 +22,22 @@ import { NgClass, NgIf } from '@angular/common';
 @Component({
   selector: 'app-pattern-typeahead',
   standalone: true,
-  imports: [NgIf, IonSkeletonText, IonText, IonRadioGroup, IonRadio, IonItem, IonInfiniteScrollContent, IonInfiniteScroll, IonContent, IonToolbar, IonSearchbar, IonTitle, IonHeader, NgClass],
+  imports: [
+    NgIf,
+    IonSkeletonText,
+    IonText,
+    IonRadioGroup,
+    IonRadio,
+    IonItem,
+    IonInfiniteScrollContent,
+    IonInfiniteScroll,
+    IonContent,
+    IonToolbar,
+    IonSearchbar,
+    IonTitle,
+    IonHeader,
+    NgClass,
+  ],
   templateUrl: './pattern-typeahead.component.html',
   styleUrl: './pattern-typeahead.component.scss',
 })
@@ -35,7 +53,10 @@ export class PatternTypeaheadComponent implements OnInit, OnDestroy {
   private batchSize = 100;
   public loadedCount = signal(0);
 
-  constructor(private patternService: PatternService, public loadingService: LoadingService) {}
+  constructor(
+    private patternService: PatternService,
+    public loadingService: LoadingService,
+  ) {}
 
   ngOnInit() {
     this.filteredPatterns.set([...this.patterns()]);
@@ -53,12 +74,12 @@ export class PatternTypeaheadComponent implements OnInit, OnDestroy {
     const searchTerm = event.detail.value;
 
     try {
-      this.loadingService.setLoading(true)
+      this.loadingService.setLoading(true);
       if (searchTerm === '') {
         this.filteredPatterns.set([...this.patterns()]);
       } else {
         const response = await this.patternService.searchPattern(searchTerm);
-        const patterns = response.results;
+        const patterns = response.patterns;
         this.filteredPatterns.set(patterns);
       }
 
@@ -75,7 +96,7 @@ export class PatternTypeaheadComponent implements OnInit, OnDestroy {
     } catch (error) {
       console.error('Error searching patterns:', error);
     } finally {
-      this.loadingService.setLoading(false)
+      this.loadingService.setLoading(false);
     }
   }
 
