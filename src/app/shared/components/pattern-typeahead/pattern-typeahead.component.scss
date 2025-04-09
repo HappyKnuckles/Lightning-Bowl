@@ -1,11 +1,16 @@
 .red-card {
-    border-left: 5px solid red;
-  }
-  
-  .yellow-card {
-    border-left: 5px solid yellow;
-  }
-  
-  .green-card {
-    border-left: 5px solid green;
-  }
+  border-left: 5px solid red;
+}
+
+.yellow-card {
+  border-left: 5px solid yellow;
+}
+
+.green-card {
+  border-left: 5px solid green;
+}
+
+ion-item {
+  margin-bottom: 6px;
+  border-radius: 7px;
+}

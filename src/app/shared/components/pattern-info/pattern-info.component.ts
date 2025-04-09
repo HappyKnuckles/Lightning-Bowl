@@ -74,7 +74,8 @@ export class PatternInfoComponent implements OnInit {
       .select(this.svgElement.nativeElement)
       .attr('preserveAspectRatio', 'xMidYMid meet')
       .attr('viewBox', '0 0 400 1500')
-      .style('background-color', 'white');
+      .style('background-color', 'white')
+      .style('border-radius', '7px');
     // .style('margin-top', '16px')
     // .style('margin-left', '8px')
     // .style('margin-right', '8px');

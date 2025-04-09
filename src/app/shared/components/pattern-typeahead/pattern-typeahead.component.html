@@ -19,7 +19,8 @@
               'red-card': getRatioValue(pattern?.ratio ?? '0') >= 1 && getRatioValue(pattern?.ratio ?? '0') < 4,
               'yellow-card': getRatioValue(pattern?.ratio ?? '0') >= 4 && getRatioValue(pattern?.ratio ?? '0') < 8,
               'green-card': getRatioValue(pattern?.ratio ?? '0') >= 8,
-            }">
+            }"
+            lines="none">
             <ion-radio [value]="pattern.title" justify="space-between">{{ pattern.title }}</ion-radio>
           </ion-item>
         }

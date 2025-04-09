@@ -274,8 +274,8 @@ export class StorageService {
       await this.loadLeagues();
       await this.loadGameHistory();
       await this.loadArsenal();
-      await this.loadAllBalls(undefined, weight);
       await this.loadAllPatterns();
+      await this.loadAllBalls(undefined, weight);
       await this.ballService.getBrands();
       await this.ballService.getCores();
       await this.ballService.getCoverstocks();
