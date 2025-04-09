@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Pattern } from '../../models/pattern.model';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, retry } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 interface SearchResult {
@@ -27,7 +27,7 @@ export class PatternService {
 
   async getPatterns(page: number): Promise<AllPatternsResult> {
     try {
-      const response = await firstValueFrom(this.http.get<AllPatternsResult>(`${environment.patternEndpoint}patterns?page=${page}`));
+      const response = await firstValueFrom(this.http.get<AllPatternsResult>(`${environment.patternEndpoint}patterns?page=${page}`).pipe(retry({ count: 5, delay: 2000 })));
       return response;
     } catch (error) {
       console.error('Error fetching patterns:', error);
@@ -37,7 +37,7 @@ export class PatternService {
 
   async getAllPatterns(): Promise<Pattern[]> {
     try {
-      const response = await firstValueFrom(this.http.get<Pattern[]>(`${environment.patternEndpoint}patterns/all`));
+      const response = await firstValueFrom(this.http.get<Pattern[]>(`${environment.patternEndpoint}patterns/all`).pipe(retry({ count: 5, delay: 2000 })));
       return response;
     } catch (error) {
       console.error('Error fetching all patterns:', error);
