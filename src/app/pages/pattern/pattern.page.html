@@ -12,7 +12,7 @@
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
   @if(!loadingService.isLoading()) {
-  <ng-container *ngIf="patterns.length <= 0 && !loadingService.isLoading(); else allPatterns">
+  <ng-container *ngIf="patterns.length <= 0; else allPatterns">
     <ion-text class="no-game-text"> No patterns found! </ion-text>
   </ng-container>
   <ng-template #allPatterns>
@@ -25,18 +25,21 @@
         }"
       button
       id="{{pattern.url}}">
+      <!-- TODO make the pattern image as card media header 
+      <img src="/assets/image.png" alt="">-->
+      <!-- <svg #patternSvg [id]="'pattern-' + pattern.url" class="pattern-chart"></svg> -->
       <ion-card-header>
         <ion-card-title>{{pattern.title}}</ion-card-title>
         <ion-card-subtitle>{{pattern.category}}</ion-card-subtitle>
       </ion-card-header>
       <ion-card-content>
-        <ion-chip>Distance: {{formatDistance(pattern.distance)}}</ion-chip>
-        <ion-chip>Ratio: {{pattern.ratio ?? 0}}</ion-chip>
-        <ion-chip>Volume: {{pattern.volume}}mL</ion-chip>
-        <ion-chip>Oil Forward: {{pattern.forward}}mL</ion-chip>
-        <ion-chip>Oil Reverse: {{pattern.reverse}}mL</ion-chip>
-        <ion-chip>Pump: {{pattern.pump}}</ion-chip>
-        <ion-chip>Tanks: {{pattern.tanks}}</ion-chip>
+        <ion-chip class="info">Distance: {{formatDistance(pattern.distance)}}</ion-chip>
+        <ion-chip class="info">Ratio: {{pattern.ratio ?? 0}}</ion-chip>
+        <ion-chip class="info">Volume: {{pattern.volume}}mL</ion-chip>
+        <ion-chip class="info">Oil Forward: {{pattern.forward}}mL</ion-chip>
+        <ion-chip class="info">Oil Reverse: {{pattern.reverse}}mL</ion-chip>
+        <ion-chip class="info">Pump: {{pattern.pump}}</ion-chip>
+        <ion-chip class="info">Tanks: {{pattern.tanks}}</ion-chip>
       </ion-card-content>
     </ion-card>
     }

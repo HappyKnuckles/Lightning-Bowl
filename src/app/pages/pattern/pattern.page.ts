@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild, AfterViewInit, ViewChildren, QueryList } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -35,6 +35,7 @@ import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { PatternInfoComponent } from 'src/app/shared/components/pattern-info/pattern-info.component';
 import { addIcons } from 'ionicons';
 import { chevronBack } from 'ionicons/icons';
+import { ChartGenerationService } from 'src/app/core/services/chart/chart-generation.service';
 
 @Component({
   selector: 'app-pattern',
@@ -73,17 +74,20 @@ export class PatternPage implements OnInit {
   patterns: Pattern[] = [];
   currentPage = 1;
   hasMoreData = true;
+  @ViewChildren('patternSvg') patternSvgElements!: QueryList<ElementRef>;
 
   constructor(
     private patternService: PatternService,
     private hapticService: HapticService,
     public loadingService: LoadingService,
     private toastService: ToastService,
+    private chartService: ChartGenerationService,
   ) {
     addIcons({ chevronBack });
   }
   async ngOnInit() {
     await this.loadPatterns();
+    // this.renderCharts();
   }
 
   async handleRefresh(event: RefresherCustomEvent): Promise<void> {
@@ -102,6 +106,20 @@ export class PatternPage implements OnInit {
       this.loadingService.setLoading(false);
     }
   }
+ 
+  
+  // Use this when your patterns change too
+  // renderCharts() {
+  //   // Wait for change detection to complete
+  //   setTimeout(() => {
+  //     this.patternSvgElements.forEach((svgElement: ElementRef<any>, index: number) => {
+  //       if (index < this.patterns.length) {
+  //         const pattern = this.patterns[index];   
+  //         this.chartService.generatePatternChart(pattern, svgElement);
+  //       }
+  //     });
+  //   });
+  // }
 
   async loadPatterns(event?: InfiniteScrollCustomEvent): Promise<void> {
     try {
