@@ -23,8 +23,7 @@ import {
   IonRippleEffect,
   IonList,
   IonRefresherContent,
-  IonRefresher,
-} from '@ionic/angular/standalone';
+  IonRefresher, IonSkeletonText } from '@ionic/angular/standalone';
 import { Ball } from 'src/app/core/models/ball.model';
 import { addIcons } from 'ionicons';
 import { globeOutline, camera, addOutline, filterOutline, openOutline, closeCircle } from 'ionicons/icons';
@@ -49,7 +48,7 @@ import { BallListComponent } from 'src/app/shared/components/ball-list/ball-list
   styleUrls: ['./balls.page.scss'],
   standalone: true,
   providers: [ModalController],
-  imports: [
+  imports: [IonSkeletonText, 
     IonRefresher,
     IonRefresherContent,
     IonList,
