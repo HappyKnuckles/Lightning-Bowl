@@ -44,4 +44,5 @@ export interface Pattern {
   forwards_data: ForwardsData[];
   reverse_data: ReverseData[];
   chartImageSrc?: SafeUrl;
+  chartImageSrcVertical?: SafeUrl;
 }

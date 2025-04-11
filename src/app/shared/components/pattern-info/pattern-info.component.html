@@ -1,5 +1,5 @@
 <div class="pattern-container">
-  <svg #svg style="width: 50%; height: auto"></svg>
+   <img [src]="pattern().chartImageSrcVertical" style="width: 50%; height: auto; border-radius: 16px" alt="Pattern image"/>
   <div class="pattern-info">
     <ion-chip>Distance: {{ formatDistance(pattern().distance) }}</ion-chip>
     <ion-chip>Volume: {{ pattern().volume }}mL</ion-chip>

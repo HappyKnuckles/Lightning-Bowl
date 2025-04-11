@@ -1,26 +1,16 @@
-import { Component, ElementRef, input, OnInit, ViewChild } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { Pattern } from 'src/app/core/models/pattern.model';
-import { IonCol, IonRow, IonGrid, IonLabel, IonChip } from '@ionic/angular/standalone';
-import { ChartGenerationService } from 'src/app/core/services/chart/chart-generation.service';
+import { IonCol, IonRow, IonGrid, IonLabel, IonChip, IonImg } from '@ionic/angular/standalone';
 
 @Component({
   selector: 'app-pattern-info',
   standalone: true,
-  imports: [IonChip, IonLabel, IonGrid, IonRow, IonCol],
+  imports: [IonImg, IonChip, IonLabel, IonGrid, IonRow, IonCol],
   templateUrl: './pattern-info.component.html',
   styleUrl: './pattern-info.component.scss',
 })
-export class PatternInfoComponent implements OnInit {
-  @ViewChild('svg', { static: true }) svgElement!: ElementRef;
+export class PatternInfoComponent {
   pattern = input.required<Pattern>();
-  yMax = 70; // Maximum y-axis value (distance in feet)
-  xMax = 39; // Maximum x-axis value (board number)
-
-  constructor(private chartService: ChartGenerationService) {}
-
-  ngOnInit(): void {
-    this.drawChart();
-  }
 
   getDifficulty() {
     const numericPart = this.pattern().ratio?.split(':')[0] || '0';
@@ -67,9 +57,5 @@ export class PatternInfoComponent implements OnInit {
     }
 
     return distStr;
-  }
-
-  drawChart(){
-    this.chartService.generatePatternChart(this.pattern(), this.svgElement);
   }
 }
