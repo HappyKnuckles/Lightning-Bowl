@@ -36,6 +36,11 @@
 
     <app-league-selector></app-league-selector>
 
+    <ion-item button id="spare-names-modal">
+      <ion-icon src="/assets/svg/pin.svg" slot="start"></ion-icon>
+      <ion-label>Spare Names</ion-label>
+    </ion-item>
+
     <!-- TODO maybe add InAppBrowser for this -->
     <ion-item href="https://github.com/HappyKnuckles/bowling-stats/issues" button detail="false">
       <ion-icon name="logo-github" slot="start"></ion-icon>
@@ -54,6 +59,24 @@
     </ion-item>
   </ion-list>
 </ion-content>
+
+<ion-modal trigger="spare-names-modal" #spareNamesModal>
+  <ng-template>
+    <ion-header [translucent]="true">
+      <ion-toolbar>
+        <ion-buttons slot="start">
+          <ion-button color="medium" (click)="spareNamesModal.dismiss()">
+            <ion-icon name="chevron-back-outline"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+        <ion-title>Spare Names</ion-title>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content [fullscreen]="true">
+      <app-spare-names></app-spare-names>
+    </ion-content>
+  </ng-template>
+</ion-modal>
 
 <ion-modal trigger="feedback-modal" #feedback [keepContentsMounted]="true">
   <ng-template>

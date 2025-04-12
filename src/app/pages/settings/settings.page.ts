@@ -31,6 +31,7 @@ import {
   mailOutline,
   chevronBack,
   refreshCircleOutline,
+  chevronBackOutline,
 } from 'ionicons/icons';
 import { NgClass, NgFor } from '@angular/common';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
@@ -41,6 +42,7 @@ import emailjs from '@emailjs/browser';
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { LeagueSelectorComponent } from 'src/app/shared/components/league-selector/league-selector.component';
+import { SpareNamesComponent } from 'src/app/shared/components/spare-names/spare-names.component';
 
 @Component({
   selector: 'app-settings',
@@ -72,6 +74,7 @@ import { LeagueSelectorComponent } from 'src/app/shared/components/league-select
     FormsModule,
     ReactiveFormsModule,
     LeagueSelectorComponent,
+    SpareNamesComponent,
   ],
 })
 export class SettingsPage implements OnInit {
@@ -93,7 +96,17 @@ export class SettingsPage implements OnInit {
     private loadingService: LoadingService,
     private themeService: ThemeChangerService,
   ) {
-    addIcons({ personCircleOutline, colorPaletteOutline, logoGithub, mailOutline, refreshCircleOutline, addOutline, chevronBack, sendOutline });
+    addIcons({
+      personCircleOutline,
+      colorPaletteOutline,
+      logoGithub,
+      mailOutline,
+      refreshCircleOutline,
+      chevronBackOutline,
+      addOutline,
+      chevronBack,
+      sendOutline,
+    });
   }
 
   ngOnInit(): void {
