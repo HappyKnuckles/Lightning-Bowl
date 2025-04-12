@@ -24,6 +24,7 @@ import {
   IonButton,
   IonIcon,
   IonSpinner,
+  IonImg,
 } from '@ionic/angular/standalone';
 import { Pattern } from 'src/app/core/models/pattern.model';
 import { PatternService } from 'src/app/core/services/pattern/pattern.service';
@@ -45,6 +46,7 @@ import { DomSanitizer } from '@angular/platform-browser';
   styleUrls: ['./pattern.page.scss'],
   standalone: true,
   imports: [
+    IonImg,
     IonSpinner,
     IonIcon,
     IonButton,
@@ -90,7 +92,7 @@ export class PatternPage implements OnInit {
   }
   async ngOnInit() {
     await this.loadPatterns();
-    this.generateChartImages(); // Generate chart images for all patterns
+    this.generateChartImages();
     // this.renderCharts();
   }
 

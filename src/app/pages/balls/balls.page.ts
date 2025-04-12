@@ -23,7 +23,9 @@ import {
   IonRippleEffect,
   IonList,
   IonRefresherContent,
-  IonRefresher, IonSkeletonText } from '@ionic/angular/standalone';
+  IonRefresher,
+  IonSkeletonText,
+} from '@ionic/angular/standalone';
 import { Ball } from 'src/app/core/models/ball.model';
 import { addIcons } from 'ionicons';
 import { globeOutline, camera, addOutline, filterOutline, openOutline, closeCircle } from 'ionicons/icons';
@@ -48,7 +50,8 @@ import { BallListComponent } from 'src/app/shared/components/ball-list/ball-list
   styleUrls: ['./balls.page.scss'],
   standalone: true,
   providers: [ModalController],
-  imports: [IonSkeletonText, 
+  imports: [
+    IonSkeletonText,
     IonRefresher,
     IonRefresherContent,
     IonList,
@@ -88,6 +91,7 @@ export class BallsPage implements OnInit {
   searchSubject = new Subject<string>();
   searchTerm = '';
   currentPage = 0;
+  componentLoading = false;
   hasMoreData = true;
   filterDisplayCount = 100;
 
@@ -263,6 +267,7 @@ export class BallsPage implements OnInit {
   async getSameCoreBalls(ball: Ball): Promise<void> {
     try {
       this.hapticService.vibrate(ImpactStyle.Light, 100);
+      this.componentLoading = true;
       this.loadingService.setLoading(true);
       this.coreBalls = await this.ballService.getBallsByCore(ball);
       if (this.coreBalls.length > 0) {
@@ -274,6 +279,7 @@ export class BallsPage implements OnInit {
       console.error('Error fetching core balls:', error);
       this.toastService.showToast(`Error fetching balls for core ${ball.core_name}`, 'bug', true);
     } finally {
+      this.componentLoading = false;
       this.loadingService.setLoading(false);
     }
   }
@@ -281,6 +287,7 @@ export class BallsPage implements OnInit {
   async getSameCoverstockBalls(ball: Ball): Promise<void> {
     try {
       this.hapticService.vibrate(ImpactStyle.Light, 100);
+      this.componentLoading = true;
       this.loadingService.setLoading(true);
       this.coverstockBalls = await this.ballService.getBallsByCoverstock(ball);
       if (this.coverstockBalls.length > 0) {
@@ -292,6 +299,7 @@ export class BallsPage implements OnInit {
       console.error('Error fetching coverstock balls:', error);
       this.toastService.showToast(`Error fetching balls for coverstock ${ball.coverstock_name}`, 'bug', true);
     } finally {
+      this.componentLoading = false;
       this.loadingService.setLoading(false);
     }
   }

@@ -63,7 +63,7 @@ export class SpareNamesComponent {
   }
 
   private isGreekChurch(pins: number[]): boolean {
-    return JSON.stringify(pins) === JSON.stringify([4, 6, 7, 10, 8]) || JSON.stringify(pins) === JSON.stringify([4, 6, 7, 10, 9]);
+    return JSON.stringify(pins) === JSON.stringify([4, 6, 7, 8, 10]) || JSON.stringify(pins) === JSON.stringify([4, 6, 7, 9, 10]);
   }
 
   private isBabySplit(pins: number[]): boolean {

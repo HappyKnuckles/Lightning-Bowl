@@ -366,7 +366,6 @@ export class ChartGenerationService {
   }
 
   generatePatternChartDataUri(pattern: Pattern, horizontal = false): string {
-
     // 1. Create a detached SVG element in memory
     const svgWidth = horizontal ? 325 : 375; // Base width for viewBox/drawing
     const svgHeight = horizontal ? 1300 : 1500; // Base height for viewBox/drawing
@@ -599,7 +598,7 @@ export class ChartGenerationService {
     const centerX = LANE_WIDTH / 2;
     const baseY = 60; // Row 1 (pin 1)
     const rowSpacing = 3; // Vertical spacing between rows (data units)
-    const offset = 12; // Base horizontal offset for positioning pins
+    const offset = 11; // Base horizontal offset for positioning pins
 
     // Row definitions (data coordinates):
     // Row 1: one pin (number 1)

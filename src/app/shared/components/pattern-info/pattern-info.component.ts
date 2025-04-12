@@ -1,11 +1,11 @@
 import { Component, input } from '@angular/core';
 import { Pattern } from 'src/app/core/models/pattern.model';
-import { IonCol, IonRow, IonGrid, IonLabel, IonChip, IonImg } from '@ionic/angular/standalone';
+import { IonCol, IonRow, IonGrid, IonLabel, IonChip } from '@ionic/angular/standalone';
 
 @Component({
   selector: 'app-pattern-info',
   standalone: true,
-  imports: [IonImg, IonChip, IonLabel, IonGrid, IonRow, IonCol],
+  imports: [IonChip, IonLabel, IonGrid, IonRow, IonCol],
   templateUrl: './pattern-info.component.html',
   styleUrl: './pattern-info.component.scss',
 })

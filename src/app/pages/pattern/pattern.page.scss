@@ -9,21 +9,3 @@
 .green-card {
   border-left: 5px solid green;
 }
-
-// .pattern-chart-image {
-//   display: block; // Good practice for images filling width
-//   width: 100%; // Make image take full width of its container (the ion-card)
-//   height: 200px; // Set a FIXED height of 200px
-//       /* Ensures the image fills the container */
-// }
-
-// Keep placeholder styling if you use it
-.chart-placeholder {
-  min-height: 200px; // Match the image height
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  color: var(--ion-color-medium);
-}

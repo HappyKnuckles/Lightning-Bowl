@@ -25,7 +25,7 @@
   </ion-refresher>
   <app-ball-filter-active></app-ball-filter-active>
 
-  @if(!loadingService.isLoading()) {
+  @if(!loadingService.isLoading() || componentLoading) {
   <ng-container *ngIf="(displayedBalls.length <= 0); else content">
     <ion-text class="no-game-text"> No balls found. </ion-text>
   </ng-container>
@@ -87,26 +87,26 @@
       </ion-card-subtitle>
     </ion-card-header>
     <ion-card-content>
-      <ion-skeleton-text [animated]="true" style="height: 15vh; width: 15vh; border-radius: 100%; margin: 0 auto;"></ion-skeleton-text>
+      <ion-skeleton-text [animated]="true" style="height: 15vh; width: 15vh; border-radius: 100%; margin: 0 auto"></ion-skeleton-text>
       <div class="ball-info">
         <ion-list lines="none" class="list">
           <div class="core">
-            <ion-skeleton-text [animated]="true" style="height:20px; width: 120px; border-radius: 10px"></ion-skeleton-text>
+            <ion-skeleton-text [animated]="true" style="height: 20px; width: 120px; border-radius: 10px"></ion-skeleton-text>
           </div>
-          <ion-skeleton-text [animated]="true" style="height:17px; width: 100px; border-radius: 10px"></ion-skeleton-text>
-          <ion-skeleton-text [animated]="true" style="height:17px; width: 100px; border-radius: 10px"></ion-skeleton-text>
-          <ion-skeleton-text [animated]="true" style="height:17px; width: 90px; border-radius: 10px"></ion-skeleton-text>
-          <ion-skeleton-text [animated]="true" style="height:17px; width: 85px; border-radius: 10px"></ion-skeleton-text>
-          <ion-skeleton-text [animated]="true" style="height:17px; width: 80px; border-radius: 10px"></ion-skeleton-text>
-          <ion-skeleton-text [animated]="true" style="height:17px; width: 70px; border-radius: 10px"></ion-skeleton-text>
+          <ion-skeleton-text [animated]="true" style="height: 17px; width: 100px; border-radius: 10px"></ion-skeleton-text>
+          <ion-skeleton-text [animated]="true" style="height: 17px; width: 100px; border-radius: 10px"></ion-skeleton-text>
+          <ion-skeleton-text [animated]="true" style="height: 17px; width: 90px; border-radius: 10px"></ion-skeleton-text>
+          <ion-skeleton-text [animated]="true" style="height: 17px; width: 85px; border-radius: 10px"></ion-skeleton-text>
+          <ion-skeleton-text [animated]="true" style="height: 17px; width: 80px; border-radius: 10px"></ion-skeleton-text>
+          <ion-skeleton-text [animated]="true" style="height: 17px; width: 70px; border-radius: 10px"></ion-skeleton-text>
         </ion-list>
-        <ion-list lines="none" class="list" style="display: flex; flex-direction: column; align-items: end;">
+        <ion-list lines="none" class="list" style="display: flex; flex-direction: column; align-items: end">
           <div class="coverstock">
-            <ion-skeleton-text [animated]="true" style="height:20px; width: 15vh; border-radius: 10px"></ion-skeleton-text>
+            <ion-skeleton-text [animated]="true" style="height: 20px; width: 15vh; border-radius: 10px"></ion-skeleton-text>
           </div>
-          <ion-skeleton-text [animated]="true" style="height:17px; width: 100px; border-radius: 10px"></ion-skeleton-text>
-          <ion-skeleton-text [animated]="true" style="height:17px; width: 85px; border-radius: 10px"></ion-skeleton-text>
-          <ion-skeleton-text [animated]="true" style="height:17px; width: 80px; border-radius: 10px"></ion-skeleton-text>
+          <ion-skeleton-text [animated]="true" style="height: 17px; width: 100px; border-radius: 10px"></ion-skeleton-text>
+          <ion-skeleton-text [animated]="true" style="height: 17px; width: 85px; border-radius: 10px"></ion-skeleton-text>
+          <ion-skeleton-text [animated]="true" style="height: 17px; width: 80px; border-radius: 10px"></ion-skeleton-text>
         </ion-list>
       </div>
     </ion-card-content>
