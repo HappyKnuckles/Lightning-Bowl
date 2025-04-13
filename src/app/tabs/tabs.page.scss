@@ -9,3 +9,7 @@ ion-icon {
 .active-tab {
   color: var(--ion-color-primary);
 }
+
+.tab-btn:not(.active-tab){
+  color: #999;
+}

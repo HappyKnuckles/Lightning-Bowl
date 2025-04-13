@@ -1,6 +1,6 @@
 import { NgFor, NgIf } from '@angular/common';
 import { Component } from '@angular/core';
-import { IonButton } from '@ionic/angular/standalone';
+import { IonButton, IonTitle } from '@ionic/angular/standalone';
 
 enum SpareNames {
   BigFour = 'Big Four',
@@ -10,12 +10,14 @@ enum SpareNames {
   Bucket = 'Bucket',
   BabySplit = 'Baby Split',
   DimeStore = 'Dime Store',
+  BabySplitWithCompany = 'Baby Split with Company',
+  Lily = 'Lily',
 }
 
 @Component({
   selector: 'app-spare-names',
   standalone: true,
-  imports: [IonButton, NgFor, NgIf],
+  imports: [IonTitle, IonButton, NgFor, NgIf],
   templateUrl: './spare-names.component.html',
   styleUrl: './spare-names.component.scss',
 })
@@ -41,6 +43,12 @@ export class SpareNamesComponent {
       return SpareNames.BabySplit;
     } else if (this.isDimeStore(pins)) {
       return SpareNames.DimeStore;
+    } else if (this.isWashout(pins)) {
+      return SpareNames.Washout;
+    } else if (this.isBabySplitWithCompany(pins)) {
+      return SpareNames.BabySplitWithCompany;
+    } else if (this.isLiliy(pins)) {
+      return SpareNames.Lily;
     }
 
     return '';
@@ -52,6 +60,25 @@ export class SpareNamesComponent {
     } else {
       this.selectedPins.push(pin);
     }
+  }
+
+  private isLiliy(pins: number[]): boolean {
+    return JSON.stringify(pins) === JSON.stringify([5, 7, 10]);
+  }
+
+  private isBabySplitWithCompany(pins: number[]): boolean {
+    return JSON.stringify(pins) === JSON.stringify([2, 7, 8]) || JSON.stringify(pins) === JSON.stringify([3, 9, 10]);
+  }
+
+  private isWashout(pins: number[]): boolean {
+    const validCombinations = [
+      [1, 2, 4, 10],
+      [1, 3, 6, 7],
+      [1, 2, 10],
+      [1, 3, 7],
+    ];
+
+    return validCombinations.some((combination) => combination.every((pin) => pins.includes(pin)) && pins.length === combination.length);
   }
 
   private isBucket(pins: number[]): boolean {
