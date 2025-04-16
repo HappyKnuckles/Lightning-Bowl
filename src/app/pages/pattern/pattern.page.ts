@@ -163,18 +163,6 @@ export class PatternPage implements OnInit {
       this.generateChartImages();
     }
   }
-
-  formatDistance(distance: string | number): string {
-    if (!distance) return '0';
-
-    const distStr = String(distance);
-    if (distStr.endsWith("'")) {
-      return distStr.slice(0, -1) + 'ft';
-    }
-
-    return distStr;
-  }
-
   getRatioValue(ratio: string): number {
     const numericPart = ratio.split(':')[0];
     return parseFloat(numericPart);

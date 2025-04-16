@@ -47,15 +47,4 @@ export class PatternInfoComponent {
       return 'Very High';
     }
   }
-
-  formatDistance(distance: string | number): string {
-    if (!distance) return '0';
-
-    const distStr = String(distance);
-    if (distStr.endsWith("'")) {
-      return distStr.slice(0, -1) + 'ft';
-    }
-
-    return distStr;
-  }
 }

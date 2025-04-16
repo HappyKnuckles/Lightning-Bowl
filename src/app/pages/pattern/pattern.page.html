@@ -31,12 +31,12 @@
         <ion-card-subtitle>{{pattern.category}}</ion-card-subtitle>
       </ion-card-header>
       <ion-card-content>
-        <ion-chip class="info">Distance: {{formatDistance(pattern.distance)}}</ion-chip>
+        <ion-chip class="info">Distance: {{pattern.distance}}ft</ion-chip>
         <ion-chip class="info">Ratio: {{pattern.ratio ?? 0}}</ion-chip>
         <ion-chip class="info">Volume: {{pattern.volume}}mL</ion-chip>
         <ion-chip class="info">Oil Forward: {{pattern.forward}}mL</ion-chip>
         <ion-chip class="info">Oil Reverse: {{pattern.reverse}}mL</ion-chip>
-        <ion-chip class="info">Pump: {{pattern.pump}}</ion-chip>
+        <ion-chip class="info">Pump: {{pattern.pump}}µL</ion-chip>
         <ion-chip class="info">Tanks: {{pattern.tanks}}</ion-chip>
       </ion-card-content>
     </ion-card>

@@ -1,7 +1,7 @@
 <div class="pattern-container">
-   <img [src]="pattern().chartImageSrcVertical" style="width: 50%; height: auto; border-radius: 16px" alt="Pattern image"/>
+  <img [src]="pattern().chartImageSrcVertical" style="width: 50%; height: auto; border-radius: 16px" alt="Pattern image" />
   <div class="pattern-info">
-    <ion-chip>Distance: {{ formatDistance(pattern().distance) }}</ion-chip>
+    <ion-chip>Distance: {{ pattern().distance }}ft</ion-chip>
     <ion-chip>Volume: {{ pattern().volume }}mL</ion-chip>
     <ion-chip>Ratio: {{ pattern().ratio }}</ion-chip>
     <ion-chip>{{ getLength() }} Length</ion-chip>
