@@ -1,84 +1,146 @@
-<form [formGroup]="patternForm" (ngSubmit)="onSubmit()">
-    <h4>Pattern Data</h4>
-    <ion-item>
-        <ion-input placeholder="" label="Pattern Title" formControlName="title"></ion-input>
-    </ion-item>
- 
-    <ion-item>
-        <ion-input placeholder="" label="Distance" formControlName="distance" type="number"></ion-input>
-    </ion-item>
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start" style="padding: 4px">
+      <ion-button (click)="cancel()">
+        <ion-icon name="chevron-back" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Add Pattern</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="reset()" [strong]="true"> Reset </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
 
-    <ion-item>
-        <ion-input placeholder="" label="Ratio (e.g. 2:1)" formControlName="ratio"></ion-input>
-    </ion-item>
+<ion-content>
+  <form [formGroup]="patternForm">
+    <h4 class="ion-padding">Pattern Data</h4>
+    <ion-list lines="full">
+      <ion-item>
+        <ion-input class="ion-text-right" placeholder="" label="Title" formControlName="title"></ion-input>
+      </ion-item>
 
-    <ion-item>
-        <ion-input placeholder="" label="Forward Oil" formControlName="forward" type="number"></ion-input>
-    </ion-item>
+      <ion-item>
+        <ion-input class="ion-text-right" placeholder="30" label="Distance" formControlName="distance" type="number"></ion-input>
+      </ion-item>
 
-    <ion-item>
-        <ion-input placeholder="" label="Reverse Oil" formControlName="reverse" type="number"></ion-input>
-    </ion-item>
+      <ion-item>
+        <ion-input class="ion-text-right" placeholder="2.00" label="Ratio" formControlName="ratio"></ion-input>
+      </ion-item>
 
-    <ion-item>
-        <ion-input placeholder="" label="Volume" formControlName="volume" readonly="true" type="number"></ion-input>
-    </ion-item>
+      <ion-item>
+        <ion-input class="ion-text-right" placeholder="12.74" label="Oil Forward" formControlName="forward" type="number"></ion-input>
+      </ion-item>
 
-    <ion-item>
-        <ion-input placeholder="" label="Pump" formControlName="pump" type="number"></ion-input>
-    </ion-item>
+      <ion-item>
+        <ion-input class="ion-text-right" placeholder="10.31" label="Oil Reverse" formControlName="reverse" type="number"></ion-input>
+      </ion-item>
 
-    <ion-item>
-        <ion-input placeholder="" label="Tanks" formControlName="tanks"></ion-input>
-    </ion-item>
+      <ion-item>
+        <ion-input class="ion-text-right" placeholder="" label="Volume" formControlName="volume" readonly="true" type="number"></ion-input>
+      </ion-item>
 
-    <h4>Forward Data</h4>
-    <div formArrayName="forwards_data" class="array-inputs">
-        <div *ngFor="let item of forwardsDataArray.controls; let i = index" [formGroupName]="i" class="input-row">
-            <p>{{i + 1}}</p>
-            <ion-input placeholder="Start" formControlName="start"></ion-input>
-            <ion-input placeholder="Stop" formControlName="stop"></ion-input>            
-            <ion-input placeholder="Load" formControlName="load"></ion-input>
-            <ion-input placeholder="Mics" formControlName="mics"></ion-input>
-            <ion-input placeholder="Speed" formControlName="speed"></ion-input>
-            <ion-input placeholder="Buffer" formControlName="buf"></ion-input>
-            <ion-input placeholder="Tank" formControlName="tank"></ion-input>
-            <ion-input placeholder="Total Oil" formControlName="total_oil"></ion-input>
-            <ion-input placeholder="Start Dist" formControlName="distance_start"></ion-input>
-            <ion-input placeholder="End Dist" formControlName="distance_end"></ion-input>
-            <ion-button fill="clear" color="danger" (click)="removeForwardData(i)">
-                <ion-icon name="trash-outline"></ion-icon>
-            </ion-button>
+      <ion-item>
+        <ion-input class="ion-text-right" placeholder="20" label="Pump" formControlName="pump" type="number"></ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-input class="ion-text-right" placeholder="" label="Tanks" formControlName="tanks"></ion-input>
+      </ion-item>
+    </ion-list>
+
+    <h4 class="ion-padding">Forward Data</h4>
+    <div formArrayName="forwards_data">
+      <div *ngFor="let item of forwardsDataArray.controls; let i = index" [formGroupName]="i">
+        <div class="row-header">
+          <h5 class="ion-padding">Entry {{ i + 1 }}</h5>
+          <ion-button fill="clear" color="danger" (click)="removeForwardData(i)">
+            <ion-icon name="trash-outline"></ion-icon>
+          </ion-button>
         </div>
-        <ion-button expand="block" (click)="addForwardData()" size="small">
-            Add Forward Data
-        </ion-button>
+        <ion-list lines="full">
+          <ion-item>
+            <ion-input class="ion-text-right ion-text-capitalize" placeholder="2L" label="Start" formControlName="start"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-input class="ion-text-right ion-text-capitalize" placeholder="2R" label="Stop" formControlName="stop"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-input class="ion-text-right" placeholder="1" label="Load" formControlName="load"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-input class="ion-text-right" placeholder="25" label="Mics" formControlName="mics"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-input class="ion-text-right" placeholder="18" label="Speed" formControlName="speed"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-input class="ion-text-right" placeholder="3" label="Buffer" formControlName="buf"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-input class="ion-text-right" label="Tank" formControlName="tank"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-input class="ion-text-right" placeholder="20" label="Total Oil" formControlName="total_oil"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-input class="ion-text-right" placeholder="0" label="Start Dist" formControlName="distance_start"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-input class="ion-text-right" placeholder="22" label="End Dist" formControlName="distance_end"></ion-input>
+          </ion-item>
+        </ion-list>
+      </div>
+      <ion-button expand="block" (click)="addForwardData()" size="small"> Add Forward Data </ion-button>
     </div>
 
-    <h4>Reverse Data</h4>
-    <div formArrayName="reverse_data" class="array-inputs">
-        <div *ngFor="let item of reverseDataArray.controls; let i = index" [formGroupName]="i" class="input-row">
-            <ion-input placeholder="#" formControlName="number"></ion-input>
-            <ion-input placeholder="Start" formControlName="start"></ion-input>
-            <ion-input placeholder="Stop" formControlName="stop"></ion-input>
-            <ion-input placeholder="Load" formControlName="load"></ion-input>
-            <ion-input placeholder="Mics" formControlName="mics"></ion-input>
-            <ion-input placeholder="Speed" formControlName="speed"></ion-input>
-            <ion-input placeholder="Buffer" formControlName="buf"></ion-input>
-            <ion-input placeholder="Tank" formControlName="tank"></ion-input>
-            <ion-input placeholder="Total Oil" formControlName="total_oil"></ion-input>
-            <ion-input placeholder="Start Dist" formControlName="distance_start"></ion-input>
-            <ion-input placeholder="End Dist" formControlName="distance_end"></ion-input>
-            <ion-button fill="clear" color="danger" (click)="removeReverseData(i)">
-                <ion-icon name="trash"></ion-icon>
-            </ion-button>
+    <h4 class="ion-padding">Reverse Data</h4>
+    <div formArrayName="reverse_data">
+      <div *ngFor="let item of reverseDataArray.controls; let i = index" [formGroupName]="i">
+        <div class="row-header">
+          <h5 class="ion-padding">Entry {{ i + 1 }}</h5>
+          <ion-button fill="clear" color="danger" (click)="removeReverseData(i)">
+            <ion-icon name="trash-outline"></ion-icon>
+          </ion-button>
         </div>
-        <ion-button expand="block" (click)="addReverseData()" size="small">
-            Add Reverse Data
-        </ion-button>
+        <ion-list lines="full">
+          <ion-item>
+            <ion-input class="ion-text-right ion-text-capitalize" placeholder="2L" label="Start" formControlName="start"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-input class="ion-text-right ion-text-capitalize" placeholder="2R" label="Stop" formControlName="stop"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-input class="ion-text-right" placeholder="1" label="Load" formControlName="load"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-input class="ion-text-right" placeholder="25" label="Mics" formControlName="mics"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-input class="ion-text-right" placeholder="18" label="Speed" formControlName="speed"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-input class="ion-text-right" placeholder="3" label="Buffer" formControlName="buf"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-input class="ion-text-right" label="Tank" formControlName="tank"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-input class="ion-text-right" placeholder="20" label="Total Oil" formControlName="total_oil"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-input class="ion-text-right" placeholder="0" label="Start Dist" formControlName="distance_start"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-input class="ion-text-right" placeholder="22" label="End Dist" formControlName="distance_end"></ion-input>
+          </ion-item>
+        </ion-list>
+      </div>
+      <ion-button expand="block" (click)="addReverseData()" size="small"> Add Reverse Data </ion-button>
     </div>
+  </form>
+</ion-content>
 
-    <div class="ion-padding">
-        <ion-button expand="block" type="submit" [disabled]="!patternForm.valid">Save Pattern</ion-button>
-    </div>
-</form>
+<ion-footer style="display: flex" class="ion-justify-content-center">
+  <ion-button class="confirm-btn" type="submit" [disabled]="!patternForm.valid" (click)="onSubmit()">Save Pattern</ion-button>
+</ion-footer>

@@ -4,7 +4,11 @@
       <ion-button for="excelUpload" type="button" class="action-sheet" slot="start" fill="clear" (click)="openExcelFileInput()">
         <ion-icon slot="icon-only" name="cloud-upload-outline"></ion-icon>
       </ion-button>
-      <ion-button (click)="exportToExcel()" class="action-sheet" fill="clear" [disabled]="(storageService.games().length <= 0 && !loadingService.isLoading())">
+      <ion-button
+        (click)="exportToExcel()"
+        class="action-sheet"
+        fill="clear"
+        [disabled]="(storageService.games().length <= 0 && !loadingService.isLoading())">
         <ion-icon slot="icon-only" name="cloud-download-outline"></ion-icon> </ion-button
     ></ion-buttons>
     <!-- Clear Input on Upload-->
@@ -27,7 +31,6 @@
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
   <app-game-filter-active></app-game-filter-active>
-  <app-pattern-form></app-pattern-form>
 
   <!-- Show this message if there are no game history items and it's not loading -->
   <ng-container *ngIf="storageService.games().length <= 0 && !loadingService.isLoading(); else checkFilteredGames">

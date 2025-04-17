@@ -3,7 +3,7 @@
     <!-- <ion-button (click)="deleteAll()"> Alles löschen</ion-button> -->
     @for (game of showingGames; track game.gameId) {
       <ion-item-divider *ngIf="$index === 0 || isNewMonth($index)" style="padding: 8px; font-size: 1.2rem">
-        <ion-badge style="position: absolute; right: 15px">{{ getMonthGameCount(game.date) }}</ion-badge>
+        <ion-badge slot="end">{{ getMonthGameCount(game.date) }}</ion-badge>
         <ion-label>{{ getMonthName(game.date) }} </ion-label>
       </ion-item-divider>
 

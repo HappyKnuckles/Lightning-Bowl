@@ -25,6 +25,7 @@ import {
   IonIcon,
   IonSpinner,
   IonImg,
+  ModalController,
 } from '@ionic/angular/standalone';
 import { Pattern } from 'src/app/core/models/pattern.model';
 import { PatternService } from 'src/app/core/services/pattern/pattern.service';
@@ -36,9 +37,11 @@ import { ImpactStyle } from '@capacitor/haptics';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { PatternInfoComponent } from 'src/app/shared/components/pattern-info/pattern-info.component';
 import { addIcons } from 'ionicons';
-import { chevronBack } from 'ionicons/icons';
+import { chevronBack, add, addOutline, arrowUpOutline, arrowDownOutline } from 'ionicons/icons';
 import { ChartGenerationService } from 'src/app/core/services/chart/chart-generation.service';
 import { DomSanitizer } from '@angular/platform-browser';
+import { PatternFormComponent } from '../../shared/components/pattern-form/pattern-form.component';
+import { BallFilterComponent } from '../../shared/components/ball-filter/ball-filter.component';
 
 @Component({
   selector: 'app-pattern',
@@ -72,6 +75,8 @@ import { DomSanitizer } from '@angular/platform-browser';
     CommonModule,
     FormsModule,
     PatternInfoComponent,
+    PatternFormComponent,
+    BallFilterComponent,
   ],
 })
 export class PatternPage implements OnInit {
@@ -87,8 +92,9 @@ export class PatternPage implements OnInit {
     private toastService: ToastService,
     private chartService: ChartGenerationService,
     private sanitizer: DomSanitizer,
+    private modalCtrl: ModalController,
   ) {
-    addIcons({ chevronBack });
+    addIcons({ addOutline, arrowUpOutline, arrowDownOutline, chevronBack, add });
   }
   async ngOnInit() {
     await this.loadPatterns();
@@ -163,6 +169,14 @@ export class PatternPage implements OnInit {
       this.generateChartImages();
     }
   }
+
+  async openAddPatternModal(): Promise<void> {
+    const modal = await this.modalCtrl.create({
+      component: PatternFormComponent,
+    });
+    return await modal.present();
+  }
+
   getRatioValue(ratio: string): number {
     const numericPart = ratio.split(':')[0];
     return parseFloat(numericPart);
