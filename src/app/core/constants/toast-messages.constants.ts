@@ -23,6 +23,8 @@ export const ToastMessages = {
   leagueEditSuccess: 'League edited successfully.',
   leagueEditError: 'Error editing league.',
   patternLoadError: 'Error loading patterns.',
+  patternAddError: 'Error adding pattern.',
+  patternAddSuccess: 'Pattern added successfully.',
   invalidInput: 'Invalid input.',
   excelFileUploadSuccess: 'Uploaded Excel file successfully.',
   excelFileUploadError: 'Error uploading Excel file.',

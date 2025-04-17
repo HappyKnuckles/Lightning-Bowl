@@ -1,0 +1,14 @@
+.array-inputs {
+    margin: 10px 0;
+  }
+  
+  .input-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  
+  .input-row ion-input {
+    flex: 1;
+    margin-right: 8px;
+  }

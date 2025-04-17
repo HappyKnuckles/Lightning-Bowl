@@ -84,4 +84,12 @@ export class PatternService {
       return { patterns: [], count: 0, query: '', numeric_query: false, threshold: 0 };
     }
   }
+
+  async addPattern(pattern: Partial<Pattern>): Promise<void> {
+    try {
+      await firstValueFrom(this.http.post<Partial<Pattern>>(`${environment.patternEndpoint}add-pattern`, pattern));
+    } catch (error) {
+      console.error('Error adding pattern:', error);
+    }
+  }
 }

@@ -40,6 +40,7 @@ import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { GameFilterActiveComponent } from 'src/app/shared/components/game-filter-active/game-filter-active.component';
 import { GameFilterComponent } from 'src/app/shared/components/game-filter/game-filter.component';
 import { GameComponent } from 'src/app/shared/components/game/game.component';
+import { PatternFormComponent } from 'src/app/shared/components/pattern-form/pattern-form.component';
 
 @Component({
   selector: 'app-history',
@@ -64,6 +65,7 @@ import { GameComponent } from 'src/app/shared/components/game/game.component';
     FormsModule,
     GameComponent,
     GameFilterActiveComponent,
+    PatternFormComponent
   ],
 })
 export class HistoryPage {

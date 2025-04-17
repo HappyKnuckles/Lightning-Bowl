@@ -11,7 +11,7 @@
   <ion-chip *ngIf="isFilterActive('balls')">
     {{ "Balls: " + getFilterValue("balls").join(", ") }}
   </ion-chip>
-  <ion-chip *ngIf="isFilterActive('timeRange')"
+  <ion-chip *ngIf="isFilterActive('timeRange') || isFilterActive('startDate') || isFilterActive('endDate')"
     >Time Range: {{ getFilterValue("startDate") | date }} - {{ getFilterValue("endDate") | date }}</ion-chip
   >
 </div>
