@@ -116,6 +116,10 @@ export class StatsPage implements OnInit, AfterViewInit {
   @ViewChild('scoreChart', { static: false }) scoreChart?: ElementRef;
   @ViewChild('pinChart', { static: false }) pinChart?: ElementRef;
   @ViewChild('throwChart', { static: false }) throwChart?: ElementRef;
+  @ViewChild('scoreDistributionChart', { static: false }) scoreDistributionChart?: ElementRef;
+  @ViewChild('spareDistributionChart', { static: false }) spareDistributionChart?: ElementRef;
+  private spareDistributionChartInstance: Chart | null = null;
+  private scoreDistributionChartInstance: Chart | null = null;
   private pinChartInstance: Chart | null = null;
   private throwChartInstance: Chart | null = null;
   private scoreChartInstance: Chart | null = null;
@@ -259,8 +263,10 @@ export class StatsPage implements OnInit, AfterViewInit {
     if (this.gameFilterService.filteredGames().length > 0) {
       if (this.selectedSegment === 'Overall') {
         this.generateScoreChart(isReload);
+        this.generateScoreDistributionChart(isReload);
       } else if (this.selectedSegment === 'Spares') {
         this.generatePinChart(isReload);
+        this.generateSpareDistributionChart(isReload);
       } else if (this.selectedSegment === 'Throws') {
         this.generateThrowChart(isReload);
       }
@@ -282,6 +288,42 @@ export class StatsPage implements OnInit, AfterViewInit {
     } catch (error) {
       this.toastService.showToast(ToastMessages.chartGenerationError, 'bug', true);
       console.error('Error generating score chart:', error);
+    }
+  }
+
+  private generateScoreDistributionChart(isReload?: boolean): void {
+    try {
+      if (!this.scoreDistributionChart) {
+        return;
+      }
+
+      this.scoreDistributionChartInstance = this.chartService.generateScoreDistributionChart(
+        this.scoreDistributionChart,
+        this.sortUtilsService.sortGameHistoryByDate([...this.gameFilterService.filteredGames()], true),
+        this.scoreDistributionChartInstance!,
+        isReload,
+      );
+    } catch (error) {
+      this.toastService.showToast(ToastMessages.chartGenerationError, 'bug', true);
+      console.error('Error generating score distribution chart:', error);
+    }
+  }
+
+  private generateSpareDistributionChart(isReload?: boolean): void {
+    try {
+      if (!this.spareDistributionChart) {
+        return;
+      }
+
+      this.spareDistributionChartInstance = this.chartService.generateSpareDistributionChart(
+        this.spareDistributionChart,
+        this.statsService.currentStats(),
+        this.spareDistributionChartInstance!,
+        isReload,
+      );
+    } catch (error) {
+      this.toastService.showToast(ToastMessages.chartGenerationError, 'bug', true);
+      console.error('Error generating spare distribution chart:', error);
     }
   }
 

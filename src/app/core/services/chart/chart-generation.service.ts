@@ -88,7 +88,7 @@ export class ChartGenerationService {
             plugins: {
               title: {
                 display: true,
-                text: 'Score analysis',
+                text: 'Score Analysis',
                 color: 'white',
                 font: {
                   size: 20,
@@ -128,6 +128,111 @@ export class ChartGenerationService {
       }
     } catch (error) {
       console.error('Error generating score chart:', error);
+      throw error;
+    }
+  }
+
+  generateScoreDistributionChart(
+    scoreDistributionChart: ElementRef,
+    games: Game[],
+    existingChartInstance: Chart | undefined,
+    isReload?: boolean,
+  ): Chart {
+    try {
+      const ctx = scoreDistributionChart.nativeElement;
+
+      const scoreLabels = Array.from({ length: 30 }, (_, i) => {
+        const start = i * 10;
+        const end = i < 29 ? i * 10 + 9 : 300;
+        return `${start}-${end}`;
+      });
+      const scoreDistribution = new Array<number>(30).fill(0);
+
+      games.forEach((game) => {
+        const score = Math.min(Math.max(game.totalScore, 0), 299);
+        const index = Math.floor(score / 10);
+        scoreDistribution[index]++;
+      });
+
+      const compressedLabels: string[] = [];
+      const compressedData: number[] = [];
+      let zeroStart: number | null = null;
+
+      for (let i = 0; i < scoreLabels.length; i++) {
+        if (scoreDistribution[i] === 0) {
+          if (zeroStart === null) zeroStart = i;
+        } else {
+          if (zeroStart !== null) {
+            compressedLabels.push(`${zeroStart * 10}-${(i - 1) * 10 + 9}`);
+            compressedData.push(0);
+            zeroStart = null;
+          }
+          compressedLabels.push(scoreLabels[i]);
+          compressedData.push(scoreDistribution[i]);
+        }
+      }
+      if (zeroStart !== null) {
+        compressedLabels.push(`${zeroStart * 10}-${(scoreLabels.length - 1) * 10 + 9}`);
+        compressedData.push(0);
+      }
+
+      const finalLabels = compressedLabels;
+      const finalData = compressedData;
+      const maxFrequency = Math.max(...finalData);
+
+      if (isReload && existingChartInstance) {
+        existingChartInstance.destroy();
+      }
+
+      if (existingChartInstance && !isReload) {
+        existingChartInstance.data.labels = finalLabels;
+        existingChartInstance.data.datasets[0].data = finalData;
+        existingChartInstance.update();
+        return existingChartInstance;
+      } else {
+        return new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: finalLabels,
+            datasets: [
+              {
+                label: 'Score Distribution',
+                data: finalData,
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1,
+              },
+            ],
+          },
+          options: {
+            scales: {
+              x: { ticks: { font: { size: 14 } } },
+              y: {
+                beginAtZero: true,
+                suggestedMax: maxFrequency + 1,
+                title: {
+                  display: true,
+                  text: 'Frequency',
+                  color: 'white',
+                  font: { size: 16 },
+                },
+                ticks: { font: { size: 14 } },
+              },
+            },
+            plugins: {
+              title: {
+                display: true,
+                text: 'Score Distribution',
+                color: 'white',
+                font: { size: 20 },
+              },
+              legend: { display: false },
+            },
+          },
+        });
+      }
+    } catch (error) {
+      console.error('Error generating score distribution chart:', error);
       throw error;
     }
   }
@@ -260,6 +365,112 @@ export class ChartGenerationService {
     }
   }
 
+  generateSpareDistributionChart(
+    spareDistributionChart: ElementRef,
+    stats: Stats,
+    existingChartInstance: Chart | undefined,
+    isReload?: boolean,
+  ): Chart {
+    try {
+      const ctx = spareDistributionChart.nativeElement;
+
+      const pinCounts = Array.from({ length: 10 }, (_, i) => (i + 1).toString());
+      const appearanceCounts = stats.pinCounts.slice(1).map((count, index) => count + stats.missedCounts[index + 1]);
+      const hitCounts = stats.pinCounts.slice(1);
+
+      if (isReload && existingChartInstance) {
+        existingChartInstance.destroy();
+      }
+
+      if (existingChartInstance && !isReload) {
+        existingChartInstance.data.labels = pinCounts;
+        existingChartInstance.data.datasets[0].data = appearanceCounts;
+        existingChartInstance.data.datasets[1].data = hitCounts;
+        existingChartInstance.update();
+        return existingChartInstance;
+      } else {
+        return new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: pinCounts,
+            datasets: [
+              {
+                label: 'Appearance Count',
+                data: appearanceCounts,
+                backgroundColor: 'rgba(153, 102, 255, 0.1)',
+                borderColor: 'rgba(153, 102, 255, .5)',
+                borderWidth: 1,
+              },
+              {
+                label: 'Hit Count',
+                data: hitCounts,
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1,
+              },
+            ],
+          },
+          options: {
+            scales: {
+              x: {
+                ticks: {
+                  font: {
+                    size: 14,
+                  },
+                },
+              },
+              y: {
+                beginAtZero: true,
+                title: {
+                  display: true,
+                  text: 'Frequency',
+                  color: 'white',
+                  font: {
+                    size: 16,
+                  },
+                },
+                ticks: {
+                  font: {
+                    size: 14,
+                  },
+                },
+              },
+            },
+            plugins: {
+              title: {
+                display: true,
+                text: 'Spare Distribution',
+                color: 'white',
+                font: {
+                  size: 20,
+                },
+              },
+              legend: {
+                display: true,
+                labels: {
+                  font: {
+                    size: 15,
+                  },
+                },
+              },
+              tooltip: {
+                callbacks: {
+                  title: function (context) {
+                    const index = context[0].dataIndex;
+                    return `${index + 1} Pin${index + 1 > 1 ? 's' : ''}`;
+                  },
+                },
+              },
+            },
+          },
+        });
+      }
+    } catch (error) {
+      console.error('Error generating spare distribution chart:', error);
+      throw error;
+    }
+  }
+
   generateThrowChart(throwChart: ElementRef, stats: Stats, existingChartInstance: Chart | undefined, isReload?: boolean): Chart {
     try {
       const { opens, spares, strikes } = this.calculateThrowChartData(stats);
@@ -321,7 +532,7 @@ export class ChartGenerationService {
             plugins: {
               title: {
                 display: true,
-                text: 'Throw distribution',
+                text: 'Throw Distribution',
                 color: 'white',
                 font: {
                   size: 20,
