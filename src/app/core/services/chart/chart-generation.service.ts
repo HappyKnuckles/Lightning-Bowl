@@ -365,7 +365,7 @@ export class ChartGenerationService {
     }
   }
 
-  generatePatternChartDataUri(pattern: Pattern, horizontal = false): string {
+  generatePatternChartDataUri(pattern: Partial<Pattern>, horizontal = false): string {
     // 1. Create a detached SVG element in memory
     const svgWidth = horizontal ? 325 : 375; // Base width for viewBox/drawing
     const svgHeight = horizontal ? 1300 : 1500; // Base height for viewBox/drawing
