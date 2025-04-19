@@ -27,13 +27,15 @@ import {
   IonItemOption,
   IonItemOptions,
   IonChip,
+  IonReorderGroup,
+  IonReorder,
 } from '@ionic/angular/standalone';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { Ball } from 'src/app/core/models/ball.model';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { addIcons } from 'ionicons';
 import { chevronBack, add, openOutline, trashOutline } from 'ionicons/icons';
-import { AlertController, ModalController } from '@ionic/angular';
+import { AlertController, ItemReorderCustomEvent, ModalController } from '@ionic/angular';
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import { ImpactStyle } from '@capacitor/haptics';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
@@ -49,6 +51,8 @@ import { BallTypeaheadComponent } from 'src/app/shared/components/ball-typeahead
   standalone: true,
   providers: [ModalController],
   imports: [
+    IonReorder,
+    IonReorderGroup,
     IonChip,
     IonItemOptions,
     IonItemOption,
@@ -139,6 +143,21 @@ export class ArsenalPage implements OnInit {
       console.error('Error displaying removal alert:', error);
       this.toastService.showToast(ToastMessages.unexpectedError, 'warning', true);
     }
+  }
+
+  async reorderArsenal(event: ItemReorderCustomEvent): Promise<void> {
+    const arsenal = this.storageService.arsenal();
+
+    const movedItem = arsenal.splice(event.detail.from, 1)[0];
+    arsenal.splice(event.detail.to, 0, movedItem);
+
+    for (let index = 0; index < arsenal.length; index++) {
+      const ball = arsenal[index];
+      ball.position = index + 1;
+      await this.storageService.saveBallToArsenal(ball);
+    }
+
+    event.detail.complete();
   }
 
   saveBallToArsenal(ball: Ball[]): void {

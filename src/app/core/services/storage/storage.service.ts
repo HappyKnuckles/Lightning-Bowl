@@ -61,7 +61,8 @@ export class StorageService {
   async loadArsenal(): Promise<void> {
     try {
       const arsenal = await this.loadData<Ball>('arsenal');
-      this.arsenal.set(arsenal.reverse());
+      const sortedArsenal = arsenal.sort((a, b) => (a.position || arsenal.length + 1) - (b.position || arsenal.length + 1));
+      this.arsenal.set(sortedArsenal);
     } catch (error) {
       console.error('Error loading arsenal:', error);
       throw error;
