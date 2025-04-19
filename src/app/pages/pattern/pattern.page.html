@@ -42,8 +42,8 @@
         <ion-chip class="info">
           Volume: {{pattern.volume}}mL (
           <p style="margin: 0">
-            <ion-icon name="arrow-up-outline" style="vertical-align: text-top"></ion-icon> {{pattern.forward}}mL ,
-            <ion-icon name="arrow-down-outline" style="vertical-align: text-top"></ion-icon> {{pattern.reverse}}mL
+            <ion-icon name="arrow-up-outline" style="vertical-align: text-top; margin-right: -2px"></ion-icon> {{pattern.forward}}mL ,
+            <ion-icon name="arrow-down-outline" style="vertical-align: text-top; margin-right: -2px"></ion-icon> {{pattern.reverse}}mL
           </p>
           )
         </ion-chip>
@@ -103,7 +103,7 @@
         <ion-title>{{pattern.title}}</ion-title>
       </ion-toolbar>
     </ion-header>
-    <ion-content>
+    <ion-content [fullscreen]="true">
       <app-pattern-info [pattern]="pattern"></app-pattern-info>
     </ion-content>
   </ng-template>

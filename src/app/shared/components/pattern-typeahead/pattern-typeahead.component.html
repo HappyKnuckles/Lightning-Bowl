@@ -7,33 +7,25 @@
   </ion-toolbar>
 </ion-header>
 <ion-content [fullscreen]="true" role="feed">
-  @if (!loadingService.isLoading()) {
-    <ng-container *ngIf="displayedPatterns().length <= 0; else allPatterns">
-      <ion-text class="no-game-text"> No patterns found! </ion-text>
-    </ng-container>
-    <ng-template #allPatterns>
-      <ion-radio-group (ionChange)="radioGroupChange($event)" [value]="prevSelectedPattern()" allowEmptySelection="true">
-        @for (pattern of displayedPatterns(); track pattern.url) {
-          <ion-item
-            [ngClass]="{
-              'red-card': getRatioValue(pattern?.ratio ?? '0') >= 1 && getRatioValue(pattern?.ratio ?? '0') < 4,
-              'yellow-card': getRatioValue(pattern?.ratio ?? '0') >= 4 && getRatioValue(pattern?.ratio ?? '0') < 8,
-              'green-card': getRatioValue(pattern?.ratio ?? '0') >= 8,
-            }"
-            lines="none">
-            <ion-radio [value]="pattern.title" justify="space-between">{{ pattern.title }}</ion-radio>
-          </ion-item>
-        }
-      </ion-radio-group>
-      <ion-infinite-scroll threshold="90%" (ionInfinite)="loadData($event)" #infiniteScroll>
-        <ion-infinite-scroll-content loadingSpinner="crescent" loadingText="Loading more patterns..."> </ion-infinite-scroll-content>
-      </ion-infinite-scroll>
-    </ng-template>
-  } @else {
-    @for (item of [1, 2, 3, 4, 5, 6, 7, 8]; track item) {
-      <ion-item>
-        <ion-skeleton-text style="width: 70%; border-radius: 5px"></ion-skeleton-text>
-      </ion-item>
-    }
-  }
+  <ng-container *ngIf="displayedPatterns().length <= 0; else allPatterns">
+    <ion-text class="no-game-text"> No patterns found! </ion-text>
+  </ng-container>
+  <ng-template #allPatterns>
+    <ion-radio-group (ionChange)="radioGroupChange($event)" [value]="prevSelectedPattern()" allowEmptySelection="true">
+      @for (pattern of displayedPatterns(); track pattern.url) {
+        <ion-item
+          [ngClass]="{
+            'red-card': getRatioValue(pattern?.ratio ?? '0') >= 1 && getRatioValue(pattern?.ratio ?? '0') < 4,
+            'yellow-card': getRatioValue(pattern?.ratio ?? '0') >= 4 && getRatioValue(pattern?.ratio ?? '0') < 8,
+            'green-card': getRatioValue(pattern?.ratio ?? '0') >= 8,
+          }"
+          lines="none">
+          <ion-radio [value]="pattern.title" justify="space-between">{{ pattern.title }}</ion-radio>
+        </ion-item>
+      }
+    </ion-radio-group>
+    <ion-infinite-scroll threshold="90%" (ionInfinite)="loadData($event)" #infiniteScroll>
+      <ion-infinite-scroll-content loadingSpinner="crescent" loadingText="Loading more patterns..."> </ion-infinite-scroll-content>
+    </ion-infinite-scroll>
+  </ng-template>
 </ion-content>
