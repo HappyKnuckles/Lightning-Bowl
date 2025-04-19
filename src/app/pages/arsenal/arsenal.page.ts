@@ -146,18 +146,15 @@ export class ArsenalPage implements OnInit {
   }
 
   async reorderArsenal(event: ItemReorderCustomEvent): Promise<void> {
-    const arsenal = this.storageService.arsenal();
+    event.detail.complete();
 
-    const movedItem = arsenal.splice(event.detail.from, 1)[0];
+    const arsenal = this.storageService.arsenal();
+    const [movedItem] = arsenal.splice(event.detail.from, 1);
     arsenal.splice(event.detail.to, 0, movedItem);
 
-    for (let index = 0; index < arsenal.length; index++) {
-      const ball = arsenal[index];
-      ball.position = index + 1;
-      await this.storageService.saveBallToArsenal(ball);
-    }
+    arsenal.forEach((ball, idx) => (ball.position = idx + 1));
 
-    event.detail.complete();
+    await Promise.all(arsenal.map((ball) => this.storageService.saveBallToArsenal(ball)));
   }
 
   saveBallToArsenal(ball: Ball[]): void {
