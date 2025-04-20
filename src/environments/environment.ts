@@ -7,4 +7,3 @@ export const environment = {
   emailUserID: 'mkI2Kqg6m34U7GL8m',
   patternEndpoint: 'http://localhost:5000/api/',
 };
-//TODO add test adIds here

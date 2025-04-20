@@ -7,4 +7,3 @@ export const environment = {
   emailUserID: 'mkI2Kqg6m34U7GL8m',
   patternEndpoint: 'https://pattern-scraper.vercel.app/api/',
 };
-//TODO add real adIds here

@@ -258,7 +258,6 @@ export class StatsPage implements OnInit, AfterViewInit {
     await alert.present();
   }
 
-  // TODO if filtergamedlength was 0, the charts dont load until restart
   private generateCharts(isReload?: boolean): void {
     if (this.gameFilterService.filteredGames().length > 0) {
       if (this.selectedSegment === 'Overall') {

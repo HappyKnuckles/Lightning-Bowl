@@ -53,6 +53,7 @@ import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { UtilsService } from 'src/app/core/services/utils/utils.service';
 import { PatternTypeaheadComponent } from '../pattern-typeahead/pattern-typeahead.component';
+import { LongPressDirective } from 'src/app/core/directives/long-press/long-press.directive';
 
 @Component({
   selector: 'app-game',
@@ -96,6 +97,7 @@ import { PatternTypeaheadComponent } from '../pattern-typeahead/pattern-typeahea
     ReactiveFormsModule,
     FormsModule,
     PatternTypeaheadComponent,
+    LongPressDirective,
   ],
   standalone: true,
 })
@@ -146,6 +148,8 @@ export class GameComponent implements OnChanges, OnInit {
   private closeTimers: Record<string, NodeJS.Timeout> = {};
   public delayedCloseMap: Record<string, boolean> = {};
   private originalGameState: Record<string, Game> = {};
+  private originalPanelState: Record<string, boolean> = {};
+
   constructor(
     private alertController: AlertController,
     private toastService: ToastService,
@@ -183,6 +187,17 @@ export class GameComponent implements OnChanges, OnInit {
     }
   }
 
+  loadMoreGames(event: InfiniteScrollCustomEvent): void {
+    setTimeout(() => {
+      this.showingGames = this.sortedGames.slice(0, this.loadedCount + this.batchSize);
+      this.loadedCount += this.batchSize;
+      event.target.complete();
+      if (this.loadedCount >= this.games.length) {
+        event.target.disabled = true;
+      }
+    }, 50);
+  }
+
   async deleteGame(gameId: string): Promise<void> {
     this.hapticService.vibrate(ImpactStyle.Heavy);
     const alert = await this.alertController.create({
@@ -212,76 +227,13 @@ export class GameComponent implements OnChanges, OnInit {
     await alert.present();
   }
 
-  loadMoreGames(event: InfiniteScrollCustomEvent): void {
-    setTimeout(() => {
-      this.showingGames = this.sortedGames.slice(0, this.loadedCount + this.batchSize);
-      this.loadedCount += this.batchSize;
-      event.target.complete();
-      if (this.loadedCount >= this.games.length) {
-        event.target.disabled = true;
-      }
-    }, 50);
-  }
-
-  isNewMonth(index: number): boolean {
-    if (index === 0) {
-      return true;
-    }
-    const currentGameDate = new Date(this.showingGames[index].date);
-    const previousGameDate = new Date(this.showingGames[index - 1].date);
-    return currentGameDate.getMonth() !== previousGameDate.getMonth() || currentGameDate.getFullYear() !== previousGameDate.getFullYear();
-  }
-
-  getMonthName(timestamp: number): string {
-    const date = new Date(timestamp);
-    const options: Intl.DateTimeFormatOptions = { month: 'long', year: 'numeric' };
-    return date.toLocaleDateString(undefined, options);
-  }
-
-  getMonthGameCount(date: number): number {
-    return this.showingGames.filter((game) => new Date(game.date).getMonth() === new Date(date).getMonth()).length;
-  }
-
-  // Hides the accordion content so it renders faster
-  hideContent(event: CustomEvent): void {
-    const openGameIds: string[] = event.detail.value || [];
-
-    openGameIds.forEach((gameId) => {
-      if (this.closeTimers[gameId]) {
-        clearTimeout(this.closeTimers[gameId]);
-        delete this.closeTimers[gameId];
-      }
-      this.delayedCloseMap[gameId] = true;
-    });
-
-    Object.keys(this.delayedCloseMap).forEach((gameId) => {
-      if (!openGameIds.includes(gameId)) {
-        if (!this.closeTimers[gameId]) {
-          this.closeTimers[gameId] = setTimeout(() => {
-            if (!(this.accordionGroup?.value || []).includes(gameId)) {
-              this.delayedCloseMap[gameId] = false;
-            }
-            delete this.closeTimers[gameId];
-          }, 500);
-        }
-      }
-    });
-  }
-
-  isDelayedOpen(gameId: string): boolean {
-    return this.delayedCloseMap[gameId];
-  }
-
+  // TODO this should save the state of the panel and revert to it
   openExpansionPanel(accordionId: string): void {
     const nativeEl = this.accordionGroup;
 
     if (nativeEl.value === accordionId) {
       nativeEl.value = undefined;
     } else nativeEl.value = accordionId;
-  }
-
-  parseIntValue(value: unknown): number {
-    return this.utilsService.parseIntValue(value) as number;
   }
 
   saveOriginalStateAndEnableEdit(game: Game): void {
@@ -299,7 +251,6 @@ export class GameComponent implements OnChanges, OnInit {
     }
   }
   cancelEdit(game: Game): void {
-    // Revert to the original game state
     if (this.originalGameState[game.gameId]) {
       Object.assign(game, this.originalGameState[game.gameId]);
       delete this.originalGameState[game.gameId];
@@ -336,9 +287,61 @@ export class GameComponent implements OnChanges, OnInit {
       console.error('Error saving game edit:', error);
     }
   }
+  // Hides the accordion content so it renders faster
+  hideContent(event: CustomEvent): void {
+    const openGameIds: string[] = event.detail.value || [];
+
+    openGameIds.forEach((gameId) => {
+      if (this.closeTimers[gameId]) {
+        clearTimeout(this.closeTimers[gameId]);
+        delete this.closeTimers[gameId];
+      }
+      this.delayedCloseMap[gameId] = true;
+    });
+
+    Object.keys(this.delayedCloseMap).forEach((gameId) => {
+      if (!openGameIds.includes(gameId)) {
+        if (!this.closeTimers[gameId]) {
+          this.closeTimers[gameId] = setTimeout(() => {
+            if (!(this.accordionGroup?.value || []).includes(gameId)) {
+              this.delayedCloseMap[gameId] = false;
+            }
+            delete this.closeTimers[gameId];
+          }, 500);
+        }
+      }
+    });
+  }
+
+  isDelayedOpen(gameId: string): boolean {
+    return this.delayedCloseMap[gameId];
+  }
+
+  isNewMonth(index: number): boolean {
+    if (index === 0) {
+      return true;
+    }
+    const currentGameDate = new Date(this.showingGames[index].date);
+    const previousGameDate = new Date(this.showingGames[index - 1].date);
+    return currentGameDate.getMonth() !== previousGameDate.getMonth() || currentGameDate.getFullYear() !== previousGameDate.getFullYear();
+  }
+
+  getMonthName(timestamp: number): string {
+    const date = new Date(timestamp);
+    const options: Intl.DateTimeFormatOptions = { month: 'long', year: 'numeric' };
+    return date.toLocaleDateString(undefined, options);
+  }
+
+  getMonthGameCount(date: number): number {
+    return this.showingGames.filter((game) => new Date(game.date).getMonth() === new Date(date).getMonth()).length;
+  }
 
   isGameValid(game: Game): boolean {
     return this.gameUtilsService.isGameValid(game);
+  }
+
+  parseIntValue(value: unknown): number {
+    return this.utilsService.parseIntValue(value) as number;
   }
 
   async takeScreenshotAndShare(game: Game): Promise<void> {

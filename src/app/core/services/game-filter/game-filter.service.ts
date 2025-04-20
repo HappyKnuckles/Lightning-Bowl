@@ -60,7 +60,6 @@ export class GameFilterService {
     private storageService: StorageService,
   ) {
     this.setDefaultFilters();
-    // this.filterGames();
   }
 
   filterGames(games: Game[], filters: GameFilter): Game[] {
@@ -69,7 +68,7 @@ export class GameFilterService {
       const gameDate = formatDate(new Date(game.date).toISOString());
       const startDate = formatDate(filters.startDate!);
       const endDate = formatDate(filters.endDate!);
-      // TODO try to find out how to not call it so often
+
       return (
         gameDate >= startDate &&
         gameDate <= endDate &&
@@ -84,7 +83,6 @@ export class GameFilterService {
       );
     });
     return filteredGames;
-    // this.filteredGames.update(() => [...filteredGames]);
   }
 
   saveFilters(): void {
