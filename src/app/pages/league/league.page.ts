@@ -99,7 +99,6 @@ export class LeaguePage {
   @ViewChild('pinChart', { static: false }) pinChart?: ElementRef;
   selectedSegment = 'Overall';
   segments: string[] = ['Overall', 'Spares', 'Games'];
-  statsValueChanged: boolean[] = [true, true];
   isEditMode: Record<string, boolean> = {};
   gamesByLeague: Signal<Record<string, Game[]>> = computed(() => {
     const games = this.storageService.games();
@@ -248,7 +247,8 @@ export class LeaguePage {
   destroyCharts(league: string): void {
     this.pinChartInstances[league]?.destroy();
     this.scoreChartInstances[league]?.destroy();
-    this.statsValueChanged = [true, true];
+    delete this.pinChartInstances[league];
+    delete this.scoreChartInstances[league];
   }
 
   onSegmentChanged(league: string, event: SegmentCustomEvent): void {
