@@ -114,7 +114,7 @@ export class ArsenalPage implements OnInit {
 
   async removeFromArsenal(ball: Ball): Promise<void> {
     try {
-      this.hapticService.vibrate(ImpactStyle.Heavy, 300);
+      this.hapticService.vibrate(ImpactStyle.Heavy);
       const alert = await this.alertController.create({
         header: 'Confirm Deletion',
         message: `Are you sure you want to remove ${ball.ball_name} from your arsenal?`,
@@ -178,7 +178,7 @@ export class ArsenalPage implements OnInit {
 
   async getSameCoreBalls(ball: Ball): Promise<void> {
     try {
-      this.hapticService.vibrate(ImpactStyle.Light, 100);
+      this.hapticService.vibrate(ImpactStyle.Light);
       this.loadingService.setLoading(true);
 
       this.coreBalls = await this.ballService.getBallsByCore(ball);
@@ -198,7 +198,7 @@ export class ArsenalPage implements OnInit {
 
   async getSameCoverstockBalls(ball: Ball): Promise<void> {
     try {
-      this.hapticService.vibrate(ImpactStyle.Light, 100);
+      this.hapticService.vibrate(ImpactStyle.Light);
       this.loadingService.setLoading(true);
 
       this.coverstockBalls = await this.ballService.getBallsByCoverstock(ball);

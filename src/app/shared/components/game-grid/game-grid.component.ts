@@ -202,7 +202,7 @@ export class GameGridComponent implements OnInit {
   }
 
   private handleInvalidInput(event: InputCustomEvent): void {
-    this.hapticService.vibrate(ImpactStyle.Heavy, 300);
+    this.hapticService.vibrate(ImpactStyle.Heavy);
     event.target.value = '';
   }
 

@@ -213,7 +213,7 @@ export class AddGamePage implements OnInit {
   async confirm(): Promise<void> {
     try {
       if (!this.isGameValid(this.gameData)) {
-        this.hapticService.vibrate(ImpactStyle.Heavy, 300);
+        this.hapticService.vibrate(ImpactStyle.Heavy);
         this.toastService.showToast(ToastMessages.invalidInput, 'bug', true);
         return;
       } else {
@@ -256,7 +256,7 @@ export class AddGamePage implements OnInit {
 
     const gameGridArray = this.gameGrids.toArray();
     if (!gameGridArray.every((grid: GameGridComponent) => grid.isGameValid())) {
-      this.hapticService.vibrate(ImpactStyle.Heavy, 300);
+      this.hapticService.vibrate(ImpactStyle.Heavy);
       this.isAlertOpen = true;
       return;
     }
@@ -273,7 +273,7 @@ export class AddGamePage implements OnInit {
         setTimeout(() => (this.is300 = false), 4000);
       }
 
-      this.hapticService.vibrate(ImpactStyle.Medium, 200);
+      this.hapticService.vibrate(ImpactStyle.Medium);
       this.toastService.showToast(ToastMessages.gameSaveSuccess, 'add');
     } catch (error) {
       console.error(error);
@@ -299,7 +299,7 @@ export class AddGamePage implements OnInit {
 
   async presentActionSheet(): Promise<void> {
     const buttons = [];
-    this.hapticService.vibrate(ImpactStyle.Medium, 200);
+    this.hapticService.vibrate(ImpactStyle.Medium);
     this.sheetOpen = true;
 
     const modes = [SeriesMode.Single, SeriesMode.Series3, SeriesMode.Series4, SeriesMode.Series5, SeriesMode.Series6];

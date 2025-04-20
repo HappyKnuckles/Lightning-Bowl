@@ -1,18 +1,31 @@
 import { Injectable } from '@angular/core';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable({ providedIn: 'root' })
 export class HapticService {
-  vibrate(style: ImpactStyle, duration: number) {
-    // Add haptic feedback with fallback for web
-    if (Haptics) {
-      Haptics.impact({ style: style });
-    } else if (navigator.vibrate) {
-      navigator.vibrate(duration); // Vibrate for 200ms
-    } else {
-      console.error('Haptic feedback not supported on this platform.');
+  // Mapping von Style auf Fallback-Dauer (in ms)
+  private readonly fallbackDurations: Record<ImpactStyle, number> = {
+    [ImpactStyle.Light]: 50,
+    [ImpactStyle.Medium]: 100,
+    [ImpactStyle.Heavy]: 200,
+  };
+
+  /**
+   * Versucht zuerst Capacitor Haptics,
+   * taucht das in einem try/catch und fällt bei Fehlern
+   * auf navigator.vibrate zurück.
+   */
+  async vibrate(style: ImpactStyle = ImpactStyle.Light): Promise<void> {
+    try {
+      await Haptics.impact({ style });
+    } catch (e) {
+      const duration = this.fallbackDurations[style] ?? this.fallbackDurations[ImpactStyle.Light];
+      if (navigator.vibrate) {
+        navigator.vibrate(duration);
+      } else {
+        console.warn('Haptic feedback not supported on this platform.');
+      }
+      console.error('Error triggering haptic feedback:', e);
     }
   }
 }

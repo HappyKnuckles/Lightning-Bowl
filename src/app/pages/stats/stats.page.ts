@@ -178,7 +178,7 @@ export class StatsPage implements OnInit, AfterViewInit {
 
   async handleRefresh(event: RefresherCustomEvent): Promise<void> {
     try {
-      this.hapticService.vibrate(ImpactStyle.Medium, 200);
+      this.hapticService.vibrate(ImpactStyle.Medium);
       await this.storageService.loadGameHistory();
       this.generateCharts(true);
     } catch (error) {

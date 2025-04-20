@@ -162,7 +162,7 @@ export class GameComponent implements OnChanges, OnInit {
   }
 
   async deleteGame(gameId: string): Promise<void> {
-    this.hapticService.vibrate(ImpactStyle.Heavy, 300);
+    this.hapticService.vibrate(ImpactStyle.Heavy);
     const alert = await this.alertController.create({
       header: 'Confirm Deletion',
       message: 'Are you sure you want to delete this game?',
@@ -269,7 +269,7 @@ export class GameComponent implements OnChanges, OnInit {
 
   enableEdit(game: Game, accordionId?: string): void {
     this.isEditMode[game.gameId] = !this.isEditMode[game.gameId];
-    this.hapticService.vibrate(ImpactStyle.Light, 100);
+    this.hapticService.vibrate(ImpactStyle.Light);
 
     if (accordionId) {
       this.openExpansionPanel(accordionId);
@@ -288,7 +288,7 @@ export class GameComponent implements OnChanges, OnInit {
   async saveEdit(game: Game): Promise<void> {
     try {
       if (!this.isGameValid(game)) {
-        this.hapticService.vibrate(ImpactStyle.Heavy, 300);
+        this.hapticService.vibrate(ImpactStyle.Heavy);
         this.toastService.showToast(ToastMessages.invalidInput, 'bug', true);
         return;
       } else {

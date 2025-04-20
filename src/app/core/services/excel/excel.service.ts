@@ -67,7 +67,7 @@ export class ExcelService {
         }
       }
 
-      this.hapticService.vibrate(ImpactStyle.Light, 100);
+      this.hapticService.vibrate(ImpactStyle.Light);
       let suffix = '';
       const fileName = `game_data_${formattedDate}`;
       let i = 1;

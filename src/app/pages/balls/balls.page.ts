@@ -162,7 +162,7 @@ export class BallsPage implements OnInit {
 
   async handleRefresh(event: RefresherCustomEvent): Promise<void> {
     try {
-      this.hapticService.vibrate(ImpactStyle.Medium, 200);
+      this.hapticService.vibrate(ImpactStyle.Medium);
       this.loadingService.setLoading(true);
       this.currentPage = 0;
       this.hasMoreData = true;
@@ -189,7 +189,7 @@ export class BallsPage implements OnInit {
 
   async removeFromArsenal(ball: Ball): Promise<void> {
     try {
-      this.hapticService.vibrate(ImpactStyle.Light, 100);
+      this.hapticService.vibrate(ImpactStyle.Light);
       await this.storageService.removeFromArsenal(ball);
       this.toastService.showToast(`${ball.ball_name} removed from Arsenal.`, 'checkmark-outline');
     } catch (error) {
@@ -200,7 +200,7 @@ export class BallsPage implements OnInit {
 
   async saveBallToArsenal(ball: Ball): Promise<void> {
     try {
-      this.hapticService.vibrate(ImpactStyle.Light, 100);
+      this.hapticService.vibrate(ImpactStyle.Light);
       await this.storageService.saveBallToArsenal(ball);
       this.toastService.showToast(`${ball.ball_name} added to Arsenal.`, 'add');
     } catch (error) {
@@ -266,7 +266,7 @@ export class BallsPage implements OnInit {
 
   async getSameCoreBalls(ball: Ball): Promise<void> {
     try {
-      this.hapticService.vibrate(ImpactStyle.Light, 100);
+      this.hapticService.vibrate(ImpactStyle.Light);
       this.componentLoading = true;
       this.loadingService.setLoading(true);
       this.coreBalls = await this.ballService.getBallsByCore(ball);
@@ -286,7 +286,7 @@ export class BallsPage implements OnInit {
 
   async getSameCoverstockBalls(ball: Ball): Promise<void> {
     try {
-      this.hapticService.vibrate(ImpactStyle.Light, 100);
+      this.hapticService.vibrate(ImpactStyle.Light);
       this.componentLoading = true;
       this.loadingService.setLoading(true);
       this.coverstockBalls = await this.ballService.getBallsByCoverstock(ball);

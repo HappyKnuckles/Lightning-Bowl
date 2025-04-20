@@ -65,7 +65,7 @@ import { PatternFormComponent } from 'src/app/shared/components/pattern-form/pat
     FormsModule,
     GameComponent,
     GameFilterActiveComponent,
-    PatternFormComponent
+    PatternFormComponent,
   ],
 })
 export class HistoryPage {
@@ -102,7 +102,7 @@ export class HistoryPage {
 
   async handleRefresh(event: RefresherCustomEvent): Promise<void> {
     try {
-      this.hapticService.vibrate(ImpactStyle.Medium, 200);
+      this.hapticService.vibrate(ImpactStyle.Medium);
       await this.storageService.loadGameHistory();
     } catch (error) {
       console.error(error);

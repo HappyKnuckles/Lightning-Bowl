@@ -104,7 +104,7 @@ export class PatternPage implements OnInit {
 
   async handleRefresh(event: RefresherCustomEvent): Promise<void> {
     try {
-      this.hapticService.vibrate(ImpactStyle.Medium, 200);
+      this.hapticService.vibrate(ImpactStyle.Medium);
       this.loadingService.setLoading(true);
       this.currentPage = 1;
       this.hasMoreData = true;

@@ -229,7 +229,7 @@ export class LeaguePage {
 
   async handleRefresh(event: RefresherCustomEvent): Promise<void> {
     try {
-      this.hapticService.vibrate(ImpactStyle.Medium, 200);
+      this.hapticService.vibrate(ImpactStyle.Medium);
       await this.storageService.loadGameHistory();
     } catch (error) {
       console.error(error);
@@ -315,7 +315,7 @@ export class LeaguePage {
   }
 
   async deleteLeague(league: string): Promise<void> {
-    this.hapticService.vibrate(ImpactStyle.Heavy, 300);
+    this.hapticService.vibrate(ImpactStyle.Heavy);
     const alert = await this.alertController.create({
       header: 'Confirm Deletion',
       message: 'Are you sure you want to delete this league?',
