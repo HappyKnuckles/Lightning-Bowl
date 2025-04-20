@@ -1,4 +1,4 @@
-import { Component, CUSTOM_ELEMENTS_SCHEMA, ElementRef, ViewChild, ViewChildren, QueryList, computed, Signal } from '@angular/core';
+import { Component, CUSTOM_ELEMENTS_SCHEMA, ElementRef, ViewChild, ViewChildren, QueryList, computed, Signal, signal, effect } from '@angular/core';
 import { DecimalPipe, NgFor, NgIf } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import {
@@ -51,6 +51,7 @@ import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { GameComponent } from 'src/app/shared/components/game/game.component';
 import { SpareDisplayComponent } from 'src/app/shared/components/spare-display/spare-display.component';
 import { StatDisplayComponent } from 'src/app/shared/components/stat-display/stat-display.component';
+import { LongPressDirective } from 'src/app/core/directives/long-press/long-press.directive';
 
 @Component({
   selector: 'app-league',
@@ -85,6 +86,7 @@ import { StatDisplayComponent } from 'src/app/shared/components/stat-display/sta
     IonSegment,
     IonSegmentView,
     IonSegmentContent,
+    LongPressDirective,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
@@ -132,6 +134,10 @@ export class LeaguePage {
   private scoreChartInstances: Record<string, Chart> = {};
   private pinChartInstances: Record<string, Chart> = {};
 
+  leagueSelectionState = signal<Record<string, boolean>>(this.buildDefaultLeagueSelection());
+  isVisibilityEdit = signal(false);
+  private previousLeagueSelectionState: Record<string, boolean> = {};
+
   constructor(
     public storageService: StorageService,
     private sortUtilsService: SortUtilsService,
@@ -153,6 +159,72 @@ export class LeaguePage {
       documentTextOutline,
       medalOutline,
     });
+    effect(() => {
+      const defaults = this.buildDefaultLeagueSelection();
+
+      const savedJson = localStorage.getItem('leagueSelection');
+      const saved: Record<string, boolean> = savedJson ? JSON.parse(savedJson) : {};
+
+      const initial = { ...defaults, ...saved };
+      this.leagueSelectionState = signal(initial);
+    });
+  }
+
+  private buildDefaultLeagueSelection(): Record<string, boolean> {
+    const keys = this.leagueKeys();
+    return keys.reduce(
+      (acc, k) => {
+        acc[k] = true;
+        return acc;
+      },
+      {} as Record<string, boolean>,
+    );
+  }
+
+  updateLeagueSelection(league: string, isChecked: boolean) {
+    this.leagueSelectionState.update((current) => ({
+      ...current,
+      [league]: isChecked,
+    }));
+
+    localStorage.setItem('leagueSelection', JSON.stringify(this.leagueSelectionState()));
+  }
+
+  editVisibility() {
+    const newState = !this.isVisibilityEdit();
+    this.isVisibilityEdit.set(newState);
+
+    if (newState) {
+      this.previousLeagueSelectionState = { ...this.leagueSelectionState() };
+      this.toastService.showToast(ToastMessages.leagueEditMode, 'create-outline');
+    } else {
+      const current = this.leagueSelectionState();
+      const previous = this.previousLeagueSelectionState;
+
+      const nowHiding: string[] = [];
+      const nowShowing: string[] = [];
+
+      for (const league of Object.keys(current)) {
+        if (previous[league] && !current[league]) {
+          nowHiding.push(league);
+        } else if (!previous[league] && current[league]) {
+          nowShowing.push(league);
+        }
+      }
+
+      const parts: string[] = [];
+
+      if (nowHiding.length) {
+        parts.push(`Now Hiding: ${nowHiding.slice(0, 3).join(', ')}${nowHiding.length > 3 ? '...' : ''}`);
+      }
+      if (nowShowing.length) {
+        parts.push(`Now Showing: ${nowShowing.slice(0, 3).join(', ')}${nowShowing.length > 3 ? '...' : ''}`);
+      }
+
+      const message = parts.length > 0 ? parts.join('<br>') : 'No visibility changes made.';
+
+      this.toastService.showToast(message, 'checkmark-outline');
+    }
   }
 
   async handleRefresh(event: RefresherCustomEvent): Promise<void> {

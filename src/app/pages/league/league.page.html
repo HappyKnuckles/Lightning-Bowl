@@ -26,7 +26,7 @@
 
   <ng-template #content>
     <ng-container *ngFor="let league of leagueKeys(); let i = index;">
-      @if(league !== 'Practice'){
+      @if(!isVisibilityEdit()){ @if(leagueSelectionState()[league]) { @if(league !== 'Practice'){
       <ion-item-sliding class="sliding" #slidingItem>
         <ion-item-options side="end" (ionSwipe)="deleteLeague(league); slidingItem.closeOpened();">
           <ion-item-option color="danger" expandable (click)="deleteLeague(league); slidingItem.closeOpened();">
@@ -38,8 +38,7 @@
             <ion-icon class="title" style="transform: translateY(-2px)" name="create-outline"></ion-icon>
           </ion-item-option>
         </ion-item-options>
-
-        <ion-item (click)="loadingService.setLoading(true)" button [id]="league">
+        <ion-item (click)="loadingService.setLoading(true)" button [id]="league" (longPressed)="editVisibility()" [delay]="1000" appLongPress>
           <ion-label class="game-info">
             <div class="title">{{ league }}</div>
             <div class="score">Games: {{gamesByLeague()[league].length}}</div>
@@ -50,7 +49,7 @@
       </ion-item-sliding>
       } @else {
       <div class="sliding">
-        <ion-item (click)="loadingService.setLoading(true)" button [id]="league">
+        <ion-item (click)="loadingService.setLoading(true)" button [id]="league" (longPressed)="editVisibility()" [delay]="1000" appLongPress>
           <ion-label class="game-info">
             <div class="title">{{ league }}</div>
             <div class="score">Games: {{gamesByLeague()[league].length}}</div>
@@ -59,13 +58,26 @@
           </ion-label>
         </ion-item>
       </div>
+      } } } @else {
+      <div class="sliding">
+        <ion-item button #leagues (longPressed)="editVisibility()" [delay]="1000" appLongPress detail="false">
+          <ion-checkbox [checked]="leagueSelectionState()[league]" (ionChange)="updateLeagueSelection(league, $event.detail.checked)"
+            ><ion-label class="game-info">
+              <div class="title">{{ league }}</div>
+              <div class="score">Games: {{gamesByLeague()[league].length}}</div>
+              <div class="score">Avg: {{statsByLeague()[league].averageScore | number: '1.1-2' }}</div>
+              <div class="score">High: {{statsByLeague()[league].highGame}}</div>
+            </ion-label>
+          </ion-checkbox>
+        </ion-item>
+      </div>
       }
     </ng-container>
   </ng-template>
 </ion-content>
 
+@for (league of leagueKeys(); track $index) { @if(leagueSelectionState()[league] && !isVisibilityEdit()) {
 <ion-modal
-  *ngFor="let league of leagueKeys()"
   [trigger]="league"
   #modal
   (didDismiss)="destroyCharts(league)"
@@ -116,5 +128,5 @@
         </ion-segment-content>
       </ion-segment-view>
     </ion-content>
-  </ng-template>
-</ion-modal>
+  </ng-template> </ion-modal
+>} }
