@@ -114,6 +114,28 @@ export class GameComponent implements OnChanges, OnInit {
     }, []);
     return [...new Set([...leagueKeys, ...savedLeagues])];
   });
+
+  // leagues = computed(() => {
+  //   const savedLeagues = this.storageService.leagues();
+
+  //   const savedJson = localStorage.getItem('leagueSelection');
+  //   const allLeagueKeys = this.games.reduce((acc: string[], game: Game) => {
+  //     if (game.league && !acc.includes(game.league)) {
+  //       acc.push(game.league);
+  //     }
+  //     return acc;
+  //   }, []);
+
+  //   if (!savedJson) {
+  //     return allLeagueKeys;
+  //   }
+
+  //   const savedSelection: Record<string, boolean> = savedJson ? JSON.parse(savedJson) : {};
+
+  //   const uniqueCombinedLeagues = [...new Set([...allLeagueKeys, ...savedLeagues])];
+
+  //   return uniqueCombinedLeagues.filter(league => savedSelection[league] === true);
+  // });
   sortedGames: Game[] = [];
   showingGames: Game[] = [];
   presentingElement?: HTMLElement;

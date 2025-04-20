@@ -1,5 +1,5 @@
 import { NgFor, NgIf } from '@angular/common';
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, computed } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { AlertController, SelectChangeEventDetail } from '@ionic/angular';
 import {
@@ -55,7 +55,17 @@ export class LeagueSelectorComponent {
   leaguesToDelete: string[] = [];
   leagueToChange = '';
   isModalOpen = false;
-
+  leagues = computed(() => {
+    const savedLeagues = this.storageService.leagues();
+    const savedJson = localStorage.getItem('leagueSelection');
+    if (!savedJson) {
+      return savedLeagues;
+    }
+    const savedSelection: Record<string, boolean> = savedJson ? JSON.parse(savedJson) : {};
+    return savedLeagues.filter((league) => {
+      return savedSelection[league] !== false;
+    });
+  });
   constructor(
     public storageService: StorageService,
     private toastService: ToastService,

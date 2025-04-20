@@ -102,7 +102,6 @@ export class AddGamePage implements OnInit {
   username = '';
   gameData!: Game;
   deviceId = '';
-  leagues: string[] = [];
   @ViewChildren(GameGridComponent) gameGrids!: QueryList<GameGridComponent>;
   @ViewChild(IonModal) modal!: IonModal;
   @ViewChild('modalCheckbox') modalCheckbox!: IonCheckbox;
@@ -138,7 +137,6 @@ export class AddGamePage implements OnInit {
       this.username = username;
     });
     this.deviceId = (await Device.getId()).identifier;
-    this.leagues = await this.storageService.loadLeagues();
     this.presentingElement = document.querySelector('.ion-page')!;
   }
 

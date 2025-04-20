@@ -7,6 +7,7 @@ import {
   add,
   bug,
   checkmarkOutline,
+  eyeOutline,
   informationCircleOutline,
   refreshOutline,
   reloadOutline,
@@ -46,6 +47,7 @@ export class ToastComponent implements OnDestroy {
       shareSocialOutline,
       removeOutline,
       informationCircleOutline,
+      eyeOutline,
     });
   }
 

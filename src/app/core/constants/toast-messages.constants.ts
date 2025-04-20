@@ -37,5 +37,5 @@ export const ToastMessages = {
   selectLeague: 'Please select a league or create a new one.',
   unexpectedError: 'Unexpected error occurred.',
   chartGenerationError: 'Error generating chart.',
-  leagueEditMode: 'Select leagues to hide from view.',
+  leagueEditMode: 'Select leagues to hide or show.',
 };

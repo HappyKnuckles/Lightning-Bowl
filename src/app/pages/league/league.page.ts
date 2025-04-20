@@ -136,6 +136,11 @@ export class LeaguePage {
 
   leagueSelectionState = signal<Record<string, boolean>>(this.buildDefaultLeagueSelection());
   isVisibilityEdit = signal(false);
+  get leaguesShown(): boolean {
+    const state = this.leagueSelectionState();
+
+    return Object.values(state).some((isVisible) => isVisible);
+  }
   private previousLeagueSelectionState: Record<string, boolean> = {};
 
   constructor(
@@ -196,7 +201,7 @@ export class LeaguePage {
 
     if (newState) {
       this.previousLeagueSelectionState = { ...this.leagueSelectionState() };
-      this.toastService.showToast(ToastMessages.leagueEditMode, 'create-outline');
+      this.toastService.showToast(ToastMessages.leagueEditMode, 'eye-outline');
     } else {
       const current = this.leagueSelectionState();
       const previous = this.previousLeagueSelectionState;
@@ -221,7 +226,7 @@ export class LeaguePage {
         parts.push(`Now Showing: ${nowShowing.slice(0, 3).join(', ')}${nowShowing.length > 3 ? '...' : ''}`);
       }
 
-      const message = parts.length > 0 ? parts.join('<br>') : 'No visibility changes made.';
+      const message = parts.length > 0 ? parts.join('<br>') : 'No changes made.';
 
       this.toastService.showToast(message, 'checkmark-outline');
     }
