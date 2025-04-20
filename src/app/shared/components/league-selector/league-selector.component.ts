@@ -20,6 +20,7 @@ import { IonSelectCustomEvent } from '@ionic/core';
 import { addIcons } from 'ionicons';
 import { addOutline, medalOutline, createOutline } from 'ionicons/icons';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
+import { HiddenLeagueSelectionService } from 'src/app/core/services/hidden-league/hidden-league.service';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 
@@ -57,6 +58,7 @@ export class LeagueSelectorComponent {
   isModalOpen = false;
   leagues = computed(() => {
     const savedLeagues = this.storageService.leagues();
+    this.hiddenLeagueSelectionService.selectionState();
     const savedJson = localStorage.getItem('leagueSelection');
     if (!savedJson) {
       return savedLeagues;
@@ -70,6 +72,7 @@ export class LeagueSelectorComponent {
     public storageService: StorageService,
     private toastService: ToastService,
     private alertController: AlertController,
+    private hiddenLeagueSelectionService: HiddenLeagueSelectionService,
   ) {
     // this.leagueSubscriptions.add(
     //   merge(this.storageService.newLeagueAdded, this.storageService.leagueDeleted, this.storageService.leagueChanged).subscribe(() => {

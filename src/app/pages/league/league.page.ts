@@ -34,6 +34,7 @@ import {
   cameraOutline,
   addOutline,
   chevronBack,
+  checkmarkOutline,
 } from 'ionicons/icons';
 import { Game } from 'src/app/core/models/game.model';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
@@ -52,6 +53,7 @@ import { GameComponent } from 'src/app/shared/components/game/game.component';
 import { SpareDisplayComponent } from 'src/app/shared/components/spare-display/spare-display.component';
 import { StatDisplayComponent } from 'src/app/shared/components/stat-display/stat-display.component';
 import { LongPressDirective } from 'src/app/core/directives/long-press/long-press.directive';
+import { HiddenLeagueSelectionService } from 'src/app/core/services/hidden-league/hidden-league.service';
 
 @Component({
   selector: 'app-league',
@@ -134,12 +136,15 @@ export class LeaguePage {
   private scoreChartInstances: Record<string, Chart> = {};
   private pinChartInstances: Record<string, Chart> = {};
 
-  leagueSelectionState = signal<Record<string, boolean>>(this.buildDefaultLeagueSelection());
   isVisibilityEdit = signal(false);
-  get leaguesShown(): boolean {
-    const state = this.leagueSelectionState();
+  get noLeaguesShown(): boolean {
+    const state = this.hiddenLeagueSelectionService.selectionState();
 
-    return Object.values(state).some((isVisible) => isVisible);
+    return !Object.values(state).some((isVisible) => isVisible);
+  }
+
+  get leagueSelectionState() {
+    return this.hiddenLeagueSelectionService.selectionState();
   }
   private previousLeagueSelectionState: Record<string, boolean> = {};
 
@@ -152,47 +157,34 @@ export class LeaguePage {
     private alertController: AlertController,
     private toastService: ToastService,
     private chartService: ChartGenerationService,
+    private hiddenLeagueSelectionService: HiddenLeagueSelectionService,
   ) {
     addIcons({
       addOutline,
+      checkmarkOutline,
       trashOutline,
       createOutline,
-      chevronForward,
       chevronBack,
+      chevronForward,
       cameraOutline,
       shareOutline,
       documentTextOutline,
       medalOutline,
     });
-    effect(() => {
-      const defaults = this.buildDefaultLeagueSelection();
-
-      const savedJson = localStorage.getItem('leagueSelection');
-      const saved: Record<string, boolean> = savedJson ? JSON.parse(savedJson) : {};
-
-      const initial = { ...defaults, ...saved };
-      this.leagueSelectionState = signal(initial);
-    });
-  }
-
-  private buildDefaultLeagueSelection(): Record<string, boolean> {
-    const keys = this.leagueKeys();
-    return keys.reduce(
-      (acc, k) => {
-        acc[k] = true;
-        return acc;
+    effect(
+      () => {
+        this.hiddenLeagueSelectionService.setAvailableLeagues(this.leagueKeys());
       },
-      {} as Record<string, boolean>,
+      { allowSignalWrites: true },
     );
   }
+  updateLeagueSelection(league: string, checked: boolean) {
+    this.hiddenLeagueSelectionService.updateSelection(league, checked);
+  }
 
-  updateLeagueSelection(league: string, isChecked: boolean) {
-    this.leagueSelectionState.update((current) => ({
-      ...current,
-      [league]: isChecked,
-    }));
-
-    localStorage.setItem('leagueSelection', JSON.stringify(this.leagueSelectionState()));
+  cancelEdit() {
+    this.hiddenLeagueSelectionService.selectionStateValue = this.previousLeagueSelectionState;
+    this.editVisibility();
   }
 
   editVisibility() {
@@ -200,10 +192,10 @@ export class LeaguePage {
     this.isVisibilityEdit.set(newState);
 
     if (newState) {
-      this.previousLeagueSelectionState = { ...this.leagueSelectionState() };
+      this.previousLeagueSelectionState = { ...this.hiddenLeagueSelectionService.selectionState() };
       this.toastService.showToast(ToastMessages.leagueEditMode, 'eye-outline');
     } else {
-      const current = this.leagueSelectionState();
+      const current = this.hiddenLeagueSelectionService.selectionState();
       const previous = this.previousLeagueSelectionState;
 
       const nowHiding: string[] = [];
@@ -244,7 +236,7 @@ export class LeaguePage {
     }
   }
 
-  cancel(league: string): void {
+  closeModal(league: string): void {
     this.selectedSegment = 'Overall';
     const modalToDismiss = this.modals.find((modal) => modal.trigger === league);
 
