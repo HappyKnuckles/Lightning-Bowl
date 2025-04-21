@@ -1,9 +1,15 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
+    <ion-buttons slot="start" (click)="resetBallSelection()">
+      <ion-button> Reset </ion-button>
+    </ion-buttons>
     <ion-title>New Ball</ion-title>
+    <ion-buttons slot="end" strong="true" (click)="saveBallSelection()">
+      <ion-button>Save</ion-button>
+    </ion-buttons>
   </ion-toolbar>
   <ion-toolbar>
-    <ion-searchbar (ionInput)="searchBalls($event)" placeholder="Search for a ball" debounce="300" showCancelButton="focus"></ion-searchbar>
+    <ion-searchbar (ionInput)="searchBalls($event)" placeholder="Search for balls" debounce="300" showCancelButton="focus"></ion-searchbar>
   </ion-toolbar>
 </ion-header>
 <ion-content [fullscreen]="true" role="feed">

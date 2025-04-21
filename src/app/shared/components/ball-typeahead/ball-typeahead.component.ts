@@ -15,8 +15,11 @@ import {
   IonInfiniteScroll,
   IonInfiniteScrollContent,
   IonTitle,
+  IonButtons,
+  IonIcon,
+  IonButton,
 } from '@ionic/angular/standalone';
-import { InfiniteScrollCustomEvent, SearchbarCustomEvent } from '@ionic/angular';
+import { InfiniteScrollCustomEvent, ModalController, SearchbarCustomEvent } from '@ionic/angular';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 
 @Component({
@@ -25,6 +28,9 @@ import { StorageService } from 'src/app/core/services/storage/storage.service';
   styleUrls: ['./ball-typeahead.component.scss'],
   standalone: true,
   imports: [
+    IonButton,
+    IonIcon,
+    IonButtons,
     IonTitle,
     IonInfiniteScrollContent,
     IonInfiniteScroll,
@@ -59,7 +65,10 @@ export class BallTypeaheadComponent implements OnInit, OnDestroy {
   private batchSize = 100;
   public loadedCount = 0;
 
-  constructor(public storageService: StorageService) {}
+  constructor(
+    public storageService: StorageService,
+    private modalCtrl: ModalController,
+  ) {}
 
   ngOnInit(): void {
     this.filteredBalls = [...this.balls];
@@ -85,19 +94,18 @@ export class BallTypeaheadComponent implements OnInit, OnDestroy {
     this.fuse = new Fuse(this.balls, options);
   }
 
-  isChecked(ball: Ball): boolean {
-    return this.selectedBalls.includes(ball);
-  }
+  loadData(event: InfiniteScrollCustomEvent): void {
+    setTimeout(() => {
+      if (this.loadedCount < this.filteredBalls.length) {
+        this.displayedBalls = this.filteredBalls.slice(0, this.loadedCount + this.batchSize);
+        this.loadedCount += this.batchSize;
+      }
+      event.target.complete();
 
-  checkboxChange(event: CustomEvent): void {
-    const checked = event.detail.checked;
-    const value = event.detail.value;
-
-    if (checked) {
-      this.selectedBalls = [...this.selectedBalls, value];
-    } else {
-      this.selectedBalls = this.selectedBalls.filter((item) => item !== value);
-    }
+      if (this.loadedCount >= this.filteredBalls.length) {
+        event.target.disabled = true;
+      }
+    }, 50);
   }
 
   searchBalls(event: SearchbarCustomEvent): void {
@@ -117,20 +125,28 @@ export class BallTypeaheadComponent implements OnInit, OnDestroy {
     this.content.scrollToTop(300);
   }
 
-  loadData(event: InfiniteScrollCustomEvent): void {
-    setTimeout(() => {
-      if (this.loadedCount < this.filteredBalls.length) {
-        this.displayedBalls = this.filteredBalls.slice(0, this.loadedCount + this.batchSize);
-        this.loadedCount += this.batchSize;
-      }
-      event.target.complete();
-
-      if (this.loadedCount >= this.filteredBalls.length) {
-        event.target.disabled = true;
-      }
-    }, 50);
+  resetBallSelection() {
+    this.selectedBalls = [];
   }
 
+  saveBallSelection() {
+    this.modalCtrl.dismiss();
+  }
+
+  checkboxChange(event: CustomEvent): void {
+    const checked = event.detail.checked;
+    const value = event.detail.value;
+
+    if (checked) {
+      this.selectedBalls = [...this.selectedBalls, value];
+    } else {
+      this.selectedBalls = this.selectedBalls.filter((item) => item !== value);
+    }
+  }
+
+  isChecked(ball: Ball): boolean {
+    return this.selectedBalls.includes(ball);
+  }
   ngOnDestroy(): void {
     if (this.selectedBalls.length > 0) {
       this.selectedBallsChange.emit(this.selectedBalls);

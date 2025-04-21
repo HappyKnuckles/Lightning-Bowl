@@ -72,9 +72,9 @@ export class BallFilterService {
   filterBalls(balls: Ball[], filters: BallFilter): Ball[] {
     const filteredBalls = balls.filter((ball) => {
       return (
-        (filters.brands.length === 0 || filters.brands.includes(ball.brand_id)) &&
-        (filters.cores.length === 0 || filters.cores.includes(ball.core_id)) &&
-        (filters.coverstocks.length === 0 || filters.coverstocks.includes(ball.ball_id)) &&
+        (filters.brands.length === 0 || filters.brands.includes(ball.brand_name)) &&
+        (filters.cores.length === 0 || filters.cores.includes(ball.core_name)) &&
+        (filters.coverstocks.length === 0 || filters.coverstocks.includes(ball.ball_name)) &&
         (filters.market === Market.ALL || filters.market === ball.us_int) &&
         (filters.coreType === CoreType.ALL || filters.coreType === ball.core_type) &&
         (!filters.availability || ball.availability === 'Available') &&

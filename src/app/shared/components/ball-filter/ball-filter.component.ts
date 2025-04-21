@@ -1,4 +1,4 @@
-import { Component, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit } from '@angular/core';
 import { BallFilterService } from 'src/app/core/services/ball-filter/ball-filter.service';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BallService } from 'src/app/core/services/ball/ball.service';
@@ -28,11 +28,14 @@ import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
+import { BallCoreTypeaheadComponent } from '../ball-core-typeahead/ball-core-typeahead.component';
+import { BallCoverstockTypeaheadComponent } from '../ball-coverstock-typeahead/ball-coverstock-typeahead.component';
 @Component({
   selector: 'app-ball-filter',
   templateUrl: './ball-filter.component.html',
   styleUrls: ['./ball-filter.component.scss'],
   standalone: true,
+  providers: [ModalController],
   imports: [
     FormsModule,
     IonList,
@@ -55,22 +58,28 @@ import { LoadingService } from 'src/app/core/services/loader/loading.service';
     ReactiveFormsModule,
     CommonModule,
     IonSelectOption,
+    BallCoreTypeaheadComponent,
+    BallCoverstockTypeaheadComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
-export class BallFilterComponent {
+export class BallFilterComponent implements OnInit {
   markets: Market[] = [Market.ALL, Market.US, Market.INT];
   coreTypes: CoreType[] = [CoreType.ALL, CoreType.ASYMMETRIC, CoreType.SYMMETRIC];
   weights: string[] = ['12', '13', '14', '15', '16'];
+  presentingElement?: HTMLElement;
+
   constructor(
     public ballFilterService: BallFilterService,
     private modalCtrl: ModalController,
     public ballService: BallService,
     private storageService: StorageService,
     private toastService: ToastService,
-    private loadingService: LoadingService
+    private loadingService: LoadingService,
   ) {}
-
+  ngOnInit() {
+    this.presentingElement = document.querySelector('.ion-page')!;
+  }
   cancel(): Promise<boolean> {
     this.ballFilterService.filters.update(() =>
       localStorage.getItem('ball-filter') ? JSON.parse(localStorage.getItem('ball-filter')!) : this.ballFilterService.filters,
@@ -103,13 +112,13 @@ export class BallFilterComponent {
 
   async changeWeight(weight: number): Promise<void> {
     try {
-      this.loadingService.setLoading(true)
+      this.loadingService.setLoading(true);
       await this.storageService.loadAllBalls(undefined, weight);
     } catch (error) {
       console.error('Error loading balls:', error);
       this.toastService.showToast(ToastMessages.ballLoadError, 'bug', true);
-    } finally{
-      this.loadingService.setLoading(false)
+    } finally {
+      this.loadingService.setLoading(false);
     }
   }
 }

@@ -1,1 +1,35 @@
-<p>ball-core-typeahead works!</p>
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="resetCoreSelection()"> Reset </ion-button>
+    </ion-buttons>
+    <ion-title>Select Cores</ion-title>
+    <ion-buttons slot="end" strong="true" (click)="saveCoreSelection()">
+      <ion-button>Save</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-searchbar (ionInput)="searchCores($event)" placeholder="Search for cores" debounce="300" showCancelButton="focus"></ion-searchbar>
+  </ion-toolbar>
+</ion-header>
+<ion-content [fullscreen]="true" role="feed">
+  <ion-list>
+    @for (core of displayedCores(); track core.core_name) {
+      <ion-item role="article">
+        <!-- <ion-avatar slot="start">
+        <ion-img [src]="storageService.url + ball.thumbnail_image"></ion-img>
+      </ion-avatar> -->
+        <ion-checkbox [value]="core" [checked]="isChecked(core)" (ionChange)="checkboxChange($event)">
+          <ion-label>
+            <p>{{ core.brand }}</p>
+            <h2>{{ core.core_name }}</h2>
+          </ion-label>
+        </ion-checkbox>
+      </ion-item>
+    }
+  </ion-list>
+
+  <ion-infinite-scroll threshold="90%" (ionInfinite)="loadData($event)" #infiniteScroll>
+    <ion-infinite-scroll-content loadingSpinner="crescent" loadingText="Loading more cores..."> </ion-infinite-scroll-content>
+  </ion-infinite-scroll>
+</ion-content>

@@ -24,31 +24,18 @@
         <ion-select-option *ngFor="let brand of ballService.brands()" [value]="brand.brand_name">{{ brand.brand_name }}</ion-select-option>
       </ion-select>
     </ion-item>
-    <ion-item>
-      <ion-select
-        label="Cores"
-        name="cores"
-        multiple="true"
-        placeholder="All"
-        [ngModel]="ballFilterService.filters().cores"
-        (ionChange)="updateFilter('cores', $event.detail.value)">
-        <ion-select-option *ngFor="let core of ballService.cores()" [value]="core.core_name">{{ core.core_name }}</ion-select-option>
-      </ion-select>
+    <ion-item button id="select-coverstocks">
+      <ion-label>Coverstocks</ion-label>
+      <p style="overflow: hidden; white-space: nowrap; text-overflow: ellipsis; margin-left: 10px; text-align: right">
+        {{ ballFilterService.filters().coverstocks.join(", ") }}
+      </p>
     </ion-item>
-    <ion-item>
-      <ion-select
-        label="Coverstocks"
-        name="coverstocks"
-        multiple="true"
-        placeholder="All"
-        [ngModel]="ballFilterService.filters().coverstocks"
-        (ionChange)="updateFilter('coverstocks', $event.detail.value)">
-        <ion-select-option *ngFor="let coverstock of ballService.coverstocks()" [value]="coverstock.coverstock_name">{{
-          coverstock.coverstock_name
-        }}</ion-select-option>
-      </ion-select>
+    <ion-item button id="select-cores">
+      <ion-label>Cores</ion-label>
+      <p style="overflow: hidden; white-space: nowrap; text-overflow: ellipsis; margin-left: 10px; text-align: right">
+        {{ ballFilterService.filters().cores.join(", ") }}
+      </p>
     </ion-item>
-    <!---->
     <ion-item>
       <ion-select
         label="Core type"
@@ -135,3 +122,21 @@
 <ion-footer style="display: flex" class="ion-justify-content-center">
   <ion-button class="confirm-btn" (click)="confirm()">Confirm ({{ ballFilterService.filteredBalls().length }} Balls)</ion-button>
 </ion-footer>
+
+<ion-modal [presentingElement]="presentingElement" trigger="select-cores">
+  <ng-template>
+    <app-ball-core-typeahead
+      [cores]="ballService.cores()"
+      (selectedCoresChange)="updateFilter('cores', $event)"
+      [prevSelectedCores]="ballFilterService.filters().cores"></app-ball-core-typeahead>
+  </ng-template>
+</ion-modal>
+
+<ion-modal [presentingElement]="presentingElement" trigger="select-coverstocks">
+  <ng-template>
+    <app-ball-coverstock-typeahead
+      [coverstocks]="ballService.coverstocks()"
+      (selectedCoverstocksChange)="updateFilter('coverstocks', $event)"
+      [prevSelectedCoverstocks]="ballFilterService.filters().coverstocks"></app-ball-coverstock-typeahead>
+  </ng-template>
+</ion-modal>

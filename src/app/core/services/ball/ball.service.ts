@@ -122,6 +122,7 @@ export class BallService {
   async getCores(): Promise<Core[]> {
     try {
       const response = await firstValueFrom(this.http.get<Core[]>(`${environment.bowwwlEndpoint}cores`));
+      response.sort((a, b) => a.brand.localeCompare(b.brand));
       this.cores.set(response);
       return response;
     } catch (error) {
@@ -133,6 +134,7 @@ export class BallService {
   async getCoverstocks(): Promise<Coverstock[]> {
     try {
       const response = await firstValueFrom(this.http.get<Coverstock[]>(`${environment.bowwwlEndpoint}coverstocks`));
+      response.sort((a, b) => a.brand.localeCompare(b.brand));
       this.coverstocks.set(response);
       return response;
     } catch (error) {

@@ -9,21 +9,21 @@
     <ion-title> Add Game </ion-title>
     <ion-buttons slot="end">
       <ion-button class="action-sheet" (click)="presentActionSheet()" fill="clear">
-        {{selectedMode}}
+        {{ selectedMode }}
         <ion-icon *ngIf="!sheetOpen" name="chevron-down" class="chevron"></ion-icon>
         <ion-icon *ngIf="sheetOpen" name="chevron-up" class="chevron"></ion-icon>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
 
-  @if(selectedMode !== 'Single'){
-  <ion-toolbar>
-    <ion-segment [value]="selectedSegment" [scrollable]="true">
-      <ion-segment-button *ngFor="let segment of segments" [value]="segment" [contentId]="segment">
-        <ion-label class="segment-label">{{segment}}</ion-label>
-      </ion-segment-button>
-    </ion-segment>
-  </ion-toolbar>
+  @if (selectedMode !== "Single") {
+    <ion-toolbar>
+      <ion-segment [value]="selectedSegment" [scrollable]="true">
+        <ion-segment-button *ngFor="let segment of segments" [value]="segment" [contentId]="segment">
+          <ion-label class="segment-label">{{ segment }}</ion-label>
+        </ion-segment-button>
+      </ion-segment>
+    </ion-toolbar>
   }
 </ion-header>
 
@@ -47,7 +47,7 @@
   <lottie-player slot="end" autoplay loop src="https://lottie.host/7b3bdd2a-221b-463e-9f59-d95964639389/duMcnXopMJ.json"></lottie-player>
 </div>
 
-<ng-container *ngFor="let mode of seriesMode; let i = index;">
+<ng-container *ngFor="let mode of seriesMode; let i = index">
   <ion-content [fullscreen]="true" *ngIf="mode">
     <ion-segment-view>
       <ion-segment-content *ngFor="let trackIndex of trackIndexes[i]; let j = index" [id]="segments[j]">
@@ -87,8 +87,8 @@
 
     <ion-grid *ngIf="i !== 0">
       <ion-row>
-        <ion-col class="middle count">Score Series: {{getSeriesCurrentScore(i)}}</ion-col>
-        <ion-col class="middle count">Max Series: {{getSeriesMaxScore(i)}}</ion-col>
+        <ion-col class="middle count">Score Series: {{ getSeriesCurrentScore(i) }}</ion-col>
+        <ion-col class="middle count">Max Series: {{ getSeriesMaxScore(i) }}</ion-col>
       </ion-row>
       <ion-row class="button-row">
         <ion-col>
@@ -118,9 +118,9 @@
     <ion-content>
       <h2 class="ion-text-center">Edit wrong game data</h2>
       <div class="grid-container">
-        <ion-grid fixed="true" *ngFor="let frame of gameData.frames; let frameIndex = index;">
+        <ion-grid fixed="true" *ngFor="let frame of gameData.frames; let frameIndex = index">
           <ion-row>
-            <ion-col class="middle frame">{{frameIndex + 1}}</ion-col>
+            <ion-col class="middle frame">{{ frameIndex + 1 }}</ion-col>
           </ion-row>
           <ion-row>
             <ion-col class="input-col" *ngIf="frameIndex !== 9"></ion-col>
@@ -131,7 +131,7 @@
                 [value]="frame.throws[0]?.value"
                 inputmode="numeric"
                 debounce="300"
-                [ngClass]="{'invalid-input': frame.isInvalid}"
+                [ngClass]="{ 'invalid-input': frame.isInvalid }"
                 (ionChange)="frame.throws[0] = frame.throws[0] || {}; frame.throws[0].value = $event.target.value; isGameValid(gameData)"></ion-input>
             </ion-col>
             <ion-col class="input-col" *ngIf="frameIndex !== 9">
@@ -141,7 +141,7 @@
                 [value]="frame.throws[1]?.value"
                 inputmode="numeric"
                 debounce="300"
-                [ngClass]="{'invalid-input': frame.isInvalid}"
+                [ngClass]="{ 'invalid-input': frame.isInvalid }"
                 (ionChange)="frame.throws[1] = frame.throws[1] || {}; frame.throws[1].value = $event.target.value; isGameValid(gameData)"></ion-input>
             </ion-col>
             <ion-col class="input-col" *ngIf="frameIndex === 9">
@@ -151,7 +151,7 @@
                 [value]="frame.throws[1]?.value"
                 inputmode="numeric"
                 debounce="300"
-                [ngClass]="{'invalid-input': frame.isInvalid}"
+                [ngClass]="{ 'invalid-input': frame.isInvalid }"
                 (ionChange)="frame.throws[1] = frame.throws[1] || {}; frame.throws[1].value = $event.target.value; isGameValid(gameData)"></ion-input>
             </ion-col>
             <ion-col class="input-col" *ngIf="frameIndex === 9">
@@ -161,7 +161,7 @@
                 [value]="frame.throws[2]?.value"
                 inputmode="numeric"
                 debounce="300"
-                [ngClass]="{'invalid-input': frame.isInvalid}"
+                [ngClass]="{ 'invalid-input': frame.isInvalid }"
                 (ionChange)="frame.throws[2] = frame.throws[2] || {}; frame.throws[2].value = $event.target.value; isGameValid(gameData)"></ion-input>
             </ion-col>
           </ion-row>
@@ -198,28 +198,18 @@
           </ion-select>
         </ion-item> -->
         <app-league-selector [isAddPage]="true" (leagueChanged)="onLeagueChange($event, true)" #leagueSelector></app-league-selector>
-        <!-- TODO make it typeahead-->
-        <ion-item>
-          <ion-select
-            [(ngModel)]="gameData.pattern"
-            name="pattern"
-            placeholder="None"
-            label="Pattern"
-            (ionChange)="gameData.pattern = $event.target.value">
-            <ion-select-option *ngFor="let pattern of storageService.allPatterns()" [value]="pattern.title"> {{ pattern.title }} </ion-select-option>
-          </ion-select>
-        </ion-item>
-        <!-- TODO currently does not open modal-->
-        <!-- <ion-item class="pattern" button id="selectPatternFoto">
+        <ion-item class="pattern" button id="selectPatternFoto">
           <ion-label>Pattern</ion-label>
-          {{gameData.pattern}}
+          {{ gameData.pattern }}
         </ion-item>
         <ion-modal [presentingElement]="presentingElement" trigger="selectPatternFoto">
           <ng-template>
-            <app-pattern-typeahead [patterns]="storageService.allPatterns()" [prevSelectedPattern]="gameData.pattern"
+            <app-pattern-typeahead
+              [patterns]="storageService.allPatterns()"
+              [prevSelectedPattern]="gameData.pattern"
               (selectedPatternsChange)="gameData.pattern = $event"></app-pattern-typeahead>
           </ng-template>
-        </ion-modal> -->
+        </ion-modal>
         <ion-item>
           <ion-select
             [(ngModel)]="gameData.balls"
@@ -228,7 +218,7 @@
             placeholder="None"
             label="Balls"
             (ionChange)="gameData.balls = $event.target.value">
-            <ion-select-option *ngFor="let ball of storageService.arsenal()" [value]="ball.ball_name"> {{ball.ball_name}} </ion-select-option>
+            <ion-select-option *ngFor="let ball of storageService.arsenal()" [value]="ball.ball_name"> {{ ball.ball_name }} </ion-select-option>
           </ion-select>
         </ion-item>
         <ion-item>

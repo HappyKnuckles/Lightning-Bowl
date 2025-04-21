@@ -40,7 +40,7 @@ import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { GameUtilsService } from 'src/app/core/services/game-utils/game-utils.service';
 import { GameScoreCalculatorService } from 'src/app/core/services/game-score-calculator/game-score-calculator.service';
 import { GameDataTransformerService } from 'src/app/core/services/game-transform/game-data-transform.service';
-import { InputCustomEvent } from '@ionic/angular';
+import { InputCustomEvent, ModalController } from '@ionic/angular';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { GameGridComponent } from 'src/app/shared/components/game-grid/game-grid.component';
 import { LeagueSelectorComponent } from 'src/app/shared/components/league-selector/league-selector.component';
@@ -61,6 +61,7 @@ defineCustomElements(window);
   templateUrl: 'add-game.page.html',
   styleUrls: ['add-game.page.scss'],
   standalone: true,
+  providers: [ModalController],
   imports: [
     IonHeader,
     IonToolbar,
