@@ -29,12 +29,7 @@
           </ion-item-option>
         </ion-item-options>
 
-        <ion-item
-          lines="none"
-          (longPressed)="saveOriginalStateAndEnableEdit(game); slidingItem.closeOpened()"
-          [delay]="1000"
-          [scaleFactor]="1.025"
-          appLongPress>
+        <ion-item lines="none" (longPressed)="saveOriginalStateAndEnableEdit(game); slidingItem.closeOpened()" [delay]="1000" appLongPress>
           <ion-accordion #accordionRef [value]="game.gameId" [id]="game.gameId">
             <ion-item slot="header" lines="none" class="expansion-header">
               <div class="game-info">

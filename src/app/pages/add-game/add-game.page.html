@@ -190,13 +190,6 @@
             >Practice</ion-checkbox
           >
         </ion-item>
-        <!-- <ion-item class="league">
-          <ion-select name="league" (ionChange)="gameData.league = $event.target.value" label="League/Tournament"
-            value="">
-            <ion-select-option value="">None</ion-select-option>
-            <ion-select-option *ngFor="let league of leagues" [value]="league">{{ league }}</ion-select-option>
-          </ion-select>
-        </ion-item> -->
         <app-league-selector [isAddPage]="true" (leagueChanged)="onLeagueChange($event, true)" #leagueSelector></app-league-selector>
         <ion-item class="pattern" button id="selectPatternFoto">
           <ion-label>Pattern</ion-label>

@@ -14,7 +14,7 @@ export class LongPressDirective implements OnDestroy {
   @Input() delay = 500;
 
   /** scale factor while pressing */
-  @Input() scaleFactor = 1.05;
+  @Input() scaleFactor = 1.025;
 
   /** CSS transition for the scale */
   @Input() transitionDuration = '250ms';
