@@ -48,9 +48,23 @@ export class StorageService {
 
   async init() {
     try {
-      const ballFilter = localStorage.getItem('ball-filter');
-      const weight = ballFilter ? JSON.parse(ballFilter).weight : '15';
       await this.storage.create();
+
+      if (navigator.storage && navigator.storage.persist) {
+        const isPersisted = await navigator.storage.persisted();
+        if (!isPersisted) {
+          const requested = await navigator.storage.persist();
+          if (!requested) {
+            console.warn('Persistent storage request was denied or not granted.');
+          }
+        }
+      } else {
+        console.warn('Persistent Storage API is not supported by this browser.');
+      }
+
+      const ballFilter = localStorage.getItem('ball-filter');
+      // Ensure weight is treated as a number if needed, adjust default as necessary
+      const weight = ballFilter ? parseInt(JSON.parse(ballFilter).weight, 10) : 15;
       await this.loadInitialData(weight);
     } catch (error) {
       console.error('Error during StorageService init:', error);
