@@ -98,6 +98,7 @@ import { LongPressDirective } from 'src/app/core/directives/long-press/long-pres
     FormsModule,
     PatternTypeaheadComponent,
     LongPressDirective,
+    DatePipe,
   ],
   standalone: true,
 })
@@ -148,7 +149,6 @@ export class GameComponent implements OnChanges, OnInit {
   private closeTimers: Record<string, NodeJS.Timeout> = {};
   public delayedCloseMap: Record<string, boolean> = {};
   private originalGameState: Record<string, Game> = {};
-  private originalPanelState: Record<string, boolean> = {};
 
   constructor(
     private alertController: AlertController,

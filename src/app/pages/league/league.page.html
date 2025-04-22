@@ -44,10 +44,10 @@
               <ion-item button #leagues (longPressed)="editVisibility()" [delay]="1000" appLongPress detail="false">
                 <ion-checkbox [checked]="selectionState[league]" (ionChange)="updateLeagueSelection(league, $event.detail.checked)">
                   <ion-label class="game-info">
-                    <div class="title">{{ league }}</div>
-                    <div class="score">Games: {{ gamesByLeague()[league].length || 0 }}</div>
-                    <div class="score">Avg: {{ statsByLeague()[league].averageScore | number: "1.1-2" }}</div>
-                    <div class="score">High: {{ statsByLeague()[league].highGame }}</div>
+                    <h2 class="title">{{ league }}</h2>
+                    <p class="score">Games: {{ gamesByLeague()[league].length || 0 }}</p>
+                    <p class="score">Avg: {{ statsByLeague()[league].averageScore | number: "1.1-2" }}</p>
+                    <p class="score">High: {{ statsByLeague()[league].highGame }}</p>
                   </ion-label>
                 </ion-checkbox>
               </ion-item>
