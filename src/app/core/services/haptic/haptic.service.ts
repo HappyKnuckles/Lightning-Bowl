@@ -12,8 +12,7 @@ export class HapticService {
 
   /**
    * Versucht zuerst Capacitor Haptics,
-   * taucht das in einem try/catch und fällt bei Fehlern
-   * auf navigator.vibrate zurück.
+   * und fällt bei Fehlern auf navigator.vibrate zurück.
    */
   async vibrate(style: ImpactStyle = ImpactStyle.Light): Promise<void> {
     try {

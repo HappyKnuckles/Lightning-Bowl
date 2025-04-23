@@ -228,17 +228,20 @@ export class GameComponent implements OnChanges, OnInit {
   }
 
   // TODO this should save the state of the panel and revert to it
-  openExpansionPanel(accordionId: string): void {
+  openExpansionPanel(accordionId?: string): void {
     const nativeEl = this.accordionGroup;
-
-    if (nativeEl.value === accordionId) {
-      nativeEl.value = undefined;
-    } else nativeEl.value = accordionId;
+    if (nativeEl.value === accordionId) nativeEl.value = undefined;
+    else nativeEl.value = accordionId;
   }
 
+  /** LONG-PRESS or header click entry point */
   saveOriginalStateAndEnableEdit(game: Game): void {
-    this.originalGameState[game.gameId] = JSON.parse(JSON.stringify(game));
-    this.enableEdit(game, game.gameId);
+    if (!this.isEditMode[game.gameId]) {
+      this.originalGameState[game.gameId] = structuredClone(game);
+      this.enableEdit(game, game.gameId);
+    } else {
+      this.cancelEdit(game);
+    }
   }
 
   enableEdit(game: Game, accordionId?: string): void {
@@ -250,12 +253,20 @@ export class GameComponent implements OnChanges, OnInit {
       this.delayedCloseMap[game.gameId] = true;
     }
   }
+
   cancelEdit(game: Game): void {
-    if (this.originalGameState[game.gameId]) {
-      Object.assign(game, this.originalGameState[game.gameId]);
+    const saved = this.originalGameState[game.gameId];
+    if (saved) {
+      Object.assign(game, saved);
       delete this.originalGameState[game.gameId];
     }
-    this.enableEdit(game);
+
+    this.isEditMode[game.gameId] = false;
+    this.hapticService.vibrate(ImpactStyle.Light);
+
+    const wasOpen = this.delayedCloseMap[game.gameId];
+    this.openExpansionPanel(wasOpen ? game.gameId : undefined);
+    delete this.delayedCloseMap[game.gameId];
   }
 
   async saveEdit(game: Game): Promise<void> {
@@ -264,24 +275,23 @@ export class GameComponent implements OnChanges, OnInit {
         this.hapticService.vibrate(ImpactStyle.Heavy);
         this.toastService.showToast(ToastMessages.invalidInput, 'bug', true);
         return;
-      } else {
-        // Create a deep copy of the game object
-        const gameCopy = structuredClone(game);
-
-        gameCopy.frames.forEach((frame: any) => {
-          delete frame.isInvalid;
-        });
-
-        if (gameCopy.league === undefined || gameCopy.league === '') {
-          gameCopy.isPractice = true;
-        } else {
-          gameCopy.isPractice = false;
-        }
-        gameCopy.totalScore = gameCopy.frameScores[9];
-        await this.storageService.saveGameToLocalStorage(gameCopy);
-        this.toastService.showToast(ToastMessages.gameUpdateSuccess, 'refresh-outline');
-        this.enableEdit(game);
       }
+
+      const gameCopy = structuredClone(game);
+      gameCopy.frames.forEach((f: any) => delete f.isInvalid);
+      gameCopy.isPractice = !gameCopy.league;
+      gameCopy.totalScore = gameCopy.frameScores[9];
+      await this.storageService.saveGameToLocalStorage(gameCopy);
+
+      this.toastService.showToast(ToastMessages.gameUpdateSuccess, 'refresh-outline');
+
+      this.isEditMode[game.gameId] = false;
+      this.hapticService.vibrate(ImpactStyle.Light);
+      const wasOpen = this.delayedCloseMap[game.gameId];
+      this.openExpansionPanel(wasOpen ? game.gameId : undefined);
+
+      delete this.originalGameState[game.gameId];
+      delete this.delayedCloseMap[game.gameId];
     } catch (error) {
       this.toastService.showToast(ToastMessages.gameUpdateError, 'bug', true);
       console.error('Error saving game edit:', error);
