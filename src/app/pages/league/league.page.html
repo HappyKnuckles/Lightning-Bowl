@@ -133,7 +133,7 @@
                 <app-stat-display [statDefinitions]="statDefinitions" [currentStats]="statsByLeague()[league]" [prevStats]="overallStats()">
                 </app-stat-display>
                 <div class="stat-container">
-                  <canvas #scoreChart style="width: 300px; height: 400px"></canvas>
+                  <canvas #scoreChart style="width: 300px; height: 400px; max-height: 700px"></canvas>
                 </div>
               </section>
             </ion-segment-content>
@@ -142,7 +142,7 @@
               <section class="tab">
                 <app-spare-display [prevStats]="overallStats()" [stats]="statsByLeague()[league]" id="league-spareStats"> </app-spare-display>
                 <div class="stat-container">
-                  <canvas #pinChart style="width: 300px; height: 300px"></canvas>
+                  <canvas #pinChart style="width: 300px; height: 300px; max-height: 700px"></canvas>
                 </div>
               </section>
             </ion-segment-content>
