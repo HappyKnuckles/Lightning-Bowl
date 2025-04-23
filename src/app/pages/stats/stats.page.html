@@ -8,27 +8,30 @@
         (click)="exportToExcel()"
         class="action-sheet"
         fill="clear"
-        [disabled]="(storageService.games().length <= 0 && !loadingService.isLoading())">
+        [disabled]="storageService.games().length <= 0 && !loadingService.isLoading()">
         <ion-icon slot="icon-only" name="cloud-download-outline"></ion-icon> </ion-button
     ></ion-buttons>
     <!-- Clear Input on Upload-->
     <input type="file" id="excelUpload" class="ion-hide" (input)="handleFileUpload($event)" placeholder="Upload file" accept=".xlsx" />
     <ion-title> Stats </ion-title>
     <ion-buttons slot="end" class="action-sheet">
-      <ion-button fill="clear" (click)="openFilterModal()" [disabled]="(storageService.games().length <= 0 && !loadingService.isLoading())">
+      <ion-button fill="clear" (click)="openFilterModal()" [disabled]="storageService.games().length <= 0 && !loadingService.isLoading()">
         <ion-icon slot="icon-only" name="filter-outline"></ion-icon>
-        <ion-text class="filter-indicator" *ngIf="gameFilterService.activeFilterCount() !== 0">{{gameFilterService.activeFilterCount()}}</ion-text>
+        <ion-text class="filter-indicator" *ngIf="gameFilterService.activeFilterCount() !== 0">{{ gameFilterService.activeFilterCount() }}</ion-text>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
-  <ion-toolbar
-    *ngIf="!((gameFilterService.filteredGames().length <= 0 && !loadingService.isLoading()) || gameFilterService.filteredGames().length <= 0)">
-    <ion-segment value="Overall" (ionChange)="onSegmentChanged($event)">
-      <ion-segment-button *ngFor="let segment of segments" [value]="segment" [contentId]="segment">
-        <ion-label class="segment-label">{{segment}}</ion-label>
-      </ion-segment-button>
-    </ion-segment>
-  </ion-toolbar>
+  @if (!((gameFilterService.filteredGames().length <= 0 && !loadingService.isLoading()) || gameFilterService.filteredGames().length <= 0)) {
+    <ion-toolbar>
+      <ion-segment [value]="selectedSegment" (ionChange)="onSegmentChanged($event)">
+        @for (segment of segments; track segment) {
+          <ion-segment-button [value]="segment" [contentId]="segment">
+            <ion-label class="segment-label">{{ segment }}</ion-label>
+          </ion-segment-button>
+        }
+      </ion-segment>
+    </ion-toolbar>
+  }
 </ion-header>
 
 <ion-content [fullscreen]="true">
@@ -39,58 +42,52 @@
   <ion-segment-view>
     <ion-segment-content id="Overall">
       <section class="tab" *ngIf="gameFilterService.filteredGames().length > 0">
-        <ng-container>
-          <app-stat-display
-            [statDefinitions]="overallStatDefinitions"
-            [currentStats]="statsService.currentStats()"
-            [prevStats]="statsService.prevStats()">
-          </app-stat-display>
-          <app-stat-display
-            [statDefinitions]="seriesStatDefinitions"
-            [currentStats]="statsService.currentStats()"
-            [prevStats]="statsService.prevStats()">
-          </app-stat-display>
-          <div class="stat-container">
-            <canvas #scoreChart class="score" style="width: 300px; height: 400px"></canvas>
-          </div>
-          <div class="stat-container">
-            <canvas #scoreDistributionChart style="width: 300px; height: 400px"></canvas>
-          </div>
-        </ng-container>
+        <app-stat-display
+          [statDefinitions]="overallStatDefinitions"
+          [currentStats]="statsService.currentStats()"
+          [prevStats]="statsService.prevStats()">
+        </app-stat-display>
+        <app-stat-display
+          [statDefinitions]="seriesStatDefinitions"
+          [currentStats]="statsService.currentStats()"
+          [prevStats]="statsService.prevStats()">
+        </app-stat-display>
+        <div class="stat-container">
+          <canvas #scoreChart class="score" style="width: 300px; height: 400px"></canvas>
+        </div>
+        <div class="stat-container">
+          <canvas #scoreDistributionChart style="width: 300px; height: 400px"></canvas>
+        </div>
       </section>
     </ion-segment-content>
 
     <ion-segment-content id="Spares">
       <section class="tab" *ngIf="gameFilterService.filteredGames().length > 0">
-        <ng-container>
-          <app-spare-display [stats]="statsService.currentStats()" [prevStats]="statsService.prevStats()" id="overalSpareStats"></app-spare-display>
-          <div class="stat-container">
-            <canvas #pinChart class="spares" style="width: 300px; height: 300px"></canvas>
-          </div>
-          <div class="stat-container">
-            <canvas #spareDistributionChart style="width: 300px; height: 400px"></canvas>
-          </div>
-        </ng-container>
+        <app-spare-display [stats]="statsService.currentStats()" [prevStats]="statsService.prevStats()" id="overalSpareStats"></app-spare-display>
+        <div class="stat-container">
+          <canvas #pinChart class="spares" style="width: 300px; height: 300px"></canvas>
+        </div>
+        <div class="stat-container">
+          <canvas #spareDistributionChart style="width: 300px; height: 400px"></canvas>
+        </div>
       </section>
     </ion-segment-content>
 
     <ion-segment-content id="Throws">
       <section class="tab" *ngIf="gameFilterService.filteredGames().length > 0">
-        <ng-container>
-          <app-stat-display
-            [statDefinitions]="throwStatDefinitions"
-            [currentStats]="statsService.currentStats()"
-            [prevStats]="statsService.prevStats()">
-          </app-stat-display>
-          <div class="stat-container">
-            <canvas #throwChart class="throws" style="width: 300px; height: 300px"></canvas>
-          </div>
-        </ng-container>
+        <app-stat-display
+          [statDefinitions]="throwStatDefinitions"
+          [currentStats]="statsService.currentStats()"
+          [prevStats]="statsService.prevStats()">
+        </app-stat-display>
+        <div class="stat-container">
+          <canvas #throwChart class="throws" style="width: 300px; height: 300px"></canvas>
+        </div>
       </section>
     </ion-segment-content>
 
     <ion-segment-content id="Sessions">
-      <ng-container *ngIf="gameFilterService.filteredGames().length > 0">
+      @if (gameFilterService.filteredGames().length > 0) {
         <ion-item class="date-picker" lines="none">
           <ion-select
             label="Session date"
@@ -99,7 +96,7 @@
             [value]="selectedDate()"
             (ionChange)="_selectedDate.set($event.detail.value)">
             <ion-select-option *ngFor="let unixDate of uniqueSortedDates()" [value]="unixDate">
-              {{ (unixDate | date:'dd.MM.yyyy') }}
+              {{ unixDate | date: "dd.MM.yyyy" }}
             </ion-select-option>
           </ion-select>
         </ion-item>
@@ -119,7 +116,7 @@
           </ion-item>
           <app-spare-display [prevStats]="statsService.currentStats()" [stats]="sessionStats()" [id]="'sessionSpareStats'"> </app-spare-display>
         </section>
-      </ng-container>
+      }
     </ion-segment-content>
   </ion-segment-view>
 
@@ -130,7 +127,7 @@
     </ng-container>
   </ng-container>
   <ng-template #checkFilteredGames>
-    <ng-container *ngIf="gameFilterService.filteredGames().length <= 0 && !loadingService.isLoading();">
+    <ng-container *ngIf="gameFilterService.filteredGames().length <= 0 && !loadingService.isLoading()">
       <ion-text class="no-game-text"> No stats for this filter! </ion-text>
     </ng-container>
   </ng-template>
