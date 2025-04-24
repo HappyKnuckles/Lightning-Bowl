@@ -355,10 +355,13 @@ export class GameComponent implements OnChanges, OnInit {
   }
 
   async takeScreenshotAndShare(game: Game): Promise<void> {
+    this.delayedCloseMap[game.gameId] = true;
     const accordion = document.getElementById(game.gameId);
     if (!accordion) {
       throw new Error('Accordion not found');
     }
+
+    await new Promise((resolve) => setTimeout(resolve, 30));
 
     const scoreTemplate = accordion.querySelector('.grid-container') as HTMLElement;
 
@@ -385,8 +388,21 @@ export class GameComponent implements OnChanges, OnInit {
 
       const formattedDate = this.datePipe.transform(game.date, 'dd.MM.yy');
 
-      const message =
-        game.totalScore === 300 ? `Look at me bitches, perfect game on ${formattedDate}! 🎳🎉.` : `Check out this game from ${formattedDate}`;
+      const messageParts = [
+        game.totalScore === 300
+          ? `Look at me bitches, perfect game on ${formattedDate}! 🎳🎉.`
+          : `Check out this game from ${formattedDate}. A ${game.totalScore}.`,
+
+        game.balls && game.balls.length > 0
+          ? game.balls.length === 1
+            ? `Bowled with: ${game.balls[0]}`
+            : `Bowled with: ${game.balls.join(', ')}`
+          : null,
+
+        game.pattern ? `Pattern: ${game.pattern}` : null,
+      ];
+
+      const message = messageParts.filter((part) => part !== null).join('\n');
 
       await new Promise((resolve) => setTimeout(resolve, 100)); // Give time for layout to update
 
@@ -439,6 +455,7 @@ export class GameComponent implements OnChanges, OnInit {
       // Restore the original state
       this.renderer.setStyle(childNode, 'width', originalWidth);
       this.accordionGroup.value = accordionGroupValues;
+      this.delayedCloseMap[game.gameId] = false;
       this.loadingService.setLoading(false);
     }
   }
