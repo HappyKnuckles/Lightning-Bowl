@@ -49,10 +49,11 @@ export class BallService {
       if (weight !== undefined) {
         params = params.set('weight', weight.toString());
       }
-
       const response = await firstValueFrom(
         this.http.get<Ball[]>(`${environment.bowwwlEndpoint}all-balls`, { params }).pipe(retry({ count: 5, delay: 2000 })),
       );
+      const uniqueCoverstockTypes = [...new Set(response.map((ball) => ball.coverstock_type).filter(Boolean))];
+      console.log('Unique coverstock types:', uniqueCoverstockTypes);
       return response;
     } catch (error) {
       console.error('Error loading all balls:', error);

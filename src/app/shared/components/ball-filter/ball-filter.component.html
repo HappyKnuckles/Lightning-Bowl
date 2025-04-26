@@ -30,6 +30,17 @@
         {{ ballFilterService.filters().coverstocks.join(", ") }}
       </p>
     </ion-item>
+    <ion-item>
+      <ion-select
+        label="Coverstock types"
+        name="coverstockTypes"
+        placeholder="All"
+        [ngModel]="ballFilterService.filters().coverstockTypes"
+        (ionChange)="updateFilter('coverstockTypes', $event.detail.value)"
+        multiple="true">
+        <ion-select-option *ngFor="let coverstockType of coverstockTypes" [value]="coverstockType">{{ coverstockType }}</ion-select-option>
+      </ion-select>
+    </ion-item>
     <ion-item button id="select-cores">
       <ion-label>Cores</ion-label>
       <p style="overflow: hidden; white-space: nowrap; text-overflow: ellipsis; margin-left: 10px; text-align: right">

@@ -1,5 +1,5 @@
 import { computed, Injectable, Signal, signal } from '@angular/core';
-import { BallFilter, CoreType, Market } from 'src/app/core/models/filter.model';
+import { BallFilter, CoreType, CoverstockType, Market } from 'src/app/core/models/filter.model';
 import { UtilsService } from '../utils/utils.service';
 import { Ball } from 'src/app/core/models/ball.model';
 import { StorageService } from '../storage/storage.service';
@@ -11,6 +11,7 @@ export class BallFilterService {
   defaultFilters: BallFilter = {
     brands: [],
     coverstocks: [],
+    coverstockTypes: [],
     cores: [],
     market: Market.ALL,
     coreType: CoreType.ALL,
@@ -75,6 +76,7 @@ export class BallFilterService {
         (filters.brands.length === 0 || filters.brands.includes(ball.brand_name)) &&
         (filters.cores.length === 0 || filters.cores.includes(ball.core_name)) &&
         (filters.coverstocks.length === 0 || filters.coverstocks.includes(ball.ball_name)) &&
+        (filters.coverstockTypes.length === 0 || filters.coverstockTypes.includes(ball.coverstock_type as CoverstockType)) &&
         (filters.market === Market.ALL || filters.market === ball.us_int) &&
         (filters.coreType === CoreType.ALL || filters.coreType === ball.core_type) &&
         (!filters.availability || ball.availability === 'Available') &&

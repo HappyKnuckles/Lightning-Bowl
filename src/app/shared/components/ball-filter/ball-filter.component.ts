@@ -3,7 +3,7 @@ import { BallFilterService } from 'src/app/core/services/ball-filter/ball-filter
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BallService } from 'src/app/core/services/ball/ball.service';
 import { CommonModule } from '@angular/common';
-import { BallFilter, CoreType, Market } from 'src/app/core/models/filter.model';
+import { BallFilter, CoreType, CoverstockType, Market } from 'src/app/core/models/filter.model';
 import {
   IonButton,
   IonButtons,
@@ -66,6 +66,7 @@ import { BallCoverstockTypeaheadComponent } from '../ball-coverstock-typeahead/b
 export class BallFilterComponent implements OnInit {
   markets: Market[] = [Market.ALL, Market.US, Market.INT];
   coreTypes: CoreType[] = [CoreType.ALL, CoreType.ASYMMETRIC, CoreType.SYMMETRIC];
+  coverstockTypes: CoverstockType[] = Object.values(CoverstockType);
   weights: string[] = ['12', '13', '14', '15', '16'];
   presentingElement?: HTMLElement;
 

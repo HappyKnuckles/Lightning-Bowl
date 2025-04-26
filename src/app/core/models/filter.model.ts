@@ -15,6 +15,7 @@ export interface GameFilter {
 export interface BallFilter {
   brands: string[];
   coverstocks: string[];
+  coverstockTypes: CoverstockType[];
   cores: string[];
   market: Market;
   weight: string;
@@ -42,6 +43,22 @@ export enum Market {
   ALL = 'All',
   US = 'US',
   INT = 'Overseas',
+}
+
+export enum CoverstockType {
+  HYBRID_REACTIVE = 'Hybrid Reactive',
+  PEARL_REACTIVE = 'Pearl Reactive',
+  SOLID_REACTIVE = 'Solid Reactive',
+  PARTICLE_REACTIVE = 'Particle Reactive',
+  URETHANE_PEARL = 'Urethane Pearl',
+  POLYESTER = 'Polyester',
+  URETHANE_SOLID = 'Urethane Solid',
+  NOT_URETHANE = 'Not Urethane',
+  MICROCELL_POLYMER = 'Microcell Polymer',
+  URETHANE_HYBRID = 'Urethane Hybrid',
+  PARTICLE_PEARL_REACTIVE = 'Particle/Pearl Reactive',
+  URETHANE_PARTICLE = 'Urethane Particle',
+  RUBBER = 'Rubber',
 }
 
 export enum CoreType {
