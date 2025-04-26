@@ -43,6 +43,8 @@ import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { LeagueSelectorComponent } from 'src/app/shared/components/league-selector/league-selector.component';
 import { SpareNamesComponent } from 'src/app/shared/components/spare-names/spare-names.component';
+import { GameStatsService } from 'src/app/core/services/game-stats/game-stats.service';
+import { AlertController, InputCustomEvent } from '@ionic/angular';
 
 @Component({
   selector: 'app-settings',
@@ -95,6 +97,8 @@ export class SettingsPage implements OnInit {
     private toastService: ToastService,
     private loadingService: LoadingService,
     private themeService: ThemeChangerService,
+    private statsService: GameStatsService,
+    private alertCtrl: AlertController,
   ) {
     addIcons({
       personCircleOutline,
@@ -120,6 +124,41 @@ export class SettingsPage implements OnInit {
 
   changeName(): void {
     this.userService.setUsername(this.username!);
+  }
+
+  async getGameCountForAverage(event: InputCustomEvent): Promise<void> {
+    const targetAvgString = event.detail.value;
+    if (!targetAvgString) {
+      return;
+    }
+    const targetAvg = parseInt(targetAvgString, 10);
+    if (isNaN(targetAvg)) {
+      console.error('Invalid target average input');
+      return;
+    }
+
+    const results = this.statsService.calculateGamesForTargetAverage(targetAvg, 10);
+
+    let message = '';
+
+    if (results.every((res) => res.gamesNeeded === 0)) {
+      message = `Your current average is already ${results[0].score} or higher. No additional games needed to reach ${targetAvg}.`;
+    } else {
+      message = results
+        .map((result) => {
+          const gamesNeededText = result.gamesNeeded === Infinity ? 'Very high' : result.gamesNeeded.toString();
+          return `${gamesNeededText} games needed with ${result.score} total`;
+        })
+        .join('<br>');
+    }
+
+    const alert = await this.alertCtrl.create({
+      header: `Games Needed for ${targetAvg} Average`,
+      message: message,
+      buttons: ['OK'],
+    });
+
+    await alert.present();
   }
 
   changeColor(): void {

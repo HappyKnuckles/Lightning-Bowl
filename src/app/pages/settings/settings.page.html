@@ -13,7 +13,7 @@
         label="Your name"
         type="text"
         [value]="username"
-        placeholder="{{username}}"
+        placeholder="{{ username }}"
         (ionChange)="username = $event.target.value!.toString()"
         (ionChange)="changeName()"
         style="margin-right: 21px">
@@ -26,9 +26,9 @@
         interface="popover"
         [(ngModel)]="currentColor"
         [ngClass]="currentColor?.toLowerCase()"
-        placeholder="{{currentColor}}"
+        placeholder="{{ currentColor }}"
         (ionChange)="changeColor()">
-        <ion-select-option *ngFor="let color of optionsWithClasses; let i = index;" [value]="color.name" [ngClass]="color.class">
+        <ion-select-option *ngFor="let color of optionsWithClasses; let i = index" [value]="color.name" [ngClass]="color.class">
           {{ color.name }}
         </ion-select-option>
       </ion-select>
@@ -39,6 +39,19 @@
     <ion-item button id="spare-names-modal">
       <ion-icon src="/assets/svg/pin.svg" slot="start"></ion-icon>
       <ion-label>Spare Names</ion-label>
+    </ion-item>
+
+    <ion-item>
+      <ion-icon src="/assets/svg/target-82-svgrepo-com.svg" slot="start"></ion-icon>
+      <ion-input
+        label="Goal Average"
+        class="ion-text-right"
+        (ionChange)="getGameCountForAverage($event)"
+        placeholder="230"
+        max="300"
+        inputmode="numeric"
+        type="number"
+        clearOnEdit="true"></ion-input>
     </ion-item>
 
     <!-- TODO maybe add InAppBrowser for this -->

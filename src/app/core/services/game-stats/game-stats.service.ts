@@ -377,6 +377,42 @@ export class GameStatsService {
     };
   }
 
+  calculateGamesForTargetAverage(targetAvg: number, steps = 15): { score: number; gamesNeeded: number }[] {
+    const stats = this.overallStats();
+    const N0 = stats.totalGames;
+    const A0 = stats.averageScore;
+    const MAX_SCORE = 300;
+
+    if (N0 === 0 || targetAvg <= A0) {
+      return [{ score: Math.ceil(A0 / 5) * 5, gamesNeeded: 0 }];
+    }
+
+    const startScore = Math.ceil(A0 / 5) * 5;
+    const allScores: number[] = [];
+    for (let s = startScore; s <= MAX_SCORE; s += 5) {
+      allScores.push(s);
+    }
+
+    const L = allScores.length;
+    const results: { score: number; gamesNeeded: number }[] = [];
+    for (let j = 0; j < steps; j++) {
+      const idx = Math.round((j * (L - 1)) / (steps - 1));
+      const S = allScores[idx];
+
+      let gamesNeeded = Infinity;
+      if (S > targetAvg) {
+        const k = (N0 * (targetAvg - A0)) / (S - targetAvg);
+        gamesNeeded = k > 0 ? Math.ceil(k) : Infinity;
+      }
+
+      if (isFinite(gamesNeeded)) {
+        results.push({ score: S, gamesNeeded });
+      }
+    }
+
+    return results;
+  }
+
   private mapStatsToPrevStats(stats: Stats): PrevStats {
     return {
       strikePercentage: stats.strikePercentage,
