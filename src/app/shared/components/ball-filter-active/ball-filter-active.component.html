@@ -15,6 +15,8 @@
     Coverstocks: {{ getFilterValue("coverstocks").join(", ") }}
   </ion-chip>
 
+  <ion-chip *ngIf="isFilterActive('coverstockTypes')"> Coverstock Types: {{ getFilterValue("coverstockTypes") }} </ion-chip>
+
   <ion-chip *ngIf="isFilterActive('cores') && getFilterValue('cores').length > 0"> Cores: {{ getFilterValue("cores").join(", ") }} </ion-chip>
 
   <!-- <ion-chip *ngIf="isFilterActive('releaseDate')">

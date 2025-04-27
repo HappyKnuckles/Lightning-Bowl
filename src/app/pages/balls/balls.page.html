@@ -10,7 +10,7 @@
     <ion-buttons slot="end" class="action-sheet">
       <ion-button fill="clear" (click)="openFilterModal()">
         <ion-icon slot="icon-only" name="filter-outline"></ion-icon>
-        <ion-text class="filter-indicator" *ngIf="isFilterActive()">{{ballFilterService.activeFilterCount()}}</ion-text>
+        <ion-text class="filter-indicator" *ngIf="isFilterActive()">{{ ballFilterService.activeFilterCount() }}</ion-text>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
@@ -25,96 +25,98 @@
   </ion-refresher>
   <app-ball-filter-active></app-ball-filter-active>
 
-  @if(!loadingService.isLoading() || componentLoading) {
-  <ng-container *ngIf="(displayedBalls.length <= 0); else content">
-    <ion-text class="no-game-text"> No balls found. </ion-text>
-  </ng-container>
+  @if (!loadingService.isLoading() || componentLoading) {
+    <ng-container *ngIf="displayedBalls.length <= 0; else content">
+      <ion-text class="no-game-text"> No balls found. </ion-text>
+    </ng-container>
 
-  <ng-template #content>
-    @for (ball of displayedBalls; track ball.ball_id) {
-    <ion-card role="article">
-      <ion-card-header>
-        <ion-card-title>{{ ball.ball_name }}</ion-card-title>
-        <ion-card-subtitle>
-          {{ball.brand_name}} ({{ball.release_date}})
-          <ion-icon *ngIf="ball.us_int === 'Overseas'" name="globe-outline" style="vertical-align: text-top"></ion-icon>
-        </ion-card-subtitle>
-      </ion-card-header>
-      <ion-card-content>
-        <ion-img [src]="storageService.url + ball.thumbnail_image" style="height: 15vh" [alt]="'Image for' + ' ' + ball.ball_name"></ion-img>
-        <div class="ball-info">
-          <ion-list lines="none" (click)="getSameCoreBalls(ball)" class="ion-activatable ion-ripple-parent list">
-            <div class="core">
-              <h2 class="title">Core:</h2>
-              <ion-icon name="open-outline"></ion-icon>
+    <ng-template #content>
+      @for (ball of displayedBalls; track ball.ball_id) {
+        <ion-card role="article">
+          <ion-card-header>
+            <ion-card-title>{{ ball.ball_name }}</ion-card-title>
+            <ion-card-subtitle>
+              {{ ball.brand_name }} ({{ ball.release_date }})
+              <ion-icon *ngIf="ball.us_int === 'Overseas'" name="globe-outline" style="vertical-align: text-top"></ion-icon>
+            </ion-card-subtitle>
+          </ion-card-header>
+          <ion-card-content>
+            <ion-img [src]="storageService.url + ball.thumbnail_image" style="height: 15vmax" [alt]="'Image for' + ' ' + ball.ball_name"></ion-img>
+            <div class="ball-info">
+              <ion-list lines="none" (click)="getSameCoreBalls(ball)" class="ion-activatable ion-ripple-parent list">
+                <div class="core">
+                  <h2 class="title">Core:</h2>
+                  <ion-icon name="open-outline"></ion-icon>
+                </div>
+                <p class="info">{{ ball.core_name }}</p>
+                <p class="info">RG: {{ ball.core_rg }}</p>
+                <p class="info">Diff: {{ ball.core_diff }}</p>
+                <p class="info" *ngIf="ball.core_int_diff">Int. Diff: {{ ball.core_int_diff }}</p>
+                <p class="info">{{ ball.core_type }}</p>
+                <ion-ripple-effect></ion-ripple-effect>
+              </ion-list>
+              <ion-list lines="none" (click)="getSameCoverstockBalls(ball)" class="ion-activatable ion-ripple-parent list">
+                <div class="coverstock">
+                  <h2 class="title">Coverstock:</h2>
+                  <ion-icon name="open-outline"></ion-icon>
+                </div>
+                <p class="info">{{ ball.coverstock_type }}</p>
+                <p class="info">{{ ball.coverstock_name }}</p>
+                <p class="info">{{ ball.factory_finish }}</p>
+                <ion-ripple-effect></ion-ripple-effect>
+              </ion-list>
             </div>
-            <p class="info">{{ ball.core_name }}</p>
-            <p class="info">RG: {{ ball.core_rg }}</p>
-            <p class="info">Diff: {{ ball.core_diff }}</p>
-            <p class="info" *ngIf="ball.core_int_diff">Int. Diff: {{ ball.core_int_diff }}</p>
-            <p class="info">{{ ball.core_type }}</p>
-            <ion-ripple-effect></ion-ripple-effect>
-          </ion-list>
-          <ion-list lines="none" (click)="getSameCoverstockBalls(ball)" class="ion-activatable ion-ripple-parent list">
-            <div class="coverstock">
-              <h2 class="title">Coverstock:</h2>
-              <ion-icon name="open-outline"></ion-icon>
-            </div>
-            <p class="info">{{ ball.coverstock_type }}</p>
-            <p class="info">{{ ball.coverstock_name }}</p>
-            <p class="info">{{ ball.factory_finish }}</p>
-            <ion-ripple-effect></ion-ripple-effect>
-          </ion-list>
-        </div>
-      </ion-card-content>
-      <ion-button *ngIf="isInArsenal(ball)" style="float: right" fill="clear" (click)="removeFromArsenal(ball)"> Remove from arsenal </ion-button>
-      <ion-button *ngIf="!isInArsenal(ball)" style="float: right" fill="clear" (click)="saveBallToArsenal(ball)"> Add to arsenal </ion-button>
-    </ion-card>
+          </ion-card-content>
+          <ion-button *ngIf="isInArsenal(ball)" style="float: right" fill="clear" (click)="removeFromArsenal(ball)"> Remove from arsenal </ion-button>
+          <ion-button *ngIf="!isInArsenal(ball)" style="float: right" fill="clear" (click)="saveBallToArsenal(ball)"> Add to arsenal </ion-button>
+        </ion-card>
+      }
+      <!-- Infinite Scroll -->
+      <ion-infinite-scroll threshold="100px" (ionInfinite)="loadBalls($event)" *ngIf="hasMoreData">
+        <ion-infinite-scroll-content loadingSpinner="crescent" loadingText="Loading more balls..."></ion-infinite-scroll-content>
+      </ion-infinite-scroll>
+    </ng-template>
+  } @else {
+    @for (item of [1, 2, 3, 4, 5, 6, 7, 8]; track item) {
+      <ion-card>
+        <ion-card-header>
+          <ion-card-title>
+            <ion-skeleton-text [animated]="true" style="width: 80%; height: 20px; border-radius: 10px"></ion-skeleton-text>
+          </ion-card-title>
+          <ion-card-subtitle>
+            <ion-skeleton-text [animated]="true" style="width: 50%; border-radius: 10px"></ion-skeleton-text>
+          </ion-card-subtitle>
+        </ion-card-header>
+        <ion-card-content>
+          <ion-skeleton-text [animated]="true" style="height: 15vh; width: 15vh; border-radius: 100%; margin: 0 auto"></ion-skeleton-text>
+          <div class="ball-info">
+            <ion-list lines="none" class="list">
+              <div class="core">
+                <ion-skeleton-text [animated]="true" style="height: 20px; width: 120px; border-radius: 10px"></ion-skeleton-text>
+              </div>
+              <ion-skeleton-text [animated]="true" style="height: 17px; width: 100px; border-radius: 10px"></ion-skeleton-text>
+              <ion-skeleton-text [animated]="true" style="height: 17px; width: 100px; border-radius: 10px"></ion-skeleton-text>
+              <ion-skeleton-text [animated]="true" style="height: 17px; width: 90px; border-radius: 10px"></ion-skeleton-text>
+              <ion-skeleton-text [animated]="true" style="height: 17px; width: 85px; border-radius: 10px"></ion-skeleton-text>
+              <ion-skeleton-text [animated]="true" style="height: 17px; width: 80px; border-radius: 10px"></ion-skeleton-text>
+              <ion-skeleton-text [animated]="true" style="height: 17px; width: 70px; border-radius: 10px"></ion-skeleton-text>
+            </ion-list>
+            <ion-list lines="none" class="list" style="display: flex; flex-direction: column; align-items: end">
+              <div class="coverstock">
+                <ion-skeleton-text [animated]="true" style="height: 20px; width: 15vh; border-radius: 10px"></ion-skeleton-text>
+              </div>
+              <ion-skeleton-text [animated]="true" style="height: 17px; width: 100px; border-radius: 10px"></ion-skeleton-text>
+              <ion-skeleton-text [animated]="true" style="height: 17px; width: 85px; border-radius: 10px"></ion-skeleton-text>
+              <ion-skeleton-text [animated]="true" style="height: 17px; width: 80px; border-radius: 10px"></ion-skeleton-text>
+            </ion-list>
+          </div>
+        </ion-card-content>
+        <ion-button style="float: right" fill="clear">
+          <ion-skeleton-text [animated]="true" style="width: 150px; height: 20px; border-radius: 10px"></ion-skeleton-text>
+        </ion-button>
+      </ion-card>
     }
-    <!-- Infinite Scroll -->
-    <ion-infinite-scroll threshold="100px" (ionInfinite)="loadBalls($event)" *ngIf="hasMoreData">
-      <ion-infinite-scroll-content loadingSpinner="crescent" loadingText="Loading more balls..."></ion-infinite-scroll-content>
-    </ion-infinite-scroll>
-  </ng-template>
-  } @else { @for(item of [1,2,3,4,5,6,7,8]; track item) {
-  <ion-card>
-    <ion-card-header>
-      <ion-card-title>
-        <ion-skeleton-text [animated]="true" style="width: 80%; height: 20px; border-radius: 10px"></ion-skeleton-text>
-      </ion-card-title>
-      <ion-card-subtitle>
-        <ion-skeleton-text [animated]="true" style="width: 50%; border-radius: 10px"></ion-skeleton-text>
-      </ion-card-subtitle>
-    </ion-card-header>
-    <ion-card-content>
-      <ion-skeleton-text [animated]="true" style="height: 15vh; width: 15vh; border-radius: 100%; margin: 0 auto"></ion-skeleton-text>
-      <div class="ball-info">
-        <ion-list lines="none" class="list">
-          <div class="core">
-            <ion-skeleton-text [animated]="true" style="height: 20px; width: 120px; border-radius: 10px"></ion-skeleton-text>
-          </div>
-          <ion-skeleton-text [animated]="true" style="height: 17px; width: 100px; border-radius: 10px"></ion-skeleton-text>
-          <ion-skeleton-text [animated]="true" style="height: 17px; width: 100px; border-radius: 10px"></ion-skeleton-text>
-          <ion-skeleton-text [animated]="true" style="height: 17px; width: 90px; border-radius: 10px"></ion-skeleton-text>
-          <ion-skeleton-text [animated]="true" style="height: 17px; width: 85px; border-radius: 10px"></ion-skeleton-text>
-          <ion-skeleton-text [animated]="true" style="height: 17px; width: 80px; border-radius: 10px"></ion-skeleton-text>
-          <ion-skeleton-text [animated]="true" style="height: 17px; width: 70px; border-radius: 10px"></ion-skeleton-text>
-        </ion-list>
-        <ion-list lines="none" class="list" style="display: flex; flex-direction: column; align-items: end">
-          <div class="coverstock">
-            <ion-skeleton-text [animated]="true" style="height: 20px; width: 15vh; border-radius: 10px"></ion-skeleton-text>
-          </div>
-          <ion-skeleton-text [animated]="true" style="height: 17px; width: 100px; border-radius: 10px"></ion-skeleton-text>
-          <ion-skeleton-text [animated]="true" style="height: 17px; width: 85px; border-radius: 10px"></ion-skeleton-text>
-          <ion-skeleton-text [animated]="true" style="height: 17px; width: 80px; border-radius: 10px"></ion-skeleton-text>
-        </ion-list>
-      </div>
-    </ion-card-content>
-    <ion-button style="float: right" fill="clear">
-      <ion-skeleton-text [animated]="true" style="width: 150px; height: 20px; border-radius: 10px"></ion-skeleton-text>
-    </ion-button>
-  </ion-card>
-  } }
+  }
 </ion-content>
 
 <ion-modal [initialBreakpoint]="0.35" [breakpoints]="[0, 0.35, 0.5, 0.75]" #coverstock>
