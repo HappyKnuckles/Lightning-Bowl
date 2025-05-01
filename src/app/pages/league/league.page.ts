@@ -254,7 +254,9 @@ export class LeaguePage {
   onSegmentChanged(league: string, event: SegmentCustomEvent): void {
     this.selectedSegment = event.detail.value?.toString() || 'Overall';
     this.generateCharts(league);
-    this.content.scrollToTop(300);
+    setTimeout(() => {
+      this.content.scrollToTop(300);
+    }, 300);
   }
 
   generateCharts(league: string, isReload?: boolean): void {

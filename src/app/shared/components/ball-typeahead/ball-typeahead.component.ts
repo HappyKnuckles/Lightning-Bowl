@@ -68,7 +68,7 @@ export class BallTypeaheadComponent implements OnInit, OnDestroy {
   constructor(
     public storageService: StorageService,
     private modalCtrl: ModalController,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.filteredBalls = [...this.balls];
@@ -122,7 +122,9 @@ export class BallTypeaheadComponent implements OnInit, OnDestroy {
 
     this.infiniteScroll.disabled = this.loadedCount >= this.filteredBalls.length;
 
-    this.content.scrollToTop(300);
+    setTimeout(() => {
+      this.content.scrollToTop(300);
+    }, 300);
   }
 
   resetBallSelection() {

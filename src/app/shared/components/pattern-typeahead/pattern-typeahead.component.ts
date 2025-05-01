@@ -56,7 +56,7 @@ export class PatternTypeaheadComponent implements OnInit, OnDestroy {
   constructor(
     private patternService: PatternService,
     public loadingService: LoadingService,
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.filteredPatterns.set([...this.patterns()]);
@@ -92,7 +92,9 @@ export class PatternTypeaheadComponent implements OnInit, OnDestroy {
       if (this.infiniteScroll) {
         this.infiniteScroll.disabled = this.loadedCount() >= this.filteredPatterns().length;
       }
-      this.content.scrollToTop(300);
+      setTimeout(() => {
+        this.content.scrollToTop(300);
+      }, 300);
     } catch (error) {
       console.error('Error searching patterns:', error);
     } finally {

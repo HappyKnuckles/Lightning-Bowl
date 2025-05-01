@@ -192,7 +192,9 @@ export class StatsPage implements OnInit, AfterViewInit {
   onSegmentChanged(event: SegmentCustomEvent): void {
     this.selectedSegment = event.detail.value?.toString() || 'Overall';
     this.generateCharts();
-    this.content.scrollToTop(300);
+    setTimeout(() => {
+      this.content.scrollToTop(300);
+    }, 300);
   }
 
   async handleFileUpload(event: Event): Promise<void> {

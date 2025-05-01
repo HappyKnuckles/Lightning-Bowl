@@ -144,7 +144,9 @@ export class BallsPage implements OnInit {
     this.searchSubject.subscribe((query) => {
       this.searchTerm = query;
       if (this.content) {
-        this.content.scrollToTop(300);
+        setTimeout(() => {
+          this.content.scrollToTop(300);
+        }, 300);
       }
     });
   }
@@ -222,7 +224,9 @@ export class BallsPage implements OnInit {
       this.hasMoreData = true;
       this.filterDisplayCount = 100;
       if (this.content) {
-        this.content.scrollToTop(300);
+        setTimeout(() => {
+          this.content.scrollToTop(300);
+        }, 300);
       }
     });
     return await modal.present();

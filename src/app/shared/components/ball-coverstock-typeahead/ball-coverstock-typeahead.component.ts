@@ -51,7 +51,7 @@ export class BallCoverstockTypeaheadComponent implements OnDestroy, OnInit {
   fuse!: Fuse<Coverstock>;
   private batchSize = 100;
   public loadedCount = signal(0);
-  constructor(private modalCtrl: ModalController) {}
+  constructor(private modalCtrl: ModalController) { }
 
   ngOnInit() {
     this.filteredCoverstocks.set([...this.coverstocks()]);
@@ -106,7 +106,9 @@ export class BallCoverstockTypeaheadComponent implements OnDestroy, OnInit {
       this.infiniteScroll.disabled = this.loadedCount() >= this.filteredCoverstocks().length;
     }
 
-    this.content.scrollToTop(300);
+    setTimeout(() => {
+      this.content.scrollToTop(300);
+    }, 300);
   }
 
   resetCoverstockSelection() {

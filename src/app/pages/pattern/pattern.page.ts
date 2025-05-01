@@ -160,7 +160,9 @@ export class PatternPage implements OnInit {
         this.hasMoreData = false;
         this.currentPage = 1;
       }
-      this.content.scrollToTop(300);
+      setTimeout(() => {
+        this.content.scrollToTop(300);
+      }, 300);
     } catch (error) {
       console.error('Error searching patterns:', error);
       this.toastService.showToast(ToastMessages.patternLoadError, 'bug', true);
