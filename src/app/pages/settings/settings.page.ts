@@ -33,7 +33,7 @@ import {
   refreshCircleOutline,
   chevronBackOutline,
 } from 'ionicons/icons';
-import { NgClass, NgFor } from '@angular/common';
+import { NgClass, NgFor, NgIf } from '@angular/common';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { UserService } from 'src/app/core/services/user/user.service';
 import { ThemeChangerService } from 'src/app/core/services/theme-changer/theme-changer.service';
@@ -77,6 +77,7 @@ import { AlertController, InputCustomEvent } from '@ionic/angular';
     ReactiveFormsModule,
     LeagueSelectorComponent,
     SpareNamesComponent,
+    NgIf
   ],
 })
 export class SettingsPage implements OnInit {
