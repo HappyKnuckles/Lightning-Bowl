@@ -13,16 +13,18 @@ import {
   IonRadio,
   IonRadioGroup,
   IonText,
-  IonSkeletonText,
+  IonSkeletonText, IonLabel, IonImg, IonAvatar
 } from '@ionic/angular/standalone';
 import { InfiniteScrollCustomEvent } from '@ionic/angular';
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import { NgClass, NgIf } from '@angular/common';
+import { ChartGenerationService } from 'src/app/core/services/chart/chart-generation.service';
+import { DomSanitizer } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-pattern-typeahead',
   standalone: true,
-  imports: [
+  imports: [IonAvatar, IonImg, IonLabel,
     NgIf,
     IonSkeletonText,
     IonText,
@@ -56,6 +58,8 @@ export class PatternTypeaheadComponent implements OnInit, OnDestroy {
   constructor(
     private patternService: PatternService,
     public loadingService: LoadingService,
+    private chartService: ChartGenerationService,
+    private sanitizer: DomSanitizer
   ) { }
 
   ngOnInit() {
@@ -68,8 +72,23 @@ export class PatternTypeaheadComponent implements OnInit, OnDestroy {
     }
 
     this.loadedCount.set(Math.min(this.batchSize, this.filteredPatterns().length));
-  }
+    // this.generateChartImages();
 
+  }
+  private generateChartImages(): void {
+    this.patterns().forEach((pattern) => {
+      if (!pattern.chartImageSrc) {
+        try {
+          const svgDataUri = this.chartService.generatePatternChartDataUri(pattern, true);
+          const svgDataUriHor = this.chartService.generatePatternChartDataUri(pattern, false);
+          pattern.chartImageSrcVertical = this.sanitizer.bypassSecurityTrustUrl(svgDataUriHor);
+          pattern.chartImageSrc = this.sanitizer.bypassSecurityTrustUrl(svgDataUri);
+        } catch (error) {
+          console.error(`Error generating chart for pattern ${pattern.title}:`, error);
+        }
+      }
+    });
+  }
   async searchPatterns(event: CustomEvent) {
     const searchTerm = event.detail.value;
 
