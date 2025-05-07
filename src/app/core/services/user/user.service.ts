@@ -1,30 +1,29 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { Injectable, signal } from '@angular/core';
 import { ToastService } from '../toast/toast.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class UserService {
-  private usernameSubject = new BehaviorSubject<string>('');
+  #username = signal<string>('');
+  get username() {
+    return this.#username;
+  }
 
-  constructor(private toastService: ToastService) {}
-
-  getUsername(): Observable<string> {
+  constructor(private toastService: ToastService) {
     const storedUsername = localStorage.getItem('username');
-    if (storedUsername !== null) {
-      this.usernameSubject.next(this.capitalizeFirstLetter(storedUsername));
-    }
-    return this.usernameSubject.asObservable();
+    this.#username = signal(storedUsername ? this.capitalizeFirstLetter(storedUsername) : '');
   }
 
   setUsername(username: string): void {
-    localStorage.setItem('username', username);
-    this.usernameSubject.next(this.capitalizeFirstLetter(username));
-    this.toastService.showToast(`Name updated to ${username}`, 'reload-outline');
+    const capitalizedUsername = this.capitalizeFirstLetter(username);
+    localStorage.setItem('username', capitalizedUsername);
+    this.#username.set(capitalizedUsername);
+    this.toastService.showToast(`Name updated to ${capitalizedUsername}`, 'reload-outline');
   }
 
   capitalizeFirstLetter(str: string): string {
+    if (!str) return '';
     return str.charAt(0).toUpperCase() + str.slice(1);
   }
 }

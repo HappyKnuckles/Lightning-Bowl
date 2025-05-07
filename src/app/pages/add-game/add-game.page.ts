@@ -134,9 +134,6 @@ export class AddGamePage implements OnInit {
   }
 
   async ngOnInit(): Promise<void> {
-    this.userService.getUsername().subscribe((username: string) => {
-      this.username = username;
-    });
     this.deviceId = (await Device.getId()).identifier;
     this.presentingElement = document.querySelector('.ion-page')!;
   }

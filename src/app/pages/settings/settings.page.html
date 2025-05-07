@@ -12,10 +12,9 @@
         class="ion-text-right"
         label="Your name"
         type="text"
-        [value]="username"
-        placeholder="{{ username }}"
-        (ionChange)="username = $event.target.value!.toString()"
-        (ionChange)="changeName()"
+        [value]="userService.username()"
+        placeholder="{{ userService.username() }}"
+        (ionChange)="changeName($event)"
         style="margin-right: 21px">
       </ion-input>
     </ion-item>
@@ -24,10 +23,10 @@
       <ion-select
         label="Color Theme"
         interface="popover"
-        [(ngModel)]="currentColor"
-        [ngClass]="currentColor?.toLowerCase()"
-        placeholder="{{ currentColor }}"
-        (ionChange)="changeColor()">
+        [ngClass]="themeService.currentColor().toLowerCase()"
+        placeholder="{{ currentColor() }}"
+        [value]="currentColor()"
+        (ionChange)="changeColor($event)">
         <ion-select-option *ngFor="let color of optionsWithClasses; let i = index" [value]="color.name" [ngClass]="color.class">
           {{ color.name }}
         </ion-select-option>

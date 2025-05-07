@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, OnInit } from '@angular/core';
 import {
   IonHeader,
   IonToolbar,
@@ -44,7 +44,7 @@ import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { LeagueSelectorComponent } from 'src/app/shared/components/league-selector/league-selector.component';
 import { SpareNamesComponent } from 'src/app/shared/components/spare-names/spare-names.component';
 import { GameStatsService } from 'src/app/core/services/game-stats/game-stats.service';
-import { AlertController, InputCustomEvent } from '@ionic/angular';
+import { AlertController, InputCustomEvent, SelectCustomEvent } from '@ionic/angular';
 
 @Component({
   selector: 'app-settings',
@@ -79,10 +79,13 @@ import { AlertController, InputCustomEvent } from '@ionic/angular';
     SpareNamesComponent,
     NgIf
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SettingsPage implements OnInit {
-  username: string | null = '';
-  currentColor: string | null = '';
+  currentColor = computed(() => {
+    const color = this.themeService.currentColor();
+    return color.charAt(0).toUpperCase() + color.slice(1)
+  })
   optionsWithClasses: { name: string; class: string }[] = [
     { name: 'Blue', class: 'blue-option' },
     { name: 'Lila', class: 'lila-option' },
@@ -94,10 +97,10 @@ export class SettingsPage implements OnInit {
   feedbackMessage = '';
   updateAvailable = false;
   constructor(
-    private userService: UserService,
+    public userService: UserService,
     private toastService: ToastService,
     private loadingService: LoadingService,
-    private themeService: ThemeChangerService,
+    public themeService: ThemeChangerService,
     private statsService: GameStatsService,
     private alertCtrl: AlertController,
   ) {
@@ -115,16 +118,12 @@ export class SettingsPage implements OnInit {
   }
 
   ngOnInit(): void {
-    this.currentColor = this.themeService.getCurrentTheme();
-
-    this.userService.getUsername().subscribe((username: string) => {
-      this.username = username;
-    });
+    // this.currentColor.set(this.themeService.getCurrentTheme());
     this.updateAvailable = localStorage.getItem('update') !== null ? true : false;
   }
 
-  changeName(): void {
-    this.userService.setUsername(this.username!);
+  changeName(event: InputCustomEvent): void {
+    this.userService.setUsername(event.detail.value ?? '');
   }
 
   async getGameCountForAverage(event: InputCustomEvent): Promise<void> {
@@ -162,13 +161,14 @@ export class SettingsPage implements OnInit {
     await alert.present();
   }
 
-  changeColor(): void {
-    this.themeService.saveColorTheme(this.currentColor!);
-    this.toastService.showToast(`Changed theme to ${this.currentColor}.`, 'checkmark-outline');
+  changeColor(event: SelectCustomEvent): void {
+    this.themeService.saveColorTheme(event.detail.value);
+    this.toastService.showToast(`Changed theme to ${event.detail.value}.`, 'checkmark-outline');
   }
 
   updateApp(): void {
     localStorage.removeItem('update');
+    this.updateAvailable = false;
     window.location.reload();
   }
 

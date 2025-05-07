@@ -1,10 +1,14 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ThemeChangerService {
   private readonly defaultTheme = 'Green';
+  #currentColor = signal<string>(this.getCurrentTheme());
+  get currentColor() {
+    return this.#currentColor;
+  }
 
   saveColorTheme(theme: string): void {
     const previousTheme = this.getCurrentTheme().toLowerCase(); // Get the current theme before saving new one
@@ -22,6 +26,7 @@ export class ThemeChangerService {
 
     // Apply the new theme class
     document.documentElement.classList.add(currentTheme);
+    this.#currentColor.set(currentTheme);
   }
 
   getCurrentTheme(): string {

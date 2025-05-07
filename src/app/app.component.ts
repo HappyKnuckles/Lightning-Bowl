@@ -1,6 +1,5 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { AlertController, IonApp, IonBackdrop, IonSpinner, IonRouterOutlet } from '@ionic/angular/standalone';
-import { Subscription } from 'rxjs';
 import { NgIf } from '@angular/common';
 import { SwUpdate } from '@angular/service-worker';
 import { HttpClient } from '@angular/common/http';
@@ -18,10 +17,9 @@ import { ThemeChangerService } from './core/services/theme-changer/theme-changer
   styleUrls: ['app.component.scss'],
   standalone: true,
   imports: [IonApp, NgIf, IonBackdrop, IonSpinner, IonRouterOutlet, ToastComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class AppComponent implements OnInit, OnDestroy {
-  private userNameSubscription: Subscription;
-  username = '';
+export class AppComponent implements OnInit {
 
   constructor(
     private alertController: AlertController,
@@ -36,17 +34,10 @@ export class AppComponent implements OnInit, OnDestroy {
     this.initializeApp();
     const currentTheme = this.themeService.getCurrentTheme();
     this.themeService.applyTheme(currentTheme);
-    this.userNameSubscription = this.userService.getUsername().subscribe((username: string) => {
-      this.username = username;
-    });
   }
 
   async ngOnInit(): Promise<void> {
     this.greetUser();
-  }
-
-  ngOnDestroy(): void {
-    this.userNameSubscription.unsubscribe();
   }
 
   private initializeApp(): void {
@@ -132,10 +123,10 @@ export class AppComponent implements OnInit, OnDestroy {
 
   private async greetUser(): Promise<void> {
     if (environment.production) {
-      if (!this.username) {
+      if (!this.userService.username()) {
         await this.showEnterNameAlert();
       } else {
-        this.presentGreetingAlert(this.username);
+        this.presentGreetingAlert(this.userService.username());
       }
     }
   }
@@ -159,7 +150,7 @@ export class AppComponent implements OnInit, OnDestroy {
             const newName = data.username.trim();
             if (newName !== '') {
               this.userService.setUsername(newName);
-              this.toastService.showToast(`Name updated to ${this.username}`, 'reload-outline');
+              this.toastService.showToast(`Name updated to ${this.userService.username()}`, 'reload-outline');
             }
           },
         },
