@@ -1,4 +1,4 @@
-import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit, QueryList, ViewChild, ViewChildren } from '@angular/core';
+import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, OnInit, QueryList, signal, ViewChild, ViewChildren } from '@angular/core';
 import {
   ActionSheetController,
   AlertController,
@@ -25,7 +25,7 @@ import {
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Game } from 'src/app/core/models/game.model';
 import { addIcons } from 'ionicons';
-import { add, chevronDown, chevronUp, cameraOutline, documentTextOutline, medalOutline } from 'ionicons/icons';
+import { add, chevronDown, chevronUp, cameraOutline, documentTextOutline, medalOutline, warningOutline } from 'ionicons/icons';
 import { NgIf, NgFor } from '@angular/common';
 import { ImpactStyle } from '@capacitor/haptics';
 import { AdService } from 'src/app/core/services/ad/ad.service';
@@ -35,7 +35,6 @@ import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { UserService } from 'src/app/core/services/user/user.service';
 import { defineCustomElements } from '@teamhive/lottie-player/loader';
-import { Device } from '@capacitor/device';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { GameUtilsService } from 'src/app/core/services/game-utils/game-utils.service';
 import { GameScoreCalculatorService } from 'src/app/core/services/game-score-calculator/game-score-calculator.service';
@@ -88,33 +87,36 @@ defineCustomElements(window);
     PatternTypeaheadComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AddGamePage implements OnInit {
-  totalScores: number[] = new Array(8).fill(0);
-  maxScores: number[] = new Array(8).fill(300);
-  seriesMode: boolean[] = [true, false, false, false, false];
-  seriesId = '';
-  selectedMode: SeriesMode = SeriesMode.Single;
-  trackIndexes: number[][] = [[0], [1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11, 12], [13, 14, 15, 16, 17, 18]];
-  sheetOpen = false;
-  isAlertOpen = false;
-  isModalOpen = false;
-  is300 = false;
-  username = '';
-  gameData!: Game;
-  deviceId = '';
+  totalScores = signal<number[]>(new Array(8).fill(0));
+  maxScores = signal<number[]>(new Array(8).fill(300));
+  seriesMode = signal([true, false, false, false, false]);
+  private seriesId = '';
+  selectedMode = signal<SeriesMode>(SeriesMode.Single);
+  trackIndexes = signal<number[][]>([[0], [1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11, 12], [13, 14, 15, 16, 17, 18]]);
+  sheetOpen = signal(false);
+  isAlertOpen = signal(false);
+  isModalOpen = signal(false);
+  is300 = signal(false);
+  gameData = signal<Game>({
+    gameId: '',
+    date: 0,
+    frames: undefined,
+    totalScore: 0,
+    frameScores: [],
+    isClean: false,
+    isPerfect: false,
+    isPractice: false,
+    pattern: '',
+  });
   @ViewChildren(GameGridComponent) gameGrids!: QueryList<GameGridComponent>;
   @ViewChild(IonModal) modal!: IonModal;
   @ViewChild('modalCheckbox') modalCheckbox!: IonCheckbox;
   selectedSegment = 'Game 1';
-  segments: string[] = ['Game 1'];
+  segments = signal(['Game 1']);
   presentingElement!: HTMLElement;
-  private allowedDeviceIds = [
-    '820fabe8-d29b-45c2-89b3-6bcc0e149f2b',
-    '21330a3a-9cff-41ce-981a-00208c21d883',
-    'b376db84-c3a4-4c65-8c59-9710b7d05791',
-    '01c1e0d1-3469-4091-96a0-76beb68a6f97',
-  ];
 
   constructor(
     private actionSheetCtrl: ActionSheetController,
@@ -130,11 +132,10 @@ export class AddGamePage implements OnInit {
     private hapticService: HapticService,
     private gameUtilsService: GameUtilsService,
   ) {
-    addIcons({ cameraOutline, chevronDown, chevronUp, medalOutline, documentTextOutline, add });
+    addIcons({ cameraOutline, chevronDown, chevronUp, warningOutline, medalOutline, documentTextOutline, add });
   }
 
   async ngOnInit(): Promise<void> {
-    this.deviceId = (await Device.getId()).identifier;
     this.presentingElement = document.querySelector('.ion-page')!;
   }
 
@@ -185,8 +186,11 @@ export class AddGamePage implements OnInit {
     const isPractice = league === '' || league === 'New';
 
     if (isModal) {
-      this.gameData.league = league;
-      this.gameData.isPractice = isPractice;
+      this.gameData.update((currentGame) => ({
+        ...currentGame,
+        league: league,
+        isPractice: isPractice,
+      }));
       this.modalCheckbox.checked = isPractice;
       this.modalCheckbox.disabled = !isPractice;
     } else {
@@ -208,12 +212,12 @@ export class AddGamePage implements OnInit {
 
   async confirm(): Promise<void> {
     try {
-      if (!this.isGameValid(this.gameData)) {
+      if (!this.isGameValid(this.gameData())) {
         this.hapticService.vibrate(ImpactStyle.Heavy);
         this.toastService.showToast(ToastMessages.invalidInput, 'bug', true);
         return;
       } else {
-        await this.storageService.saveGameToLocalStorage(this.gameData);
+        await this.storageService.saveGameToLocalStorage(this.gameData());
         this.toastService.showToast(ToastMessages.gameSaveSuccess, 'add');
         this.modal.dismiss(null, 'confirm');
       }
@@ -228,7 +232,12 @@ export class AddGamePage implements OnInit {
   }
 
   updateFrameScore(event: InputCustomEvent, index: number): void {
-    this.gameData.frameScores[index] = parseInt(event.detail.value!, 10);
+    this.gameData.update((currentGame) => {
+      const newGame = { ...currentGame };
+      newGame.frameScores = [...(currentGame.frameScores || [])];
+      newGame.frameScores[index] = parseInt(event.detail.value!, 10);
+      return newGame;
+    });
   }
 
   clearFrames(index?: number): void {
@@ -245,7 +254,7 @@ export class AddGamePage implements OnInit {
   }
 
   calculateScore(): void {
-    const isSeries = this.seriesMode.some((mode, i) => mode && i !== 0);
+    const isSeries = this.seriesMode().some((mode, i) => mode && i !== 0);
     if (isSeries) {
       this.seriesId = this.generateUniqueSeriesId();
     }
@@ -253,7 +262,7 @@ export class AddGamePage implements OnInit {
     const gameGridArray = this.gameGrids.toArray();
     if (!gameGridArray.every((grid: GameGridComponent) => grid.isGameValid())) {
       this.hapticService.vibrate(ImpactStyle.Heavy);
-      this.isAlertOpen = true;
+      this.isAlertOpen.set(true);
       return;
     }
 
@@ -265,8 +274,8 @@ export class AddGamePage implements OnInit {
       });
 
       if (perfectGame) {
-        this.is300 = true;
-        setTimeout(() => (this.is300 = false), 4000);
+        this.is300.set(true);
+        setTimeout(() => this.is300.set(false), 4000);
       }
 
       this.hapticService.vibrate(ImpactStyle.Medium);
@@ -278,35 +287,43 @@ export class AddGamePage implements OnInit {
   }
 
   onMaxScoreChanged(maxScore: number, index: number): void {
-    this.maxScores[index] = maxScore;
+    this.maxScores.update((currentScores) => {
+      const newScores = [...currentScores];
+      newScores[index] = maxScore;
+      return newScores;
+    });
   }
 
   onTotalScoreChange(totalScore: number, index: number): void {
-    this.totalScores[index] = totalScore;
+    this.totalScores.update((currentScores) => {
+      const newScores = [...currentScores];
+      newScores[index] = totalScore;
+      return newScores;
+    });
   }
 
   getSeriesMaxScore(index: number): number {
-    return this.gameScoreCalculatorService.getSeriesMaxScore(index, this.maxScores);
+    return this.gameScoreCalculatorService.getSeriesMaxScore(index, this.maxScores());
   }
 
   getSeriesCurrentScore(index: number): number {
-    return this.gameScoreCalculatorService.getSeriesCurrentScore(index, this.totalScores);
+    return this.gameScoreCalculatorService.getSeriesCurrentScore(index, this.totalScores());
   }
 
   async presentActionSheet(): Promise<void> {
     const buttons = [];
     this.hapticService.vibrate(ImpactStyle.Medium);
-    this.sheetOpen = true;
+    this.sheetOpen.set(true);
 
     const modes = [SeriesMode.Single, SeriesMode.Series3, SeriesMode.Series4, SeriesMode.Series5, SeriesMode.Series6];
 
     modes.forEach((mode, index) => {
-      if (!this.seriesMode[index]) {
+      if (!this.seriesMode()[index]) {
         buttons.push({
           text: mode,
           handler: () => {
-            this.seriesMode = this.seriesMode.map((_, i) => i === index);
-            this.selectedMode = mode;
+            this.seriesMode.set(this.seriesMode().map((_, i) => i === index));
+            this.selectedMode.set(mode);
           },
         });
       }
@@ -336,7 +353,7 @@ export class AddGamePage implements OnInit {
 
     actionSheet.onWillDismiss().then(() => {
       gameData = captureGameData();
-      this.sheetOpen = false;
+      this.sheetOpen.set(false);
       this.updateSegments();
     });
     actionSheet.onDidDismiss().then(() => {
@@ -386,16 +403,16 @@ export class AddGamePage implements OnInit {
   }
 
   private updateSegments(): void {
-    if (this.selectedMode === SeriesMode.Series3) {
-      this.segments = ['Game 1', 'Game 2', 'Game 3'];
-    } else if (this.selectedMode === SeriesMode.Series4) {
-      this.segments = ['Game 1', 'Game 2', 'Game 3', 'Game 4'];
-    } else if (this.selectedMode === SeriesMode.Series5) {
-      this.segments = ['Game 1', 'Game 2', 'Game 3', 'Game 4', 'Game 5'];
-    } else if (this.selectedMode === SeriesMode.Series6) {
-      this.segments = ['Game 1', 'Game 2', 'Game 3', 'Game 4', 'Game 5', 'Game 6'];
+    if (this.selectedMode() === SeriesMode.Series3) {
+      this.segments.set(['Game 1', 'Game 2', 'Game 3']);
+    } else if (this.selectedMode() === SeriesMode.Series4) {
+      this.segments.set(['Game 1', 'Game 2', 'Game 3', 'Game 4']);
+    } else if (this.selectedMode() === SeriesMode.Series5) {
+      this.segments.set(['Game 1', 'Game 2', 'Game 3', 'Game 4', 'Game 5']);
+    } else if (this.selectedMode() === SeriesMode.Series6) {
+      this.segments.set(['Game 1', 'Game 2', 'Game 3', 'Game 4', 'Game 5', 'Game 6']);
     } else {
-      this.segments = ['Game 1'];
+      this.segments.set(['Game 1']);
     }
   }
 
@@ -433,14 +450,15 @@ export class AddGamePage implements OnInit {
 
   private parseBowlingScores(input: string): void {
     try {
-      const { frames, frameScores, totalScore } = this.gameUtilsService.parseBowlingScores(input, this.username!);
-      this.gameData = this.transformGameService.transformGameData(frames, frameScores, totalScore, false, '', false, '', '', '', []);
-      this.gameData.isPractice = true;
-      if (this.gameData.frames.length === 10 && this.gameData.frameScores.length === 10 && this.gameData.totalScore <= 300) {
-        this.isModalOpen = true;
+      const { frames, frameScores, totalScore } = this.gameUtilsService.parseBowlingScores(input, this.userService.username());
+      const transformedGame = this.transformGameService.transformGameData(frames, frameScores, totalScore, false, '', false, '', '', '', []);
+      this.gameData.set(transformedGame);
+      this.gameData.update((game) => ({ ...game, isPractice: true }));
+      if (this.gameData().frames.length === 10 && this.gameData().frameScores.length === 10 && this.gameData().totalScore <= 300) {
+        this.isModalOpen.set(true);
       } else {
         // this.toastService.showToast('Spielinhalt wurde nicht richtig erkannt! Probiere einen anderen Winkel.', 'bug-outline', true);
-        this.isModalOpen = true;
+        this.isModalOpen.set(false);
       }
     } catch (error) {
       this.toastService.showToast(ToastMessages.unexpectedError, 'bug', true);
