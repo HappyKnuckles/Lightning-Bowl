@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -79,21 +79,21 @@ import { BallListComponent } from 'src/app/shared/components/ball-list/ball-list
     BallListComponent,
     BallFilterActiveComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BallsPage implements OnInit {
   @ViewChild('core', { static: false }) coreModal!: IonModal;
   @ViewChild('coverstock', { static: false }) coverstockModal!: IonModal;
   @ViewChild(IonContent, { static: false }) content!: IonContent;
-
-  balls: Ball[] = [];
-  coreBalls: Ball[] = [];
-  coverstockBalls: Ball[] = [];
+  balls = signal<Ball[]>([]);
+  coreBalls = signal<Ball[]>([]);
+  coverstockBalls = signal<Ball[]>([]);
   searchSubject = new Subject<string>();
   searchTerm = '';
-  currentPage = 0;
-  componentLoading = false;
-  hasMoreData = true;
-  filterDisplayCount = 100;
+  currentPage = signal(0);
+  componentLoading = signal(false);
+  hasMoreData = signal(true);
+  filterDisplayCount = signal(100);
 
   // Computed getter for displayed balls.
   // • If a search term exists, we build a Fuse instance over the correct data source.
@@ -102,7 +102,6 @@ export class BallsPage implements OnInit {
   get displayedBalls(): Ball[] {
     let result: Ball[];
     if (this.searchTerm.trim() !== '') {
-      this.hasMoreData = false;
       const options = {
         keys: [
           { name: 'ball_name', weight: 1 },
@@ -123,9 +122,9 @@ export class BallsPage implements OnInit {
       const fuseInstance = new Fuse(baseArray, options);
       result = fuseInstance.search(this.searchTerm).map((result) => result.item);
     } else {
-      result = this.isFilterActive() ? this.ballFilterService.filteredBalls() : this.balls;
+      result = this.isFilterActive() ? this.ballFilterService.filteredBalls() : this.balls();
       if (this.isFilterActive()) {
-        result = result.slice(0, this.filterDisplayCount);
+        result = result.slice(0, this.filterDisplayCount());
       }
     }
     return result.slice().sort((a, b) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime());
@@ -166,11 +165,11 @@ export class BallsPage implements OnInit {
     try {
       this.hapticService.vibrate(ImpactStyle.Medium);
       this.loadingService.setLoading(true);
-      this.currentPage = 0;
-      this.hasMoreData = true;
-      this.balls = [];
+      this.currentPage.set(0);
+      this.hasMoreData.set(true);
+      this.balls.set([]);
       if (this.isFilterActive()) {
-        this.filterDisplayCount = 100;
+        this.filterDisplayCount.set(100);
       }
       await this.loadBalls();
       await this.storageService.loadAllBalls();
@@ -186,6 +185,11 @@ export class BallsPage implements OnInit {
 
   searchBalls(event: SearchbarCustomEvent): void {
     const query = event.detail.value!.toLowerCase();
+    if (query.length === 0) {
+      this.hasMoreData.set(true);
+    } else {
+      this.hasMoreData.set(false);
+    }
     this.searchSubject.next(query);
   }
 
@@ -220,9 +224,9 @@ export class BallsPage implements OnInit {
       component: BallFilterComponent,
     });
     modal.onDidDismiss().then(() => {
-      this.currentPage = 0;
-      this.hasMoreData = true;
-      this.filterDisplayCount = 100;
+      this.currentPage.set(0);
+      this.hasMoreData.set(true);
+      this.filterDisplayCount.set(100);
       if (this.content) {
         setTimeout(() => {
           this.content.scrollToTop(300);
@@ -239,21 +243,21 @@ export class BallsPage implements OnInit {
       }
       // If filters are active and an infinite scroll event is triggered, increase the display count.
       if (this.isFilterActive() && event) {
-        this.filterDisplayCount += 100;
+        this.filterDisplayCount.update((count) => count + 100);
         const totalFiltered = this.ballFilterService.filteredBalls().length;
-        if (this.filterDisplayCount >= totalFiltered) {
-          this.hasMoreData = false;
+        if (this.filterDisplayCount() >= totalFiltered) {
+          this.hasMoreData.set(false);
         }
         event.target.complete();
         return;
       }
       // Otherwise, load the next page from the API.
-      const response = await this.ballService.loadBalls(this.currentPage);
+      const response = await this.ballService.loadBalls(this.currentPage());
       if (response.length > 0) {
-        this.balls = [...this.balls, ...response];
-        this.currentPage++;
+        this.balls.update((currentBalls) => [...currentBalls, ...response]);
+        this.currentPage.update((page) => page + 1);
       } else {
-        this.hasMoreData = false;
+        this.hasMoreData.set(false);
       }
     } catch (error) {
       console.error('Error fetching balls:', error);
@@ -271,9 +275,9 @@ export class BallsPage implements OnInit {
   async getSameCoreBalls(ball: Ball): Promise<void> {
     try {
       this.hapticService.vibrate(ImpactStyle.Light);
-      this.componentLoading = true;
+      this.componentLoading.set(true);
       this.loadingService.setLoading(true);
-      this.coreBalls = await this.ballService.getBallsByCore(ball);
+      this.coreBalls.set(await this.ballService.getBallsByCore(ball));
       if (this.coreBalls.length > 0) {
         this.coreModal.present();
       } else {
@@ -283,7 +287,7 @@ export class BallsPage implements OnInit {
       console.error('Error fetching core balls:', error);
       this.toastService.showToast(`Error fetching balls for core ${ball.core_name}`, 'bug', true);
     } finally {
-      this.componentLoading = false;
+      this.componentLoading.set(false);
       this.loadingService.setLoading(false);
     }
   }
@@ -291,9 +295,9 @@ export class BallsPage implements OnInit {
   async getSameCoverstockBalls(ball: Ball): Promise<void> {
     try {
       this.hapticService.vibrate(ImpactStyle.Light);
-      this.componentLoading = true;
+      this.componentLoading.set(true);
       this.loadingService.setLoading(true);
-      this.coverstockBalls = await this.ballService.getBallsByCoverstock(ball);
+      this.coverstockBalls.set(await this.ballService.getBallsByCoverstock(ball));
       if (this.coverstockBalls.length > 0) {
         await this.coverstockModal.present();
       } else {
@@ -303,7 +307,7 @@ export class BallsPage implements OnInit {
       console.error('Error fetching coverstock balls:', error);
       this.toastService.showToast(`Error fetching balls for coverstock ${ball.coverstock_name}`, 'bug', true);
     } finally {
-      this.componentLoading = false;
+      this.componentLoading.set(false);
       this.loadingService.setLoading(false);
     }
   }

@@ -1,4 +1,4 @@
-import { Component, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ViewChild } from '@angular/core';
 import {
   AlertController,
   IonHeader,
@@ -67,6 +67,7 @@ import { PatternFormComponent } from 'src/app/shared/components/pattern-form/pat
     GameFilterActiveComponent,
     PatternFormComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HistoryPage {
   @ViewChild('accordionGroup') accordionGroup!: IonAccordionGroup;
