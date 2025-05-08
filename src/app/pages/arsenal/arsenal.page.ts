@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, Signal, ViewChild } from '@angular/core';
+import { Component, OnInit, computed, Signal, ViewChild, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -87,8 +87,8 @@ import { BallTypeaheadComponent } from 'src/app/shared/components/ball-typeahead
 export class ArsenalPage implements OnInit {
   @ViewChild('core', { static: false }) coreModal!: IonModal;
   @ViewChild('coverstock', { static: false }) coverstockModal!: IonModal;
-  coverstockBalls: Ball[] = [];
-  coreBalls: Ball[] = [];
+  coverstockBalls = signal<Ball[]>([]);
+  coreBalls = signal<Ball[]>([]);
   presentingElement?: HTMLElement;
   ballsWithoutArsenal: Signal<Ball[]> = computed(() =>
     this.storageService
@@ -181,7 +181,7 @@ export class ArsenalPage implements OnInit {
       this.hapticService.vibrate(ImpactStyle.Light);
       this.loadingService.setLoading(true);
 
-      this.coreBalls = await this.ballService.getBallsByCore(ball);
+      this.coreBalls.set(await this.ballService.getBallsByCore(ball));
 
       if (this.coreBalls.length > 0) {
         this.coreModal.present();
@@ -201,7 +201,7 @@ export class ArsenalPage implements OnInit {
       this.hapticService.vibrate(ImpactStyle.Light);
       this.loadingService.setLoading(true);
 
-      this.coverstockBalls = await this.ballService.getBallsByCoverstock(ball);
+      this.coverstockBalls.set(await this.ballService.getBallsByCoverstock(ball));
 
       if (this.coverstockBalls.length > 0) {
         await this.coverstockModal.present();
