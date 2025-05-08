@@ -13,9 +13,9 @@ import {
   IonRadio,
   IonRadioGroup,
   IonText,
-  IonSkeletonText, IonLabel, IonImg, IonAvatar
+  IonSkeletonText, IonLabel, IonImg, IonAvatar, IonButtons, IonButton
 } from '@ionic/angular/standalone';
-import { InfiniteScrollCustomEvent } from '@ionic/angular';
+import { InfiniteScrollCustomEvent, ModalController } from '@ionic/angular';
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import { NgClass, NgIf } from '@angular/common';
 import { ChartGenerationService } from 'src/app/core/services/chart/chart-generation.service';
@@ -24,7 +24,7 @@ import { DomSanitizer } from '@angular/platform-browser';
 @Component({
   selector: 'app-pattern-typeahead',
   standalone: true,
-  imports: [IonAvatar, IonImg, IonLabel,
+  imports: [IonButton, IonButtons, IonAvatar, IonImg, IonLabel,
     NgIf,
     IonSkeletonText,
     IonText,
@@ -59,7 +59,8 @@ export class PatternTypeaheadComponent implements OnInit, OnDestroy {
     private patternService: PatternService,
     public loadingService: LoadingService,
     private chartService: ChartGenerationService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private modalCtrl: ModalController
   ) { }
 
   ngOnInit() {
@@ -73,22 +74,19 @@ export class PatternTypeaheadComponent implements OnInit, OnDestroy {
 
     this.loadedCount.set(Math.min(this.batchSize, this.filteredPatterns().length));
     // this.generateChartImages();
+  }
 
+  resetPatternSelection() {
+    this.selectedPattern = '';
   }
-  private generateChartImages(): void {
-    this.patterns().forEach((pattern) => {
-      if (!pattern.chartImageSrc) {
-        try {
-          const svgDataUri = this.chartService.generatePatternChartDataUri(pattern, true);
-          const svgDataUriHor = this.chartService.generatePatternChartDataUri(pattern, false);
-          pattern.chartImageSrcVertical = this.sanitizer.bypassSecurityTrustUrl(svgDataUriHor);
-          pattern.chartImageSrc = this.sanitizer.bypassSecurityTrustUrl(svgDataUri);
-        } catch (error) {
-          console.error(`Error generating chart for pattern ${pattern.title}:`, error);
-        }
-      }
-    });
+
+  savePatternSelection() {
+    this.modalCtrl.dismiss();
   }
+  ngOnDestroy(): void {
+    this.selectedPatternsChange.emit(this.selectedPattern);
+  }
+
   async searchPatterns(event: CustomEvent) {
     const searchTerm = event.detail.value;
 
@@ -154,7 +152,18 @@ export class PatternTypeaheadComponent implements OnInit, OnDestroy {
     }
   }
 
-  ngOnDestroy(): void {
-    this.selectedPatternsChange.emit(this.selectedPattern);
+  private generateChartImages(): void {
+    this.patterns().forEach((pattern) => {
+      if (!pattern.chartImageSrc) {
+        try {
+          const svgDataUri = this.chartService.generatePatternChartDataUri(pattern, 325, 1300, 1300, 400, 2, .05, .2, true);
+          const svgDataUriHor = this.chartService.generatePatternChartDataUri(pattern, 20, 100, 400, 1500, 2, .05, .2, false);
+          pattern.chartImageSrcHorizontal = this.sanitizer.bypassSecurityTrustUrl(svgDataUriHor);
+          pattern.chartImageSrc = this.sanitizer.bypassSecurityTrustUrl(svgDataUri);
+        } catch (error) {
+          console.error(`Error generating chart for pattern ${pattern.title}:`, error);
+        }
+      }
+    });
   }
 }

@@ -576,12 +576,8 @@ export class ChartGenerationService {
     }
   }
 
-  generatePatternChartDataUri(pattern: Partial<Pattern>, horizontal = false): string {
+  generatePatternChartDataUri(pattern: Partial<Pattern>, svgWidth: number, svgHeight: number, viewBoxWidth: number, viewBoxHeight: number, pinRadius: number, pinStrokeWidth: number, arrowSize: number, horizontal = false): string {
     // 1. Create a detached SVG element in memory
-    const svgWidth = horizontal ? 325 : 375; // Base width for viewBox/drawing
-    const svgHeight = horizontal ? 1300 : 1500; // Base height for viewBox/drawing
-    const viewBoxWidth = horizontal ? 1300 : 400;
-    const viewBoxHeight = horizontal ? 400 : 1500; // Base height for viewBox/drawing
     const tempSvgElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
 
     // Set necessary attributes directly on the temporary SVG
@@ -837,7 +833,7 @@ export class ChartGenerationService {
     const pins = [...row4, ...row3, ...row2, ...row1];
 
     // Define the pin radius in pixels.
-    const pinRadius = 20;
+    // const pinRadius = pinWidth;
 
     // Add a group for pins so they are drawn on top.
     const pinsGroup = g.append('g').attr('class', 'pins-group');
@@ -854,7 +850,7 @@ export class ChartGenerationService {
       .attr('r', pinRadius)
       .attr('fill', 'white')
       .attr('stroke', 'black')
-      .attr('stroke-width', 1);
+      .attr('stroke-width', pinStrokeWidth);
 
     const arrowPositions = [
       { board: 4, distance: 12.5 },
@@ -867,7 +863,6 @@ export class ChartGenerationService {
     ];
 
     // Create arrow shape as an upward-pointing triangle
-    const arrowSize = 7; // Size of the arrow
     const arrowShape = d3
       .symbol()
       .type(d3.symbolTriangle)

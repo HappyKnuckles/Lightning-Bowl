@@ -1,6 +1,13 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
+    <ion-buttons slot="start" (click)="resetPatternSelection()">
+      <ion-button color="medium"> Reset </ion-button>
+    </ion-buttons>
+
     <ion-title>Select Pattern</ion-title>
+    <ion-buttons slot="end" strong="true" (click)="savePatternSelection()">
+      <ion-button>Save</ion-button>
+    </ion-buttons>
   </ion-toolbar>
   <ion-toolbar>
     <ion-searchbar (ionInput)="searchPatterns($event)" placeholder="Search for a pattern" debounce="300"
@@ -12,14 +19,14 @@
     <ion-text class="no-game-text"> No patterns found! </ion-text>
   </ng-container>
   <ng-template #allPatterns>
-    <ion-radio-group (ionChange)="radioGroupChange($event)" [value]="prevSelectedPattern()" allowEmptySelection="true">
+    <ion-radio-group (ionChange)="radioGroupChange($event)" [value]="selectedPattern" allowEmptySelection="true">
       @for (pattern of displayedPatterns(); track pattern.url) {
       <ion-item [ngClass]="{
             'red-card': getRatioValue(pattern?.ratio ?? '0') >= 1 && getRatioValue(pattern?.ratio ?? '0') < 4,
             'yellow-card': getRatioValue(pattern?.ratio ?? '0') >= 4 && getRatioValue(pattern?.ratio ?? '0') < 8,
             'green-card': getRatioValue(pattern?.ratio ?? '0') >= 8,
           }" lines="none">
-          <!-- <ion-avatar slot="start">
+        <!-- <ion-avatar slot="start">
               <img [src]="pattern.chartImageSrcVertical" alt="">
           </ion-avatar> -->
         <ion-radio [value]="pattern.title" justify="space-between">

@@ -1,5 +1,6 @@
 <div class="pattern-container">
-  <img [src]="pattern().chartImageSrcVertical" style="width: 50%; height: auto; border-radius: 16px" alt="Pattern image" />
+  <img [src]="pattern().chartImageSrcHorizontal" style="width: 50%; height: auto; border-radius: 16px"
+    alt="Pattern image" />
   <div class="pattern-info">
     <ion-chip>Distance: {{ pattern().distance }}ft</ion-chip>
     <ion-chip>Volume: {{ pattern().volume }}mL</ion-chip>
@@ -11,9 +12,7 @@
 </div>
 
 <ion-grid class="ion-padding-horizontal">
-  <ion-row
-    ><ion-col><ion-label>Forward Oil</ion-label></ion-col></ion-row
-  >
+  <ion-row><ion-col><ion-label>Forward Oil</ion-label></ion-col></ion-row>
   <ion-row class="header-row">
     <ion-col size="2">Boards</ion-col>
     <ion-col size="1.4">Load</ion-col>
@@ -25,22 +24,20 @@
   </ion-row>
 
   @for (data of pattern().forwards_data; track $index) {
-    <ion-row class="data-row">
-      <ion-col size="2">{{ data.start }}-{{ data.stop }}</ion-col>
-      <ion-col size="1.4">{{ data.load }}</ion-col>
-      <ion-col size="1.4">{{ data.mics }}</ion-col>
-      <ion-col size="1.6">{{ data.speed }}</ion-col>
-      <ion-col size="1.6">{{ data.buf }}</ion-col>
-      <ion-col size="1.5">{{ data.total_oil }}</ion-col>
-      <ion-col size="auto">{{ data.distance_start }}-{{ data.distance_end }}</ion-col>
-    </ion-row>
+  <ion-row class="data-row">
+    <ion-col size="2">{{ data.start }}-{{ data.stop }}</ion-col>
+    <ion-col size="1.4">{{ data.load }}</ion-col>
+    <ion-col size="1.4">{{ data.mics }}</ion-col>
+    <ion-col size="1.6">{{ data.speed }}</ion-col>
+    <ion-col size="1.6">{{ data.buf }}</ion-col>
+    <ion-col size="1.5">{{ data.total_oil }}</ion-col>
+    <ion-col size="auto">{{ data.distance_start }}-{{ data.distance_end }}</ion-col>
+  </ion-row>
   }
 </ion-grid>
 
 <ion-grid class="ion-padding-horizontal ion-margin-bottom">
-  <ion-row
-    ><ion-col><ion-label>Reverse Oil</ion-label></ion-col></ion-row
-  >
+  <ion-row><ion-col><ion-label>Reverse Oil</ion-label></ion-col></ion-row>
   <ion-row class="header-row">
     <ion-col size="2">Boards</ion-col>
     <ion-col size="1.4">Load</ion-col>
@@ -52,14 +49,14 @@
   </ion-row>
 
   @for (data of pattern().reverse_data; track $index) {
-    <ion-row class="data-row">
-      <ion-col size="2">{{ data.start }}-{{ data.stop }}</ion-col>
-      <ion-col size="1.4">{{ data.load }}</ion-col>
-      <ion-col size="1.4">{{ data.mics }}</ion-col>
-      <ion-col size="1.6">{{ data.speed }}</ion-col>
-      <ion-col size="1.6">{{ data.buf }}</ion-col>
-      <ion-col size="1.5">{{ data.total_oil }}</ion-col>
-      <ion-col size="auto">{{ data.distance_start }}-{{ data.distance_end }}</ion-col>
-    </ion-row>
+  <ion-row class="data-row">
+    <ion-col size="2">{{ data.start }}-{{ data.stop }}</ion-col>
+    <ion-col size="1.4">{{ data.load }}</ion-col>
+    <ion-col size="1.4">{{ data.mics }}</ion-col>
+    <ion-col size="1.6">{{ data.speed }}</ion-col>
+    <ion-col size="1.6">{{ data.buf }}</ion-col>
+    <ion-col size="1.5">{{ data.total_oil }}</ion-col>
+    <ion-col size="auto">{{ data.distance_start }}-{{ data.distance_end }}</ion-col>
+  </ion-row>
   }
 </ion-grid>

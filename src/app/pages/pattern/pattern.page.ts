@@ -188,9 +188,9 @@ export class PatternPage implements OnInit {
     this.patterns.forEach((pattern) => {
       if (!pattern.chartImageSrc) {
         try {
-          const svgDataUri = this.chartService.generatePatternChartDataUri(pattern, true);
-          const svgDataUriHor = this.chartService.generatePatternChartDataUri(pattern, false);
-          pattern.chartImageSrcVertical = this.sanitizer.bypassSecurityTrustUrl(svgDataUriHor);
+          const svgDataUri = this.chartService.generatePatternChartDataUri(pattern, 325, 1300, 1300, 400, 20, 1, 7, true);
+          const svgDataUriHor = this.chartService.generatePatternChartDataUri(pattern, 375, 1500, 400, 1500, 20, 1, 7, false);
+          pattern.chartImageSrcHorizontal = this.sanitizer.bypassSecurityTrustUrl(svgDataUriHor);
           pattern.chartImageSrc = this.sanitizer.bypassSecurityTrustUrl(svgDataUri);
         } catch (error) {
           console.error(`Error generating chart for pattern ${pattern.title}:`, error);
