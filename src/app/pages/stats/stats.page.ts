@@ -110,7 +110,7 @@ export class StatsPage implements OnInit, AfterViewInit {
 
     return this.statsService.calculateBowlingStats(filteredGames) as SessionStats;
   });
-  selectedSegment = 'Overall';
+  selectedSegment = signal('Overall');
   segments: string[] = ['Overall', 'Spares', 'Throws', 'Sessions'];
   // Viewchilds and Instances
   @ViewChild('scoreChart', { static: false }) scoreChart?: ElementRef;
@@ -190,7 +190,7 @@ export class StatsPage implements OnInit, AfterViewInit {
   }
 
   onSegmentChanged(event: SegmentCustomEvent): void {
-    this.selectedSegment = event.detail.value?.toString() || 'Overall';
+    this.selectedSegment.set(event.detail.value?.toString() || 'Overall');
     this.generateCharts();
     setTimeout(() => {
       this.content.scrollToTop(300);
@@ -262,13 +262,13 @@ export class StatsPage implements OnInit, AfterViewInit {
 
   private generateCharts(isReload?: boolean): void {
     if (this.gameFilterService.filteredGames().length > 0) {
-      if (this.selectedSegment === 'Overall') {
+      if (this.selectedSegment() === 'Overall') {
         this.generateScoreChart(isReload);
         this.generateScoreDistributionChart(isReload);
-      } else if (this.selectedSegment === 'Spares') {
+      } else if (this.selectedSegment() === 'Spares') {
         this.generatePinChart(isReload);
         this.generateSpareDistributionChart(isReload);
-      } else if (this.selectedSegment === 'Throws') {
+      } else if (this.selectedSegment() === 'Throws') {
         this.generateThrowChart(isReload);
       }
     }

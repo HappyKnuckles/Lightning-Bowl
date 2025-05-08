@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, Signal, ViewChild, signal } from '@angular/core';
+import { Component, OnInit, computed, Signal, ViewChild, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -83,6 +83,7 @@ import { BallTypeaheadComponent } from 'src/app/shared/components/ball-typeahead
     BallListComponent,
     BallTypeaheadComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ArsenalPage implements OnInit {
   @ViewChild('core', { static: false }) coreModal!: IonModal;
