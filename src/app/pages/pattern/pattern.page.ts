@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -78,6 +78,7 @@ import { BallFilterComponent } from '../../shared/components/ball-filter/ball-fi
     PatternFormComponent,
     BallFilterComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PatternPage implements OnInit {
   @ViewChild(IonContent, { static: false }) content!: IonContent;
