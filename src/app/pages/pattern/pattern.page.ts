@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -81,9 +81,9 @@ import { BallFilterComponent } from '../../shared/components/ball-filter/ball-fi
 })
 export class PatternPage implements OnInit {
   @ViewChild(IonContent, { static: false }) content!: IonContent;
-  patterns: Pattern[] = [];
-  currentPage = 1;
-  hasMoreData = true;
+  patterns = signal<Pattern[]>([]);
+  currentPage = signal(1);
+  hasMoreData = signal(true);
 
   constructor(
     private patternService: PatternService,
@@ -106,9 +106,9 @@ export class PatternPage implements OnInit {
     try {
       this.hapticService.vibrate(ImpactStyle.Medium);
       this.loadingService.setLoading(true);
-      this.currentPage = 1;
-      this.hasMoreData = true;
-      this.patterns = [];
+      this.currentPage.set(1);
+      this.hasMoreData.set(true);
+      this.patterns.set([]);
       await this.loadPatterns();
     } catch (error) {
       console.error(error);
@@ -124,13 +124,13 @@ export class PatternPage implements OnInit {
       if (!event) {
         this.loadingService.setLoading(true);
       }
-      const response = await this.patternService.getPatterns(this.currentPage);
+      const response = await this.patternService.getPatterns(this.currentPage());
       const patterns = response.patterns;
       if (response.total > 0) {
-        this.patterns = [...this.patterns, ...patterns];
-        this.currentPage++;
+        this.patterns.update((currentPatterns) => [...currentPatterns, ...patterns]);
+        this.currentPage.update((value) => value + 1);
       } else {
-        this.hasMoreData = false;
+        this.hasMoreData.set(false);
       }
     } catch (error) {
       console.error('Error fetching patterns:', error);
@@ -150,15 +150,15 @@ export class PatternPage implements OnInit {
     try {
       this.loadingService.setLoading(true);
       if (event.detail.value === '') {
-        this.hasMoreData = true;
-        const response = await this.patternService.getPatterns(this.currentPage);
-        this.patterns = response.patterns;
-        this.currentPage++;
+        this.hasMoreData.set(true);
+        const response = await this.patternService.getPatterns(this.currentPage());
+        this.patterns.set(response.patterns);
+        this.currentPage.update((value) => value + 1);
       } else {
         const response = await this.patternService.searchPattern(event.detail.value);
-        this.patterns = response.patterns;
-        this.hasMoreData = false;
-        this.currentPage = 1;
+        this.patterns.set(response.patterns);
+        this.hasMoreData.set(false);
+        this.currentPage.set(1);
       }
       setTimeout(() => {
         this.content.scrollToTop(300);
@@ -185,7 +185,7 @@ export class PatternPage implements OnInit {
   }
 
   private generateChartImages(): void {
-    this.patterns.forEach((pattern) => {
+    this.patterns().forEach((pattern) => {
       if (!pattern.chartImageSrc) {
         try {
           const svgDataUri = this.chartService.generatePatternChartDataUri(pattern, true);
