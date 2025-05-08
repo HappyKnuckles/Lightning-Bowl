@@ -116,7 +116,7 @@
           </ion-toolbar>
 
           <ion-toolbar>
-            <ion-segment [value]="selectedSegment" (ionChange)="onSegmentChanged(league, $event)">
+            <ion-segment [value]="selectedSegment()" (ionChange)="onSegmentChanged(league, $event)">
               @for (segment of segments; track segment) {
                 <ion-segment-button [value]="segment" [contentId]="segment + '-' + league">
                   <ion-label class="segment-label">{{ segment }}</ion-label>

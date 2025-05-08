@@ -1,4 +1,16 @@
-import { Component, CUSTOM_ELEMENTS_SCHEMA, ElementRef, ViewChild, ViewChildren, QueryList, computed, Signal, signal, effect } from '@angular/core';
+import {
+  Component,
+  CUSTOM_ELEMENTS_SCHEMA,
+  ElementRef,
+  ViewChild,
+  ViewChildren,
+  QueryList,
+  computed,
+  Signal,
+  signal,
+  effect,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { DecimalPipe, NgFor, NgIf } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import {
@@ -91,15 +103,15 @@ import { HiddenLeagueSelectionService } from 'src/app/core/services/hidden-leagu
     LongPressDirective,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LeaguePage {
   @ViewChild('modalContent') content!: IonContent;
   @ViewChildren('modal') modals!: QueryList<IonModal>;
   @ViewChild('scoreChart', { static: false }) scoreChart?: ElementRef;
   @ViewChild('pinChart', { static: false }) pinChart?: ElementRef;
-  selectedSegment = 'Overall';
+  selectedSegment = signal('Overall');
   segments: string[] = ['Overall', 'Spares', 'Games'];
-  isEditMode: Record<string, boolean> = {};
   gamesByLeague: Signal<Record<string, Game[]>> = computed(() => {
     const games = this.storageService.games();
     return this.sortUtilsService.sortGamesByLeagues(games, true);
@@ -132,19 +144,17 @@ export class LeaguePage {
     return statsByLeague;
   });
   statDefinitions = leagueStatDefinitions;
-  private scoreChartInstances: Record<string, Chart> = {};
-  private pinChartInstances: Record<string, Chart> = {};
-
   isVisibilityEdit = signal(false);
   get noLeaguesShown(): boolean {
     const state = this.hiddenLeagueSelectionService.selectionState();
 
     return !Object.values(state).some((isVisible) => isVisible);
   }
-
   get leagueSelectionState() {
     return this.hiddenLeagueSelectionService.selectionState();
   }
+  private scoreChartInstances: Record<string, Chart> = {};
+  private pinChartInstances: Record<string, Chart> = {};
   private previousLeagueSelectionState: Record<string, boolean> = {};
 
   constructor(
@@ -236,7 +246,7 @@ export class LeaguePage {
   }
 
   closeModal(league: string): void {
-    this.selectedSegment = 'Overall';
+    this.selectedSegment.set('Overall');
     const modalToDismiss = this.modals.find((modal) => modal.trigger === league);
 
     if (modalToDismiss) {
@@ -252,7 +262,7 @@ export class LeaguePage {
   }
 
   onSegmentChanged(league: string, event: SegmentCustomEvent): void {
-    this.selectedSegment = event.detail.value?.toString() || 'Overall';
+    this.selectedSegment.set(event.detail.value?.toString() || 'Overall');
     this.generateCharts(league);
     setTimeout(() => {
       this.content.scrollToTop(300);
@@ -261,9 +271,9 @@ export class LeaguePage {
 
   generateCharts(league: string, isReload?: boolean): void {
     if (this.storageService.games().length > 0) {
-      if (this.selectedSegment === 'Overall') {
+      if (this.selectedSegment() === 'Overall') {
         this.generateScoreChart(league, isReload);
-      } else if (this.selectedSegment === 'Spares') {
+      } else if (this.selectedSegment() === 'Spares') {
         this.generatePinChart(league, isReload);
       }
     }
