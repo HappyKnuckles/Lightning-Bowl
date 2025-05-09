@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { addIcons } from 'ionicons';
 import {
   add,
@@ -22,6 +22,7 @@ import { AsyncPipe } from '@angular/common';
   styleUrls: ['tabs.page.scss'],
   standalone: true,
   imports: [IonModal, RouterModule, AsyncPipe, IonItem, IonList, IonContent, IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TabsPage {
   activeMoreTab$ = new BehaviorSubject<boolean>(false);
