@@ -1,4 +1,4 @@
-import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, OnInit, signal } from '@angular/core';
 import { BallFilterService } from 'src/app/core/services/ball-filter/ball-filter.service';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BallService } from 'src/app/core/services/ball/ball.service';
@@ -62,12 +62,13 @@ import { BallCoverstockTypeaheadComponent } from '../ball-coverstock-typeahead/b
     BallCoverstockTypeaheadComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BallFilterComponent implements OnInit {
-  markets: Market[] = [Market.ALL, Market.US, Market.INT];
-  coreTypes: CoreType[] = [CoreType.ALL, CoreType.ASYMMETRIC, CoreType.SYMMETRIC];
-  coverstockTypes: CoverstockType[] = Object.values(CoverstockType);
-  weights: string[] = ['12', '13', '14', '15', '16'];
+  markets = signal<Market[]>([Market.ALL, Market.US, Market.INT]);
+  coreTypes = signal<CoreType[]>([CoreType.ALL, CoreType.ASYMMETRIC, CoreType.SYMMETRIC]);
+  coverstockTypes = signal<CoverstockType[]>(Object.values(CoverstockType));
+  weights = signal(['12', '13', '14', '15', '16']);
   presentingElement?: HTMLElement;
 
   constructor(

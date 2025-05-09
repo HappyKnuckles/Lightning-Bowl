@@ -1,5 +1,5 @@
 import { NgIf } from '@angular/common';
-import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, CUSTOM_ELEMENTS_SCHEMA, input } from '@angular/core';
 import { IonText, IonIcon } from '@ionic/angular/standalone';
 import { ConditionalNumberPipe } from '../../pipes/number-pipe/conditional-number.pipe';
 import { addIcons } from 'ionicons';
@@ -15,24 +15,20 @@ import { UtilsService } from 'src/app/core/services/utils/utils.service';
   imports: [NgIf, IonText, IonIcon, ConditionalNumberPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class StatRowComponent implements OnChanges {
-  @Input({ required: true }) label!: string;
-  @Input({ required: true }) currentStat!: number;
-  @Input() toolTip?: string;
-  @Input() prevStat?: number;
-  @Input() id?: string;
-  @Input() isPercentage?: boolean;
+export class StatRowComponent {
+  label = input.required<string>();
+  currentStat = input.required<number>();
+  toolTip = input<string | undefined>();
+  prevStat = input<number | undefined>();
+  id = input<string | undefined>();
+  isPercentage = input<boolean | undefined>();
 
-  statDifference = '0';
+  statDifference = computed(() => {
+    return this.calculateStatDifference(this.currentStat(), this.prevStat()!);
+  });
 
   constructor(private utilsService: UtilsService) {
     addIcons({ informationCircleOutline, arrowUp, arrowDown });
-  }
-
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['currentStat'] || changes['prevStat']) {
-      this.statDifference = this.calculateStatDifference(this.currentStat, this.prevStat!);
-    }
   }
 
   getArrowIcon(currentValue: number, previousValue?: number): string {

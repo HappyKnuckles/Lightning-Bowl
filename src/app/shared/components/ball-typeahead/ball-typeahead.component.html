@@ -14,7 +14,7 @@
 </ion-header>
 <ion-content [fullscreen]="true" role="feed">
   <ion-list>
-    @for (ball of displayedBalls; track ball.ball_id) {
+    @for (ball of displayedBalls(); track ball.ball_id) {
       <ion-item role="article">
         <ion-avatar slot="start">
           <ion-img [src]="storageService.url + ball.thumbnail_image"></ion-img>

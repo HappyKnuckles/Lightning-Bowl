@@ -1,4 +1,4 @@
-import { Component, computed, EventEmitter, input, Output, signal, ViewChild, OnInit, OnDestroy } from '@angular/core';
+import { Component, computed, EventEmitter, input, Output, signal, ViewChild, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { InfiniteScrollCustomEvent, ModalController } from '@ionic/angular';
 import Fuse from 'fuse.js';
 import { Core } from 'src/app/core/models/ball.model';
@@ -40,22 +40,23 @@ import {
     IonTitle,
     IonToolbar,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './ball-core-typeahead.component.html',
   styleUrl: './ball-core-typeahead.component.scss',
 })
 export class BallCoreTypeaheadComponent implements OnInit, OnDestroy {
+  @ViewChild(IonContent, { static: false }) content!: IonContent;
+  @ViewChild('infiniteScroll') infiniteScroll!: IonInfiniteScroll;
   cores = input<Core[]>([]);
   prevSelectedCores = input<string[]>([]);
   @Output() selectedCoresChange = new EventEmitter<string[]>();
-  @ViewChild(IonContent, { static: false }) content!: IonContent;
-  @ViewChild('infiniteScroll') infiniteScroll!: IonInfiniteScroll;
   filteredCores = signal<Core[]>([]);
-  selectedCores: Core[] = [];
   displayedCores = computed(() => this.filteredCores().slice(0, this.loadedCount()));
-  fuse!: Fuse<Core>;
+  private fuse!: Fuse<Core>;
+  private selectedCores: Core[] = [];
   private batchSize = 100;
   public loadedCount = signal(0);
-  constructor(private modalCtrl: ModalController) { }
+  constructor(private modalCtrl: ModalController) {}
 
   ngOnInit() {
     this.filteredCores.set([...this.cores()]);

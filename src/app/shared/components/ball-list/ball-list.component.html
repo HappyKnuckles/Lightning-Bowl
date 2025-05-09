@@ -1,13 +1,13 @@
 <ion-header [translucent]="true">
   <ion-toolbar style="display: flex; align-items: flex-start">
     <ion-title size="small">
-      {{ isCoverstock ? "Coverstock: " + balls[0].coverstock_name : "Core: " + balls[0].core_name }}
+      {{ isCoverstock() ? "Coverstock: " + balls()[0].coverstock_name : "Core: " + balls()[0].core_name }}
     </ion-title>
   </ion-toolbar>
 </ion-header>
 <ion-content [fullscreen]="true">
   <ion-list>
-    @for (ball of balls; track ball.ball_id) {
+    @for (ball of balls(); track ball.ball_id) {
       <ion-item>
         <ion-avatar slot="start">
           <ion-img [src]="storageService.url + ball.thumbnail_image"></ion-img>

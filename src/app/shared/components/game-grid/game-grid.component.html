@@ -87,7 +87,7 @@
       <ng-template>
         <app-pattern-typeahead
           [patterns]="storageService.allPatterns()"
-          [prevSelectedPattern]="pattern"
+          [prevSelectedPattern]="pattern()"
           (selectedPatternsChange)="selectPattern($event)"></app-pattern-typeahead>
       </ng-template>
     </ion-modal>

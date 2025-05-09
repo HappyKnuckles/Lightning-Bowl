@@ -1,4 +1,4 @@
-import { input, Output, ViewChild, signal, computed, Component, OnDestroy, EventEmitter, OnInit } from '@angular/core';
+import { input, Output, ViewChild, signal, computed, Component, OnDestroy, EventEmitter, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { ModalController, InfiniteScrollCustomEvent } from '@ionic/angular';
 import Fuse from 'fuse.js';
 import { Coverstock } from 'src/app/core/models/ball.model';
@@ -36,22 +36,25 @@ import {
     IonHeader,
     IonToolbar,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './ball-coverstock-typeahead.component.html',
   styleUrl: './ball-coverstock-typeahead.component.scss',
 })
 export class BallCoverstockTypeaheadComponent implements OnDestroy, OnInit {
+  @ViewChild(IonContent, { static: false }) content!: IonContent;
+  @ViewChild('infiniteScroll') infiniteScroll!: IonInfiniteScroll;
   coverstocks = input<Coverstock[]>([]);
   prevSelectedCoverstocks = input<string[]>([]);
   @Output() selectedCoverstocksChange = new EventEmitter<string[]>();
-  @ViewChild(IonContent, { static: false }) content!: IonContent;
-  @ViewChild('infiniteScroll') infiniteScroll!: IonInfiniteScroll;
-  filteredCoverstocks = signal<Coverstock[]>([]);
-  selectedCoverstocks: Coverstock[] = [];
+
   displayedCoverstocks = computed(() => this.filteredCoverstocks().slice(0, this.loadedCount()));
-  fuse!: Fuse<Coverstock>;
+  private filteredCoverstocks = signal<Coverstock[]>([]);
+  private fuse!: Fuse<Coverstock>;
+  private selectedCoverstocks: Coverstock[] = [];
+
   private batchSize = 100;
   public loadedCount = signal(0);
-  constructor(private modalCtrl: ModalController) { }
+  constructor(private modalCtrl: ModalController) {}
 
   ngOnInit() {
     this.filteredCoverstocks.set([...this.coverstocks()]);

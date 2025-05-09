@@ -1,10 +1,10 @@
 <div class="stat-container">
-  @for (stat of statDefinitions; track stat.key) {
+  @for (stat of statDefinitions(); track stat.key) {
     <div class="stats">
       <app-stat-row
         [label]="stat.label"
-        [currentStat]="getNumericStat(currentStats, stat.key)!"
-        [prevStat]="stat.prevKey ? getNumericStat(prevStats, stat.prevKey) : undefined"
+        [currentStat]="getNumericStat(currentStats(), stat.key)!"
+        [prevStat]="stat.prevKey ? getNumericStat(prevStats(), stat.prevKey) : undefined"
         [toolTip]="stat.toolTip"
         [id]="stat.id"
         [isPercentage]="stat.isPercentage">

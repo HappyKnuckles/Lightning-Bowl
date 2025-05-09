@@ -1,5 +1,5 @@
 import { NgIf, NgFor, NgClass, DatePipe } from '@angular/common';
-import { Component, Input, Renderer2, ViewChild, OnChanges, SimpleChanges, computed, OnInit } from '@angular/core';
+import { Component, Renderer2, ViewChild, OnChanges, SimpleChanges, computed, OnInit, input, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { ImpactStyle } from '@capacitor/haptics';
@@ -101,15 +101,16 @@ import { LongPressDirective } from 'src/app/core/directives/long-press/long-pres
     DatePipe,
   ],
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GameComponent implements OnChanges, OnInit {
-  @Input() games!: Game[];
-  @Input() isLeaguePage?: boolean = false;
-  @Input() gameCount?: number;
   @ViewChild('accordionGroup') accordionGroup!: IonAccordionGroup;
+  games = input.required<Game[]>();
+  isLeaguePage = input<boolean>(false);
+  gameCount = input<number>(0);
   leagues = computed(() => {
     const savedLeagues = this.storageService.leagues();
-    const leagueKeys = this.games.reduce((acc: string[], game: Game) => {
+    const leagueKeys = this.games().reduce((acc: string[], game: Game) => {
       if (game.league && !acc.includes(game.league)) {
         acc.push(game.league);
       }
@@ -139,13 +140,12 @@ export class GameComponent implements OnChanges, OnInit {
 
   //   return uniqueCombinedLeagues.filter(league => savedSelection[league] === true);
   // });
-  sortedGames: Game[] = [];
-  showingGames: Game[] = [];
+  isEditMode = signal<Record<string, boolean>>({});
+  showingGames = signal<Game[]>([]);
   presentingElement?: HTMLElement;
-
+  private sortedGames: Game[] = [];
   private batchSize = 100;
   public loadedCount = 0;
-  isEditMode: Record<string, boolean> = {};
   private closeTimers: Record<string, NodeJS.Timeout> = {};
   public delayedCloseMap: Record<string, boolean> = {};
   private originalGameState: Record<string, Game> = {};
@@ -181,18 +181,18 @@ export class GameComponent implements OnChanges, OnInit {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['games'] && this.games) {
-      this.sortedGames = [...this.games].sort((a, b) => b.date - a.date);
-      this.showingGames = this.sortedGames.slice(0, this.batchSize);
+      this.sortedGames = [...this.games()].sort((a, b) => b.date - a.date);
+      this.showingGames.set(this.sortedGames.slice(0, this.batchSize));
       this.loadedCount += this.batchSize;
     }
   }
 
   loadMoreGames(event: InfiniteScrollCustomEvent): void {
     setTimeout(() => {
-      this.showingGames = this.sortedGames.slice(0, this.loadedCount + this.batchSize);
+      this.showingGames.set(this.sortedGames.slice(0, this.loadedCount + this.batchSize));
       this.loadedCount += this.batchSize;
       event.target.complete();
-      if (this.loadedCount >= this.games.length) {
+      if (this.loadedCount >= this.games().length) {
         event.target.disabled = true;
       }
     }, 50);
@@ -236,7 +236,7 @@ export class GameComponent implements OnChanges, OnInit {
 
   /** LONG-PRESS or header click entry point */
   saveOriginalStateAndEnableEdit(game: Game): void {
-    if (!this.isEditMode[game.gameId]) {
+    if (!this.isEditMode()[game.gameId]) {
       this.originalGameState[game.gameId] = structuredClone(game);
       this.enableEdit(game, game.gameId);
     } else {
@@ -245,7 +245,10 @@ export class GameComponent implements OnChanges, OnInit {
   }
 
   enableEdit(game: Game, accordionId?: string): void {
-    this.isEditMode[game.gameId] = !this.isEditMode[game.gameId];
+    this.isEditMode.update((currentModes) => ({
+      ...currentModes,
+      [game.gameId]: !currentModes[game.gameId],
+    }));
     this.hapticService.vibrate(ImpactStyle.Light);
 
     if (accordionId) {
@@ -261,7 +264,10 @@ export class GameComponent implements OnChanges, OnInit {
       delete this.originalGameState[game.gameId];
     }
 
-    this.isEditMode[game.gameId] = false;
+    this.isEditMode.update((currentModes) => ({
+      ...currentModes,
+      [game.gameId]: false,
+    }));
     this.hapticService.vibrate(ImpactStyle.Light);
 
     const wasOpen = this.delayedCloseMap[game.gameId];
@@ -285,7 +291,10 @@ export class GameComponent implements OnChanges, OnInit {
 
       this.toastService.showToast(ToastMessages.gameUpdateSuccess, 'refresh-outline');
 
-      this.isEditMode[game.gameId] = false;
+      this.isEditMode.update((currentModes) => ({
+        ...currentModes,
+        [game.gameId]: false,
+      }));
       this.hapticService.vibrate(ImpactStyle.Light);
       const wasOpen = this.delayedCloseMap[game.gameId];
       this.openExpansionPanel(wasOpen ? game.gameId : undefined);
@@ -331,8 +340,8 @@ export class GameComponent implements OnChanges, OnInit {
     if (index === 0) {
       return true;
     }
-    const currentGameDate = new Date(this.showingGames[index].date);
-    const previousGameDate = new Date(this.showingGames[index - 1].date);
+    const currentGameDate = new Date(this.showingGames()[index].date);
+    const previousGameDate = new Date(this.showingGames()[index - 1].date);
     return currentGameDate.getMonth() !== previousGameDate.getMonth() || currentGameDate.getFullYear() !== previousGameDate.getFullYear();
   }
 
@@ -343,7 +352,7 @@ export class GameComponent implements OnChanges, OnInit {
   }
 
   getMonthGameCount(date: number): number {
-    return this.showingGames.filter((game) => new Date(game.date).getMonth() === new Date(date).getMonth()).length;
+    return this.showingGames().filter((game) => new Date(game.date).getMonth() === new Date(date).getMonth()).length;
   }
 
   isGameValid(game: Game): boolean {

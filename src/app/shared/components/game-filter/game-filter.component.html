@@ -64,7 +64,7 @@
           }"
           [ngModel]="gameFilterService.filters().startDate"
           name="startDate"
-          [highlightedDates]="highlightedDates"
+          [highlightedDates]="highlightedDates()"
           (ionChange)="updateFilter('startDate', $event.detail.value)"
           presentation="date"
           [min]="defaultFilters.startDate"
@@ -85,7 +85,7 @@
           }"
           [ngModel]="gameFilterService.filters().endDate"
           name="endDate"
-          [highlightedDates]="highlightedDates"
+          [highlightedDates]="highlightedDates()"
           (ionChange)="updateFilter('endDate', $event.detail.value)"
           presentation="date"
           [min]="gameFilterService.filters().startDate"></ion-datetime>
@@ -118,7 +118,7 @@
         (ionChange)="updateFilter('leagues', $event.detail.value)">
         <ion-select-option value="all">All</ion-select-option>
         <ion-select-option value="">None</ion-select-option>
-        <ion-select-option *ngFor="let league of leagues" [value]="league">{{ league }}</ion-select-option>
+        <ion-select-option *ngFor="let league of leagues()" [value]="league">{{ league }}</ion-select-option>
       </ion-select>
     </ion-item>
     <ion-item>

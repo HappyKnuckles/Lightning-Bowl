@@ -1,4 +1,4 @@
-import { Component, computed, EventEmitter, input, OnDestroy, OnInit, Output, ViewChild, signal } from '@angular/core';
+import { Component, computed, input, OnDestroy, OnInit, ViewChild, signal, output, ChangeDetectionStrategy } from '@angular/core';
 import { Pattern } from 'src/app/core/models/pattern.model';
 import { PatternService } from 'src/app/core/services/pattern/pattern.service';
 import {
@@ -38,25 +38,26 @@ import { NgClass, NgIf } from '@angular/common';
     IonHeader,
     NgClass,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './pattern-typeahead.component.html',
   styleUrl: './pattern-typeahead.component.scss',
 })
 export class PatternTypeaheadComponent implements OnInit, OnDestroy {
-  patterns = input<Partial<Pattern>[]>([]);
-  prevSelectedPattern = input<string>('');
-  @Output() selectedPatternsChange = new EventEmitter<string>();
   @ViewChild(IonContent, { static: false }) content!: IonContent;
   @ViewChild('infiniteScroll') infiniteScroll!: IonInfiniteScroll;
-  filteredPatterns = signal<Partial<Pattern>[]>([]);
+  patterns = input<Partial<Pattern>[]>([]);
+  prevSelectedPattern = input<string>('');
+  selectedPatternsChange = output<string>();
   selectedPattern = '';
   displayedPatterns = computed(() => this.filteredPatterns().slice(0, this.loadedCount()));
+  private filteredPatterns = signal<Partial<Pattern>[]>([]);
   private batchSize = 100;
   public loadedCount = signal(0);
 
   constructor(
     private patternService: PatternService,
     public loadingService: LoadingService,
-  ) { }
+  ) {}
 
   ngOnInit() {
     this.filteredPatterns.set([...this.patterns()]);

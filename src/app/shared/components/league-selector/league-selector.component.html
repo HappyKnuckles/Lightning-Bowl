@@ -1,6 +1,9 @@
-@if (isAddPage) {
+@if (isAddPage()) {
   <ion-item>
-    <ion-select label="League/Tournament" [(ngModel)]="selectedLeague" (ionChange)="leagueChanged.emit(this.selectedLeague); onLeagueChange($event)">
+    <ion-select
+      label="League/Tournament"
+      [(ngModel)]="selectedLeague"
+      (ionChange)="leagueChanged.emit(this.selectedLeague()); onLeagueChange($event)">
       <ion-select-option value="new">Add new</ion-select-option>
       <ion-select-option value="">None</ion-select-option>
       <ion-select-option *ngFor="let league of leagues()" [value]="league">{{ league }}</ion-select-option>
@@ -22,7 +25,7 @@
   </ion-item>
 }
 
-<ion-modal [isOpen]="isModalOpen" #modal>
+<ion-modal [isOpen]="isModalOpen()" #modal>
   <ng-template>
     <ion-header>
       <ion-toolbar>
@@ -31,7 +34,7 @@
         </ion-buttons>
         <ion-title>Edit league</ion-title>
         <ion-buttons slot="end">
-          <ion-button type="submit" (click)="editLeague()" [disabled]="newLeague === ''">Save</ion-button>
+          <ion-button type="submit" (click)="editLeague()" [disabled]="newLeague() === ''">Save</ion-button>
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
@@ -47,9 +50,9 @@
         <ion-input
           label="Change league name"
           [value]="leagueToChange"
-          [readonly]="leagueToChange === ''"
+          [readonly]="leagueToChange() === ''"
           placeholder="League name"
-          (ionChange)="newLeague = $event.target.value!.toString()"></ion-input>
+          (ionChange)="newLeague.set($event.target.value!.toString())"></ion-input>
       </ion-item>
     </ion-content>
   </ng-template>

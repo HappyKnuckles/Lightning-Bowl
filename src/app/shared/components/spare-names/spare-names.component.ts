@@ -1,6 +1,6 @@
-import { NgFor, NgIf } from '@angular/common';
-import { Component } from '@angular/core';
-import { IonButton, IonTitle } from '@ionic/angular/standalone';
+import { NgIf } from '@angular/common';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { IonButton } from '@ionic/angular/standalone';
 
 enum SpareNames {
   BigFour = 'Big Four',
@@ -17,9 +17,10 @@ enum SpareNames {
 @Component({
   selector: 'app-spare-names',
   standalone: true,
-  imports: [IonTitle, IonButton, NgFor, NgIf],
+  imports: [IonButton, NgIf],
   templateUrl: './spare-names.component.html',
   styleUrl: './spare-names.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SpareNamesComponent {
   selectedPins: number[] = [];

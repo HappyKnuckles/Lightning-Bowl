@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, CUSTOM_ELEMENTS_SCHEMA, Input, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, CUSTOM_ELEMENTS_SCHEMA, input, OnInit, signal } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ModalController } from '@ionic/angular';
 import {
@@ -56,12 +56,13 @@ import { UtilsService } from 'src/app/core/services/utils/utils.service';
     IonSelectOption,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GameFilterComponent implements OnInit {
-  @Input() filteredGames!: Game[];
+  filteredGames = input.required<Game[]>();
   defaultFilters = this.gameFilterService.defaultFilters;
-  highlightedDates: { date: string; textColor: string; backgroundColor: string }[] = [];
-  leagues: string[] = [];
+  highlightedDates = signal<{ date: string; textColor: string; backgroundColor: string }[]>([]);
+  leagues = signal<string[]>([]);
   patterns = computed<string[]>(() => {
     return this.storageService
       .games()
@@ -150,21 +151,23 @@ export class GameFilterComponent implements OnInit {
 
   private getLeagues(): void {
     const gamesByLeague = this.sortUtilsService.sortGamesByLeagues(this.storageService.games(), false);
-    this.leagues = Object.keys(gamesByLeague);
+    this.leagues.set(Object.keys(gamesByLeague));
   }
 
   private getHighlightedDates(): void {
     const textColor = '#000000';
     const rootStyles = getComputedStyle(document.documentElement);
     const backgroundColor = rootStyles.getPropertyValue('--ion-color-primary').trim();
-    this.highlightedDates = this.storageService.games().map((game) => {
-      const date = new Date(game.date);
-      const formattedDate = this.utilsService.transformDate(date);
-      return {
-        date: formattedDate,
-        textColor: textColor,
-        backgroundColor: backgroundColor,
-      };
-    });
+    this.highlightedDates.set(
+      this.storageService.games().map((game) => {
+        const date = new Date(game.date);
+        const formattedDate = this.utilsService.transformDate(date);
+        return {
+          date: formattedDate,
+          textColor: textColor,
+          backgroundColor: backgroundColor,
+        };
+      }),
+    );
   }
 }

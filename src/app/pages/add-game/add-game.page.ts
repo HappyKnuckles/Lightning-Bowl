@@ -195,7 +195,7 @@ export class AddGamePage implements OnInit {
       this.modalCheckbox.disabled = !isPractice;
     } else {
       this.gameGrids.forEach((trackGrid: GameGridComponent) => {
-        trackGrid.leagueSelector.selectedLeague = league;
+        trackGrid.leagueSelector.selectedLeague.set(league);
         trackGrid.selectedLeague = league;
         trackGrid.isPractice = isPractice;
         trackGrid.checkbox.checked = isPractice;

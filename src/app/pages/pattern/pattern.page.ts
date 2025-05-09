@@ -77,6 +77,7 @@ import { BallFilterComponent } from '../../shared/components/ball-filter/ball-fi
     PatternInfoComponent,
     PatternFormComponent,
     BallFilterComponent,
+    PatternInfoComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

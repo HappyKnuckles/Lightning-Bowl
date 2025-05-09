@@ -1,4 +1,4 @@
-import { Component, OnInit, EventEmitter, Output, QueryList, ViewChildren, ViewChild, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { Component, OnInit, QueryList, ViewChildren, ViewChild, CUSTOM_ELEMENTS_SCHEMA, output } from '@angular/core';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { NgFor, NgIf } from '@angular/common';
 import {
@@ -55,14 +55,14 @@ import { PatternTypeaheadComponent } from '../pattern-typeahead/pattern-typeahea
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class GameGridComponent implements OnInit {
-  @Output() maxScoreChanged = new EventEmitter<number>();
-  @Output() totalScoreChanged = new EventEmitter<number>();
-  @Output() leagueChanged = new EventEmitter<string>();
-  @Output() isPracticeChanged = new EventEmitter<boolean>();
+  // TODO transform to signals
   @ViewChildren(IonInput) inputs!: QueryList<IonInput>;
   @ViewChild('leagueSelector') leagueSelector!: LeagueSelectorComponent;
   @ViewChild('checkbox') checkbox!: IonCheckbox;
-
+  maxScoreChanged = output<number>();
+  totalScoreChanged = output<number>();
+  leagueChanged = output<string>();
+  isPracticeChanged = output<boolean>();
   totalScore = 0;
   maxScore = 300;
   note = '';
@@ -141,7 +141,7 @@ export class GameGridComponent implements OnInit {
     if (isSave) {
       this.note = '';
       this.selectedLeague = '';
-      this.leagueSelector.selectedLeague = '';
+      this.leagueSelector.selectedLeague.set('');
       this.pattern = '';
       this.isPractice = true;
       this.balls = [];

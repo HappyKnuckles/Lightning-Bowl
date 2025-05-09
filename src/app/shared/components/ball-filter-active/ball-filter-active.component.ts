@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { BallFilter } from 'src/app/core/models/filter.model';
 import { BallFilterService } from 'src/app/core/services/ball-filter/ball-filter.service';
 import { UtilsService } from 'src/app/core/services/utils/utils.service';
@@ -11,6 +11,7 @@ import { NgIf } from '@angular/common';
   imports: [IonChip, NgIf],
   templateUrl: './ball-filter-active.component.html',
   styleUrl: './ball-filter-active.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BallFilterActiveComponent {
   constructor(

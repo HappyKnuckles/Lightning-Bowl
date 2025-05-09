@@ -1,5 +1,5 @@
 import { NgFor, NgIf } from '@angular/common';
-import { Component, EventEmitter, Input, Output, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, model, output, signal } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { AlertController, SelectChangeEventDetail } from '@ionic/angular';
 import {
@@ -47,15 +47,16 @@ import { ToastService } from 'src/app/core/services/toast/toast.service';
     IonSelectOption,
   ],
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LeagueSelectorComponent {
-  @Input() isAddPage = false;
-  @Output() leagueChanged = new EventEmitter<string>();
-  selectedLeague = '';
-  newLeague = '';
+  isAddPage = input.required<boolean>();
+  leagueChanged = output<string>();
+  selectedLeague = model<string>('');
+  newLeague = model<string>('');
   leaguesToDelete: string[] = [];
-  leagueToChange = '';
-  isModalOpen = false;
+  leagueToChange = model<string>('');
+  isModalOpen = signal(false);
   leagues = computed(() => {
     const savedLeagues = this.storageService.leagues();
     this.hiddenLeagueSelectionService.selectionState();
@@ -86,7 +87,7 @@ export class LeagueSelectorComponent {
     if (event.detail.value === 'new') {
       await this.openAddAlert();
     } else if (event.detail.value === 'edit') {
-      this.isModalOpen = true;
+      this.isModalOpen.set(true);
     } else if (event.detail.value === 'delete') {
       await this.openDeleteAlert();
     }
@@ -94,12 +95,12 @@ export class LeagueSelectorComponent {
 
   async saveLeague(): Promise<void> {
     try {
-      await this.storageService.addLeague(this.newLeague);
-      this.selectedLeague = this.newLeague;
-      this.leagueChanged.emit(this.selectedLeague);
-      this.newLeague = '';
+      await this.storageService.addLeague(this.newLeague());
+      this.selectedLeague.set(this.newLeague());
+      this.leagueChanged.emit(this.selectedLeague());
+      this.newLeague.set('');
       this.toastService.showToast(ToastMessages.leagueSaveSuccess, 'add');
-      this.isModalOpen = false;
+      this.isModalOpen.set(false);
     } catch (error) {
       console.error(error);
       this.toastService.showToast(ToastMessages.leagueSaveError, 'bug', true);
@@ -108,16 +109,16 @@ export class LeagueSelectorComponent {
 
   cancel(): void {
     this.leaguesToDelete = [];
-    this.isModalOpen = false;
+    this.isModalOpen.set(false);
   }
 
   async editLeague(): Promise<void> {
     try {
-      await this.storageService.editLeague(this.newLeague, this.leagueToChange);
-      this.newLeague = '';
-      this.leagueToChange = '';
+      await this.storageService.editLeague(this.newLeague(), this.leagueToChange());
+      this.newLeague.set('');
+      this.leagueToChange.set('');
       this.toastService.showToast(ToastMessages.leagueEditSuccess, 'checkmark-outline');
-      this.isModalOpen = false;
+      this.isModalOpen.set(false);
     } catch (error) {
       console.error(error);
       this.toastService.showToast(ToastMessages.leagueEditError, 'bug', true);
@@ -130,7 +131,7 @@ export class LeagueSelectorComponent {
         await this.storageService.deleteLeague(league);
       }
       this.toastService.showToast(ToastMessages.leagueDeleteSuccess, 'checkmark-outline');
-      this.isModalOpen = false;
+      this.isModalOpen.set(false);
     } catch (error) {
       console.error(error);
       this.toastService.showToast(ToastMessages.leagueDeleteError, 'bug', true);
@@ -187,8 +188,8 @@ export class LeagueSelectorComponent {
             text: 'Cancel',
             role: 'cancel',
             handler: () => {
-              this.selectedLeague = '';
-              this.leagueChanged.emit(this.selectedLeague);
+              this.selectedLeague.set('');
+              this.leagueChanged.emit(this.selectedLeague());
             },
           },
           {

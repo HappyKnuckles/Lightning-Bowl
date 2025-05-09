@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { IonItem, IonContent, IonAvatar, IonImg, IonList, IonLabel, IonHeader, IonToolbar, IonTitle } from '@ionic/angular/standalone';
 import { Ball } from 'src/app/core/models/ball.model';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
@@ -12,8 +12,8 @@ import { StorageService } from 'src/app/core/services/storage/storage.service';
   imports: [IonTitle, IonToolbar, IonHeader, IonLabel, IonList, IonImg, IonAvatar, IonItem, IonContent],
 })
 export class BallListComponent {
-  @Input() balls: Ball[] = [];
-  @Input() isCoverstock = false;
+  balls = input<Ball[]>([]);
+  isCoverstock = input<boolean>(false);
 
   constructor(public storageService: StorageService) {}
 }

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnInit, Output, ViewChild, OnDestroy } from '@angular/core';
+import { Component, OnInit, ViewChild, OnDestroy, input, ChangeDetectionStrategy, signal, output } from '@angular/core';
 import Fuse from 'fuse.js';
 import { Ball } from 'src/app/core/models/ball.model';
 import {
@@ -52,27 +52,28 @@ import { StorageService } from 'src/app/core/services/storage/storage.service';
     IonItem,
     IonList,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BallTypeaheadComponent implements OnInit, OnDestroy {
-  @Input() balls: Ball[] = [];
-  @Output() selectedBallsChange = new EventEmitter<Ball[]>();
   @ViewChild('infiniteScroll') infiniteScroll!: IonInfiniteScroll;
   @ViewChild(IonContent, { static: false }) content!: IonContent;
-  filteredBalls: Ball[] = [];
-  displayedBalls: Ball[] = [];
-  fuse!: Fuse<Ball>;
+  balls = input<Ball[]>([]);
+  selectedBallsChange = output<Ball[]>();
+  displayedBalls = signal<Ball[]>([]);
   selectedBalls: Ball[] = [];
+  private filteredBalls: Ball[] = [];
+  private fuse!: Fuse<Ball>;
   private batchSize = 100;
   public loadedCount = 0;
 
   constructor(
     public storageService: StorageService,
     private modalCtrl: ModalController,
-  ) { }
+  ) {}
 
   ngOnInit(): void {
-    this.filteredBalls = [...this.balls];
-    this.displayedBalls = this.filteredBalls.slice(0, this.batchSize);
+    this.filteredBalls = [...this.balls()];
+    this.displayedBalls.set(this.filteredBalls.slice(0, this.batchSize));
     this.loadedCount = this.batchSize;
 
     const options = {
@@ -91,13 +92,19 @@ export class BallTypeaheadComponent implements OnInit, OnDestroy {
       shouldSort: true,
       useExtendedSearch: false,
     };
-    this.fuse = new Fuse(this.balls, options);
+    this.fuse = new Fuse(this.balls(), options);
+  }
+
+  ngOnDestroy(): void {
+    if (this.selectedBalls.length > 0) {
+      this.selectedBallsChange.emit(this.selectedBalls);
+    }
   }
 
   loadData(event: InfiniteScrollCustomEvent): void {
     setTimeout(() => {
       if (this.loadedCount < this.filteredBalls.length) {
-        this.displayedBalls = this.filteredBalls.slice(0, this.loadedCount + this.batchSize);
+        this.displayedBalls.set(this.filteredBalls.slice(0, this.loadedCount + this.batchSize));
         this.loadedCount += this.batchSize;
       }
       event.target.complete();
@@ -114,11 +121,11 @@ export class BallTypeaheadComponent implements OnInit, OnDestroy {
       const result = this.fuse.search(searchTerm);
       this.filteredBalls = result.map((res) => res.item);
     } else {
-      this.filteredBalls = [...this.balls];
+      this.filteredBalls = [...this.balls()];
     }
 
     this.loadedCount = this.batchSize;
-    this.displayedBalls = this.filteredBalls.slice(0, this.batchSize);
+    this.displayedBalls.set(this.filteredBalls.slice(0, this.batchSize));
 
     this.infiniteScroll.disabled = this.loadedCount >= this.filteredBalls.length;
 
@@ -148,10 +155,5 @@ export class BallTypeaheadComponent implements OnInit, OnDestroy {
 
   isChecked(ball: Ball): boolean {
     return this.selectedBalls.includes(ball);
-  }
-  ngOnDestroy(): void {
-    if (this.selectedBalls.length > 0) {
-      this.selectedBallsChange.emit(this.selectedBalls);
-    }
   }
 }

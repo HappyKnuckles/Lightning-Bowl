@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { StatDefinition } from 'src/app/core/models/stat-definitions.model';
 import { StatRowComponent } from '../stat-list/stat-row.component';
 import { GameStats } from 'src/app/core/models/stats.model';
@@ -11,9 +11,9 @@ import { GameStats } from 'src/app/core/models/stats.model';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StatDisplayComponent {
-  @Input() statDefinitions: StatDefinition[] = [];
-  @Input() currentStats!: GameStats;
-  @Input() prevStats?: GameStats;
+  statDefinitions = input<StatDefinition[]>([]);
+  currentStats = input.required<GameStats>();
+  prevStats = input<GameStats | undefined>();
 
   getNumericStat(stats: GameStats | undefined, key: string): number | undefined {
     if (!stats) return undefined;
