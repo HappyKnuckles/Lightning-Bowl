@@ -23,7 +23,7 @@
   </ion-toolbar>
   @if (!((gameFilterService.filteredGames().length <= 0 && !loadingService.isLoading()) || gameFilterService.filteredGames().length <= 0)) {
     <ion-toolbar>
-      <ion-segment [value]="selectedSegment" (ionChange)="onSegmentChanged($event)">
+      <ion-segment [value]="selectedSegment()" (ionChange)="onSegmentChanged($event)">
         @for (segment of segments; track segment) {
           <ion-segment-button [value]="segment" [contentId]="segment">
             <ion-label class="segment-label">{{ segment }}</ion-label>

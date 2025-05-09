@@ -12,7 +12,7 @@
   </ion-text>
 
   @if (statDifference() !== "0") {
-    <ion-popover class="diff-popover" [trigger]="id">
+    <ion-popover class="diff-popover" [trigger]="id()">
       <ion-text [color]="getDiffColor(currentStat(), prevStat())">
         {{ statDifference() }}
       </ion-text>
