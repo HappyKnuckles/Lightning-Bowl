@@ -1,13 +1,13 @@
 <div class="stat-container">
   <ion-grid class="stat-grid">
     <ion-row class="stat-header stats()">
-      <ion-col [id]="'tooltip' + id">
+      <ion-col [id]="'tooltip' + id()">
         <ion-text
           >Count
           <ion-icon name="information-circle-outline"></ion-icon>
         </ion-text>
       </ion-col>
-      <ion-popover [trigger]="'tooltip' + id">
+      <ion-popover [trigger]="'tooltip' + id(id)">
         <ion-text class="tooltip">This is the pin count you left standing after your first throw.</ion-text>
       </ion-popover>
       <ion-col><ion-text>Miss</ion-text></ion-col>
@@ -59,7 +59,7 @@
         </ion-col>
         @if (stats().totalSparesMissed + stats().totalSparesConverted !== 0) {
           <ion-col [ngStyle]="{ color: getRateColor(stats().overallSpareRate) }" class="spare-rates-content">
-            <ion-text [id]="'overall' + id!" class="stat-text">
+            <ion-text [id]="'overall' + id()!" class="stat-text">
               {{ stats().overallSpareRate | number: "1.2-2" }}%
               @if (prevStats() && getArrowIcon(stats().overallSpareRate, prevStats().overallSpareRate)) {
                 <ion-icon
@@ -70,7 +70,7 @@
               }
             </ion-text>
             @if (prevStats() && calculateStatDifference(stats().overallSpareRate, prevStats().overallSpareRate) !== "0") {
-              <ion-popover class="diff-popover" [trigger]="'overall' + id!">
+              <ion-popover class="diff-popover" [trigger]="'overall' + id()!">
                 <ion-text [color]="getDiffColor(stats().overallSpareRate, prevStats().overallSpareRate)">
                   {{ calculateStatDifference(stats().overallSpareRate, prevStats().overallSpareRate) }}
                 </ion-text>
