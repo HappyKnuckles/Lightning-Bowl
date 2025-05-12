@@ -22,6 +22,7 @@ import { ThemeChangerService } from './core/services/theme-changer/theme-changer
 export class AppComponent implements OnInit, OnDestroy {
   private userNameSubscription: Subscription;
   username = '';
+  private updateInterval: any;
 
   constructor(
     private alertController: AlertController,
@@ -47,6 +48,9 @@ export class AppComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.userNameSubscription.unsubscribe();
+    if (this.updateInterval) {
+      clearInterval(this.updateInterval);
+    }
   }
 
   private initializeApp(): void {
@@ -128,6 +132,13 @@ export class AppComponent implements OnInit, OnDestroy {
         });
       }
     });
+
+    this.updateInterval = setInterval(
+      () => {
+        this.swUpdate.checkForUpdate();
+      },
+      15 * 60 * 1000,
+    );
   }
 
   private async greetUser(): Promise<void> {

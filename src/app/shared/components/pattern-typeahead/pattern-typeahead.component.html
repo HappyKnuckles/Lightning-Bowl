@@ -10,10 +10,10 @@
     </ion-buttons>
   </ion-toolbar>
   <ion-toolbar>
-    <ion-searchbar (ionInput)="searchPatterns($event)" placeholder="Search for a pattern" debounce="300"
-      showCancelButton="focus"></ion-searchbar>
+    <ion-searchbar (ionInput)="searchPatterns($event)" placeholder="Search for a pattern" debounce="300" showCancelButton="focus"></ion-searchbar>
   </ion-toolbar>
 </ion-header>
+<!-- TODO virtual scroll because prefetched data-->
 <ion-content [fullscreen]="true" role="feed">
   <ng-container *ngIf="displayedPatterns().length <= 0; else allPatterns">
     <ion-text class="no-game-text"> No patterns found! </ion-text>
@@ -21,26 +21,27 @@
   <ng-template #allPatterns>
     <ion-radio-group (ionChange)="radioGroupChange($event)" [value]="selectedPattern" allowEmptySelection="true">
       @for (pattern of displayedPatterns(); track pattern.url) {
-      <ion-item [ngClass]="{
+        <ion-item
+          [ngClass]="{
             'red-card': getRatioValue(pattern?.ratio ?? '0') >= 1 && getRatioValue(pattern?.ratio ?? '0') < 4,
             'yellow-card': getRatioValue(pattern?.ratio ?? '0') >= 4 && getRatioValue(pattern?.ratio ?? '0') < 8,
             'green-card': getRatioValue(pattern?.ratio ?? '0') >= 8,
-          }" lines="none">
-        <!-- <ion-avatar slot="start">
+          }"
+          lines="none">
+          <!-- <ion-avatar slot="start">
               <img [src]="pattern.chartImageSrcVertical" alt="">
           </ion-avatar> -->
-        <ion-radio [value]="pattern.title" justify="space-between">
-          <ion-label>
-            <p>{{pattern.category}}</p>
-            <h2> {{ pattern.title }} </h2>
-          </ion-label>
-        </ion-radio>
-      </ion-item>
+          <ion-radio [value]="pattern.title" justify="space-between">
+            <ion-label>
+              <p>{{ pattern.category }}</p>
+              <h2>{{ pattern.title }}</h2>
+            </ion-label>
+          </ion-radio>
+        </ion-item>
       }
     </ion-radio-group>
     <ion-infinite-scroll threshold="90%" (ionInfinite)="loadData($event)" #infiniteScroll>
-      <ion-infinite-scroll-content loadingSpinner="crescent" loadingText="Loading more patterns...">
-      </ion-infinite-scroll-content>
+      <ion-infinite-scroll-content loadingSpinner="crescent" loadingText="Loading more patterns..."> </ion-infinite-scroll-content>
     </ion-infinite-scroll>
   </ng-template>
 </ion-content>
