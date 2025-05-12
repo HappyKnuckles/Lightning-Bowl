@@ -75,19 +75,19 @@
 <div style="margin: 0 5px">
   <ion-list lines="full" style="border-radius: 7px">
     <ion-item>
-      <ion-checkbox [(ngModel)]="isPractice" name="isPractice" #checkbox (ionChange)="isPracticeChanged.emit(isPractice)">Practice</ion-checkbox>
+      <ion-checkbox [(ngModel)]="isPractice" name="isPractice" #checkbox (ionChange)="isPracticeChanged.emit(isPractice())">Practice</ion-checkbox>
     </ion-item>
     <!-- TODO make this reset on save-->
     <app-league-selector [isAddPage]="true" (leagueChanged)="onLeagueChanged($event)" #leagueSelector></app-league-selector>
     <ion-item id="selectPatternAdd" button>
       <ion-label>Pattern</ion-label>
-      {{ pattern }}
+      {{ pattern() }}
     </ion-item>
     <ion-modal [presentingElement]="presentingElement" trigger="selectPatternAdd">
       <ng-template>
         <app-pattern-typeahead
           [patterns]="storageService.allPatterns()"
-          [prevSelectedPattern]="pattern"
+          [prevSelectedPattern]="pattern()"
           (selectedPatternsChange)="selectPattern($event)"></app-pattern-typeahead>
       </ng-template>
     </ion-modal>

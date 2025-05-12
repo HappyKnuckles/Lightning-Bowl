@@ -1,4 +1,4 @@
-import { Component, OnInit, QueryList, ViewChildren, ViewChild, CUSTOM_ELEMENTS_SCHEMA, output } from '@angular/core';
+import { Component, OnInit, QueryList, ViewChildren, ViewChild, CUSTOM_ELEMENTS_SCHEMA, output, model } from '@angular/core';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { NgFor, NgIf } from '@angular/common';
 import {
@@ -65,11 +65,11 @@ export class GameGridComponent implements OnInit {
   isPracticeChanged = output<boolean>();
   totalScore = 0;
   maxScore = 300;
-  note = '';
-  balls: string[] = [];
-  pattern = '';
-  selectedLeague = '';
-  isPractice = true;
+  note = model<string>('');
+  balls = model<string[]>([]);
+  pattern = model<string>('');
+  selectedLeague = model<string>('');
+  isPractice = model<boolean>(true);
   frames: number[][] = Array.from({ length: 10 }, () => []);
   frameScores: number[] = [];
   presentingElement?: HTMLElement;
@@ -92,12 +92,12 @@ export class GameGridComponent implements OnInit {
   }
 
   onLeagueChanged(league: string): void {
-    this.selectedLeague = league;
-    this.leagueChanged.emit(this.selectedLeague);
+    this.selectedLeague.set(league);
+    this.leagueChanged.emit(this.selectedLeague());
   }
 
   selectPattern(pattern: string): void {
-    this.pattern = pattern;
+    this.pattern.set(pattern);
   }
 
   getFrameValue(frameIndex: number, inputIndex: number): string {
@@ -139,12 +139,12 @@ export class GameGridComponent implements OnInit {
     });
 
     if (isSave) {
-      this.note = '';
-      this.selectedLeague = '';
+      this.note.set('');
+      this.selectedLeague.set('');
       this.leagueSelector.selectedLeague.set('');
-      this.pattern = '';
-      this.isPractice = true;
-      this.balls = [];
+      this.pattern.set('');
+      this.isPractice.set(true);
+      this.balls.set([]);
     }
 
     this.updateScores();
@@ -165,7 +165,7 @@ export class GameGridComponent implements OnInit {
 
   async saveGameToLocalStorage(isSeries: boolean, seriesId: string): Promise<void> {
     try {
-      if (this.selectedLeague === 'New') {
+      if (this.selectedLeague() === 'New') {
         this.toastService.showToast(ToastMessages.selectLeague, 'bug', true);
         return;
       }
@@ -173,13 +173,13 @@ export class GameGridComponent implements OnInit {
         this.frames,
         this.frameScores,
         this.totalScore,
-        this.isPractice,
-        this.selectedLeague,
+        this.isPractice(),
+        this.selectedLeague(),
         isSeries,
         seriesId,
-        this.note,
-        this.pattern,
-        this.balls,
+        this.note(),
+        this.pattern(),
+        this.balls(),
       );
 
       await this.storageService.saveGameToLocalStorage(gameData);

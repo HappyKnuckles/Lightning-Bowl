@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, model, OnInit, ViewChild } from '@angular/core';
 import {
   IonHeader,
   IonToolbar,
@@ -77,15 +77,16 @@ import { AlertController, InputCustomEvent, SelectCustomEvent } from '@ionic/ang
     ReactiveFormsModule,
     LeagueSelectorComponent,
     SpareNamesComponent,
-    NgIf
+    NgIf,
   ],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SettingsPage implements OnInit {
+  @ViewChild('feedback') feedbackModal: IonModal | undefined;
   currentColor = computed(() => {
     const color = this.themeService.currentColor();
-    return color.charAt(0).toUpperCase() + color.slice(1)
-  })
+    return color.charAt(0).toUpperCase() + color.slice(1);
+  });
   optionsWithClasses: { name: string; class: string }[] = [
     { name: 'Blue', class: 'blue-option' },
     { name: 'Lila', class: 'lila-option' },
@@ -93,8 +94,8 @@ export class SettingsPage implements OnInit {
     { name: 'Red', class: 'red-option' },
     { name: 'Gray', class: 'gray-option' },
   ];
-  userEmail = '';
-  feedbackMessage = '';
+  userEmail = model('');
+  feedbackMessage = model('');
   updateAvailable = false;
   constructor(
     public userService: UserService,
@@ -175,15 +176,15 @@ export class SettingsPage implements OnInit {
   async submitFeedback(form: NgForm): Promise<void> {
     if (form.valid) {
       const templateParams = {
-        from_name: this.userEmail,
-        message: this.feedbackMessage,
+        from_name: this.userEmail(),
+        message: this.feedbackMessage(),
         to_name: 'Lightning Bowl',
       };
       this.loadingService.setLoading(true);
       try {
         await emailjs.send(environment.emailServiceID, environment.emailTemplateID, templateParams, environment.emailUserID);
-        this.userEmail = '';
-        this.feedbackMessage = '';
+        this.userEmail.set('');
+        this.feedbackMessage.set('');
         this.toastService.showToast(ToastMessages.feedbackUploadSuccess, 'checkmark-outline');
         form.resetForm();
       } catch (error) {
@@ -191,6 +192,7 @@ export class SettingsPage implements OnInit {
         this.toastService.showToast(ToastMessages.feedbackUploadError, 'bug-outline', true);
       } finally {
         this.loadingService.setLoading(false);
+        this.feedbackModal?.dismiss();
       }
     } else {
       alert('Please fill out all fields correctly.');

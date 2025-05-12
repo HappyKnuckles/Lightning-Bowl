@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, OnInit, QueryList, signal, ViewChild, ViewChildren } from '@angular/core';
+import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, model, OnInit, QueryList, signal, ViewChild, ViewChildren } from '@angular/core';
 import {
   ActionSheetController,
   AlertController,
@@ -100,7 +100,7 @@ export class AddGamePage implements OnInit {
   isAlertOpen = signal(false);
   isModalOpen = signal(false);
   is300 = signal(false);
-  gameData = signal<Game>({
+  gameData = model<Game>({
     gameId: '',
     date: 0,
     frames: undefined,
@@ -196,8 +196,8 @@ export class AddGamePage implements OnInit {
     } else {
       this.gameGrids.forEach((trackGrid: GameGridComponent) => {
         trackGrid.leagueSelector.selectedLeague.set(league);
-        trackGrid.selectedLeague = league;
-        trackGrid.isPractice = isPractice;
+        trackGrid.selectedLeague.set(league);
+        trackGrid.isPractice.set(isPractice);
         trackGrid.checkbox.checked = isPractice;
         trackGrid.checkbox.disabled = !isPractice;
       });
@@ -206,7 +206,7 @@ export class AddGamePage implements OnInit {
 
   onIsPracticeChange(isPractice: boolean): void {
     this.gameGrids.forEach((trackGrid: GameGridComponent) => {
-      trackGrid.isPractice = isPractice;
+      trackGrid.isPractice.set(isPractice);
     });
   }
 
@@ -344,11 +344,11 @@ export class AddGamePage implements OnInit {
     const captureGameData = () =>
       this.gameGrids.map((gameGrid: GameGridComponent) => ({
         frames: gameGrid.frames,
-        league: gameGrid.selectedLeague,
-        note: gameGrid.note,
-        balls: gameGrid.balls,
-        pattern: gameGrid.pattern,
-        isPractice: gameGrid.isPractice,
+        league: gameGrid.selectedLeague(),
+        note: gameGrid.note(),
+        balls: gameGrid.balls(),
+        pattern: gameGrid.pattern(),
+        isPractice: gameGrid.isPractice(),
       }));
 
     actionSheet.onWillDismiss().then(() => {
@@ -361,10 +361,10 @@ export class AddGamePage implements OnInit {
         const data = gameData[index];
         if (!data) return;
         gameGrid.frames = data.frames;
-        gameGrid.note = data.note!;
-        gameGrid.balls = data.balls!;
-        gameGrid.isPractice = data.isPractice!;
-        gameGrid.pattern = data.pattern!;
+        gameGrid.note.set(data.note!);
+        gameGrid.balls.set(data.balls!);
+        gameGrid.isPractice.set(data.isPractice!);
+        gameGrid.pattern.set(data.pattern!);
         gameGrid.onLeagueChanged(data.league!);
         gameGrid.updateScores();
       });

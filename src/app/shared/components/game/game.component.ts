@@ -1,5 +1,17 @@
 import { NgIf, NgFor, NgClass, DatePipe } from '@angular/common';
-import { Component, Renderer2, ViewChild, OnChanges, SimpleChanges, computed, OnInit, input, signal, ChangeDetectionStrategy } from '@angular/core';
+import {
+  Component,
+  Renderer2,
+  ViewChild,
+  OnChanges,
+  SimpleChanges,
+  computed,
+  OnInit,
+  input,
+  signal,
+  ChangeDetectionStrategy,
+  model,
+} from '@angular/core';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { ImpactStyle } from '@capacitor/haptics';
@@ -141,7 +153,7 @@ export class GameComponent implements OnChanges, OnInit {
   //   return uniqueCombinedLeagues.filter(league => savedSelection[league] === true);
   // });
   isEditMode = signal<Record<string, boolean>>({});
-  showingGames = signal<Game[]>([]);
+  showingGames = model<Game[]>([]);
   presentingElement?: HTMLElement;
   private sortedGames: Game[] = [];
   private batchSize = 100;
