@@ -195,7 +195,7 @@ export class LeagueSelectorComponent {
           {
             text: 'Add',
             handler: async (data) => {
-              this.newLeague = data.league;
+              this.newLeague.set(data.league);
               await this.saveLeague();
             },
           },

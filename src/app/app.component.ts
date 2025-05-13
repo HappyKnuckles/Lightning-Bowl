@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
 import { AlertController, IonApp, IonBackdrop, IonSpinner, IonRouterOutlet } from '@ionic/angular/standalone';
 import { NgIf } from '@angular/common';
 import { SwUpdate } from '@angular/service-worker';
@@ -17,9 +17,10 @@ import { ThemeChangerService } from './core/services/theme-changer/theme-changer
   styleUrls: ['app.component.scss'],
   standalone: true,
   imports: [IonApp, NgIf, IonBackdrop, IonSpinner, IonRouterOutlet, ToastComponent],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit, OnDestroy {
+  private updateInterval!: NodeJS.Timeout;
 
   constructor(
     private alertController: AlertController,
@@ -38,6 +39,12 @@ export class AppComponent implements OnInit {
 
   async ngOnInit(): Promise<void> {
     this.greetUser();
+  }
+
+  ngOnDestroy(): void {
+    if (this.updateInterval) {
+      clearInterval(this.updateInterval);
+    }
   }
 
   private initializeApp(): void {
@@ -119,6 +126,13 @@ export class AppComponent implements OnInit {
         });
       }
     });
+
+    this.updateInterval = setInterval(
+      () => {
+        this.swUpdate.checkForUpdate();
+      },
+      15 * 60 * 1000,
+    );
   }
 
   private async greetUser(): Promise<void> {

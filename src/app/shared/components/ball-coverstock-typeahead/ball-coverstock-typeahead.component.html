@@ -16,6 +16,8 @@
       showCancelButton="focus"></ion-searchbar>
   </ion-toolbar>
 </ion-header>
+<!-- TODO virtual scroll because prefetched data-->
+
 <ion-content [fullscreen]="true" role="feed">
   <ion-list>
     @for (coverstock of displayedCoverstocks(); track coverstock.coverstock_name) {
