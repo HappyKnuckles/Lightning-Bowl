@@ -54,6 +54,7 @@ import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { UtilsService } from 'src/app/core/services/utils/utils.service';
 import { PatternTypeaheadComponent } from '../pattern-typeahead/pattern-typeahead.component';
 import { LongPressDirective } from 'src/app/core/directives/long-press/long-press.directive';
+import { GameGridComponent } from '../game-grid/game-grid.component';
 
 @Component({
   selector: 'app-game',
@@ -99,6 +100,7 @@ import { LongPressDirective } from 'src/app/core/directives/long-press/long-pres
     PatternTypeaheadComponent,
     LongPressDirective,
     DatePipe,
+    GameGridComponent,
   ],
   standalone: true,
 })
@@ -107,6 +109,8 @@ export class GameComponent implements OnChanges, OnInit {
   @Input() isLeaguePage?: boolean = false;
   @Input() gameCount?: number;
   @ViewChild('accordionGroup') accordionGroup!: IonAccordionGroup;
+  @ViewChild(GameGridComponent) gameGrid!: GameGridComponent;
+
   leagues = computed(() => {
     const savedLeagues = this.storageService.leagues();
     const leagueKeys = this.games.reduce((acc: string[], game: Game) => {
@@ -142,7 +146,6 @@ export class GameComponent implements OnChanges, OnInit {
   sortedGames: Game[] = [];
   showingGames: Game[] = [];
   presentingElement?: HTMLElement;
-
   private batchSize = 100;
   public loadedCount = 0;
   isEditMode: Record<string, boolean> = {};
@@ -271,17 +274,14 @@ export class GameComponent implements OnChanges, OnInit {
 
   async saveEdit(game: Game): Promise<void> {
     try {
-      if (!this.isGameValid(game)) {
+      if (!this.isGameValid(this.gameGrid.game())) {
         this.hapticService.vibrate(ImpactStyle.Heavy);
         this.toastService.showToast(ToastMessages.invalidInput, 'bug', true);
         return;
       }
-
-      const gameCopy = structuredClone(game);
-      gameCopy.frames.forEach((f: any) => delete f.isInvalid);
-      gameCopy.isPractice = !gameCopy.league;
-      gameCopy.totalScore = gameCopy.frameScores[9];
-      await this.storageService.saveGameToLocalStorage(gameCopy);
+      this.gameGrid.game().frames.forEach((f: any) => delete f.isInvalid);
+      this.gameGrid.game().isPractice = !this.gameGrid.game().league;
+      await this.gameGrid.saveGameToLocalStorage(game.isSeries!, game.seriesId!);
 
       this.toastService.showToast(ToastMessages.gameUpdateSuccess, 'refresh-outline');
 

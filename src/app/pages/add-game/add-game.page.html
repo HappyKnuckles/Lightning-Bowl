@@ -111,119 +111,17 @@
         </ion-buttons>
         <ion-title>Your game</ion-title>
         <ion-buttons slot="end">
-          <ion-button (click)="confirm()" [strong]="true" [disabled]="!isGameValid(gameData)">Save</ion-button>
+          <ion-button (click)="confirm()" [strong]="true" [disabled]="!isGameValid(modalGrid.game())">Save</ion-button>
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
     <ion-content>
       <h2 class="ion-text-center">Edit wrong game data</h2>
-      <div class="grid-container">
-        <ion-grid fixed="true" *ngFor="let frame of gameData.frames; let frameIndex = index">
-          <ion-row>
-            <ion-col class="middle frame">{{ frameIndex + 1 }}</ion-col>
-          </ion-row>
-          <ion-row>
-            <ion-col class="input-col" *ngIf="frameIndex !== 9"></ion-col>
-            <ion-col class="input-col">
-              <ion-input
-                type="text"
-                clearOnEdit="true"
-                [value]="frame.throws[0]?.value"
-                inputmode="numeric"
-                debounce="300"
-                [ngClass]="{ 'invalid-input': frame.isInvalid }"
-                (ionChange)="frame.throws[0] = frame.throws[0] || {}; frame.throws[0].value = $event.target.value; isGameValid(gameData)"></ion-input>
-            </ion-col>
-            <ion-col class="input-col" *ngIf="frameIndex !== 9">
-              <ion-input
-                type="text"
-                clearOnEdit="true"
-                [value]="frame.throws[1]?.value"
-                inputmode="numeric"
-                debounce="300"
-                [ngClass]="{ 'invalid-input': frame.isInvalid }"
-                (ionChange)="frame.throws[1] = frame.throws[1] || {}; frame.throws[1].value = $event.target.value; isGameValid(gameData)"></ion-input>
-            </ion-col>
-            <ion-col class="input-col" *ngIf="frameIndex === 9">
-              <ion-input
-                type="text"
-                clearOnEdit="true"
-                [value]="frame.throws[1]?.value"
-                inputmode="numeric"
-                debounce="300"
-                [ngClass]="{ 'invalid-input': frame.isInvalid }"
-                (ionChange)="frame.throws[1] = frame.throws[1] || {}; frame.throws[1].value = $event.target.value; isGameValid(gameData)"></ion-input>
-            </ion-col>
-            <ion-col class="input-col" *ngIf="frameIndex === 9">
-              <ion-input
-                type="text"
-                clearOnEdit="true"
-                [value]="frame.throws[2]?.value"
-                inputmode="numeric"
-                debounce="300"
-                [ngClass]="{ 'invalid-input': frame.isInvalid }"
-                (ionChange)="frame.throws[2] = frame.throws[2] || {}; frame.throws[2].value = $event.target.value; isGameValid(gameData)"></ion-input>
-            </ion-col>
-          </ion-row>
-          <ion-row>
-            <ion-col class="middle count">
-              <ion-input
-                type="text"
-                class="frame-scores"
-                [value]="gameData.frameScores[frameIndex]"
-                inputmode="numeric"
-                clearOnEdit="true"
-                (ionChange)="updateFrameScore($event, frameIndex)">
-              </ion-input>
-            </ion-col>
-          </ion-row>
-        </ion-grid>
-      </div>
-      <ion-list lines="full" style="border-radius: 7px">
-        <ion-item>
-          <ion-checkbox
-            #modalCheckbox
-            [(ngModel)]="gameData.isPractice"
-            [checked]="gameData.isPractice"
-            (ionChange)="gameData.isPractice = $event.target.checked"
-            name="isPractice"
-            >Practice</ion-checkbox
-          >
-        </ion-item>
-        <app-league-selector [isAddPage]="true" (leagueChanged)="onLeagueChange($event, true)" #leagueSelector></app-league-selector>
-        <ion-item class="pattern" button id="selectPatternFoto">
-          <ion-label>Pattern</ion-label>
-          {{ gameData.pattern }}
-        </ion-item>
-        <ion-modal [presentingElement]="presentingElement" trigger="selectPatternFoto">
-          <ng-template>
-            <app-pattern-typeahead
-              [patterns]="storageService.allPatterns()"
-              [prevSelectedPattern]="gameData.pattern"
-              (selectedPatternsChange)="gameData.pattern = $event"></app-pattern-typeahead>
-          </ng-template>
-        </ion-modal>
-        <ion-item>
-          <ion-select
-            [(ngModel)]="gameData.balls"
-            multiple="true"
-            name="balls"
-            placeholder="None"
-            label="Balls"
-            (ionChange)="gameData.balls = $event.target.value">
-            <ion-select-option *ngFor="let ball of storageService.arsenal()" [value]="ball.ball_name"> {{ ball.ball_name }} </ion-select-option>
-          </ion-select>
-        </ion-item>
-        <ion-item>
-          <ion-textarea
-            type="text"
-            label="Note"
-            (ionChange)="gameData.note = $event.target.value || ''"
-            name="note"
-            [autoGrow]="true"
-            placeholder="today knee pain, lanes dry af"></ion-textarea>
-        </ion-item>
-      </ion-list>
+      <app-game-grid
+        #modalGrid
+        (leagueChanged)="onLeagueChange($event)"
+        (isPracticeChanged)="onIsPracticeChange($event)"
+        [game]="gameData"></app-game-grid>
     </ion-content>
   </ng-template>
 </ion-modal>

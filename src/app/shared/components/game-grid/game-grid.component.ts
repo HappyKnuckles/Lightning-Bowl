@@ -1,4 +1,4 @@
-import { Component, OnInit, EventEmitter, Output, QueryList, ViewChildren, ViewChild, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { Component, OnInit, EventEmitter, Output, QueryList, ViewChildren, ViewChild, CUSTOM_ELEMENTS_SCHEMA, input } from '@angular/core';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { NgFor, NgIf } from '@angular/common';
 import {
@@ -26,6 +26,7 @@ import { InputCustomEvent } from '@ionic/angular';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { UtilsService } from 'src/app/core/services/utils/utils.service';
 import { PatternTypeaheadComponent } from '../pattern-typeahead/pattern-typeahead.component';
+import { Game } from 'src/app/core/models/game.model';
 
 @Component({
   selector: 'app-game-grid',
@@ -62,16 +63,22 @@ export class GameGridComponent implements OnInit {
   @ViewChildren(IonInput) inputs!: QueryList<IonInput>;
   @ViewChild('leagueSelector') leagueSelector!: LeagueSelectorComponent;
   @ViewChild('checkbox') checkbox!: IonCheckbox;
-
-  totalScore = 0;
+  showMetadata = input<boolean>(true);
+  game = input<Game>({
+    frames: [],
+    totalScore: 0,
+    note: '',
+    balls: [],
+    pattern: '',
+    league: '',
+    isPractice: true,
+    gameId: '',
+    date: 0,
+    frameScores: [],
+    isClean: false,
+    isPerfect: false,
+  });
   maxScore = 300;
-  note = '';
-  balls: string[] = [];
-  pattern = '';
-  selectedLeague = '';
-  isPractice = true;
-  frames: number[][] = Array.from({ length: 10 }, () => []);
-  frameScores: number[] = [];
   presentingElement?: HTMLElement;
 
   constructor(
@@ -85,32 +92,44 @@ export class GameGridComponent implements OnInit {
   ) {}
 
   async ngOnInit(): Promise<void> {
-    this.updateScores();
-    this.maxScoreChanged.emit(this.maxScore);
-    this.totalScoreChanged.emit(this.totalScore);
+    const currentGame = this.game();
+    if (this.game().date != 0) {
+      const newFrames: number[][] = [];
+      for (let i = 0; i < 10; i++) {
+        const frameData = currentGame.frames[i];
+
+        if (frameData && Array.isArray(frameData.throws)) {
+          newFrames.push(frameData.throws.map((t: any) => t.value));
+        } else {
+          newFrames.push([]);
+        }
+      }
+      this.game().frames = newFrames;
+    } else {
+      this.game().frames = Array.from({ length: 10 }, () => []);
+    }
     this.presentingElement = document.querySelector('.ion-page')!;
   }
 
   onLeagueChanged(league: string): void {
-    this.selectedLeague = league;
-    this.leagueChanged.emit(this.selectedLeague);
+    this.leagueChanged.emit(league);
   }
 
   selectPattern(pattern: string): void {
-    this.pattern = pattern;
+    this.game().pattern = pattern;
   }
 
   getFrameValue(frameIndex: number, inputIndex: number): string {
-    const val = this.frames[frameIndex][inputIndex];
+    const val = this.game().frames[frameIndex][inputIndex];
     return val !== undefined ? val.toString() : '';
   }
 
   simulateScore(event: InputCustomEvent, frameIndex: number, inputIndex: number): void {
     const inputValue = event.detail.value!;
-    const parsedValue = this.gameUtilsService.parseInputValue(inputValue, frameIndex, inputIndex, this.frames);
+    const parsedValue = this.gameUtilsService.parseInputValue(inputValue, frameIndex, inputIndex, this.game().frames);
 
     if (inputValue.length === 0) {
-      this.frames[frameIndex].splice(inputIndex, 1);
+      this.game().frames[frameIndex].splice(inputIndex, 1);
       this.updateScores();
       return;
     }
@@ -118,20 +137,20 @@ export class GameGridComponent implements OnInit {
       this.handleInvalidInput(event);
       return;
     }
-    if (!this.gameUtilsService.isValidFrameScore(parsedValue, frameIndex, inputIndex, this.frames)) {
+    if (!this.gameUtilsService.isValidFrameScore(parsedValue, frameIndex, inputIndex, this.game().frames)) {
       this.handleInvalidInput(event);
       return;
     }
 
-    this.frames[frameIndex][inputIndex] = parsedValue;
+    this.game().frames[frameIndex][inputIndex] = parsedValue;
     this.updateScores();
     this.focusNextInput(frameIndex, inputIndex);
   }
 
   clearFrames(isSave: boolean): void {
-    this.frames = Array.from({ length: 10 }, () => []);
-    this.frameScores = [];
-    this.totalScore = 0;
+    this.game().frames = Array.from({ length: 10 }, () => []);
+    this.game().frameScores = [];
+    this.game().totalScore = 0;
     this.maxScore = 300;
 
     this.inputs.forEach((input) => {
@@ -139,47 +158,47 @@ export class GameGridComponent implements OnInit {
     });
 
     if (isSave) {
-      this.note = '';
-      this.selectedLeague = '';
+      this.game().note = '';
+      this.game().league = '';
       this.leagueSelector.selectedLeague = '';
-      this.pattern = '';
-      this.isPractice = true;
-      this.balls = [];
+      this.game().pattern = '';
+      this.game().isPractice = true;
+      this.game().balls = [];
     }
 
     this.updateScores();
     this.maxScoreChanged.emit(this.maxScore);
-    this.totalScoreChanged.emit(this.totalScore);
   }
 
   updateScores(): void {
-    const scoreResult = this.gameScoreCalculatorService.calculateScore(this.frames);
-    this.totalScore = scoreResult.totalScore;
-    this.frameScores = scoreResult.frameScores;
+    const scoreResult = this.gameScoreCalculatorService.calculateScore(this.game().frames);
+    this.game().totalScore = scoreResult.totalScore;
+    this.game().frameScores = scoreResult.frameScores;
 
-    this.maxScore = this.gameScoreCalculatorService.calculateMaxScore(this.frames, this.totalScore);
+    this.maxScore = this.gameScoreCalculatorService.calculateMaxScore(this.game().frames, this.game().totalScore);
 
     this.maxScoreChanged.emit(this.maxScore);
-    this.totalScoreChanged.emit(this.totalScore);
   }
 
   async saveGameToLocalStorage(isSeries: boolean, seriesId: string): Promise<void> {
     try {
-      if (this.selectedLeague === 'New') {
+      if (this.game().league === 'New') {
         this.toastService.showToast(ToastMessages.selectLeague, 'bug', true);
         return;
       }
       const gameData = this.transformGameService.transformGameData(
-        this.frames,
-        this.frameScores,
-        this.totalScore,
-        this.isPractice,
-        this.selectedLeague,
+        this.game().frames,
+        this.game().frameScores,
+        this.game().totalScore,
+        this.game().isPractice,
+        this.game().league,
         isSeries,
         seriesId,
-        this.note,
-        this.pattern,
-        this.balls,
+        this.game().note,
+        this.game().pattern,
+        this.game().balls,
+        this.game().gameId,
+        this.game().date,
       );
 
       await this.storageService.saveGameToLocalStorage(gameData);
@@ -190,7 +209,7 @@ export class GameGridComponent implements OnInit {
   }
 
   isGameValid(): boolean {
-    return this.gameUtilsService.isGameValid(undefined, this.frames);
+    return this.gameUtilsService.isGameValid(undefined, this.game().frames);
   }
 
   isNumber(value: unknown): boolean {

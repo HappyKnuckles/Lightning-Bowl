@@ -29,7 +29,11 @@
           </ion-item-option>
         </ion-item-options>
 
-        <ion-item [lines]="$last ? 'none' : ''" (longPressed)="saveOriginalStateAndEnableEdit(game); slidingItem.closeOpened()" [delay]="1000" appLongPress>
+        <ion-item
+          [lines]="$last ? 'none' : ''"
+          (longPressed)="saveOriginalStateAndEnableEdit(game); slidingItem.closeOpened()"
+          [delay]="1000"
+          appLongPress>
           <ion-accordion #accordionRef [value]="game.gameId" [id]="game.gameId">
             <ion-item slot="header" lines="none" class="expansion-header">
               <ion-label class="game-info">
@@ -146,12 +150,12 @@
                     <ion-select-option *ngFor="let league of leagues()" [value]="league">{{ league }}</ion-select-option>
                   </ion-select>
                 </ion-item>
-                <ion-item class="pattern" button id="selectPatternHistory">
+                <ion-item class="pattern" button [id]="'selectPatternHistory' + $index">
                   <ion-icon src="assets/svg/lane.svg" slot="start"></ion-icon>
                   <ion-label>Pattern</ion-label>
                   {{ game.pattern }}
                 </ion-item>
-                <ion-modal [presentingElement]="presentingElement" trigger="selectPatternHistory">
+                <ion-modal [presentingElement]="presentingElement" [trigger]="'selectPatternHistory' + $index">
                   <ng-template>
                     <app-pattern-typeahead
                       [patterns]="storageService.allPatterns()"
@@ -171,79 +175,10 @@
                   <ion-icon name="document-text-outline" slot="start"> </ion-icon>
                   <ion-textarea type="text" [(ngModel)]="game.note" [autoGrow]="true"></ion-textarea>
                 </ion-item>
-                <div class="grid-container">
-                  <ion-grid fixed="true" *ngFor="let frame of game.frames; let frameIndex = index">
-                    <ion-row>
-                      <ion-col class="middle frame">{{ frameIndex + 1 }}</ion-col>
-                    </ion-row>
-                    <ion-row>
-                      <ion-col class="input-col" *ngIf="frameIndex !== 9"></ion-col>
-                      <ion-col class="input-col">
-                        <ion-input
-                          type="number"
-                          clearOnEdit="true"
-                          [value]="frame.throws[0]?.value"
-                          [ngClass]="{ 'invalid-input': frame.isInvalid }"
-                          inputmode="numeric"
-                          debounce="300"
-                          (ionInput)="
-                            frame.throws[0] = frame.throws[0] || {}; frame.throws[0].value = parseIntValue($event.target.value); isGameValid(game)
-                          "></ion-input>
-                      </ion-col>
-                      <ion-col class="input-col" *ngIf="frameIndex !== 9">
-                        <ion-input
-                          type="number"
-                          clearOnEdit="true"
-                          [value]="frame.throws[1]?.value"
-                          [ngClass]="{ 'invalid-input': frame.isInvalid }"
-                          inputmode="numeric"
-                          debounce="300"
-                          (ionInput)="
-                            frame.throws[1] = frame.throws[1] || {}; frame.throws[1].value = parseIntValue($event.target.value); isGameValid(game)
-                          "></ion-input>
-                      </ion-col>
-                      <ion-col class="input-col" *ngIf="frameIndex === 9">
-                        <ion-input
-                          type="number"
-                          clearOnEdit="true"
-                          [value]="frame.throws[1]?.value"
-                          [ngClass]="{ 'invalid-input': frame.isInvalid }"
-                          inputmode="numeric"
-                          debounce="300"
-                          (ionInput)="
-                            frame.throws[1] = frame.throws[1] || {}; frame.throws[1].value = parseIntValue($event.target.value); isGameValid(game)
-                          "></ion-input>
-                      </ion-col>
-                      <ion-col class="input-col" *ngIf="frameIndex === 9">
-                        <ion-input
-                          type="number"
-                          clearOnEdit="true"
-                          [value]="frame.throws[2]?.value"
-                          [ngClass]="{ 'invalid-input': frame.isInvalid }"
-                          inputmode="numeric"
-                          debounce="300"
-                          (ionInput)="
-                            frame.throws[2] = frame.throws[2] || {}; frame.throws[2].value = parseIntValue($event.target.value); isGameValid(game)
-                          "></ion-input>
-                      </ion-col>
-                    </ion-row>
-                    <ion-row>
-                      <ion-col class="middle count">
-                        <ion-input
-                          type="text"
-                          class="frame-scores-edit"
-                          [value]="game.frameScores[frameIndex]"
-                          inputmode="numeric"
-                          clearOnEdit="true"
-                          (ionChange)="game.frameScores[frameIndex] = parseIntValue($event.target.value)">
-                        </ion-input>
-                      </ion-col>
-                    </ion-row>
-                  </ion-grid>
-                </div>
+                <app-game-grid [game]="game" [showMetadata]="false"></app-game-grid>
                 <div class="action-row">
                   <ion-button class="left-button" (click)="cancelEdit(game)">Cancel</ion-button>
-                  <ion-button class="right-button" (click)="saveEdit(game)">Save</ion-button>
+                  <ion-button class="right-button" [disabled]="!isGameValid(game)" (click)="saveEdit(game)">Save</ion-button>
                 </div>
               }
             </div>
