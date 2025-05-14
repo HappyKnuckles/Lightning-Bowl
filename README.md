@@ -2,6 +2,10 @@
 
 Lightning Bowl is a free app designed for bowlers of all skill levels, from beginners to pros. It helps track your games and statistics with ease, offering a clean and intuitive interface across four main tabs.
 
+## Disclaimer
+
+This project is provided under a custom license. You are welcome to fork this repository for personal use. Please see the [LICENSE](LICENSE) file for full details.
+
 ## Features
 
 ### Add Games
