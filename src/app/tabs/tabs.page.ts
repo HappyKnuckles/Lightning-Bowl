@@ -31,7 +31,7 @@ export class TabsPage {
     addIcons({ add, statsChartOutline, receipt, medalOutline, ellipsisHorizontal, bowlingBallOutline, bagAddOutline, settingsOutline });
 
     this.router.events.pipe(filter((event) => event instanceof NavigationEnd)).subscribe(() => {
-      this.activeMoreTab$.next(this.moreTabs.includes(this.router.url));
+      this.activeMoreTab$.next(this.moreTabs.some((tab) => this.router.url.includes(tab)));
     });
   }
 

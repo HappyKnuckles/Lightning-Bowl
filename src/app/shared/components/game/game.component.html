@@ -29,7 +29,11 @@
           </ion-item-option>
         </ion-item-options>
 
-        <ion-item [lines]="$last ? 'none' : ''" (longPressed)="saveOriginalStateAndEnableEdit(game); slidingItem.closeOpened()" [delay]="1000" appLongPress>
+        <ion-item
+          [lines]="$last ? 'none' : ''"
+          (longPressed)="saveOriginalStateAndEnableEdit(game); slidingItem.closeOpened()"
+          [delay]="1000"
+          appLongPress>
           <ion-accordion #accordionRef [value]="game.gameId" [id]="game.gameId">
             <ion-item slot="header" lines="none" class="expansion-header">
               <ion-label class="game-info">
@@ -50,7 +54,7 @@
                   </ion-item>
                 } -->
                 @if (game.balls && game.balls.length > 0) {
-                  <ion-item class="arsenal" [lines]="game.note ? '' : 'none'">
+                  <ion-item class="arsenal" [lines]="game.note ? '' : 'none'" button (click)="navigateToBallsPage(game.balls)">
                     <ion-icon name="bowling-ball-outline" slot="start"></ion-icon>
                     <ion-text>{{ game.balls.join(", ") }}</ion-text>
                   </ion-item>

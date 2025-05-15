@@ -54,6 +54,7 @@ import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { UtilsService } from 'src/app/core/services/utils/utils.service';
 import { PatternTypeaheadComponent } from '../pattern-typeahead/pattern-typeahead.component';
 import { LongPressDirective } from 'src/app/core/directives/long-press/long-press.directive';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-game',
@@ -160,6 +161,8 @@ export class GameComponent implements OnChanges, OnInit {
     private renderer: Renderer2,
     private gameUtilsService: GameUtilsService,
     private utilsService: UtilsService,
+    private router: Router,
+    private modalCtrl: ModalController,
   ) {
     addIcons({
       trashOutline,
@@ -321,6 +324,14 @@ export class GameComponent implements OnChanges, OnInit {
         }
       }
     });
+  }
+
+  navigateToBallsPage(balls: string[]): void {
+    const searchQuery = balls.join(', ');
+    if (this.isLeaguePage) {
+      this.modalCtrl.dismiss();
+    }
+    this.router.navigate(['tabs/balls'], { queryParams: { search: searchQuery } });
   }
 
   isDelayedOpen(gameId: string): boolean {
