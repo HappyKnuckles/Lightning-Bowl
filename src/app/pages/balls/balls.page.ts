@@ -43,6 +43,7 @@ import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { BallFilterActiveComponent } from 'src/app/shared/components/ball-filter-active/ball-filter-active.component';
 import { BallFilterComponent } from 'src/app/shared/components/ball-filter/ball-filter.component';
 import { BallListComponent } from 'src/app/shared/components/ball-list/ball-list.component';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-balls',
@@ -119,15 +120,26 @@ export class BallsPage implements OnInit {
         shouldSort: true,
         useExtendedSearch: false,
       };
+
       const baseArray = this.isFilterActive() ? this.ballFilterService.filteredBalls() : this.storageService.allBalls();
+
       const fuseInstance = new Fuse(baseArray, options);
-      result = fuseInstance.search(this.searchTerm).map((result) => result.item);
+
+      // Split the search term by commas and trim each term
+      const searchTerms = this.searchTerm.split(',').map((term) => term.trim());
+
+      // Collect results for each search term
+      const searchResults = searchTerms.flatMap((term) => fuseInstance.search(term).map((result) => result.item));
+
+      // Remove duplicates
+      result = Array.from(new Set(searchResults));
     } else {
       result = this.isFilterActive() ? this.ballFilterService.filteredBalls() : this.balls;
       if (this.isFilterActive()) {
         result = result.slice(0, this.filterDisplayCount);
       }
     }
+
     return result.slice().sort((a, b) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime());
   }
 
@@ -139,6 +151,7 @@ export class BallsPage implements OnInit {
     private hapticService: HapticService,
     private ballService: BallService,
     public ballFilterService: BallFilterService,
+    private route: ActivatedRoute,
   ) {
     addIcons({ filterOutline, closeCircle, globeOutline, openOutline, addOutline, camera });
     this.searchSubject.subscribe((query) => {
@@ -147,6 +160,11 @@ export class BallsPage implements OnInit {
         setTimeout(() => {
           this.content.scrollToTop(300);
         }, 300);
+      }
+    });
+    this.route.queryParams.subscribe((params) => {
+      if (params['search']) {
+        this.searchTerm = params['search'];
       }
     });
   }
