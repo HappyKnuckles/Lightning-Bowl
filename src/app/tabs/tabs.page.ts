@@ -36,6 +36,6 @@ export class TabsPage {
   }
 
   isActive(path: string): boolean {
-    return this.router.url === path;
+    return this.router.url.includes(path);
   }
 }
