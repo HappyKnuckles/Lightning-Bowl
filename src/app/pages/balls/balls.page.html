@@ -16,7 +16,7 @@
   </ion-toolbar>
   <ion-toolbar>
     <ion-searchbar
-      [value]="searchTerm"
+      [value]="searchTerm()"
       (ionInput)="searchBalls($event)"
       placeholder="Search for a ball"
       showCancelButton="focus"

@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -34,7 +34,7 @@ import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import Fuse from 'fuse.js';
-import { Subject } from 'rxjs';
+import { distinctUntilChanged, Subject } from 'rxjs';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { ImpactStyle } from '@capacitor/haptics';
 import { BallService } from 'src/app/core/services/ball/ball.service';
@@ -80,17 +80,17 @@ import { ActivatedRoute } from '@angular/router';
     BallListComponent,
     BallFilterActiveComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BallsPage implements OnInit {
   @ViewChild('core', { static: false }) coreModal!: IonModal;
   @ViewChild('coverstock', { static: false }) coverstockModal!: IonModal;
   @ViewChild(IonContent, { static: false }) content!: IonContent;
-
-  balls: Ball[] = [];
+  balls = signal<Ball[]>([]);
   coreBalls: Ball[] = [];
   coverstockBalls: Ball[] = [];
   searchSubject = new Subject<string>();
-  searchTerm = '';
+  searchTerm = signal('');
   currentPage = 0;
   componentLoading = false;
   hasMoreData = true;
@@ -102,7 +102,7 @@ export class BallsPage implements OnInit {
   // • Otherwise, we display the paged API-loaded balls.
   get displayedBalls(): Ball[] {
     let result: Ball[];
-    if (this.searchTerm.trim() !== '') {
+    if (this.searchTerm().trim() !== '') {
       this.hasMoreData = false;
       const options = {
         keys: [
@@ -112,11 +112,11 @@ export class BallsPage implements OnInit {
           { name: 'coverstock_name', weight: 0.7 },
           { name: 'factory_finish', weight: 0.5 },
         ],
-        threshold: 0.3,
+        threshold: 0.2,
         ignoreLocation: true,
         minMatchCharLength: 3,
-        includeMatches: true,
-        includeScore: true,
+        includeMatches: false,
+        includeScore: false,
         shouldSort: true,
         useExtendedSearch: false,
       };
@@ -126,21 +126,21 @@ export class BallsPage implements OnInit {
       const fuseInstance = new Fuse(baseArray, options);
 
       // Split the search term by commas and trim each term
-      const searchTerms = this.searchTerm.split(',').map((term) => term.trim());
+      const searchTerms = this.searchTerm()
+        .split(',')
+        .map((term) => term.trim());
 
       // Collect results for each search term
-      const searchResults = searchTerms.flatMap((term) => fuseInstance.search(term).map((result) => result.item));
-
-      // Remove duplicates
-      result = Array.from(new Set(searchResults));
+      result = searchTerms.flatMap((term) => fuseInstance.search(term).map((result) => result.item));
     } else {
-      result = this.isFilterActive() ? this.ballFilterService.filteredBalls() : this.balls;
+      result = this.isFilterActive() ? this.ballFilterService.filteredBalls() : this.balls();
       if (this.isFilterActive()) {
         result = result.slice(0, this.filterDisplayCount);
       }
+      this.hasMoreData = true;
     }
 
-    return result.slice().sort((a, b) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime());
+    return result;
   }
 
   constructor(
@@ -154,17 +154,17 @@ export class BallsPage implements OnInit {
     private route: ActivatedRoute,
   ) {
     addIcons({ filterOutline, closeCircle, globeOutline, openOutline, addOutline, camera });
-    this.searchSubject.subscribe((query) => {
-      this.searchTerm = query;
+    this.searchSubject.pipe(distinctUntilChanged()).subscribe((query) => {
+      this.searchTerm.set(query);
       if (this.content) {
         setTimeout(() => {
           this.content.scrollToTop(300);
         }, 300);
       }
     });
-    this.route.queryParams.subscribe((params) => {
+    this.route.queryParams.pipe(distinctUntilChanged()).subscribe((params) => {
       if (params['search']) {
-        this.searchTerm = params['search'];
+        this.searchTerm.set(params['search']);
       }
     });
   }
@@ -186,7 +186,7 @@ export class BallsPage implements OnInit {
       this.loadingService.setLoading(true);
       this.currentPage = 0;
       this.hasMoreData = true;
-      this.balls = [];
+      this.balls.set([]);
       if (this.isFilterActive()) {
         this.filterDisplayCount = 100;
       }
@@ -268,7 +268,7 @@ export class BallsPage implements OnInit {
       // Otherwise, load the next page from the API.
       const response = await this.ballService.loadBalls(this.currentPage);
       if (response.length > 0) {
-        this.balls = [...this.balls, ...response];
+        this.balls.set([...this.balls(), ...response]);
         this.currentPage++;
       } else {
         this.hasMoreData = false;
