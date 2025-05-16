@@ -34,7 +34,7 @@ import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import Fuse from 'fuse.js';
-import { distinctUntilChanged, Subject } from 'rxjs';
+import { Subject } from 'rxjs';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { ImpactStyle } from '@capacitor/haptics';
 import { BallService } from 'src/app/core/services/ball/ball.service';
@@ -154,7 +154,7 @@ export class BallsPage implements OnInit {
     private route: ActivatedRoute,
   ) {
     addIcons({ filterOutline, closeCircle, globeOutline, openOutline, addOutline, camera });
-    this.searchSubject.pipe(distinctUntilChanged()).subscribe((query) => {
+    this.searchSubject.subscribe((query) => {
       this.searchTerm.set(query);
       if (this.content) {
         setTimeout(() => {
@@ -162,7 +162,7 @@ export class BallsPage implements OnInit {
         }, 300);
       }
     });
-    this.route.queryParams.pipe(distinctUntilChanged()).subscribe((params) => {
+    this.route.queryParams.subscribe((params) => {
       if (params['search']) {
         this.searchTerm.set(params['search']);
       }
@@ -227,10 +227,6 @@ export class BallsPage implements OnInit {
       console.error(`Fehler beim Speichern von ${ball.ball_name} im Arsenal:`, error);
       this.toastService.showToast(ToastMessages.ballSaveError, 'bug', true);
     }
-  }
-
-  isInArsenal(ball: Ball): boolean {
-    return this.storageService.arsenal().some((b: Ball) => b.ball_id === ball.ball_id && b.core_weight === ball.core_weight);
   }
 
   async openFilterModal(): Promise<void> {
@@ -324,6 +320,10 @@ export class BallsPage implements OnInit {
       this.componentLoading = false;
       this.loadingService.setLoading(false);
     }
+  }
+
+  isInArsenal(ball: Ball): boolean {
+    return this.storageService.arsenal().some((b: Ball) => b.ball_id === ball.ball_id && b.core_weight === ball.core_weight);
   }
 
   isFilterActive(): boolean {
