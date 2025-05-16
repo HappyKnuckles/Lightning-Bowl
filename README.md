@@ -11,6 +11,7 @@ This project is provided under a custom license. You are welcome to fork this re
 ### Add Games
 
 On the "Add" page, you can effortlessly log your games. There’s even an option to upload images of your scoresheet, allowing automatic entry of your scores (currently compatible with West-Bowl’s scoring system).
+You can select a league, pattern, ball and even a note to all your games. If you are playing a series there is the possibility to swap between single, 3-4-5-6 Series.
 
 <img src="src/assets/screenshots/start.png" alt="App Screenshot" width="300"/>
 
@@ -22,13 +23,40 @@ The "Stats" page provides a comprehensive overview of your performance. Track ke
 
 ### Game History
 
-In the "History" section, you’ll find a detailed log of all your past games. Swipe right to share, swipe even further to edit, or swipe left to delete, . You can also export your game history to a readable Excel file or import games using the same format.
+In the "History" section, you’ll find a detailed log of all your past games. Swipe right to share, swipe even further to edit, or swipe left to delete. You can also export your game history to a readable Excel file or import games using the same format.
 
 <img src="src/assets/screenshots/history.png" alt="App Screenshot" width="300"/>
 
+### Leagues
+
+Manage your leagues in the "Leagues" tab. You can add new leagues, view your performance within specific leagues, and see league-specific statistics. You can also hide leagues when longpressing the league.
+
+<img src="src/assets/screenshots/league.png" alt="App Screenshot" width="300"/>
+
+### Arsenal
+
+Keep track of your bowling balls in the "Arsenal" section, accessible via the "More" tab. Add details about each ball, such as name, brand, core, and coverstock.
+
+<img src="src/assets/screenshots/arsenal.png" alt="App Screenshot" width="300"/>
+
+### Ball Details
+
+View and manage individual ball information. This includes specifics like core type, coverstock details, and factory finish, helping you understand your equipment better.
+
+<img src="src/assets/screenshots/balls.png" alt="App Screenshot" width="300"/>
+
+### Pattern Library
+
+Explore different oil patterns in the "Pattern Library", accessible via the "More" tab. View details about various patterns, including their length, volume, and ratio, to better prepare for different lane conditions.
+
+<img src="src/assets/screenshots/pattern.png" alt="App Screenshot" width="300"/>
+
 ### Settings
 
-The "Settings" page allows you to personalize your experience. Customize your username and choose from a range of color themes to suit your style.
+The "Settings" page allows you to personalize your experience. Customize your username and choose from a range of color themes to suit your style. You can also look up spare names or find out how many games you need to reach a certain average.
+
+<img src="src/assets/screenshots/settings.png" alt="App Screenshot" width="300"/>
+
 
 ## Contributing
 
