@@ -1,0 +1,61 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button color="medium" (click)="cancel()">Cancel</ion-button>
+    </ion-buttons>
+    <ion-title>Filter</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="reset()" [strong]="true">Reset</ion-button>
+      <ion-button (click)="confirm()" [strong]="true" [disabled]="filterForm.invalid">Confirm</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <form [formGroup]="filterForm" (ngSubmit)="confirm()">
+    <ion-list>
+      <ion-item>
+        <ion-input label="Min Volume" label-placement="stacked" type="number" formControlName="minVolume"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input label="Max Volume" label-placement="stacked" type="number" formControlName="maxVolume"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input label="Min Length" label-placement="stacked" type="number" formControlName="minLength"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input label="Max Length" label-placement="stacked" type="number" formControlName="maxLength"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-select label="Category" label-placement="stacked" formControlName="category" multiple="true">
+          <!-- Add ion-select-option elements here for each category -->
+          <!-- Example: <ion-select-option value="cat1">Category 1</ion-select-option> -->
+        </ion-select>
+      </ion-item>
+      <ion-item>
+        <ion-input label="Min Ratio" label-placement="stacked" type="number" formControlName="minRatio"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input label="Max Ratio" label-placement="stacked" type="number" formControlName="maxRatio"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input label="Min Pump" label-placement="stacked" type="number" formControlName="minPump"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input label="Max Pump" label-placement="stacked" type="number" formControlName="maxPump"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input label="Min Forward Volume" label-placement="stacked" type="number" formControlName="minForwardVolume"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input label="Max Forward Volume" label-placement="stacked" type="number" formControlName="maxForwardVolume"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input label="Min Reverse Volume" label-placement="stacked" type="number" formControlName="minReverseVolume"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input label="Max Reverse Volume" label-placement="stacked" type="number" formControlName="maxReverseVolume"></ion-input>
+      </ion-item>
+    </ion-list>
+  </form>
+</ion-content>

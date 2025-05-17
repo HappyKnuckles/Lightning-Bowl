@@ -29,6 +29,22 @@ export interface BallFilter {
   inArsenal: boolean;
 }
 
+export interface PatternFilter {
+  minVolume: number;
+  maxVolume: number;
+  minLength: number;
+  maxLength: number;
+  category: string[];
+  minRatio: number;
+  maxRatio: number;
+  minPump: number;
+  maxPump: number;
+  minForwardVolume: number;
+  maxForwardVolume: number;
+  minReverseVolume: number;
+  maxReverseVolume: number;
+}
+
 export enum TimeRange {
   TODAY = 0,
   WEEK = 1,

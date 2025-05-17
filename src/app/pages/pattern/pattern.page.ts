@@ -37,11 +37,12 @@ import { ImpactStyle } from '@capacitor/haptics';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { PatternInfoComponent } from 'src/app/shared/components/pattern-info/pattern-info.component';
 import { addIcons } from 'ionicons';
-import { chevronBack, add, addOutline, arrowUpOutline, arrowDownOutline } from 'ionicons/icons';
+import { chevronBack, add, addOutline, arrowUpOutline, arrowDownOutline, filterOutline } from 'ionicons/icons';
 import { ChartGenerationService } from 'src/app/core/services/chart/chart-generation.service';
 import { DomSanitizer } from '@angular/platform-browser';
 import { PatternFormComponent } from '../../shared/components/pattern-form/pattern-form.component';
 import { BallFilterComponent } from '../../shared/components/ball-filter/ball-filter.component';
+import { PatternFilterComponent } from 'src/app/shared/components/pattern-filter/pattern-filter.component';
 
 @Component({
   selector: 'app-pattern',
@@ -94,12 +95,20 @@ export class PatternPage implements OnInit {
     private sanitizer: DomSanitizer,
     private modalCtrl: ModalController,
   ) {
-    addIcons({ addOutline, arrowUpOutline, arrowDownOutline, chevronBack, add });
+    addIcons({ filterOutline, arrowUpOutline, arrowDownOutline, chevronBack, addOutline, add });
   }
   async ngOnInit() {
     await this.loadPatterns();
     this.generateChartImages();
     // this.renderCharts();
+  }
+
+  async openFilterModal() {
+    const modal = await this.modalCtrl.create({
+      component: PatternFilterComponent,
+    });
+
+    return await modal.present();
   }
 
   async handleRefresh(event: RefresherCustomEvent): Promise<void> {
