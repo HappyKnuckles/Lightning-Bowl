@@ -55,7 +55,9 @@
           (maxScoreChanged)="onMaxScoreChanged($event, trackIndex)"
           (totalScoreChanged)="onTotalScoreChange($event, trackIndex)"
           (leagueChanged)="onLeagueChange($event)"
-          (isPracticeChanged)="onIsPracticeChange($event)"></app-game-grid>
+          (patternChanged)="onPatternChange($event)"
+          (isPracticeChanged)="onIsPracticeChange($event)"
+          [patternId]="j.toString()"></app-game-grid>
         <ion-grid *ngIf="i !== 0">
           <ion-row>
             <ion-col class="middle count">Total: {{ totalScores[trackIndex] }}</ion-col>
@@ -121,7 +123,8 @@
         #modalGrid
         (leagueChanged)="onLeagueChange($event)"
         (isPracticeChanged)="onIsPracticeChange($event)"
-        [game]="gameData"></app-game-grid>
+        [game]="gameData"
+        [patternId]="gameData.gameId"></app-game-grid>
     </ion-content>
   </ng-template>
 </ion-modal>

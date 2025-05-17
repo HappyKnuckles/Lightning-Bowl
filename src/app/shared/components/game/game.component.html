@@ -175,7 +175,7 @@
                   <ion-icon name="document-text-outline" slot="start"> </ion-icon>
                   <ion-textarea type="text" [(ngModel)]="game.note" [autoGrow]="true"></ion-textarea>
                 </ion-item>
-                <app-game-grid [game]="game" [showMetadata]="false"></app-game-grid>
+                <app-game-grid [game]="game" [patternId]="game.gameId" [showMetadata]="false"></app-game-grid>
                 <div class="action-row">
                   <ion-button class="left-button" (click)="cancelEdit(game)">Cancel</ion-button>
                   <ion-button class="right-button" [disabled]="!isGameValid(game)" (click)="saveEdit(game)">Save</ion-button>

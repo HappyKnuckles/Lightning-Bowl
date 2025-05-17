@@ -210,6 +210,12 @@ export class AddGamePage implements OnInit {
     });
   }
 
+  onPatternChange(pattern: string): void {
+    this.gameGrids.forEach((trackGrid: GameGridComponent) => {
+      trackGrid.game().pattern = pattern;
+    });
+  }
+
   async confirm(): Promise<void> {
     try {
       if (!this.isGameValid(this.gameData)) {
@@ -353,6 +359,7 @@ export class AddGamePage implements OnInit {
         gameGrid.game().balls = data.balls!;
         gameGrid.game().isPractice = data.isPractice!;
         gameGrid.game().pattern = data.pattern!;
+        gameGrid.onPatternChanged(data.pattern!);
         gameGrid.onLeagueChanged(data.league!);
         gameGrid.updateScores();
       });

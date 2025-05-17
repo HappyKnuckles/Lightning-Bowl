@@ -1,4 +1,4 @@
-import { Component, OnInit, EventEmitter, Output, QueryList, ViewChildren, ViewChild, CUSTOM_ELEMENTS_SCHEMA, input } from '@angular/core';
+import { Component, OnInit, EventEmitter, Output, QueryList, ViewChildren, ViewChild, CUSTOM_ELEMENTS_SCHEMA, input, output } from '@angular/core';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { NgFor, NgIf } from '@angular/common';
 import {
@@ -60,10 +60,12 @@ export class GameGridComponent implements OnInit {
   @Output() totalScoreChanged = new EventEmitter<number>();
   @Output() leagueChanged = new EventEmitter<string>();
   @Output() isPracticeChanged = new EventEmitter<boolean>();
+  patternChanged = output<string>();
   @ViewChildren(IonInput) inputs!: QueryList<IonInput>;
   @ViewChild('leagueSelector') leagueSelector!: LeagueSelectorComponent;
   @ViewChild('checkbox') checkbox!: IonCheckbox;
   showMetadata = input<boolean>(true);
+  patternId = input.required<string>();
   game = input<Game>({
     frames: [],
     totalScore: 0,
@@ -115,8 +117,9 @@ export class GameGridComponent implements OnInit {
     this.leagueChanged.emit(league);
   }
 
-  selectPattern(pattern: string): void {
+  onPatternChanged(pattern: string): void {
     this.game().pattern = pattern;
+    this.patternChanged.emit(pattern);
   }
 
   getFrameValue(frameIndex: number, inputIndex: number): string {
