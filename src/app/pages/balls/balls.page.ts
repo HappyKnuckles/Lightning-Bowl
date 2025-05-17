@@ -137,6 +137,7 @@ export class BallsPage implements OnInit {
       if (this.isFilterActive()) {
         result = result.slice(0, this.filterDisplayCount);
       }
+      result = result.sort((a, b) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime());
       this.hasMoreData = true;
     }
 

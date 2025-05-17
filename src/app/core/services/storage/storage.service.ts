@@ -286,14 +286,16 @@ export class StorageService {
 
   private async loadInitialData(weight: number): Promise<void> {
     try {
-      await this.loadLeagues();
-      await this.loadGameHistory();
-      await this.loadArsenal();
-      await this.loadAllPatterns();
-      await this.loadAllBalls(undefined, weight);
-      await this.ballService.getBrands();
-      await this.ballService.getCores();
-      await this.ballService.getCoverstocks();
+      await Promise.all([
+        this.loadAllPatterns(),
+        this.loadAllBalls(undefined, weight),
+        this.loadLeagues(),
+        this.loadGameHistory(),
+        this.loadArsenal(),
+        this.ballService.getBrands(),
+        this.ballService.getCores(),
+        this.ballService.getCoverstocks(),
+      ]);
       if (this.games().length > 0) {
         if (localStorage.getItem('first-game') === null) {
           localStorage.setItem('first-game', this.games()[this.games().length - 1].date.toString());
