@@ -54,7 +54,7 @@
                   </ion-item>
                 } -->
                 @if (game.balls && game.balls.length > 0) {
-                  <ion-item class="arsenal" [lines]="game.note ? '' : 'none'">
+                  <ion-item class="arsenal" [lines]="game.note ? '' : 'none'" button (click)="navigateToBallsPage(game.balls)">
                     <ion-icon name="bowling-ball-outline" slot="start"></ion-icon>
                     <ion-text>{{ game.balls.join(", ") }}</ion-text>
                   </ion-item>

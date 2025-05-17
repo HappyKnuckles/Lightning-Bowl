@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -43,6 +43,7 @@ import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { BallFilterActiveComponent } from 'src/app/shared/components/ball-filter-active/ball-filter-active.component';
 import { BallFilterComponent } from 'src/app/shared/components/ball-filter/ball-filter.component';
 import { BallListComponent } from 'src/app/shared/components/ball-list/ball-list.component';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-balls',
@@ -79,17 +80,17 @@ import { BallListComponent } from 'src/app/shared/components/ball-list/ball-list
     BallListComponent,
     BallFilterActiveComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BallsPage implements OnInit {
   @ViewChild('core', { static: false }) coreModal!: IonModal;
   @ViewChild('coverstock', { static: false }) coverstockModal!: IonModal;
   @ViewChild(IonContent, { static: false }) content!: IonContent;
-
-  balls: Ball[] = [];
+  balls = signal<Ball[]>([]);
   coreBalls: Ball[] = [];
   coverstockBalls: Ball[] = [];
   searchSubject = new Subject<string>();
-  searchTerm = '';
+  searchTerm = signal('');
   currentPage = 0;
   componentLoading = false;
   hasMoreData = true;
@@ -101,7 +102,7 @@ export class BallsPage implements OnInit {
   // • Otherwise, we display the paged API-loaded balls.
   get displayedBalls(): Ball[] {
     let result: Ball[];
-    if (this.searchTerm.trim() !== '') {
+    if (this.searchTerm().trim() !== '') {
       this.hasMoreData = false;
       const options = {
         keys: [
@@ -111,24 +112,36 @@ export class BallsPage implements OnInit {
           { name: 'coverstock_name', weight: 0.7 },
           { name: 'factory_finish', weight: 0.5 },
         ],
-        threshold: 0.3,
+        threshold: 0.2,
         ignoreLocation: true,
         minMatchCharLength: 3,
-        includeMatches: true,
-        includeScore: true,
+        includeMatches: false,
+        includeScore: false,
         shouldSort: true,
         useExtendedSearch: false,
       };
+
       const baseArray = this.isFilterActive() ? this.ballFilterService.filteredBalls() : this.storageService.allBalls();
+
       const fuseInstance = new Fuse(baseArray, options);
-      result = fuseInstance.search(this.searchTerm).map((result) => result.item);
+
+      // Split the search term by commas and trim each term
+      const searchTerms = this.searchTerm()
+        .split(',')
+        .map((term) => term.trim());
+
+      // Collect results for each search term
+      result = searchTerms.flatMap((term) => fuseInstance.search(term).map((result) => result.item));
     } else {
-      result = this.isFilterActive() ? this.ballFilterService.filteredBalls() : this.balls;
+      result = this.isFilterActive() ? this.ballFilterService.filteredBalls() : this.balls();
       if (this.isFilterActive()) {
         result = result.slice(0, this.filterDisplayCount);
       }
+      result = result.sort((a, b) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime());
+      this.hasMoreData = true;
     }
-    return result.slice().sort((a, b) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime());
+
+    return result;
   }
 
   constructor(
@@ -139,14 +152,20 @@ export class BallsPage implements OnInit {
     private hapticService: HapticService,
     private ballService: BallService,
     public ballFilterService: BallFilterService,
+    private route: ActivatedRoute,
   ) {
     addIcons({ filterOutline, closeCircle, globeOutline, openOutline, addOutline, camera });
     this.searchSubject.subscribe((query) => {
-      this.searchTerm = query;
+      this.searchTerm.set(query);
       if (this.content) {
         setTimeout(() => {
           this.content.scrollToTop(300);
         }, 300);
+      }
+    });
+    this.route.queryParams.subscribe((params) => {
+      if (params['search']) {
+        this.searchTerm.set(params['search']);
       }
     });
   }
@@ -168,7 +187,7 @@ export class BallsPage implements OnInit {
       this.loadingService.setLoading(true);
       this.currentPage = 0;
       this.hasMoreData = true;
-      this.balls = [];
+      this.balls.set([]);
       if (this.isFilterActive()) {
         this.filterDisplayCount = 100;
       }
@@ -211,10 +230,6 @@ export class BallsPage implements OnInit {
     }
   }
 
-  isInArsenal(ball: Ball): boolean {
-    return this.storageService.arsenal().some((b: Ball) => b.ball_id === ball.ball_id && b.core_weight === ball.core_weight);
-  }
-
   async openFilterModal(): Promise<void> {
     const modal = await this.modalCtrl.create({
       component: BallFilterComponent,
@@ -250,7 +265,7 @@ export class BallsPage implements OnInit {
       // Otherwise, load the next page from the API.
       const response = await this.ballService.loadBalls(this.currentPage);
       if (response.length > 0) {
-        this.balls = [...this.balls, ...response];
+        this.balls.set([...this.balls(), ...response]);
         this.currentPage++;
       } else {
         this.hasMoreData = false;
@@ -306,6 +321,10 @@ export class BallsPage implements OnInit {
       this.componentLoading = false;
       this.loadingService.setLoading(false);
     }
+  }
+
+  isInArsenal(ball: Ball): boolean {
+    return this.storageService.arsenal().some((b: Ball) => b.ball_id === ball.ball_id && b.core_weight === ball.core_weight);
   }
 
   isFilterActive(): boolean {

@@ -15,7 +15,12 @@
     </ion-buttons>
   </ion-toolbar>
   <ion-toolbar>
-    <ion-searchbar (ionInput)="searchBalls($event)" placeholder="Search for a ball" showCancelButton="focus" debounce="300"></ion-searchbar>
+    <ion-searchbar
+      [value]="searchTerm()"
+      (ionInput)="searchBalls($event)"
+      placeholder="Search for a ball"
+      showCancelButton="focus"
+      debounce="300"></ion-searchbar>
   </ion-toolbar>
 </ion-header>
 

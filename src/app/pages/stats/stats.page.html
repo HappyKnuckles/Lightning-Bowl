@@ -1,7 +1,14 @@
 <ion-header [translucent]="true" class="ion-text-center">
   <ion-toolbar>
     <ion-buttons slot="start" style="padding: 4px">
-      <ion-button for="excelUpload" type="button" class="action-sheet" slot="start" fill="clear" (click)="openExcelFileInput()">
+      <ion-button
+        for="excelUpload"
+        type="button"
+        class="action-sheet"
+        slot="start"
+        fill="clear"
+        [disabled]="storageService.allBalls().length === 0"
+        (click)="openExcelFileInput()">
         <ion-icon slot="icon-only" name="cloud-upload-outline"></ion-icon>
       </ion-button>
       <ion-button
