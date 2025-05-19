@@ -63,17 +63,19 @@ ion-img::part(image) {
     margin-left: 0;
     margin-right: 4px;
     font-size: 0.75rem;
+
     &:last-child {
       margin: 0;
     }
   }
 }
 
-.arsenal-chart{
+.arsenal-chart-container {
   border: 1px solid #2b2828;
-    margin: 0 16px 12px;
-    border-radius: 7px;
-    background-color: #141414;
-    padding: 0 0 12px 12px;
-    height: 100%;
+  margin: 0 16px 12px;
+  border-radius: 7px;
+  background-color: #141414;
+  padding: 0 0 12px 12px;
+  height: 100%;
+  max-height: 80dvh;
 }

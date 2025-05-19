@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, Signal, ViewChild, ElementRef, AfterViewInit, effect } from '@angular/core';
+import { Component, OnInit, computed, Signal, ViewChild, ElementRef, AfterViewInit, effect, model } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -38,7 +38,7 @@ import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { Ball } from 'src/app/core/models/ball.model';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { addIcons } from 'ionicons';
-import { chevronBack, add, openOutline, trashOutline } from 'ionicons/icons';
+import { chevronBack, add, openOutline, trashOutline, ellipsisVerticalOutline } from 'ionicons/icons';
 import { AlertController, ItemReorderCustomEvent, ModalController } from '@ionic/angular';
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import { ImpactStyle } from '@capacitor/haptics';
@@ -105,7 +105,7 @@ export class ArsenalPage implements OnInit, AfterViewInit {
       .allBalls()
       .filter((ball) => !this.storageService.arsenal().some((b) => b.ball_id === ball.ball_id && b.core_weight === ball.core_weight)),
   );
-
+  selectedSegment = model('arsenal');
   @ViewChild('balls', { static: false }) ballChart?: ElementRef;
   private ballsChartInstance: Chart | null = null;
   constructor(
@@ -118,9 +118,11 @@ export class ArsenalPage implements OnInit, AfterViewInit {
     private ballService: BallService,
     private chartGenerationService: ChartGenerationService,
   ) {
-    addIcons({ add, trashOutline, chevronBack, openOutline });
+    addIcons({ add, ellipsisVerticalOutline, trashOutline, chevronBack, openOutline });
     effect(() => {
-      this.generateBallDistributionChart();
+      if (this.selectedSegment() === 'compare') {
+        this.generateBallDistributionChart();
+      }
     });
   }
 
