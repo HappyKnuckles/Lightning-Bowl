@@ -16,10 +16,12 @@
 </ion-header>
 
 <ion-content [fullscreen]="true">
+  <div class="arsenal-chart">
+    <canvas #balls style="width: 600px; height: 800px"> </canvas>
+  </div>
   <ng-container *ngIf="storageService.arsenal().length <= 0; else content">
     <ion-text class="no-game-text"> You have no balls in your arsenal. Add a ball to get started! </ion-text>
   </ng-container>
-  <canvas #balls style="height: 400px; width: 400px"></canvas>
   <ng-template #content>
     <ion-list>
       <ion-reorder-group disabled="false" (ionItemReorder)="reorderArsenal($event)">

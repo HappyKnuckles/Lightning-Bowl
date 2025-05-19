@@ -396,18 +396,16 @@ export class AddGamePage implements OnInit {
       }
     });
   }
-
   private updateSegments(): void {
-    if (this.selectedMode === SeriesMode.Series3) {
-      this.segments = ['Game 1', 'Game 2', 'Game 3'];
-    } else if (this.selectedMode === SeriesMode.Series4) {
-      this.segments = ['Game 1', 'Game 2', 'Game 3', 'Game 4'];
-    } else if (this.selectedMode === SeriesMode.Series5) {
-      this.segments = ['Game 1', 'Game 2', 'Game 3', 'Game 4', 'Game 5'];
-    } else if (this.selectedMode === SeriesMode.Series6) {
-      this.segments = ['Game 1', 'Game 2', 'Game 3', 'Game 4', 'Game 5', 'Game 6'];
-    } else {
-      this.segments = ['Game 1'];
+    let numberOfGames = 1;
+
+    if (this.selectedMode !== SeriesMode.Single) {
+      const match = this.selectedMode.match(/\d+/);
+      if (match) {
+        numberOfGames = parseInt(match[0], 10);
+      }
+
+      this.segments = Array.from({ length: numberOfGames }, (_, i) => `Game ${i + 1}`);
     }
   }
 

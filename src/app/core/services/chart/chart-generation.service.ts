@@ -2,12 +2,138 @@ import { ElementRef, Injectable } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { Game } from 'src/app/core/models/game.model';
 import { Stats } from 'src/app/core/models/stats.model';
-import Chart, { ChartConfiguration, ScatterDataPoint, TooltipItem } from 'chart.js/auto';
+import Chart, { ChartConfiguration, ScatterDataPoint, Plugin } from 'chart.js/auto';
 import * as d3 from 'd3';
 import { Pattern, ForwardsData, ReverseData } from '../../models/pattern.model';
 import { Ball } from '../../models/ball.model';
+import zoomPlugin from 'chartjs-plugin-zoom';
+
 const LANE_HEIGHT = 70;
 const LANE_WIDTH = 39;
+
+const ballDistributionZonePlugin: Plugin<'scatter'> = {
+  id: 'ballDistributionZones',
+  beforeDatasetsDraw(chart) {
+    const { ctx, chartArea, scales } = chart;
+    if (!chartArea || !scales['x'] || !scales['y']) return;
+    ctx.save();
+
+    const xRanges = [
+      { min: scales['x'].min, max: 2.52, label: 'Low RG' },
+      { min: 2.52, max: 2.56, label: 'Med RG' },
+      { min: 2.56, max: scales['x'].max, label: 'High RG' },
+    ];
+    const yRanges = [
+      { min: scales['y'].min, max: 0.035, label: 'Low Diff' },
+      { min: 0.035, max: 0.05, label: 'Med Diff' },
+      { min: 0.05, max: scales['y'].max, label: 'High Diff' },
+    ];
+    const zoneStyles = [
+      { color: 'rgba(220,20,60,0.15)', textColor: '#F5F5F5' },
+      { color: 'rgba(255,140,0,0.15)', textColor: '#F5F5F5' },
+      { color: 'rgba(255,215,0,0.15)', textColor: '#F5F5F5' },
+      { color: 'rgba(30,144,255,0.15)', textColor: '#F5F5F5' },
+      { color: 'rgba(128,128,128,0.15)', textColor: '#F5F5F5' },
+      { color: 'rgba(34,139,34,0.15)', textColor: '#F5F5F5' },
+      { color: 'rgba(147,112,219,0.15)', textColor: '#F5F5F5' },
+      { color: 'rgba(75,0,130,0.15)', textColor: '#F5F5F5' },
+      { color: 'rgba(0,139,139,0.15)', textColor: '#F5F5F5' },
+    ];
+
+    let idx = 0;
+    for (const yR of yRanges) {
+      for (const xR of xRanges) {
+        const style = zoneStyles[idx++];
+        const x1 = scales['x'].getPixelForValue(xR.min);
+        const x2 = scales['x'].getPixelForValue(xR.max);
+        const y1 = scales['y'].getPixelForValue(yR.max);
+        const y2 = scales['y'].getPixelForValue(yR.min);
+        const left = Math.max(chartArea.left, Math.min(x1, x2));
+        const right = Math.min(chartArea.right, Math.max(x1, x2));
+        const top = Math.max(chartArea.top, Math.min(y1, y2));
+        const bottom = Math.min(chartArea.bottom, Math.max(y1, y2));
+        const width = right - left;
+        const height = bottom - top;
+        if (width > 0 && height > 0) {
+          ctx.fillStyle = style.color;
+          ctx.fillRect(left, top, width, height);
+          ctx.fillStyle = style.textColor;
+          ctx.font = 'bold 9px Arial';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          const lines = [xR.label, yR.label];
+          const lineH = 10;
+          let yText = top + (height - lines.length * lineH) / 2 + lineH / 2;
+          for (const line of lines) {
+            ctx.fillText(line, left + width / 2, yText);
+            yText += lineH;
+          }
+        }
+      }
+    }
+
+    ctx.restore();
+  },
+};
+
+const customAxisTitlesPlugin: Plugin<'scatter'> = {
+  id: 'customAxisTitles',
+  afterDraw(chart) {
+    const { ctx, chartArea } = chart;
+    if (!chartArea) return;
+
+    // --- X-Axis Title Logic ---
+    ctx.save();
+    // Default for descriptive parts
+    ctx.fillStyle = 'grey';
+    ctx.font = 'bold 12px Arial';
+
+    // Far left (X-axis)
+    ctx.textAlign = 'left';
+    ctx.fillText('← Earlier Roll', chartArea.left - 20, chartArea.bottom + 35);
+
+    // Center (X-axis) - RG with 14px and white color
+    ctx.textAlign = 'center';
+    ctx.font = 'bold 14px Arial'; // Change font for RG
+    ctx.fillStyle = 'white'; // Change color for RG
+    ctx.fillText('RG', (chartArea.left + chartArea.right) / 2, chartArea.bottom + 35);
+
+    // Far right (X-axis) - Revert to grey for descriptive part
+    ctx.textAlign = 'right';
+    ctx.font = 'bold 12px Arial'; // Revert font
+    ctx.fillStyle = 'grey'; // Revert color
+    ctx.fillText('Later Roll →', chartArea.right + 20, chartArea.bottom + 35);
+    ctx.restore();
+
+    // --- Y-Axis Title Logic ---
+    ctx.save();
+    // Font will be set in drawRotated, color will be passed as parameter
+
+    const xPos = chartArea.left - 40; // pivot X for Y-axis titles
+    const bottomY = chartArea.bottom - 25;
+    const midY = (chartArea.top + chartArea.bottom) / 2;
+    const topY = chartArea.top + 35;
+
+    function drawRotated(text: string, x: number, y: number, font: string, color: string) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(-Math.PI / 2); // rotate 90° CCW
+      ctx.textAlign = 'center';
+      ctx.font = font; // Apply specific font
+      ctx.fillStyle = color; // Apply specific color
+      ctx.fillText(text, 0, 0);
+      ctx.restore();
+    }
+
+    // Y-axis labels
+    drawRotated('← Less Flare', xPos, bottomY, 'bold 12px Arial', 'grey');
+    drawRotated('Diff', xPos, midY, 'bold 14px Arial', 'white'); // Diff with 14px and white color
+    drawRotated('More Flare →', xPos, topY, 'bold 12px Arial', 'grey');
+
+    ctx.restore();
+  },
+};
+
 @Injectable({
   providedIn: 'root',
 })
@@ -913,155 +1039,169 @@ export class ChartGenerationService {
     isReload?: boolean,
   ): Chart {
     try {
-      const url = 'https://bowwwl.com';
+      const baseUrl = 'https://bowwwl.com';
       const canvas = ballDistributionChartCanvas.nativeElement as HTMLCanvasElement;
       const ctx = canvas.getContext('2d');
-      console.log(balls);
       if (!ctx) {
         if (existingChartInstance) return existingChartInstance;
-        throw new Error('Failed to get canvas context for ball distribution chart.');
+        throw new Error('Failed to get canvas context.');
       }
 
+      // If reloading, destroy old chart
       if (isReload && existingChartInstance) {
         existingChartInstance.destroy();
-        existingChartInstance = undefined; // Ensure a new chart is created if reload is true
+        existingChartInstance = undefined;
       }
 
-      const chartDataPoints: (ScatterDataPoint & { name: string; imageUrl: string })[] = [];
+      // 1) Helper for tiny random jitter
+      const jitter = () => (Math.random() - 0.5) * 0.004;
+
+      // 2) Build data points + preload images
+      const dataPoints: (ScatterDataPoint & { name: string; imageUrl: string; cover: string })[] = [];
       const pointImages: HTMLImageElement[] = [];
-
       for (const ball of balls) {
-        // Assuming ball.rg and ball.diff are string representations of numbers
-        const xValue = parseFloat(ball.core_rg);
-        const yValue = parseFloat(ball.core_diff);
-
-        if (isNaN(xValue) || isNaN(yValue)) {
-          console.warn(`Skipping ball "${ball.ball_name}" due to invalid rg ("${ball.core_rg}") or diff ("${ball.core_diff}").`);
+        const xRaw = parseFloat(ball.core_rg);
+        const yRaw = parseFloat(ball.core_diff);
+        if (isNaN(xRaw) || isNaN(yRaw)) {
+          console.warn(`Skipping invalid RG/Diff for ${ball.ball_name}`);
           continue;
         }
+        const x = xRaw + jitter();
+        const y = yRaw + jitter();
+        dataPoints.push({ x, y, name: ball.ball_name, imageUrl: baseUrl + ball.thumbnail_image, cover: ball.coverstock_type });
 
-        chartDataPoints.push({
-          x: xValue,
-          y: yValue,
-          name: ball.ball_name,
-          imageUrl: url + ball.thumbnail_image, // Store for tooltip or other uses
-        });
-
-        const img = new Image();
-        // Set a common size for images if desired, or let pointRadius control it.
-        img.width = 30;
-        img.height = 30;
-        img.src = url + ball.thumbnail_image;
-        img.onerror = () => {
-          console.warn(`Failed to load image for ball ${ball.ball_name}: ${ball.thumbnail_image}`);
-          // Chart.js will likely show a broken image or default point style
-        };
+        const img = new Image(70, 70);
+        img.src = baseUrl + ball.thumbnail_image;
+        img.onerror = () => console.warn(`Failed to load image for ${ball.ball_name}`);
         pointImages.push(img);
       }
-      console.log(pointImages);
+
+      // 5) Base dataset
       const dataset = {
         label: 'Bowling Balls',
-        data: chartDataPoints,
-        pointStyle: pointImages, // Array of HTMLImageElement for each point
-        pointRadius: 20, // Adjust this to control the size of the image/hitbox
-        pointHoverRadius: 25,
+        data: dataPoints,
+        pointStyle: pointImages,
+        pointHitRadius: 35,
         usePointStyle: true,
-        backgroundColor: 'rgba(0,0,0,0)', // Transparent background for points if images have transparency
-      } as any;
+        backgroundColor: 'rgba(0,0,0,0)',
+      };
 
+      // 6) Register plugins and build config
+      const config: ChartConfiguration<'scatter'> = {
+        type: 'scatter',
+        data: { datasets: [dataset] },
+        plugins: [zoomPlugin, ballDistributionZonePlugin, customAxisTitlesPlugin],
+
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          layout: {
+            padding: {
+              bottom: 20,
+              left: 20,
+              right: 20,
+            },
+          },
+          scales: {
+            x: {
+              type: 'linear',
+              position: 'bottom',
+              ticks: {
+                color: 'white',
+                callback: (v) => Number(v).toFixed(3),
+                font: { size: 8 },
+              },
+              grid: { color: 'rgba(255,255,255,0.2)' },
+              min: 2.4,
+              max: 2.8,
+            },
+            y: {
+              ticks: {
+                color: 'white',
+                callback: (v) => Number(v).toFixed(3),
+                font: { size: 8 },
+              },
+              grid: { color: 'rgba(255,255,255,0.2)' },
+              min: 0.005,
+              max: 0.06,
+            },
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              enabled: true,
+              backgroundColor: 'rgba(0,0,0,0.85)',
+              titleFont: { size: 14, weight: 'bold' },
+              mode: 'nearest',
+              bodyFont: { size: 12 },
+              padding: 10,
+              displayColors: false,
+              callbacks: {
+                title: (items) => (items[0]?.raw as any).name || '',
+                label: (context) => {
+                  const dp = context.raw as any;
+                  const x = dp.x as number;
+                  const y = dp.y as number;
+
+                  // 1) Determine Roll category
+                  let rollCat: string;
+                  if (x < 2.52) {
+                    rollCat = 'Early Roll';
+                  } else if (x < 2.56) {
+                    rollCat = 'Medium Roll';
+                  } else {
+                    rollCat = 'Later Roll';
+                  }
+
+                  // 2) Determine Flare category
+                  let flareCat: string;
+                  if (y < 0.035) {
+                    flareCat = 'Low Flare';
+                  } else if (y < 0.05) {
+                    flareCat = 'Medium Flare';
+                  } else {
+                    flareCat = 'High Flare';
+                  }
+
+                  // 3) Return all tooltip lines
+                  return [`RG:     ${x.toFixed(3)}`, `Diff:   ${y.toFixed(3)}`, `Cover:  ${dp.cover}`, rollCat, flareCat];
+                },
+              },
+            },
+            zoom: {
+              zoom: {
+                wheel: { enabled: true },
+                pinch: { enabled: true },
+                mode: 'xy',
+              },
+              pan: {
+                enabled: true,
+                mode: 'xy',
+                onPanStart: ({ chart, event }) => {
+                  const { left, right, top, bottom } = chart.chartArea;
+                  const panEvent = event as unknown as { center: { x: number; y: number } };
+                  return (
+                    panEvent.center.x >= left + 25 && panEvent.center.x <= right + 30 && panEvent.center.y >= top && panEvent.center.y <= bottom + 50
+                  );
+                },
+              },
+            },
+          },
+        },
+      };
+
+      // 7) Create or update chart
       if (existingChartInstance && !isReload) {
-        existingChartInstance.data.datasets[0].data = chartDataPoints;
-        (existingChartInstance.data.datasets[0] as any).pointStyle = pointImages;
+        existingChartInstance.data.datasets[0] = dataset;
         existingChartInstance.update();
         return existingChartInstance;
       } else {
-        const config: ChartConfiguration = {
-          type: 'scatter',
-          data: {
-            datasets: [dataset],
-          },
-          options: {
-            responsive: true,
-
-            maintainAspectRatio: false, // Set to true if you want to enforce a specific aspect ratio via options.aspectRatio
-            scales: {
-              x: {
-                type: 'linear',
-                position: 'bottom',
-                title: {
-                  display: true,
-                  text: 'RG (Radius of Gyration)',
-                  color: 'white', // Assuming a dark theme consistent with other charts
-                  font: { size: 16, weight: 'bold' },
-                },
-                ticks: {
-                  color: 'white',
-                  font: { size: 12 },
-                  callback: function (value) {
-                    return Number(value).toFixed(3); // Format RG to 3 decimal places
-                  },
-                },
-                grid: { color: 'rgba(255, 255, 255, 0.2)' },
-                max: 2.8,
-              },
-              y: {
-                title: {
-                  display: true,
-                  text: 'RG Differential',
-                  color: 'white',
-                  font: { size: 16, weight: 'bold' },
-                },
-                ticks: {
-                  color: 'white',
-                  font: { size: 12 },
-                  callback: function (value) {
-                    return Number(value).toFixed(3); // Format Diff to 3 decimal places
-                  },
-                },
-                grid: { color: 'rgba(255, 255, 255, 0.2)' },
-                max: 0.06,
-              },
-            },
-            plugins: {
-              title: {
-                display: true,
-                text: 'Bowling Ball Characteristics',
-                color: 'white',
-                font: { size: 20, weight: 'bold' },
-              },
-              legend: {
-                display: false, // Usually not needed for scatter plots with image points
-              },
-              tooltip: {
-                enabled: true,
-                backgroundColor: 'rgba(0, 0, 0, 0.85)',
-                titleFont: { size: 14, weight: 'bold' },
-                bodyFont: { size: 12 },
-                padding: 10,
-                displayColors: false, // No color box in tooltip
-                callbacks: {
-                  title: function (tooltipItems: TooltipItem<'scatter'>[]) {
-                    const dataPoint = tooltipItems[0]?.raw as ScatterDataPoint & { name: string };
-                    return dataPoint?.name || '';
-                  },
-                  label: function (context: TooltipItem<'scatter'>) {
-                    const dataPoint = context.raw as ScatterDataPoint & { name: string };
-                    if (dataPoint) {
-                      return [`RG: ${Number(dataPoint.x).toFixed(3)}`, `Diff: ${Number(dataPoint.y).toFixed(3)}`];
-                    }
-                    return '';
-                  },
-                },
-              },
-            },
-          },
-        };
         return new Chart(ctx, config);
       }
-    } catch (error) {
-      console.error('Error generating ball distribution chart:', error);
-      if (existingChartInstance) return existingChartInstance; // Fallback
-      throw error;
+    } catch (err) {
+      console.error('Error generating chart:', err);
+      if (existingChartInstance) return existingChartInstance;
+      throw err;
     }
   }
 

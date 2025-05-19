@@ -29,6 +29,10 @@ import {
   IonChip,
   IonReorderGroup,
   IonReorder,
+  IonSegment,
+  IonSegmentButton,
+  IonSegmentContent,
+  IonSegmentView,
 } from '@ionic/angular/standalone';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { Ball } from 'src/app/core/models/ball.model';
@@ -53,6 +57,8 @@ import { ChartGenerationService } from 'src/app/core/services/chart/chart-genera
   standalone: true,
   providers: [ModalController],
   imports: [
+    IonSegmentButton,
+    IonSegment,
     IonReorder,
     IonReorderGroup,
     IonChip,
@@ -84,6 +90,8 @@ import { ChartGenerationService } from 'src/app/core/services/chart/chart-genera
     FormsModule,
     BallListComponent,
     BallTypeaheadComponent,
+    IonSegmentContent,
+    IonSegmentView,
   ],
 })
 export class ArsenalPage implements OnInit, AfterViewInit {
@@ -97,13 +105,13 @@ export class ArsenalPage implements OnInit, AfterViewInit {
       .allBalls()
       .filter((ball) => !this.storageService.arsenal().some((b) => b.ball_id === ball.ball_id && b.core_weight === ball.core_weight)),
   );
+
   @ViewChild('balls', { static: false }) ballChart?: ElementRef;
   private ballsChartInstance: Chart | null = null;
   constructor(
     public storageService: StorageService,
     private hapticService: HapticService,
     private alertController: AlertController,
-
     private loadingService: LoadingService,
     public toastService: ToastService,
     public modalCtrl: ModalController,
@@ -112,16 +120,28 @@ export class ArsenalPage implements OnInit, AfterViewInit {
   ) {
     addIcons({ add, trashOutline, chevronBack, openOutline });
     effect(() => {
-      this.ballsChartInstance = this.chartGenerationService.generateBallDistributionChart(
-        this.ballChart!,
-        this.storageService.arsenal(),
-        this.ballsChartInstance!,
-      );
+      this.generateBallDistributionChart();
     });
   }
 
   ngOnInit() {
     this.presentingElement = document.querySelector('.ion-page')!;
+  }
+
+  private generateBallDistributionChart(): void {
+    try {
+      if (!this.ballChart) {
+        return;
+      }
+      this.ballsChartInstance = this.chartGenerationService.generateBallDistributionChart(
+        this.ballChart!,
+        this.storageService.arsenal(),
+        this.ballsChartInstance!,
+      );
+    } catch (error) {
+      console.error('Error generating ball distribution chart:', error);
+      this.toastService.showToast(ToastMessages.chartGenerationError, 'bug', true);
+    }
   }
 
   ngAfterViewInit() {
