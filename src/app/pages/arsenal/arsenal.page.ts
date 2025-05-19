@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, Signal, ViewChild } from '@angular/core';
+import { Component, OnInit, computed, Signal, ViewChild, ElementRef, AfterViewInit, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -43,6 +43,8 @@ import { BallService } from 'src/app/core/services/ball/ball.service';
 import { BallListComponent } from 'src/app/shared/components/ball-list/ball-list.component';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { BallTypeaheadComponent } from 'src/app/shared/components/ball-typeahead/ball-typeahead.component';
+import { Chart } from 'chart.js';
+import { ChartGenerationService } from 'src/app/core/services/chart/chart-generation.service';
 
 @Component({
   selector: 'app-arsenal',
@@ -84,7 +86,7 @@ import { BallTypeaheadComponent } from 'src/app/shared/components/ball-typeahead
     BallTypeaheadComponent,
   ],
 })
-export class ArsenalPage implements OnInit {
+export class ArsenalPage implements OnInit, AfterViewInit {
   @ViewChild('core', { static: false }) coreModal!: IonModal;
   @ViewChild('coverstock', { static: false }) coverstockModal!: IonModal;
   coverstockBalls: Ball[] = [];
@@ -95,6 +97,8 @@ export class ArsenalPage implements OnInit {
       .allBalls()
       .filter((ball) => !this.storageService.arsenal().some((b) => b.ball_id === ball.ball_id && b.core_weight === ball.core_weight)),
   );
+  @ViewChild('balls', { static: false }) ballChart?: ElementRef;
+  private ballsChartInstance: Chart | null = null;
   constructor(
     public storageService: StorageService,
     private hapticService: HapticService,
@@ -104,12 +108,29 @@ export class ArsenalPage implements OnInit {
     public toastService: ToastService,
     public modalCtrl: ModalController,
     private ballService: BallService,
+    private chartGenerationService: ChartGenerationService,
   ) {
     addIcons({ add, trashOutline, chevronBack, openOutline });
+    effect(() => {
+      this.ballsChartInstance = this.chartGenerationService.generateBallDistributionChart(
+        this.ballChart!,
+        this.storageService.arsenal(),
+        this.ballsChartInstance!,
+      );
+    });
   }
 
   ngOnInit() {
     this.presentingElement = document.querySelector('.ion-page')!;
+  }
+
+  ngAfterViewInit() {
+    //  this.ballsChartInstance = this.chartGenerationService.generateBallDistributionChart(
+    //   this.ballChart!,
+    //   this.storageService.arsenal(),
+    //   this.ballsChartInstance!,
+    // )
+    console.log('hi');
   }
 
   async removeFromArsenal(ball: Ball): Promise<void> {

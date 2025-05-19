@@ -2,9 +2,10 @@ import { ElementRef, Injectable } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { Game } from 'src/app/core/models/game.model';
 import { Stats } from 'src/app/core/models/stats.model';
-import Chart from 'chart.js/auto';
+import Chart, { ChartConfiguration, ScatterDataPoint, TooltipItem } from 'chart.js/auto';
 import * as d3 from 'd3';
 import { Pattern, ForwardsData, ReverseData } from '../../models/pattern.model';
+import { Ball } from '../../models/ball.model';
 const LANE_HEIGHT = 70;
 const LANE_WIDTH = 39;
 @Injectable({
@@ -576,7 +577,17 @@ export class ChartGenerationService {
     }
   }
 
-  generatePatternChartDataUri(pattern: Partial<Pattern>, svgWidth: number, svgHeight: number, viewBoxWidth: number, viewBoxHeight: number, pinRadius: number, pinStrokeWidth: number, arrowSize: number, horizontal = false): string {
+  generatePatternChartDataUri(
+    pattern: Partial<Pattern>,
+    svgWidth: number,
+    svgHeight: number,
+    viewBoxWidth: number,
+    viewBoxHeight: number,
+    pinRadius: number,
+    pinStrokeWidth: number,
+    arrowSize: number,
+    horizontal = false,
+  ): string {
     // 1. Create a detached SVG element in memory
     const tempSvgElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
 
@@ -893,6 +904,165 @@ export class ChartGenerationService {
 
     // 5. Return the Data URI
     return 'data:image/svg+xml;base64,' + encodedString;
+  }
+
+  generateBallDistributionChart(
+    ballDistributionChartCanvas: ElementRef,
+    balls: Ball[],
+    existingChartInstance: Chart | undefined,
+    isReload?: boolean,
+  ): Chart {
+    try {
+      const url = 'https://bowwwl.com';
+      const canvas = ballDistributionChartCanvas.nativeElement as HTMLCanvasElement;
+      const ctx = canvas.getContext('2d');
+      console.log(balls);
+      if (!ctx) {
+        if (existingChartInstance) return existingChartInstance;
+        throw new Error('Failed to get canvas context for ball distribution chart.');
+      }
+
+      if (isReload && existingChartInstance) {
+        existingChartInstance.destroy();
+        existingChartInstance = undefined; // Ensure a new chart is created if reload is true
+      }
+
+      const chartDataPoints: (ScatterDataPoint & { name: string; imageUrl: string })[] = [];
+      const pointImages: HTMLImageElement[] = [];
+
+      for (const ball of balls) {
+        // Assuming ball.rg and ball.diff are string representations of numbers
+        const xValue = parseFloat(ball.core_rg);
+        const yValue = parseFloat(ball.core_diff);
+
+        if (isNaN(xValue) || isNaN(yValue)) {
+          console.warn(`Skipping ball "${ball.ball_name}" due to invalid rg ("${ball.core_rg}") or diff ("${ball.core_diff}").`);
+          continue;
+        }
+
+        chartDataPoints.push({
+          x: xValue,
+          y: yValue,
+          name: ball.ball_name,
+          imageUrl: url + ball.thumbnail_image, // Store for tooltip or other uses
+        });
+
+        const img = new Image();
+        // Set a common size for images if desired, or let pointRadius control it.
+        img.width = 30;
+        img.height = 30;
+        img.src = url + ball.thumbnail_image;
+        img.onerror = () => {
+          console.warn(`Failed to load image for ball ${ball.ball_name}: ${ball.thumbnail_image}`);
+          // Chart.js will likely show a broken image or default point style
+        };
+        pointImages.push(img);
+      }
+      console.log(pointImages);
+      const dataset = {
+        label: 'Bowling Balls',
+        data: chartDataPoints,
+        pointStyle: pointImages, // Array of HTMLImageElement for each point
+        pointRadius: 20, // Adjust this to control the size of the image/hitbox
+        pointHoverRadius: 25,
+        usePointStyle: true,
+        backgroundColor: 'rgba(0,0,0,0)', // Transparent background for points if images have transparency
+      } as any;
+
+      if (existingChartInstance && !isReload) {
+        existingChartInstance.data.datasets[0].data = chartDataPoints;
+        (existingChartInstance.data.datasets[0] as any).pointStyle = pointImages;
+        existingChartInstance.update();
+        return existingChartInstance;
+      } else {
+        const config: ChartConfiguration = {
+          type: 'scatter',
+          data: {
+            datasets: [dataset],
+          },
+          options: {
+            responsive: true,
+
+            maintainAspectRatio: false, // Set to true if you want to enforce a specific aspect ratio via options.aspectRatio
+            scales: {
+              x: {
+                type: 'linear',
+                position: 'bottom',
+                title: {
+                  display: true,
+                  text: 'RG (Radius of Gyration)',
+                  color: 'white', // Assuming a dark theme consistent with other charts
+                  font: { size: 16, weight: 'bold' },
+                },
+                ticks: {
+                  color: 'white',
+                  font: { size: 12 },
+                  callback: function (value) {
+                    return Number(value).toFixed(3); // Format RG to 3 decimal places
+                  },
+                },
+                grid: { color: 'rgba(255, 255, 255, 0.2)' },
+                max: 2.8,
+              },
+              y: {
+                title: {
+                  display: true,
+                  text: 'RG Differential',
+                  color: 'white',
+                  font: { size: 16, weight: 'bold' },
+                },
+                ticks: {
+                  color: 'white',
+                  font: { size: 12 },
+                  callback: function (value) {
+                    return Number(value).toFixed(3); // Format Diff to 3 decimal places
+                  },
+                },
+                grid: { color: 'rgba(255, 255, 255, 0.2)' },
+                max: 0.06,
+              },
+            },
+            plugins: {
+              title: {
+                display: true,
+                text: 'Bowling Ball Characteristics',
+                color: 'white',
+                font: { size: 20, weight: 'bold' },
+              },
+              legend: {
+                display: false, // Usually not needed for scatter plots with image points
+              },
+              tooltip: {
+                enabled: true,
+                backgroundColor: 'rgba(0, 0, 0, 0.85)',
+                titleFont: { size: 14, weight: 'bold' },
+                bodyFont: { size: 12 },
+                padding: 10,
+                displayColors: false, // No color box in tooltip
+                callbacks: {
+                  title: function (tooltipItems: TooltipItem<'scatter'>[]) {
+                    const dataPoint = tooltipItems[0]?.raw as ScatterDataPoint & { name: string };
+                    return dataPoint?.name || '';
+                  },
+                  label: function (context: TooltipItem<'scatter'>) {
+                    const dataPoint = context.raw as ScatterDataPoint & { name: string };
+                    if (dataPoint) {
+                      return [`RG: ${Number(dataPoint.x).toFixed(3)}`, `Diff: ${Number(dataPoint.y).toFixed(3)}`];
+                    }
+                    return '';
+                  },
+                },
+              },
+            },
+          },
+        };
+        return new Chart(ctx, config);
+      }
+    } catch (error) {
+      console.error('Error generating ball distribution chart:', error);
+      if (existingChartInstance) return existingChartInstance; // Fallback
+      throw error;
+    }
   }
 
   private calculateScoreChartData(gameHistory: Game[]) {
