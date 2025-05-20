@@ -1050,7 +1050,6 @@ export class ChartGenerationService {
       // If reloading, destroy old chart
       if (isReload && existingChartInstance) {
         existingChartInstance.destroy();
-        existingChartInstance = undefined;
       }
 
       // 1) Helper for tiny random jitter

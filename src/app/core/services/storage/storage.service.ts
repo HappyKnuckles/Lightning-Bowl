@@ -251,11 +251,8 @@ export class StorageService {
 
   async editLeague(newLeague: string, oldLeague: string) {
     try {
-      const newKey = 'league' + '_' + newLeague;
-      await this.deleteLeague('league' + '_' + oldLeague);
-      await this.save(newKey, newLeague);
-      this.leagues.update((leagues) => leagues.map((l) => (l === oldLeague ? newLeague : l)));
-
+      await this.deleteLeague(oldLeague);
+      await this.addLeague(newLeague);
       const games = await this.loadData<Game>('game');
       const updatedGames = games.map((game) => {
         if (game.league === oldLeague) {

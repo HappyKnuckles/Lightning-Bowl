@@ -363,8 +363,10 @@ export class LeaguePage {
         {
           text: 'Edit',
           handler: async (data: { league: string }) => {
+            const newLeagueName = data.league;
+            const oldLeagueName = league;
             try {
-              await this.storageService.editLeague(data.league, league);
+              await this.storageService.editLeague(newLeagueName, oldLeagueName);
               this.toastService.showToast(ToastMessages.leagueEditSuccess, 'checkmark-outline');
             } catch (error) {
               this.toastService.showToast(ToastMessages.leagueEditError, 'bug', true);
