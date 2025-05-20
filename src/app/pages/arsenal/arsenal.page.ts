@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, Signal, ViewChild, ElementRef, AfterViewInit, effect, model } from '@angular/core';
+import { Component, OnInit, computed, Signal, ViewChild, ElementRef, effect, model } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -94,7 +94,7 @@ import { ChartGenerationService } from 'src/app/core/services/chart/chart-genera
     IonSegmentView,
   ],
 })
-export class ArsenalPage implements OnInit, AfterViewInit {
+export class ArsenalPage implements OnInit {
   @ViewChild('core', { static: false }) coreModal!: IonModal;
   @ViewChild('coverstock', { static: false }) coverstockModal!: IonModal;
   coverstockBalls: Ball[] = [];
@@ -144,15 +144,6 @@ export class ArsenalPage implements OnInit, AfterViewInit {
       console.error('Error generating ball distribution chart:', error);
       this.toastService.showToast(ToastMessages.chartGenerationError, 'bug', true);
     }
-  }
-
-  ngAfterViewInit() {
-    //  this.ballsChartInstance = this.chartGenerationService.generateBallDistributionChart(
-    //   this.ballChart!,
-    //   this.storageService.arsenal(),
-    //   this.ballsChartInstance!,
-    // )
-    console.log('hi');
   }
 
   async removeFromArsenal(ball: Ball): Promise<void> {

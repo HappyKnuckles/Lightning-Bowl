@@ -83,7 +83,7 @@
         [ngModel]="ballFilterService.filters().minRg"
         name="minRg"
         clearOnEdit="true"
-        inputmode="numeric"
+        inputmode="decimal"
         label="RG range"
         (ionChange)="updateFilter('minRg', $event.detail.value)"></ion-input>
       <!-- <ion-label class="ion-text-center" style="margin-inline-end: 8px">-</ion-label> -->
@@ -94,7 +94,7 @@
         [ngModel]="ballFilterService.filters().maxRg"
         name="maxRg"
         clearOnEdit="true"
-        inputmode="numeric"
+        inputmode="decimal"
         (ionChange)="updateFilter('maxRg', $event.detail.value)"></ion-input>
     </ion-item>
     <ion-item>
@@ -103,7 +103,7 @@
         [ngModel]="ballFilterService.filters().minDiff"
         name="minDiff"
         clearOnEdit="true"
-        inputmode="numeric"
+        inputmode="decimal"
         label="Diff range"
         (ionChange)="updateFilter('minDiff', $event.detail.value)"></ion-input>
       <!-- <ion-label class="ion-text-center" style="margin-inline-end: 8px">-</ion-label> -->
@@ -114,7 +114,7 @@
         [ngModel]="ballFilterService.filters().maxDiff"
         name="maxDiff"
         clearOnEdit="true"
-        inputmode="numeric"
+        inputmode="decimal"
         (ionChange)="updateFilter('maxDiff', $event.detail.value)"></ion-input>
     </ion-item>
     <ion-item>
