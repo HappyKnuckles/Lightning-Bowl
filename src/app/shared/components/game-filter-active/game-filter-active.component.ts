@@ -33,6 +33,7 @@ export class GameFilterActiveComponent {
   }
 
   getFilterValue(key: keyof GameFilter): any {
+    console.log('getFilterValue', this.gameFilterService.filters()[key]);
     return this.gameFilterService.filters()[key];
   }
 }

@@ -6,7 +6,11 @@
   <ion-chip *ngIf="isFilterActive('isClean')">Only Clean Games</ion-chip>
   <ion-chip *ngIf="isFilterActive('isPerfect')">Only Perfect Games</ion-chip>
   <ion-chip *ngIf="isFilterActive('leagues')">
-    {{ getFilterValue("leagues") === "None" ? "Leagues: " + getFilterValue("leagues").join(", ") : "No Leagues" }}
+    {{
+      !getFilterValue("leagues") || getFilterValue("leagues").length === 0 || getFilterValue("leagues")[0] === ""
+        ? "No Leagues"
+        : "Leagues: " + getFilterValue("leagues").join(", ")
+    }}
   </ion-chip>
   <ion-chip *ngIf="isFilterActive('balls')">
     {{ "Balls: " + getFilterValue("balls").join(", ") }}
