@@ -19,25 +19,25 @@ const ballDistributionZonePlugin: Plugin<'scatter'> = {
     ctx.save();
 
     const xRanges = [
-      { min: scales['x'].min, max: 2.52, label: 'Low RG' },
-      { min: 2.52, max: 2.56, label: 'Med RG' },
-      { min: 2.56, max: scales['x'].max, label: 'High RG' },
+      { min: scales['x'].min, max: 0.035, label: 'Low Diff' },
+      { min: 0.035, max: 0.05, label: 'Med Diff' },
+      { min: 0.05, max: scales['x'].max, label: 'High Diff' },
     ];
     const yRanges = [
-      { min: scales['y'].min, max: 0.035, label: 'Low Diff' },
-      { min: 0.035, max: 0.05, label: 'Med Diff' },
-      { min: 0.05, max: scales['y'].max, label: 'High Diff' },
+      { min: scales['y'].min, max: 2.52, label: 'Low RG' },
+      { min: 2.52, max: 2.58, label: 'Med RG' },
+      { min: 2.58, max: scales['y'].max, label: 'High RG' },
     ];
     const zoneStyles = [
-      { color: 'rgba(220,20,60,0.15)', textColor: '#F5F5F5' },
-      { color: 'rgba(255,140,0,0.15)', textColor: '#F5F5F5' },
-      { color: 'rgba(255,215,0,0.15)', textColor: '#F5F5F5' },
-      { color: 'rgba(30,144,255,0.15)', textColor: '#F5F5F5' },
-      { color: 'rgba(128,128,128,0.15)', textColor: '#F5F5F5' },
-      { color: 'rgba(34,139,34,0.15)', textColor: '#F5F5F5' },
-      { color: 'rgba(147,112,219,0.15)', textColor: '#F5F5F5' },
-      { color: 'rgba(75,0,130,0.15)', textColor: '#F5F5F5' },
-      { color: 'rgba(0,139,139,0.15)', textColor: '#F5F5F5' },
+      { color: 'rgba(220,20,60,0.05)', textColor: '#F5F5F5' },
+      { color: 'rgba(255,140,0,0.05)', textColor: '#F5F5F5' },
+      { color: 'rgba(255,215,0,0.05)', textColor: '#F5F5F5' },
+      { color: 'rgba(30,144,255,0.05)', textColor: '#F5F5F5' },
+      { color: 'rgba(128,128,128,0.05)', textColor: '#F5F5F5' },
+      { color: 'rgba(34,139,34,0.05)', textColor: '#F5F5F5' },
+      { color: 'rgba(147,112,219,0.05)', textColor: '#F5F5F5' },
+      { color: 'rgba(75,0,130,0.05)', textColor: '#F5F5F5' },
+      { color: 'rgba(0,139,139,0.05)', textColor: '#F5F5F5' },
     ];
 
     let idx = 0;
@@ -84,56 +84,49 @@ const customAxisTitlesPlugin: Plugin<'scatter'> = {
 
     // --- X-Axis Title Logic ---
     ctx.save();
-    // Default for descriptive parts
     ctx.fillStyle = 'grey';
     ctx.font = 'bold 12px Arial';
+    const xAxisYPos = chartArea.bottom + 35;
 
-    // Far left (X-axis)
     ctx.textAlign = 'left';
-    ctx.fillText('← Earlier Roll', chartArea.left - 20, chartArea.bottom + 35);
+    ctx.fillText('← Less Flare', chartArea.left - 20, xAxisYPos);
 
-    // Center (X-axis) - RG with 14px and white color
     ctx.textAlign = 'center';
-    ctx.font = 'bold 14px Arial'; // Change font for RG
-    ctx.fillStyle = 'white'; // Change color for RG
-    ctx.fillText('RG', (chartArea.left + chartArea.right) / 2, chartArea.bottom + 35);
+    ctx.font = 'bold 14px Arial';
+    ctx.fillStyle = 'white';
+    ctx.fillText('Diff', (chartArea.left + chartArea.right) / 2, xAxisYPos);
 
-    // Far right (X-axis) - Revert to grey for descriptive part
     ctx.textAlign = 'right';
-    ctx.font = 'bold 12px Arial'; // Revert font
-    ctx.fillStyle = 'grey'; // Revert color
-    ctx.fillText('Later Roll →', chartArea.right + 20, chartArea.bottom + 35);
+    ctx.font = 'bold 12px Arial';
+    ctx.fillStyle = 'grey';
+    ctx.fillText('More Flare →', chartArea.right + 20, xAxisYPos);
     ctx.restore();
 
     // --- Y-Axis Title Logic ---
     ctx.save();
-    // Font will be set in drawRotated, color will be passed as parameter
-
-    const xPos = chartArea.left - 40; // pivot X for Y-axis titles
-    const bottomY = chartArea.bottom - 25;
-    const midY = (chartArea.top + chartArea.bottom) / 2;
-    const topY = chartArea.top + 35;
+    const yAxisXPos = chartArea.left - 40;
+    const lessFlareYPos = chartArea.bottom - 25;
+    const diffYPos = (chartArea.top + chartArea.bottom) / 2;
+    const moreFlareYPos = chartArea.top + 35;
 
     function drawRotated(text: string, x: number, y: number, font: string, color: string) {
       ctx.save();
       ctx.translate(x, y);
-      ctx.rotate(-Math.PI / 2); // rotate 90° CCW
+      ctx.rotate(-Math.PI / 2);
       ctx.textAlign = 'center';
-      ctx.font = font; // Apply specific font
-      ctx.fillStyle = color; // Apply specific color
+      ctx.font = font;
+      ctx.fillStyle = color;
       ctx.fillText(text, 0, 0);
       ctx.restore();
     }
 
-    // Y-axis labels
-    drawRotated('← Less Flare', xPos, bottomY, 'bold 12px Arial', 'grey');
-    drawRotated('Diff', xPos, midY, 'bold 14px Arial', 'white'); // Diff with 14px and white color
-    drawRotated('More Flare →', xPos, topY, 'bold 12px Arial', 'grey');
+    drawRotated('← Earlier Roll', yAxisXPos, lessFlareYPos, 'bold 12px Arial', 'grey');
+    drawRotated('RG', yAxisXPos, diffYPos, 'bold 14px Arial', 'white');
+    drawRotated('Later Roll →', yAxisXPos, moreFlareYPos, 'bold 12px Arial', 'grey');
 
     ctx.restore();
   },
 };
-
 @Injectable({
   providedIn: 'root',
 })
@@ -1047,20 +1040,17 @@ export class ChartGenerationService {
         throw new Error('Failed to get canvas context.');
       }
 
-      // If reloading, destroy old chart
       if (isReload && existingChartInstance) {
         existingChartInstance.destroy();
       }
 
-      // 1) Helper for tiny random jitter
       const jitter = () => (Math.random() - 0.5) * 0.004;
 
-      // 2) Build data points + preload images
       const dataPoints: (ScatterDataPoint & { name: string; imageUrl: string; cover: string })[] = [];
       const pointImages: HTMLImageElement[] = [];
       for (const ball of balls) {
-        const xRaw = parseFloat(ball.core_rg);
-        const yRaw = parseFloat(ball.core_diff);
+        const xRaw = parseFloat(ball.core_diff);
+        const yRaw = parseFloat(ball.core_rg);
         if (isNaN(xRaw) || isNaN(yRaw)) {
           console.warn(`Skipping invalid RG/Diff for ${ball.ball_name}`);
           continue;
@@ -1075,7 +1065,6 @@ export class ChartGenerationService {
         pointImages.push(img);
       }
 
-      // 5) Base dataset
       const dataset = {
         label: 'Bowling Balls',
         data: dataPoints,
@@ -1085,7 +1074,6 @@ export class ChartGenerationService {
         backgroundColor: 'rgba(0,0,0,0)',
       };
 
-      // 6) Register plugins and build config
       const config: ChartConfiguration<'scatter'> = {
         type: 'scatter',
         data: { datasets: [dataset] },
@@ -1098,8 +1086,9 @@ export class ChartGenerationService {
             padding: {
               bottom: 20,
               left: 20,
-              right: 20,
+              right: 0,
             },
+            autoPadding: false,
           },
           scales: {
             x: {
@@ -1111,8 +1100,8 @@ export class ChartGenerationService {
                 font: { size: 8 },
               },
               grid: { color: 'rgba(255,255,255,0.2)' },
-              min: 2.4,
-              max: 2.8,
+              min: 0.005,
+              max: 0.06,
             },
             y: {
               ticks: {
@@ -1121,8 +1110,8 @@ export class ChartGenerationService {
                 font: { size: 8 },
               },
               grid: { color: 'rgba(255,255,255,0.2)' },
-              min: 0.005,
-              max: 0.06,
+              min: 2.4,
+              max: 2.8,
             },
           },
           plugins: {
@@ -1142,28 +1131,25 @@ export class ChartGenerationService {
                   const x = dp.x as number;
                   const y = dp.y as number;
 
-                  // 1) Determine Roll category
                   let rollCat: string;
-                  if (x < 2.52) {
+                  if (y < 2.52) {
                     rollCat = 'Early Roll';
-                  } else if (x < 2.56) {
+                  } else if (y < 2.58) {
                     rollCat = 'Medium Roll';
                   } else {
                     rollCat = 'Later Roll';
                   }
 
-                  // 2) Determine Flare category
                   let flareCat: string;
-                  if (y < 0.035) {
+                  if (x < 0.035) {
                     flareCat = 'Low Flare';
-                  } else if (y < 0.05) {
+                  } else if (x < 0.05) {
                     flareCat = 'Medium Flare';
                   } else {
                     flareCat = 'High Flare';
                   }
 
-                  // 3) Return all tooltip lines
-                  return [`RG:     ${x.toFixed(3)}`, `Diff:   ${y.toFixed(3)}`, `Cover:  ${dp.cover}`, rollCat, flareCat];
+                  return [`RG: ${y.toFixed(3)}`, `Diff: ${x.toFixed(3)}`, `Cover: ${dp.cover}`, rollCat, flareCat];
                 },
               },
             },
@@ -1189,9 +1175,12 @@ export class ChartGenerationService {
         },
       };
 
-      // 7) Create or update chart
       if (existingChartInstance && !isReload) {
         existingChartInstance.data.datasets[0] = dataset;
+        if (existingChartInstance.options.scales) {
+          existingChartInstance.options.scales['x'] = config.options?.scales?.['x'];
+          existingChartInstance.options.scales['y'] = config.options?.scales?.['y'];
+        }
         existingChartInstance.update();
         return existingChartInstance;
       } else {

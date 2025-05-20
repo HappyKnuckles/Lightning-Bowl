@@ -25,8 +25,8 @@ import { GameDataTransformerService } from 'src/app/core/services/game-transform
 import { InputCustomEvent } from '@ionic/angular';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { UtilsService } from 'src/app/core/services/utils/utils.service';
-import { PatternTypeaheadComponent } from '../pattern-typeahead/pattern-typeahead.component';
 import { Game } from 'src/app/core/models/game.model';
+import { PatternTypeaheadComponent } from '../pattern-typeahead/pattern-typeahead.component';
 
 @Component({
   selector: 'app-game-grid',
