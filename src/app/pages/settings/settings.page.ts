@@ -77,7 +77,7 @@ import { AlertController, InputCustomEvent } from '@ionic/angular';
     ReactiveFormsModule,
     LeagueSelectorComponent,
     SpareNamesComponent,
-    NgIf
+    NgIf,
   ],
 })
 export class SettingsPage implements OnInit {

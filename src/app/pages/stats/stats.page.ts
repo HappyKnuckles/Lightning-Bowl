@@ -123,7 +123,8 @@ export class StatsPage implements OnInit, AfterViewInit {
   private pinChartInstance: Chart | null = null;
   private throwChartInstance: Chart | null = null;
   private scoreChartInstance: Chart | null = null;
-
+  isCollapsed = false;
+  private COLLAPSE_THRESHOLD = 50;
   constructor(
     public loadingService: LoadingService,
     public statsService: GameStatsService,
@@ -195,6 +196,11 @@ export class StatsPage implements OnInit, AfterViewInit {
     setTimeout(() => {
       this.content.scrollToTop(300);
     }, 300);
+  }
+
+  onContentScroll(event: CustomEvent) {
+    const scrollTop = event.detail.scrollTop || 0;
+    this.isCollapsed = scrollTop > this.COLLAPSE_THRESHOLD;
   }
 
   async handleFileUpload(event: Event): Promise<void> {

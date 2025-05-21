@@ -17,7 +17,7 @@
   </ion-toolbar>
 
   @if (selectedMode !== "Single") {
-    <ion-toolbar>
+    <ion-toolbar class="collapse-toolbar outer" [class.visible]="isCollapsed" [class.hidden]="!isCollapsed">
       <ion-segment [value]="selectedSegment" [scrollable]="true">
         <ion-segment-button *ngFor="let segment of segments" [value]="segment" [contentId]="segment">
           <ion-label class="segment-label">{{ segment }}</ion-label>
@@ -48,7 +48,21 @@
 </div>
 
 <ng-container *ngFor="let mode of seriesMode; let i = index">
-  <ion-content [fullscreen]="true" *ngIf="mode">
+  <ion-content [fullscreen]="true" *ngIf="mode" scrollEvents="true" (ionScroll)="onContentScroll($event)">
+    <ion-header collapse="condense">
+      <ion-toolbar>
+        <ion-title style="font-size: 28px" size="large">Add Game</ion-title>
+      </ion-toolbar>
+      @if (selectedMode !== "Single") {
+        <ion-toolbar class="collapse-toolbar inner" [class.visible]="!isCollapsed" [class.hidden]="isCollapsed">
+          <ion-segment [value]="selectedSegment" [scrollable]="true">
+            <ion-segment-button *ngFor="let segment of segments" [value]="segment" [contentId]="segment">
+              <ion-label class="segment-label">{{ segment }}</ion-label>
+            </ion-segment-button>
+          </ion-segment>
+        </ion-toolbar>
+      }
+    </ion-header>
     <ion-segment-view>
       <ion-segment-content *ngFor="let trackIndex of trackIndexes[i]; let j = index" [id]="segments[j]">
         <app-game-grid

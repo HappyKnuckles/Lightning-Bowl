@@ -117,6 +117,9 @@ export class AddGamePage implements OnInit {
     '01c1e0d1-3469-4091-96a0-76beb68a6f97',
   ];
 
+  isCollapsed = false;
+  private COLLAPSE_THRESHOLD = 50;
+
   constructor(
     private actionSheetCtrl: ActionSheetController,
     private imageProcessingService: ImageProcesserService,
@@ -396,6 +399,12 @@ export class AddGamePage implements OnInit {
       }
     });
   }
+
+  onContentScroll(event: CustomEvent) {
+    const scrollTop = event.detail.scrollTop || 0;
+    this.isCollapsed = scrollTop > this.COLLAPSE_THRESHOLD;
+  }
+
   private updateSegments(): void {
     let numberOfGames = 1;
 

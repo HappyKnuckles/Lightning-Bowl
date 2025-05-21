@@ -70,6 +70,8 @@ import { PatternFormComponent } from 'src/app/shared/components/pattern-form/pat
 })
 export class HistoryPage {
   @ViewChild('accordionGroup') accordionGroup!: IonAccordionGroup;
+  isCollapsed = false;
+  private COLLAPSE_THRESHOLD = 50;
   constructor(
     private alertController: AlertController,
     private toastService: ToastService,
@@ -136,6 +138,11 @@ export class HistoryPage {
     if (fileInput) {
       fileInput.click();
     }
+  }
+
+  onContentScroll(event: CustomEvent) {
+    const scrollTop = event.detail.scrollTop || 0;
+    this.isCollapsed = scrollTop > this.COLLAPSE_THRESHOLD;
   }
 
   async exportToExcel(): Promise<void> {

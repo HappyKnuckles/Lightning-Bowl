@@ -51,7 +51,7 @@ export class BallCoverstockTypeaheadComponent implements OnDestroy, OnInit {
   fuse!: Fuse<Coverstock>;
   private batchSize = 100;
   public loadedCount = signal(0);
-  constructor(private modalCtrl: ModalController) { }
+  constructor(private modalCtrl: ModalController) {}
 
   ngOnInit() {
     this.filteredCoverstocks.set([...this.coverstocks()]);

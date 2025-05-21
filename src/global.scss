@@ -25,6 +25,39 @@
 @import url("@ionic/angular/css/text-transformation.css");
 @import url("@ionic/angular/css/flex-utils.css");
 
+.header-collapse-condense {
+  ion-toolbar {
+    --background: var(--ion-item-background);
+  }
+}
+
+// Searchbar collapse
+.collapse-toolbar {
+  // --min-height: 56px;
+  /* or whatever your toolbar height is */
+  height: var(--min-height);
+  overflow: hidden;
+  /* hide contents when “hidden” */
+  transition:
+    opacity 200ms ease,
+    transform 200ms ease;
+}
+
+/* Visible = full opacity, in place */
+.collapse-toolbar.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: all;
+}
+
+/* Hidden = transparent & shifted up a bit */
+.collapse-toolbar.hidden {
+  opacity: 0;
+  transform: translateY(-100%);
+  pointer-events: none;
+  display: none;
+}
+
 ion-segment-view {
   height: fit-content;
 }
@@ -49,7 +82,7 @@ ion-input {
   --highlight-color-focused: var(--ion-input-color) !important;
 }
 
-.no-game-text {
+.no-content-text {
   width: 60%;
   display: flex;
   justify-content: center;
@@ -64,7 +97,7 @@ ion-input {
   color: #080f08 !important;
 }
 
-ion-header {
+ion-header:not(ion-content > ion-header) {
   // background-color: #080f08;
 
   ion-toolbar {
@@ -225,9 +258,9 @@ ion-button {
 }
 
 ion-content::part(scroll) {
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
-  }
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
 
 .segment-label {
   font-size: clamp(0.875rem, 4vw, 1.063rem);

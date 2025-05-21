@@ -29,7 +29,7 @@
     </ion-buttons>
   </ion-toolbar>
   @if (!((gameFilterService.filteredGames().length <= 0 && !loadingService.isLoading()) || gameFilterService.filteredGames().length <= 0)) {
-    <ion-toolbar>
+    <ion-toolbar class="collapse-toolbar outer" [class.visible]="isCollapsed" [class.hidden]="!isCollapsed">
       <ion-segment [value]="selectedSegment" (ionChange)="onSegmentChanged($event)">
         @for (segment of segments; track segment) {
           <ion-segment-button [value]="segment" [contentId]="segment">
@@ -39,13 +39,40 @@
       </ion-segment>
     </ion-toolbar>
   }
+  <ion-toolbar
+    *ngIf="gameFilterService.activeFilterCount() !== 0"
+    class="collapse-toolbar outer"
+    [class.visible]="isCollapsed"
+    [class.hidden]="!isCollapsed">
+    <app-game-filter-active></app-game-filter-active>
+  </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
+<ion-content [fullscreen]="true" scrollEvents="true" (ionScroll)="onContentScroll($event)">
   <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
-  <app-game-filter-active></app-game-filter-active>
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title style="font-size: 28px" size="large">Stats</ion-title>
+    </ion-toolbar>
+    @if (!((gameFilterService.filteredGames().length <= 0 && !loadingService.isLoading()) || gameFilterService.filteredGames().length <= 0)) {
+      <ion-toolbar class="collapse-toolbar inner" [class.visible]="!isCollapsed" [class.hidden]="isCollapsed">
+        <ion-segment [value]="selectedSegment" (ionChange)="onSegmentChanged($event)">
+          @for (segment of segments; track segment) {
+            <ion-segment-button [value]="segment" [contentId]="segment">
+              <ion-label class="segment-label">{{ segment }}</ion-label>
+            </ion-segment-button>
+          }
+        </ion-segment>
+      </ion-toolbar>
+    }
+    <app-game-filter-active
+      *ngIf="gameFilterService.activeFilterCount() !== 0"
+      class="collapse-toolbar inner"
+      [class.visible]="!isCollapsed"
+      [class.hidden]="isCollapsed"></app-game-filter-active>
+  </ion-header>
   <ion-segment-view>
     <ion-segment-content id="Overall">
       <section class="tab" *ngIf="gameFilterService.filteredGames().length > 0">
@@ -130,12 +157,12 @@
   <!-- Show this message if there are no game history items and it's not loading -->
   <ng-container *ngIf="gameFilterService.filteredGames().length <= 0">
     <ng-container *ngIf="storageService.games().length <= 0 && !loadingService.isLoading(); else checkFilteredGames">
-      <ion-text class="no-game-text"> Start playing a few games to see your stats here! </ion-text>
+      <ion-text class="no-content-text"> Start playing a few games to see your stats here! </ion-text>
     </ng-container>
   </ng-container>
   <ng-template #checkFilteredGames>
     <ng-container *ngIf="gameFilterService.filteredGames().length <= 0 && !loadingService.isLoading()">
-      <ion-text class="no-game-text"> No stats for this filter! </ion-text>
+      <ion-text class="no-content-text"> No stats for this filter! </ion-text>
     </ng-container>
   </ng-template>
 </ion-content>

@@ -7,105 +7,124 @@
     </ion-buttons> -->
     <ion-title>Pattern Library</ion-title>
   </ion-toolbar>
-  <ion-toolbar>
+  <ion-toolbar class="collapse-toolbar outer" [class.visible]="isCollapsed" [class.hidden]="!isCollapsed">
     <ion-searchbar (ionInput)="searchPatterns($event)" placeholder="Search for a pattern" showCancelButton="focus" debounce="300"></ion-searchbar>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
+<ion-content [fullscreen]="true" scrollEvents="true" (ionScroll)="onContentScroll($event)">
   <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
-  @if(!loadingService.isLoading()) {
-  <ng-container *ngIf="patterns.length <= 0; else allPatterns">
-    <ion-text class="no-game-text"> No patterns found! </ion-text>
-  </ng-container>
-  <ng-template #allPatterns>
-    @for(pattern of patterns; track pattern.url) {
-    <ion-card
-      [ngClass]="{
-          'red-card': getRatioValue(pattern.ratio ?? '0') >= 1 && getRatioValue(pattern.ratio ?? '0') < 4,
-          'yellow-card': getRatioValue(pattern.ratio ?? '0') >= 4 && getRatioValue(pattern.ratio ?? '0') < 8,
-          'green-card': getRatioValue(pattern.ratio ?? '0') >= 8
-        }"
-      button
-      id="{{pattern.url}}">
-      <img *ngIf="pattern.chartImageSrc" [src]="pattern.chartImageSrc" alt="{{ pattern.title }} Oil Pattern Chart" class="pattern-chart-image" />
-      <ion-card-header>
-        <ion-card-title>{{pattern.title}}</ion-card-title>
-        <ion-card-subtitle>{{pattern.category}}</ion-card-subtitle>
-      </ion-card-header>
-      <ion-card-content>
-        <ion-chip class="info">Distance: {{pattern.distance}}ft</ion-chip>
-        <ion-chip class="info">Ratio: {{pattern.ratio ?? 0}}</ion-chip> <ion-chip class="info">Pump: {{pattern.pump}}µL</ion-chip>
-        <ion-chip class="info">Tanks: {{pattern.tanks}}</ion-chip>
-        <ion-chip class="info">
-          Volume: {{pattern.volume}}mL (
-          <p style="margin: 0">
-            <ion-icon name="arrow-up-outline" style="vertical-align: text-top; margin-right: -2px"></ion-icon> {{pattern.forward}}mL ,
-            <ion-icon name="arrow-down-outline" style="vertical-align: text-top; margin-right: -2px"></ion-icon> {{pattern.reverse}}mL
-          </p>
-          )
-        </ion-chip>
-        <!-- <ion-chip class="info">Oil Forward: {{pattern.forward}}mL</ion-chip>
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title style="font-size: 28px" size="large">Pattern Library</ion-title>
+      <ion-searchbar
+        class="collapse-toolbar inner"
+        [class.visible]="!isCollapsed"
+        [class.hidden]="isCollapsed"
+        (ionInput)="searchPatterns($event)"
+        placeholder="Search for a pattern"
+        showCancelButton="focus"
+        debounce="300"></ion-searchbar>
+    </ion-toolbar>
+  </ion-header>
+  @if (!loadingService.isLoading()) {
+    <ng-container *ngIf="patterns.length <= 0; else allPatterns">
+      <ion-text class="no-content-text"> No patterns found! </ion-text>
+    </ng-container>
+    <ng-template #allPatterns>
+      @for (pattern of patterns; track pattern.url) {
+        <ion-card
+          [ngClass]="{
+            'red-card': getRatioValue(pattern.ratio ?? '0') >= 1 && getRatioValue(pattern.ratio ?? '0') < 4,
+            'yellow-card': getRatioValue(pattern.ratio ?? '0') >= 4 && getRatioValue(pattern.ratio ?? '0') < 8,
+            'green-card': getRatioValue(pattern.ratio ?? '0') >= 8,
+          }"
+          button
+          id="{{ pattern.url }}">
+          <img *ngIf="pattern.chartImageSrc" [src]="pattern.chartImageSrc" alt="{{ pattern.title }} Oil Pattern Chart" class="pattern-chart-image" />
+          <ion-card-header>
+            <ion-card-title>{{ pattern.title }}</ion-card-title>
+            <ion-card-subtitle>{{ pattern.category }}</ion-card-subtitle>
+          </ion-card-header>
+          <ion-card-content>
+            <ion-chip class="info">Distance: {{ pattern.distance }}ft</ion-chip>
+            <ion-chip class="info">Ratio: {{ pattern.ratio ?? 0 }}</ion-chip> <ion-chip class="info">Pump: {{ pattern.pump }}µL</ion-chip>
+            <ion-chip class="info">Tanks: {{ pattern.tanks }}</ion-chip>
+            <ion-chip class="info">
+              Volume: {{ pattern.volume }}mL (
+              <p style="margin: 0">
+                <ion-icon name="arrow-up-outline" style="vertical-align: text-top; margin-right: -2px"></ion-icon>
+                {{ pattern.forward }}mL ,
+                <ion-icon name="arrow-down-outline" style="vertical-align: text-top; margin-right: -2px"></ion-icon>
+                {{ pattern.reverse }}mL
+              </p>
+              )
+            </ion-chip>
+            <!-- <ion-chip class="info">Oil Forward: {{pattern.forward}}mL</ion-chip>
         <ion-chip class="info">Oil Reverse: {{pattern.reverse}}mL</ion-chip> -->
-      </ion-card-content>
-    </ion-card>
+          </ion-card-content>
+        </ion-card>
+      }
+    </ng-template>
+    <ion-infinite-scroll threshold="100px" (ionInfinite)="loadPatterns($event)" *ngIf="hasMoreData">
+      <ion-infinite-scroll-content loadingSpinner="crescent" loadingText="Loading more patterns..."></ion-infinite-scroll-content>
+    </ion-infinite-scroll>
+  } @else {
+    @for (item of [1, 2, 3, 4, 5, 6, 7, 8]; track item) {
+      <ion-card>
+        <ion-skeleton-text style="width: 100%; height: 100px; margin: 0"></ion-skeleton-text>
+        <ion-card-header>
+          <ion-card-title>
+            <ion-skeleton-text [animated]="true" style="width: 80%; height: 20px; border-radius: 10px"></ion-skeleton-text>
+          </ion-card-title>
+          <ion-card-subtitle>
+            <ion-skeleton-text [animated]="true" style="width: 50%; border-radius: 10px"></ion-skeleton-text>
+          </ion-card-subtitle>
+        </ion-card-header>
+        <ion-card-content>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px">
+            <div style="display: inline-flex">
+              <ion-skeleton-text [animated]="true" style="width: 90px; height: 24px; border-radius: 10px"></ion-skeleton-text>
+            </div>
+            <div style="display: inline-flex">
+              <ion-skeleton-text [animated]="true" style="width: 70px; height: 24px; border-radius: 10px"></ion-skeleton-text>
+            </div>
+            <div style="display: inline-flex">
+              <ion-skeleton-text [animated]="true" style="width: 85px; height: 24px; border-radius: 10px"></ion-skeleton-text>
+            </div>
+            <div style="display: inline-flex">
+              <ion-skeleton-text [animated]="true" style="width: 100px; height: 24px; border-radius: 10px"></ion-skeleton-text>
+            </div>
+            <div style="display: inline-flex">
+              <ion-skeleton-text [animated]="true" style="width: 250px; height: 24px; border-radius: 10px"></ion-skeleton-text>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
     }
-  </ng-template>
-  <ion-infinite-scroll threshold="100px" (ionInfinite)="loadPatterns($event)" *ngIf="hasMoreData">
-    <ion-infinite-scroll-content loadingSpinner="crescent" loadingText="Loading more patterns..."></ion-infinite-scroll-content>
-  </ion-infinite-scroll>
-  } @else { @for(item of [1,2,3,4,5,6,7,8]; track item) {
-  <ion-card>
-    <ion-skeleton-text style="width: 100%; height: 100px; margin: 0"></ion-skeleton-text>
-    <ion-card-header>
-      <ion-card-title>
-        <ion-skeleton-text [animated]="true" style="width: 80%; height: 20px; border-radius: 10px"></ion-skeleton-text>
-      </ion-card-title>
-      <ion-card-subtitle>
-        <ion-skeleton-text [animated]="true" style="width: 50%; border-radius: 10px"></ion-skeleton-text>
-      </ion-card-subtitle>
-    </ion-card-header>
-    <ion-card-content>
-      <div style="display: flex; flex-wrap: wrap; gap: 8px">
-        <div style="display: inline-flex">
-          <ion-skeleton-text [animated]="true" style="width: 90px; height: 24px; border-radius: 10px"></ion-skeleton-text>
-        </div>
-        <div style="display: inline-flex">
-          <ion-skeleton-text [animated]="true" style="width: 70px; height: 24px; border-radius: 10px"></ion-skeleton-text>
-        </div>
-        <div style="display: inline-flex">
-          <ion-skeleton-text [animated]="true" style="width: 85px; height: 24px; border-radius: 10px"></ion-skeleton-text>
-        </div>
-        <div style="display: inline-flex">
-          <ion-skeleton-text [animated]="true" style="width: 100px; height: 24px; border-radius: 10px"></ion-skeleton-text>
-        </div>
-        <div style="display: inline-flex">
-          <ion-skeleton-text [animated]="true" style="width: 250px; height: 24px; border-radius: 10px"></ion-skeleton-text>
-        </div>
-      </div>
-    </ion-card-content>
-  </ion-card>
-  } }
+  }
 </ion-content>
 
-@if(!loadingService.isLoading()) { @for(pattern of patterns; track pattern.url) {
-<ion-modal trigger="{{pattern.url}}" #modal>
-  <ng-template>
-    <ion-header translucent="true">
-      <ion-toolbar>
-        <ion-buttons slot="start" style="padding: 4px">
-          <ion-button (click)="modal.dismiss()">
-            <ion-icon name="chevron-back" slot="icon-only"></ion-icon>
-          </ion-button>
-        </ion-buttons>
-        <ion-title>{{pattern.title}}</ion-title>
-      </ion-toolbar>
-    </ion-header>
-    <ion-content [fullscreen]="true">
-      <app-pattern-info [pattern]="pattern"></app-pattern-info>
-    </ion-content>
-  </ng-template>
-</ion-modal>
-} }
+@if (!loadingService.isLoading()) {
+  @for (pattern of patterns; track pattern.url) {
+    <ion-modal trigger="{{ pattern.url }}" #modal>
+      <ng-template>
+        <ion-header translucent="true">
+          <ion-toolbar>
+            <ion-buttons slot="start" style="padding: 4px">
+              <ion-button (click)="modal.dismiss()">
+                <ion-icon name="chevron-back" slot="icon-only"></ion-icon>
+              </ion-button>
+            </ion-buttons>
+            <ion-title>{{ pattern.title }}</ion-title>
+          </ion-toolbar>
+        </ion-header>
+        <ion-content [fullscreen]="true">
+          <app-pattern-info [pattern]="pattern"></app-pattern-info>
+        </ion-content>
+      </ng-template>
+    </ion-modal>
+  }
+}

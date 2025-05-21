@@ -22,20 +22,25 @@
   <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title style="font-size: 28px" size="large">Leagues</ion-title>
+    </ion-toolbar>
+  </ion-header>
   <!-- Show this message if there are no game history items and it's not loading -->
   <ng-container *ngIf="storageService.games().length <= 0 && !loadingService.isLoading(); else noLeagues">
-    <ion-text class="no-game-text"> Start playing a few games to see your leagues here! </ion-text>
+    <ion-text class="no-content-text"> Start playing a few games to see your leagues here! </ion-text>
   </ng-container>
 
   <ng-template #noLeagues>
     <ng-container *ngIf="leagueKeys().length <= 0 && !loadingService.isLoading(); else content">
-      <ion-text class="no-game-text"> No leagues saved! </ion-text>
+      <ion-text class="no-content-text"> No leagues saved! </ion-text>
     </ng-container>
   </ng-template>
 
   <ng-template #content>
     @if (noLeaguesShown && !isVisibilityEdit()) {
-      <ion-text class="no-game-text" (longPressed)="editVisibility()" [delay]="1000" appLongPress> No leagues selected to show! </ion-text>
+      <ion-text class="no-content-text" (longPressed)="editVisibility()" [delay]="1000" appLongPress> No leagues selected to show! </ion-text>
     } @else {
       @for (league of leagueKeys(); track league) {
         @if (isVisibilityEdit()) {

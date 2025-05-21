@@ -16,7 +16,7 @@
 <!-- TODO virtual scroll because prefetched data-->
 <ion-content [fullscreen]="true" role="feed">
   <ng-container *ngIf="displayedPatterns().length <= 0; else allPatterns">
-    <ion-text class="no-game-text"> No patterns found! </ion-text>
+    <ion-text class="no-content-text"> No patterns found! </ion-text>
   </ng-container>
   <ng-template #allPatterns>
     <ion-radio-group (ionChange)="radioGroupChange($event)" [value]="selectedPattern" allowEmptySelection="true">

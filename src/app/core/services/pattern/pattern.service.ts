@@ -27,7 +27,9 @@ export class PatternService {
 
   async getPatterns(page: number): Promise<AllPatternsResult> {
     try {
-      const response = await firstValueFrom(this.http.get<AllPatternsResult>(`${environment.patternEndpoint}patterns?page=${page}`).pipe(retry({ count: 5, delay: 2000 })));
+      const response = await firstValueFrom(
+        this.http.get<AllPatternsResult>(`${environment.patternEndpoint}patterns?page=${page}`).pipe(retry({ count: 5, delay: 2000 })),
+      );
       return response;
     } catch (error) {
       console.error('Error fetching patterns:', error);
@@ -37,7 +39,9 @@ export class PatternService {
 
   async getAllPatterns(): Promise<Pattern[]> {
     try {
-      const response = await firstValueFrom(this.http.get<Pattern[]>(`${environment.patternEndpoint}patterns/all`).pipe(retry({ count: 5, delay: 2000 })));
+      const response = await firstValueFrom(
+        this.http.get<Pattern[]>(`${environment.patternEndpoint}patterns/all`).pipe(retry({ count: 5, delay: 2000 })),
+      );
       return response;
     } catch (error) {
       console.error('Error fetching all patterns:', error);

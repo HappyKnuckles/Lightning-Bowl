@@ -68,7 +68,7 @@ export class BallTypeaheadComponent implements OnInit, OnDestroy {
   constructor(
     public storageService: StorageService,
     private modalCtrl: ModalController,
-  ) { }
+  ) {}
 
   ngOnInit(): void {
     this.filteredBalls = [...this.balls];

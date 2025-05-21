@@ -84,7 +84,8 @@ export class PatternPage implements OnInit {
   patterns: Pattern[] = [];
   currentPage = 1;
   hasMoreData = true;
-
+  isCollapsed = false;
+  private COLLAPSE_THRESHOLD = 50;
   constructor(
     private patternService: PatternService,
     private hapticService: HapticService,
@@ -101,7 +102,6 @@ export class PatternPage implements OnInit {
     this.generateChartImages();
     // this.renderCharts();
   }
-
   async handleRefresh(event: RefresherCustomEvent): Promise<void> {
     try {
       this.hapticService.vibrate(ImpactStyle.Medium);
@@ -177,6 +177,11 @@ export class PatternPage implements OnInit {
       component: PatternFormComponent,
     });
     return await modal.present();
+  }
+
+  onContentScroll(event: CustomEvent) {
+    const scrollTop = event.detail.scrollTop || 0;
+    this.isCollapsed = scrollTop > this.COLLAPSE_THRESHOLD;
   }
 
   getRatioValue(ratio: string): number {

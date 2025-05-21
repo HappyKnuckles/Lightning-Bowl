@@ -55,7 +55,7 @@ export class BallCoreTypeaheadComponent implements OnInit, OnDestroy {
   fuse!: Fuse<Core>;
   private batchSize = 100;
   public loadedCount = signal(0);
-  constructor(private modalCtrl: ModalController) { }
+  constructor(private modalCtrl: ModalController) {}
 
   ngOnInit() {
     this.filteredCores.set([...this.cores()]);

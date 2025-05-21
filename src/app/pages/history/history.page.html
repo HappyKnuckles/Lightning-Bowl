@@ -31,21 +31,39 @@
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
+  <ion-toolbar
+    *ngIf="gameFilterService.activeFilterCount() !== 0"
+    class="collapse-toolbar outer"
+    [class.visible]="isCollapsed"
+    [class.hidden]="!isCollapsed">
+    <app-game-filter-active></app-game-filter-active>
+  </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
+<ion-content [fullscreen]="true" scrollEvents="true" (ionScroll)="onContentScroll($event)">
   <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
-  <app-game-filter-active></app-game-filter-active>
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title style="font-size: 28px" size="large"
+        >History <ion-badge>{{ gameFilterService.filteredGames().length }}</ion-badge></ion-title
+      >
+    </ion-toolbar>
+    <app-game-filter-active
+      *ngIf="gameFilterService.activeFilterCount() !== 0"
+      class="collapse-toolbar inner"
+      [class.visible]="!isCollapsed"
+      [class.hidden]="isCollapsed"></app-game-filter-active>
+  </ion-header>
 
   <!-- Show this message if there are no game history items and it's not loading -->
   <ng-container *ngIf="storageService.games().length <= 0 && !loadingService.isLoading(); else checkFilteredGames">
-    <ion-text class="no-game-text"> Start playing a few games to see your history here! </ion-text>
+    <ion-text class="no-content-text"> Start playing a few games to see your history here! </ion-text>
   </ng-container>
   <ng-template #checkFilteredGames>
     <ng-container *ngIf="gameFilterService.filteredGames().length <= 0 && !loadingService.isLoading(); else content">
-      <ion-text class="no-game-text"> No games for this filter! </ion-text>
+      <ion-text class="no-content-text"> No games for this filter! </ion-text>
     </ng-container>
   </ng-template>
   <!-- Main content to display when there is game history or when loading is done -->

@@ -108,6 +108,8 @@ export class ArsenalPage implements OnInit {
   selectedSegment = model('arsenal');
   @ViewChild('balls', { static: false }) ballChart?: ElementRef;
   private ballsChartInstance: Chart | null = null;
+  isCollapsed = false;
+  private COLLAPSE_THRESHOLD = 50;
   constructor(
     public storageService: StorageService,
     private hapticService: HapticService,
@@ -128,22 +130,6 @@ export class ArsenalPage implements OnInit {
 
   ngOnInit() {
     this.presentingElement = document.querySelector('.ion-page')!;
-  }
-
-  private generateBallDistributionChart(): void {
-    try {
-      if (!this.ballChart) {
-        return;
-      }
-      this.ballsChartInstance = this.chartGenerationService.generateBallDistributionChart(
-        this.ballChart!,
-        this.storageService.arsenal(),
-        this.ballsChartInstance!,
-      );
-    } catch (error) {
-      console.error('Error generating ball distribution chart:', error);
-      this.toastService.showToast(ToastMessages.chartGenerationError, 'bug', true);
-    }
   }
 
   async removeFromArsenal(ball: Ball): Promise<void> {
@@ -247,6 +233,27 @@ export class ArsenalPage implements OnInit {
       this.toastService.showToast(`Error fetching balls for coverstock ${ball.coverstock_name}`, 'bug', true);
     } finally {
       this.loadingService.setLoading(false);
+    }
+  }
+
+  onContentScroll(event: CustomEvent) {
+    const scrollTop = event.detail.scrollTop || 0;
+    this.isCollapsed = scrollTop > this.COLLAPSE_THRESHOLD;
+  }
+
+  private generateBallDistributionChart(): void {
+    try {
+      if (!this.ballChart) {
+        return;
+      }
+      this.ballsChartInstance = this.chartGenerationService.generateBallDistributionChart(
+        this.ballChart!,
+        this.storageService.arsenal(),
+        this.ballsChartInstance!,
+      );
+    } catch (error) {
+      console.error('Error generating ball distribution chart:', error);
+      this.toastService.showToast(ToastMessages.chartGenerationError, 'bug', true);
     }
   }
 }

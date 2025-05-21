@@ -14,7 +14,7 @@
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
-  <ion-toolbar>
+  <ion-toolbar class="collapse-toolbar outer" [class.visible]="isCollapsed" [class.hidden]="!isCollapsed">
     <ion-searchbar
       [value]="searchTerm()"
       (ionInput)="searchBalls($event)"
@@ -22,17 +22,38 @@
       showCancelButton="focus"
       debounce="300"></ion-searchbar>
   </ion-toolbar>
+  <ion-toolbar class="collapse-toolbar outer" [class.visible]="isCollapsed" [class.hidden]="!isCollapsed">
+    <app-ball-filter-active></app-ball-filter-active>
+  </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" role="feed">
+<ion-content [fullscreen]="true" role="feed" scrollEvents="true" (ionScroll)="onContentScroll($event)">
   <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
-  <app-ball-filter-active></app-ball-filter-active>
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title style="font-size: 28px" size="large">Ball Library</ion-title>
+      <ion-searchbar
+        class="collapse-toolbar inner"
+        [class.visible]="!isCollapsed"
+        [class.hidden]="isCollapsed"
+        [value]="searchTerm()"
+        (ionInput)="searchBalls($event)"
+        placeholder="Search for a ball"
+        showCancelButton="focus"
+        debounce="300"></ion-searchbar>
+      <app-ball-filter-active class="collapse-toolbar inner" [class.visible]="!isCollapsed" [class.hidden]="isCollapsed"></app-ball-filter-active>
+    </ion-toolbar>
+
+    <!-- <ion-toolbar  *ngIf="isFilterActive()" class="collapse-toolbar inner" [class.visible]="!isCollapsed" [class.hidden]="isCollapsed">
+      <app-ball-filter-active></app-ball-filter-active>
+    </ion-toolbar> -->
+  </ion-header>
 
   @if (!loadingService.isLoading() || componentLoading) {
     <ng-container *ngIf="displayedBalls.length <= 0; else content">
-      <ion-text class="no-game-text"> No balls found. </ion-text>
+      <ion-text class="no-content-text"> No balls found. </ion-text>
     </ng-container>
 
     <ng-template #content>

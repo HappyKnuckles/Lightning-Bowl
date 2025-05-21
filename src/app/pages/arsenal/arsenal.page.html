@@ -14,7 +14,7 @@
     </ion-buttons>
   </ion-toolbar>
   @if (storageService.arsenal().length > 0) {
-    <ion-toolbar>
+    <ion-toolbar class="collapse-toolbar outer" [class.visible]="isCollapsed" [class.hidden]="!isCollapsed">
       <ion-segment [(ngModel)]="selectedSegment">
         <ion-segment-button value="arsenal" contentId="arsenal">Arsenal</ion-segment-button>
         <ion-segment-button value="compare" contentId="compare">Compare Chart</ion-segment-button>
@@ -23,7 +23,20 @@
   }
 </ion-header>
 
-<ion-content [fullscreen]="true">
+<ion-content [fullscreen]="true" scrollEvents="true" (ionScroll)="onContentScroll($event)">
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title style="font-size: 28px" size="large">Arsenal</ion-title>
+    </ion-toolbar>
+    @if (storageService.arsenal().length > 0) {
+      <ion-toolbar class="collapse-toolbar inner" [class.visible]="!isCollapsed" [class.hidden]="isCollapsed">
+        <ion-segment [(ngModel)]="selectedSegment">
+          <ion-segment-button value="arsenal" contentId="arsenal">Arsenal</ion-segment-button>
+          <ion-segment-button value="compare" contentId="compare">Compare Chart</ion-segment-button>
+        </ion-segment>
+      </ion-toolbar>
+    }
+  </ion-header>
   <ion-segment-view>
     <ion-segment-content id="arsenal">
       @if (storageService.arsenal().length > 0) {
@@ -69,7 +82,7 @@
   </ion-segment-view>
 
   <ng-container *ngIf="storageService.arsenal().length <= 0">
-    <ion-text class="no-game-text"> You have no balls in your arsenal. Add a ball to get started! </ion-text>
+    <ion-text class="no-content-text"> You have no balls in your arsenal. Add a ball to get started! </ion-text>
   </ng-container>
   <!-- <ng-template #content>
     <ion-list>

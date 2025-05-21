@@ -79,6 +79,7 @@ import { ActivatedRoute } from '@angular/router';
     FormsModule,
     BallListComponent,
     BallFilterActiveComponent,
+    BallFilterComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -143,6 +144,8 @@ export class BallsPage implements OnInit {
 
     return result;
   }
+  isCollapsed = false;
+  private COLLAPSE_THRESHOLD = 50;
 
   constructor(
     private modalCtrl: ModalController,
@@ -283,36 +286,6 @@ export class BallsPage implements OnInit {
     }
   }
 
-  getLengthPotential(ball: Ball): string {
-    const rg = parseFloat(ball.core_rg);
-    if (isNaN(rg)) {
-      return '';
-    }
-
-    if (rg < 2.52) {
-      return 'Early Roll';
-    } else if (rg < 2.58) {
-      return 'Medium Roll';
-    } else {
-      return 'Late Roll';
-    }
-  }
-
-  getFlarePotential(ball: Ball): string {
-    const diff = parseFloat(ball.core_diff);
-    if (isNaN(diff)) {
-      return '';
-    }
-
-    if (diff < 0.035) {
-      return 'Low Flare';
-    } else if (diff < 0.05) {
-      return 'Medium Flare';
-    } else {
-      return 'High Flare';
-    }
-  }
-
   async getSameCoreBalls(ball: Ball): Promise<void> {
     try {
       this.hapticService.vibrate(ImpactStyle.Light);
@@ -351,6 +324,41 @@ export class BallsPage implements OnInit {
       this.componentLoading = false;
       this.loadingService.setLoading(false);
     }
+  }
+
+  getLengthPotential(ball: Ball): string {
+    const rg = parseFloat(ball.core_rg);
+    if (isNaN(rg)) {
+      return '';
+    }
+
+    if (rg < 2.52) {
+      return 'Early Roll';
+    } else if (rg < 2.58) {
+      return 'Medium Roll';
+    } else {
+      return 'Late Roll';
+    }
+  }
+
+  getFlarePotential(ball: Ball): string {
+    const diff = parseFloat(ball.core_diff);
+    if (isNaN(diff)) {
+      return '';
+    }
+
+    if (diff < 0.035) {
+      return 'Low Flare';
+    } else if (diff < 0.05) {
+      return 'Medium Flare';
+    } else {
+      return 'High Flare';
+    }
+  }
+
+  onContentScroll(event: CustomEvent) {
+    const scrollTop = event.detail.scrollTop || 0;
+    this.isCollapsed = scrollTop > this.COLLAPSE_THRESHOLD;
   }
 
   isInArsenal(ball: Ball): boolean {
