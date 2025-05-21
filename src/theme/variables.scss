@@ -26,7 +26,7 @@
     --ion-color-dark-rgb: rgb(81 7 7 / 80%);
   }
 
-  ion-content {
+  ion-content, ion-app {
     --background: #0a0202;
   }
 }
@@ -53,7 +53,7 @@
     // --ion-text-color: #000;
   }
 
-  ion-content {
+  ion-content, ion-app {
     --background: #02070a;
   }
 }
@@ -85,7 +85,7 @@
     --ion-color-dark-rgb: rgb(77 77 77 / 80%);
   }
 
-  ion-content {
+  ion-content, ion-app {
     --background: #0d0e0d;
   }
 }
@@ -116,7 +116,7 @@
     --ion-color-dark-rgb: rgb(34 40 74 / 80%);
   }
 
-  ion-content {
+  ion-content, ion-app {
     --background: #05020a;
   }
 }
@@ -203,7 +203,7 @@
   --ion-color-light-shade: #d7d8da;
   --ion-color-light-tint: #f5f6f9;
 
-  ion-content {
+  ion-content, ion-app {
     --background: #020a06;
   }
 }

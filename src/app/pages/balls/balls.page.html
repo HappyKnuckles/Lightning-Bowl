@@ -22,13 +22,15 @@
       showCancelButton="focus"
       debounce="300"></ion-searchbar>
   </ion-toolbar>
+  <ion-toolbar>
+    <app-ball-filter-active></app-ball-filter-active>
+  </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true" role="feed">
   <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
-  <app-ball-filter-active></app-ball-filter-active>
 
   @if (!loadingService.isLoading() || componentLoading) {
     <ng-container *ngIf="displayedBalls.length <= 0; else content">

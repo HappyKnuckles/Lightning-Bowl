@@ -39,13 +39,15 @@
       </ion-segment>
     </ion-toolbar>
   }
+  <ion-toolbar>
+    <app-game-filter-active></app-game-filter-active>
+  </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
   <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
-  <app-game-filter-active></app-game-filter-active>
   <ion-segment-view>
     <ion-segment-content id="Overall">
       <section class="tab" *ngIf="gameFilterService.filteredGames().length > 0">
