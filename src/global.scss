@@ -67,12 +67,16 @@ ion-input {
 ion-header {
   // background-color: #080f08;
 
-  ion-toolbar {
+  ion-toolbar:first-child {
     height: 50px !important;
     display: flex;
     flex: 1 1 0%;
     align-items: center;
-  }
+  }  
+
+  ion-searchbar{
+      padding-bottom: 0 !important;
+    }
 
   ion-icon {
     font-size: 1.5rem !important;
