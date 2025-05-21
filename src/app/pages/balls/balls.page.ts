@@ -283,6 +283,36 @@ export class BallsPage implements OnInit {
     }
   }
 
+  getLengthPotential(ball: Ball): string {
+    const rg = parseFloat(ball.core_rg);
+    if (isNaN(rg)) {
+      return '';
+    }
+
+    if (rg < 2.52) {
+      return 'Early Roll';
+    } else if (rg < 2.58) {
+      return 'Medium Roll';
+    } else {
+      return 'Late Roll';
+    }
+  }
+
+  getFlarePotential(ball: Ball): string {
+    const diff = parseFloat(ball.core_diff);
+    if (isNaN(diff)) {
+      return '';
+    }
+
+    if (diff < 0.035) {
+      return 'Low Flare';
+    } else if (diff < 0.05) {
+      return 'Medium Flare';
+    } else {
+      return 'High Flare';
+    }
+  }
+
   async getSameCoreBalls(ball: Ball): Promise<void> {
     try {
       this.hapticService.vibrate(ImpactStyle.Light);

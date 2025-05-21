@@ -107,15 +107,15 @@ const customAxisTitlesPlugin: Plugin<'scatter'> = {
     ctx.textAlign = 'right';
     ctx.font = 'bold 12px Arial';
     ctx.fillStyle = 'grey';
-    ctx.fillText('More Flare →', chartArea.right + 20, xAxisYPos);
+    ctx.fillText('More Flare →', chartArea.right + 10, xAxisYPos);
     ctx.restore();
 
     // --- Y-Axis Title Logic ---
     ctx.save();
     const yAxisXPos = chartArea.left - 40;
-    const lessFlareYPos = chartArea.bottom - 25;
+    const earlierRollYPos = chartArea.bottom - 25;
     const diffYPos = (chartArea.top + chartArea.bottom) / 2;
-    const moreFlareYPos = chartArea.top + 35;
+    const laterRollPos = chartArea.top + 35;
 
     function drawRotated(text: string, x: number, y: number, font: string, color: string) {
       ctx.save();
@@ -128,9 +128,9 @@ const customAxisTitlesPlugin: Plugin<'scatter'> = {
       ctx.restore();
     }
 
-    drawRotated('← Earlier Roll', yAxisXPos, lessFlareYPos, 'bold 12px Arial', 'grey');
+    drawRotated('← Earlier Roll', yAxisXPos, earlierRollYPos, 'bold 12px Arial', 'grey');
     drawRotated('RG', yAxisXPos, diffYPos, 'bold 14px Arial', 'white');
-    drawRotated('Later Roll →', yAxisXPos, moreFlareYPos, 'bold 12px Arial', 'grey');
+    drawRotated('Later Roll →', yAxisXPos, laterRollPos, 'bold 12px Arial', 'grey');
 
     ctx.restore();
   },
@@ -1108,8 +1108,8 @@ export class ChartGenerationService {
                 font: { size: 8 },
               },
               grid: { color: 'rgba(255,255,255,0.2)', drawOnChartArea: false },
-              min: 0.005,
-              max: 0.06,
+              min: 0.015,
+              max: 0.073,
             },
             y: {
               ticks: {
@@ -1118,8 +1118,8 @@ export class ChartGenerationService {
                 font: { size: 8 },
               },
               grid: { color: 'rgba(255,255,255,0.2)', drawOnChartArea: false },
-              min: 2.4,
-              max: 2.8,
+              min: 2.35,
+              max: 2.75,
             },
           },
           plugins: {
