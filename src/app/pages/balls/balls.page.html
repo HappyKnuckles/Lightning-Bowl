@@ -22,7 +22,7 @@
       showCancelButton="focus"
       debounce="300"></ion-searchbar>
   </ion-toolbar>
-  <ion-toolbar>
+  <ion-toolbar *ngIf="isFilterActive()">
     <app-ball-filter-active></app-ball-filter-active>
   </ion-toolbar>
 </ion-header>
