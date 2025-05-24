@@ -172,21 +172,20 @@ export class StorageService {
 
   async saveGamesToLocalStorage(gameData: Game[]): Promise<void> {
     try {
-      for (const game of gameData) {
-        const key = 'game' + game.gameId;
-        await this.save(key, game);
-      }
+      // Save all games in parallel
+      await Promise.all(gameData.map((game) => this.save('game' + game.gameId, game)));
+
+      // Efficient signal update
       this.games.update((games) => {
-        const updatedGames = [...games];
+        const existingMap = new Map(games.map((g) => [g.gameId, g]));
         for (const game of gameData) {
-          const index = updatedGames.findIndex((g) => g.gameId === game.gameId);
-          if (index !== -1) {
-            updatedGames[index] = game;
-          } else {
-            updatedGames.unshift(game);
-          }
+          existingMap.set(game.gameId, game);
         }
-        return updatedGames;
+
+        // Keep new/updated games at top
+        const updatedIds = new Set(gameData.map((g) => g.gameId));
+        const others = games.filter((g) => !updatedIds.has(g.gameId));
+        return [...gameData, ...others];
       });
     } catch (error) {
       console.error('Error saving games to local storage:', error);

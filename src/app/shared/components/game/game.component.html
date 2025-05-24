@@ -145,7 +145,12 @@
               } @else {
                 <ion-item class="league">
                   <ion-icon name="medal-outline" slot="start"></ion-icon>
-                  <ion-select name="league" [(ngModel)]="game.league" label="League/Tournament" [value]="game.league">
+                  <ion-select
+                    name="league"
+                    [(ngModel)]="game.league"
+                    (ngModelChange)="updateSeries(game, game.league)"
+                    label="League/Tournament"
+                    [value]="game.league">
                     <ion-select-option [value]="''">None</ion-select-option>
                     <ion-select-option *ngFor="let league of leagues()" [value]="league">{{ league }}</ion-select-option>
                   </ion-select>
@@ -160,7 +165,7 @@
                     <app-pattern-typeahead
                       [patterns]="storageService.allPatterns()"
                       [prevSelectedPattern]="game.pattern"
-                      (selectedPatternsChange)="game.pattern = $event"></app-pattern-typeahead>
+                      (selectedPatternsChange)="game.pattern = $event; updateSeries(game, undefined, game.pattern)"></app-pattern-typeahead>
                   </ng-template>
                 </ion-modal>
                 <ion-item class="arsenal">

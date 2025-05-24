@@ -267,6 +267,10 @@ export class GameComponent implements OnChanges, OnInit {
       delete this.originalGameState[game.gameId];
     }
 
+    if (game.isSeries) {
+      this.updateSeries(game, game.league, game.pattern);
+    }
+
     this.isEditMode[game.gameId] = false;
     this.hapticService.vibrate(ImpactStyle.Light);
 
@@ -275,21 +279,73 @@ export class GameComponent implements OnChanges, OnInit {
     delete this.delayedCloseMap[game.gameId];
   }
 
+  updateSeries(game: Game, league?: string, pattern?: string): void {
+    if (!game.isSeries) return;
+
+    this.storageService.games.update((gamesArr) =>
+      gamesArr.map((g) => {
+        if (g.seriesId === game.seriesId) {
+          return {
+            ...g,
+            ...(league !== undefined && { league }),
+            ...(pattern !== undefined && { pattern }),
+          };
+        }
+        return g;
+      }),
+    );
+  }
+
   async saveEdit(game: Game): Promise<void> {
     try {
-      if (!this.isGameValid(this.gameGrid.game())) {
+      const editedGameFromGrid = this.gameGrid.game();
+
+      // 1) Validate using the current data from the grid
+      if (!this.isGameValid(editedGameFromGrid)) {
         this.hapticService.vibrate(ImpactStyle.Heavy);
         this.toastService.showToast(ToastMessages.invalidInput, 'bug', true);
         return;
       }
-      this.gameGrid.game().frames.forEach((f: any) => delete f.isInvalid);
-      this.gameGrid.game().isPractice = !this.gameGrid.game().league;
-      await this.gameGrid.saveGameToLocalStorage(game.isSeries!, game.seriesId!);
+
+      // 2) Clean up per‐frame flags on the current grid data
+      editedGameFromGrid.frames.forEach((f: any) => delete f.isInvalid);
+
+      // 3) Compute isPractice on the current grid data
+      editedGameFromGrid.isPractice = !editedGameFromGrid.league;
+
+      // 4) Did we change league or pattern? Compare original with current grid data.
+      const originalGameSnapshot = this.originalGameState[game.gameId];
+      const leagueChanged = originalGameSnapshot && originalGameSnapshot.league !== editedGameFromGrid.league;
+      const patternChanged = originalGameSnapshot && originalGameSnapshot.pattern !== editedGameFromGrid.pattern;
+      // 5) If part of a series and league/pattern changed → update everyone
+      if (editedGameFromGrid.isSeries && (leagueChanged || patternChanged)) {
+        const seriesIdToUpdate = editedGameFromGrid.seriesId;
+        const newLeague = editedGameFromGrid.league;
+        const newPattern = editedGameFromGrid.pattern;
+        const newIsPractice = !newLeague;
+
+        // First, save the primary edited game
+        await this.gameGrid.saveGameToLocalStorage(editedGameFromGrid.isSeries!, seriesIdToUpdate!);
+
+        // Then, update other games in the same series
+        const gamesToUpdateInStorage = this.storageService
+          .games()
+          .filter((g) => g.seriesId === seriesIdToUpdate && g.gameId !== editedGameFromGrid.gameId)
+          .map((g) => ({
+            ...g,
+            league: newLeague,
+            pattern: newPattern,
+            isPractice: newIsPractice,
+          }));
+        await this.storageService.saveGamesToLocalStorage(gamesToUpdateInStorage);
+      } else {
+        await this.gameGrid.saveGameToLocalStorage(editedGameFromGrid.isSeries!, editedGameFromGrid.seriesId!);
+      }
 
       this.toastService.showToast(ToastMessages.gameUpdateSuccess, 'refresh-outline');
-
       this.isEditMode[game.gameId] = false;
       this.hapticService.vibrate(ImpactStyle.Light);
+
       const wasOpen = this.delayedCloseMap[game.gameId];
       this.openExpansionPanel(wasOpen ? game.gameId : undefined);
 
@@ -300,6 +356,7 @@ export class GameComponent implements OnChanges, OnInit {
       console.error('Error saving game edit:', error);
     }
   }
+
   // Hides the accordion content so it renders faster
   hideContent(event: CustomEvent): void {
     const openGameIds: string[] = event.detail.value || [];

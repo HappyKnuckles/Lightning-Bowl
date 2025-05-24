@@ -203,9 +203,11 @@ export class GameGridComponent implements OnInit {
         this.game().gameId,
         this.game().date,
       );
-
+      this.game().frames = gameData.frames;
       await this.storageService.saveGameToLocalStorage(gameData);
-      this.clearFrames(true);
+      if (this.showMetadata()) {
+        this.clearFrames(true);
+      }
     } catch (error) {
       console.error('Error saving game to local storage:', error);
     }
