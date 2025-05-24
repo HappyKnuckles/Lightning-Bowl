@@ -170,6 +170,7 @@ export class GameGridComponent implements OnInit {
     }
 
     this.updateScores();
+    this.totalScoreChanged.emit(this.game().totalScore);
     this.maxScoreChanged.emit(this.maxScore);
   }
 
@@ -179,7 +180,7 @@ export class GameGridComponent implements OnInit {
     this.game().frameScores = scoreResult.frameScores;
 
     this.maxScore = this.gameScoreCalculatorService.calculateMaxScore(this.game().frames, this.game().totalScore);
-
+    this.totalScoreChanged.emit(this.game().totalScore);
     this.maxScoreChanged.emit(this.maxScore);
   }
 
