@@ -1,6 +1,20 @@
-import { Component, OnInit, EventEmitter, Output, QueryList, ViewChildren, ViewChild, CUSTOM_ELEMENTS_SCHEMA, input, output } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  EventEmitter,
+  Output,
+  QueryList,
+  ViewChildren,
+  ViewChild,
+  CUSTOM_ELEMENTS_SCHEMA,
+  input,
+  output,
+} from '@angular/core';
+import { Platform } from '@ionic/angular';
+import { Subscription } from 'rxjs';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
-import { NgFor, NgIf } from '@angular/common';
+import { NgFor, NgIf, NgStyle } from '@angular/common';
 import {
   IonGrid,
   IonModal,
@@ -27,6 +41,7 @@ import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { UtilsService } from 'src/app/core/services/utils/utils.service';
 import { Game } from 'src/app/core/models/game.model';
 import { PatternTypeaheadComponent } from '../pattern-typeahead/pattern-typeahead.component';
+import { Keyboard } from '@capacitor/keyboard';
 
 @Component({
   selector: 'app-game-grid',
@@ -48,14 +63,14 @@ import { PatternTypeaheadComponent } from '../pattern-typeahead/pattern-typeahea
     IonInput,
     FormsModule,
     NgIf,
-    NgFor,
     LeagueSelectorComponent,
     IonModal,
     PatternTypeaheadComponent,
+    NgStyle,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
-export class GameGridComponent implements OnInit {
+export class GameGridComponent implements OnInit, OnDestroy {
   @Output() maxScoreChanged = new EventEmitter<number>();
   @Output() totalScoreChanged = new EventEmitter<number>();
   @Output() leagueChanged = new EventEmitter<string>();
@@ -83,6 +98,18 @@ export class GameGridComponent implements OnInit {
   maxScore = 300;
   presentingElement?: HTMLElement;
 
+  // Keyboard toolbar
+  showButtonToolbar = false;
+  currentFrameIndex: number | null = null;
+  currentRollIndex: number | null = null;
+  keyboardOffset = 0;
+  isLandScapeMode = false;
+
+  private keyboardShowSubscription: Subscription | undefined;
+  private keyboardHideSubscription: Subscription | undefined;
+  private usingVisualViewportListener = false;
+  private resizeSubscription: Subscription | undefined;
+
   constructor(
     private gameScoreCalculatorService: GameScoreCalculatorService,
     public storageService: StorageService,
@@ -91,7 +118,10 @@ export class GameGridComponent implements OnInit {
     private hapticService: HapticService,
     private gameUtilsService: GameUtilsService,
     private utilsService: UtilsService,
-  ) {}
+    private platform: Platform,
+  ) {
+    this.initializeKeyboardListeners();
+  }
 
   async ngOnInit(): Promise<void> {
     const currentGame = this.game();
@@ -113,6 +143,53 @@ export class GameGridComponent implements OnInit {
     this.presentingElement = document.querySelector('.ion-page')!;
   }
 
+  ngOnDestroy() {
+    if (this.keyboardShowSubscription) {
+      this.keyboardShowSubscription.unsubscribe();
+    }
+    if (this.keyboardHideSubscription) {
+      this.keyboardHideSubscription.unsubscribe();
+    }
+    if (this.resizeSubscription) {
+      this.resizeSubscription.unsubscribe();
+    }
+    if (this.usingVisualViewportListener && 'visualViewport' in window && window.visualViewport) {
+      window.visualViewport.removeEventListener('resize', this.onViewportResize);
+    }
+  }
+
+  initializeKeyboardListeners() {
+    if (this.platform.is('mobile') && !this.platform.is('mobileweb')) {
+      Keyboard.addListener('keyboardWillShow', (info) => {
+        this.keyboardOffset = Math.max(0, info.keyboardHeight || 0);
+        this.showButtonToolbar = true;
+      });
+
+      Keyboard.addListener('keyboardWillHide', () => {
+        this.keyboardOffset = 0;
+        this.showButtonToolbar = false;
+      });
+    } else if ('visualViewport' in window && window.visualViewport) {
+      window.visualViewport.addEventListener('resize', this.onViewportResize);
+    }
+    this.resizeSubscription = this.platform.resize.subscribe(() => {
+      this.isLandScapeMode = this.platform.isLandscape();
+    });
+  }
+
+  handleInputFocus(frameIndex: number, rollIndex: number) {
+    this.currentFrameIndex = frameIndex;
+    this.currentRollIndex = rollIndex;
+
+    setTimeout(() => {
+      this.showButtonToolbar = true;
+    }, 100);
+  }
+
+  handleInputBlur() {
+    this.showButtonToolbar = false;
+  }
+
   onLeagueChanged(league: string): void {
     this.leagueChanged.emit(league);
   }
@@ -125,6 +202,19 @@ export class GameGridComponent implements OnInit {
   getFrameValue(frameIndex: number, inputIndex: number): string {
     const val = this.game().frames[frameIndex][inputIndex];
     return val !== undefined ? val.toString() : '';
+  }
+
+  selectSpecialScore(char: string) {
+    if (this.currentFrameIndex === null || this.currentRollIndex === null) {
+      this.showButtonToolbar = false;
+      return;
+    }
+
+    const mockEvent = {
+      detail: { value: char },
+    } as InputCustomEvent<{ value: string | undefined | null }>;
+
+    this.simulateScore(mockEvent, this.currentFrameIndex, this.currentRollIndex);
   }
 
   simulateScore(event: InputCustomEvent, frameIndex: number, inputIndex: number): void {
@@ -222,6 +312,65 @@ export class GameGridComponent implements OnInit {
     return this.utilsService.isNumber(value);
   }
 
+  isStrikeButtonDisabled(): boolean {
+    if (this.currentFrameIndex === null || this.currentRollIndex === null) return true;
+
+    const frameIndex = this.currentFrameIndex;
+    const rollIndex = this.currentRollIndex;
+
+    if (frameIndex < 9) {
+      return rollIndex !== 0;
+    }
+
+    const frame = this.game().frames[9];
+    const first = frame[0];
+    const second = frame[1];
+
+    switch (rollIndex) {
+      case 0:
+        return false; // Always allowed on first
+      case 1:
+        return first !== 10; // Only allowed if first was strike
+      case 2:
+        // Allow if:
+        // - first and second are both strikes
+        // - OR first + second == 10 (i.e. spare), but neither is 10
+        // - OR second is 10 (i.e. second strike after first miss)
+        return !((first === 10 && second === 10) || (first + second === 10 && first !== 10 && second !== 10) || (first !== 10 && second === 10));
+      default:
+        return true;
+    }
+  }
+
+  isSpareButtonDisabled(): boolean {
+    if (this.currentFrameIndex === null || this.currentRollIndex === null) return true;
+
+    const frameIndex = this.currentFrameIndex;
+    const rollIndex = this.currentRollIndex;
+
+    if (frameIndex < 9) {
+      return rollIndex !== 1;
+    }
+
+    const frame = this.game().frames[9];
+    const first = frame[0];
+    const second = frame[1];
+
+    switch (rollIndex) {
+      case 0:
+        return true; // Never allowed on first
+      case 1:
+        return first === 10; // Not allowed if first was strike
+      case 2:
+        // Disable if:
+        // 1. First two balls were strikes (e.g., X, X, then this throw)
+        // 2. First two balls formed a spare (e.g., 5, /, then this throw)
+        return (first === 10 && second === 10) || (first !== 10 && first + second === 10);
+      default:
+        return true;
+    }
+  }
+
   private isValidNumber0to10(value: number): boolean {
     return !isNaN(value) && value >= 0 && value <= 10;
   }
@@ -230,6 +379,23 @@ export class GameGridComponent implements OnInit {
     this.hapticService.vibrate(ImpactStyle.Heavy);
     event.target.value = '';
   }
+
+  private onViewportResize = () => {
+    // This method is now primarily a fallback.
+    if (!window.visualViewport) return;
+
+    const viewportHeight = window.visualViewport.height;
+    const fullHeight = window.innerHeight;
+    const keyboardActualHeight = fullHeight - viewportHeight;
+
+    if (keyboardActualHeight > 100) {
+      this.keyboardOffset = this.isLandScapeMode ? Math.max(0, keyboardActualHeight - 72) : Math.max(0, keyboardActualHeight - 85);
+    } else {
+      {
+        this.keyboardOffset = 0;
+      }
+    }
+  };
 
   private async focusNextInput(frameIndex: number, inputIndex: number) {
     await new Promise((resolve) => setTimeout(resolve, 50));

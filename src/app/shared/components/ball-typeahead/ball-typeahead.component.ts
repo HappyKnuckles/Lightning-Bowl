@@ -16,11 +16,12 @@ import {
   IonInfiniteScrollContent,
   IonTitle,
   IonButtons,
-  IonIcon,
   IonButton,
 } from '@ionic/angular/standalone';
 import { InfiniteScrollCustomEvent, ModalController, SearchbarCustomEvent } from '@ionic/angular';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
+import { Keyboard } from '@capacitor/keyboard';
+import { SearchBlurDirective } from 'src/app/core/directives/search-blur/search-blur.directive';
 
 @Component({
   selector: 'app-ball-typeahead',
@@ -29,7 +30,6 @@ import { StorageService } from 'src/app/core/services/storage/storage.service';
   standalone: true,
   imports: [
     IonButton,
-    IonIcon,
     IonButtons,
     IonTitle,
     IonInfiniteScrollContent,
@@ -51,6 +51,7 @@ import { StorageService } from 'src/app/core/services/storage/storage.service';
     IonAvatar,
     IonItem,
     IonList,
+    SearchBlurDirective,
   ],
 })
 export class BallTypeaheadComponent implements OnInit, OnDestroy {
@@ -68,8 +69,14 @@ export class BallTypeaheadComponent implements OnInit, OnDestroy {
   constructor(
     public storageService: StorageService,
     private modalCtrl: ModalController,
-  ) { }
+  ) {}
 
+  blur(search: IonSearchbar): void {
+    search.getInputElement().then((input) => {
+      input.blur();
+      Keyboard.hide();
+    });
+  }
   ngOnInit(): void {
     this.filteredBalls = [...this.balls];
     this.displayedBalls = this.filteredBalls.slice(0, this.batchSize);

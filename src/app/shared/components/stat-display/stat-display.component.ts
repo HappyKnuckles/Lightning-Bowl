@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { StatDefinition } from 'src/app/core/models/stat-definitions.model';
-import { StatRowComponent } from '../stat-list/stat-row.component';
+import { StatRowComponent } from '../stat-row/stat-row.component';
 import { GameStats } from 'src/app/core/models/stats.model';
 @Component({
   selector: 'app-stat-display',

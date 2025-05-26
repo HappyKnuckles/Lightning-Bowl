@@ -9,7 +9,12 @@
     </ion-buttons>
   </ion-toolbar>
   <ion-toolbar>
-    <ion-searchbar (ionInput)="searchCores($event)" placeholder="Search for cores" debounce="300" showCancelButton="focus"></ion-searchbar>
+    <ion-searchbar
+      appSearchBlur
+      (ionInput)="searchCores($event)"
+      placeholder="Search for cores"
+      debounce="300"
+      showCancelButton="focus"></ion-searchbar>
   </ion-toolbar>
 </ion-header>
 <!-- TODO virtual scroll because prefetched data-->

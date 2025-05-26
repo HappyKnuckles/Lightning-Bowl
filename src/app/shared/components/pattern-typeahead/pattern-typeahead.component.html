@@ -10,7 +10,12 @@
     </ion-buttons>
   </ion-toolbar>
   <ion-toolbar>
-    <ion-searchbar (ionInput)="searchPatterns($event)" placeholder="Search for a pattern" debounce="300" showCancelButton="focus"></ion-searchbar>
+    <ion-searchbar
+      appSearchBlur
+      (ionInput)="searchPatterns($event)"
+      placeholder="Search for a pattern"
+      debounce="300"
+      showCancelButton="focus"></ion-searchbar>
   </ion-toolbar>
 </ion-header>
 <!-- TODO virtual scroll because prefetched data-->

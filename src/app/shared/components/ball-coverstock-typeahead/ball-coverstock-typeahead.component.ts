@@ -17,6 +17,7 @@ import {
   IonItem,
   IonInfiniteScrollContent,
 } from '@ionic/angular/standalone';
+import { SearchBlurDirective } from 'src/app/core/directives/search-blur/search-blur.directive';
 
 @Component({
   selector: 'app-ball-coverstock-typeahead',
@@ -35,6 +36,7 @@ import {
     IonButton,
     IonHeader,
     IonToolbar,
+    SearchBlurDirective,
   ],
   templateUrl: './ball-coverstock-typeahead.component.html',
   styleUrl: './ball-coverstock-typeahead.component.scss',
@@ -51,7 +53,7 @@ export class BallCoverstockTypeaheadComponent implements OnDestroy, OnInit {
   fuse!: Fuse<Coverstock>;
   private batchSize = 100;
   public loadedCount = signal(0);
-  constructor(private modalCtrl: ModalController) { }
+  constructor(private modalCtrl: ModalController) {}
 
   ngOnInit() {
     this.filteredCoverstocks.set([...this.coverstocks()]);

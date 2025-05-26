@@ -23,8 +23,6 @@ import {
   IonButtons,
   IonButton,
   IonIcon,
-  IonSpinner,
-  IonImg,
   ModalController,
 } from '@ionic/angular/standalone';
 import { Pattern } from 'src/app/core/models/pattern.model';
@@ -41,7 +39,7 @@ import { chevronBack, add, addOutline, arrowUpOutline, arrowDownOutline } from '
 import { ChartGenerationService } from 'src/app/core/services/chart/chart-generation.service';
 import { DomSanitizer } from '@angular/platform-browser';
 import { PatternFormComponent } from '../../shared/components/pattern-form/pattern-form.component';
-import { BallFilterComponent } from '../../shared/components/ball-filter/ball-filter.component';
+import { SearchBlurDirective } from 'src/app/core/directives/search-blur/search-blur.directive';
 
 @Component({
   selector: 'app-pattern',
@@ -49,8 +47,6 @@ import { BallFilterComponent } from '../../shared/components/ball-filter/ball-fi
   styleUrls: ['./pattern.page.scss'],
   standalone: true,
   imports: [
-    IonImg,
-    IonSpinner,
     IonIcon,
     IonButton,
     IonButtons,
@@ -75,8 +71,7 @@ import { BallFilterComponent } from '../../shared/components/ball-filter/ball-fi
     CommonModule,
     FormsModule,
     PatternInfoComponent,
-    PatternFormComponent,
-    BallFilterComponent,
+    SearchBlurDirective,
   ],
 })
 export class PatternPage implements OnInit {

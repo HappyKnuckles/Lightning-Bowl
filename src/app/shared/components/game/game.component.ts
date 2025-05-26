@@ -1,4 +1,4 @@
-import { NgIf, NgFor, NgClass, DatePipe } from '@angular/common';
+import { NgIf, NgFor, DatePipe } from '@angular/common';
 import { Component, Input, Renderer2, ViewChild, OnChanges, SimpleChanges, computed, OnInit } from '@angular/core';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
@@ -93,7 +93,6 @@ import { GameGridComponent } from '../game-grid/game-grid.component';
     IonInput,
     NgIf,
     NgFor,
-    NgClass,
     IonSelect,
     IonSelectOption,
     ReactiveFormsModule,

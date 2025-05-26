@@ -1,5 +1,5 @@
 import { Component, CUSTOM_ELEMENTS_SCHEMA, ElementRef, ViewChild, ViewChildren, QueryList, computed, Signal, signal, effect } from '@angular/core';
-import { DecimalPipe, NgFor, NgIf } from '@angular/common';
+import { DecimalPipe, NgIf } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import {
   IonContent,
@@ -80,7 +80,6 @@ import { HiddenLeagueSelectionService } from 'src/app/core/services/hidden-leagu
     GameComponent,
     ReactiveFormsModule,
     NgIf,
-    NgFor,
     DecimalPipe,
     StatDisplayComponent,
     SpareDisplayComponent,

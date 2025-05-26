@@ -13,7 +13,9 @@
           autocapitalize="on"
           debounce="1000"
           [value]="getFrameValue(frameIndex, 0)"
-          (ionInput)="simulateScore($event, frameIndex, 0)">
+          (ionInput)="simulateScore($event, frameIndex, 0)"
+          (ionFocus)="handleInputFocus(frameIndex, 0)"
+          (ionBlur)="handleInputBlur()">
         </ion-input>
       </ion-col>
       <ion-col class="input-col" *ngIf="i !== 10">
@@ -25,7 +27,9 @@
           debounce="1000"
           [disabled]="game().frames[frameIndex][0] === 10 && i !== 10"
           [value]="getFrameValue(frameIndex, 1)"
-          (ionInput)="simulateScore($event, frameIndex, 1)">
+          (ionInput)="simulateScore($event, frameIndex, 1)"
+          (ionFocus)="handleInputFocus(frameIndex, 1)"
+          (ionBlur)="handleInputBlur()">
         </ion-input>
       </ion-col>
       <ion-col class="input-col" *ngIf="i === 10">
@@ -37,7 +41,9 @@
           debounce="1000"
           [disabled]="game().frames[frameIndex][0] === 10 && i !== 10"
           [value]="getFrameValue(frameIndex, 1)"
-          (ionInput)="simulateScore($event, frameIndex, 1)">
+          (ionInput)="simulateScore($event, frameIndex, 1)"
+          (ionFocus)="handleInputFocus(frameIndex, 1)"
+          (ionBlur)="handleInputBlur()">
         </ion-input>
       </ion-col>
       <ion-col class="input-col" *ngIf="i === 10">
@@ -49,7 +55,9 @@
           debounce="1000"
           [value]="getFrameValue(frameIndex, 2)"
           [disabled]="game().frames[frameIndex][0] !== 10 && game().frames[frameIndex][0] + (game().frames[frameIndex][1] || 0) !== 10"
-          (ionInput)="simulateScore($event, frameIndex, 2)">
+          (ionInput)="simulateScore($event, frameIndex, 2)"
+          (ionFocus)="handleInputFocus(frameIndex, 2)"
+          (ionBlur)="handleInputBlur()">
         </ion-input>
       </ion-col>
     </ion-row>
@@ -74,6 +82,11 @@
       <ion-col class="middle count" style="color: var(--ion-color-quartiary)">0</ion-col>
     </ion-row>
   </ion-grid>
+
+  <div class="score-toolbar" *ngIf="showMetadata()" [class.show]="showButtonToolbar" [ngStyle]="{ bottom: keyboardOffset + 'px' }">
+    <ion-button (click)="selectSpecialScore('X')" (mousedown)="$event.preventDefault()" [disabled]="isStrikeButtonDisabled()"> X </ion-button>
+    <ion-button (click)="selectSpecialScore('/')" (mousedown)="$event.preventDefault()" [disabled]="isSpareButtonDisabled()"> / </ion-button>
+  </div>
 </div>
 
 @if (showMetadata()) {

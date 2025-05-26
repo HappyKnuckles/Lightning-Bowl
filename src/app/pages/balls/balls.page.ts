@@ -44,6 +44,7 @@ import { BallFilterActiveComponent } from 'src/app/shared/components/ball-filter
 import { BallFilterComponent } from 'src/app/shared/components/ball-filter/ball-filter.component';
 import { BallListComponent } from 'src/app/shared/components/ball-list/ball-list.component';
 import { ActivatedRoute } from '@angular/router';
+import { SearchBlurDirective } from 'src/app/core/directives/search-blur/search-blur.directive';
 
 @Component({
   selector: 'app-balls',
@@ -79,6 +80,7 @@ import { ActivatedRoute } from '@angular/router';
     FormsModule,
     BallListComponent,
     BallFilterActiveComponent,
+    SearchBlurDirective,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

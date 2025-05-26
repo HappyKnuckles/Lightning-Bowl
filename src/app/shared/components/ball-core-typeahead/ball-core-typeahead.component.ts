@@ -10,8 +10,6 @@ import {
   IonInfiniteScroll,
   IonContent,
   IonItem,
-  IonAvatar,
-  IonImg,
   IonCheckbox,
   IonLabel,
   IonSearchbar,
@@ -19,6 +17,7 @@ import {
   IonButtons,
   IonButton,
 } from '@ionic/angular/standalone';
+import { SearchBlurDirective } from 'src/app/core/directives/search-blur/search-blur.directive';
 
 @Component({
   selector: 'app-ball-core-typeahead',
@@ -30,8 +29,6 @@ import {
     IonSearchbar,
     IonLabel,
     IonCheckbox,
-    IonImg,
-    IonAvatar,
     IonItem,
     IonContent,
     IonInfiniteScroll,
@@ -39,6 +36,7 @@ import {
     IonHeader,
     IonTitle,
     IonToolbar,
+    SearchBlurDirective,
   ],
   templateUrl: './ball-core-typeahead.component.html',
   styleUrl: './ball-core-typeahead.component.scss',
@@ -55,7 +53,7 @@ export class BallCoreTypeaheadComponent implements OnInit, OnDestroy {
   fuse!: Fuse<Core>;
   private batchSize = 100;
   public loadedCount = signal(0);
-  constructor(private modalCtrl: ModalController) { }
+  constructor(private modalCtrl: ModalController) {}
 
   ngOnInit() {
     this.filteredCores.set([...this.cores()]);

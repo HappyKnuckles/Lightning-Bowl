@@ -15,7 +15,6 @@ import {
   IonRow,
   IonCol,
   IonButtons,
-  IonInput,
   IonSegment,
   IonSegmentButton,
   IonSegmentView,
@@ -43,8 +42,6 @@ import { GameDataTransformerService } from 'src/app/core/services/game-transform
 import { InputCustomEvent, ModalController } from '@ionic/angular';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { GameGridComponent } from 'src/app/shared/components/game-grid/game-grid.component';
-import { LeagueSelectorComponent } from 'src/app/shared/components/league-selector/league-selector.component';
-import { PatternTypeaheadComponent } from 'src/app/shared/components/pattern-typeahead/pattern-typeahead.component';
 
 const enum SeriesMode {
   Single = 'Single',
@@ -75,8 +72,6 @@ defineCustomElements(window);
     IonCol,
     IonModal,
     IonButtons,
-    IonInput,
-    IonCheckbox,
     IonSegmentButton,
     IonSegment,
     IonSegmentContent,
@@ -84,8 +79,6 @@ defineCustomElements(window);
     NgIf,
     NgFor,
     GameGridComponent,
-    LeagueSelectorComponent,
-    PatternTypeaheadComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
