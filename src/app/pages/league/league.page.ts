@@ -47,7 +47,7 @@ import { ImpactStyle } from '@capacitor/haptics';
 import { SortUtilsService } from 'src/app/core/services/sort-utils/sort-utils.service';
 import Chart from 'chart.js/auto';
 import { ChartGenerationService } from 'src/app/core/services/chart/chart-generation.service';
-import { leagueStatDefinitions } from '../stats/stats.definitions';
+import { leagueStatDefinitions } from '../../core/constants/stats.definitions.constants';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { GameComponent } from 'src/app/shared/components/game/game.component';
 import { SpareDisplayComponent } from 'src/app/shared/components/spare-display/spare-display.component';

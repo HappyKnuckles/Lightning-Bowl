@@ -40,7 +40,15 @@ import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { AlertController, ModalController, RefresherCustomEvent, SegmentCustomEvent } from '@ionic/angular';
 import { SortUtilsService } from 'src/app/core/services/sort-utils/sort-utils.service';
 import { ChartGenerationService } from 'src/app/core/services/chart/chart-generation.service';
-import { overallStatDefinitions, seriesStatDefinitions, sessionStatDefinitions, throwStatDefinitions } from './stats.definitions';
+import {
+  overallStatDefinitions,
+  seriesStatDefinitions,
+  sessionStatDefinitions,
+  throwStatDefinitions,
+  playFrequencyStatDefinitions,
+  specialStatDefinitions,
+  strikeStatDefinitions,
+} from '../../core/constants/stats.definitions.constants';
 import { GameFilterService } from 'src/app/core/services/game-filter/game-filter.service';
 import { UtilsService } from 'src/app/core/services/utils/utils.service';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
@@ -89,6 +97,9 @@ export class StatsPage implements OnInit, AfterViewInit {
   seriesStatDefinitions = seriesStatDefinitions;
   throwStatDefinitions = throwStatDefinitions;
   sessionStatDefinitions = sessionStatDefinitions;
+  playFrequencyStatDefinitions = playFrequencyStatDefinitions;
+  specialStatDefinitions = specialStatDefinitions;
+  strikeStatDefinitions = strikeStatDefinitions;
   uniqueSortedDates: Signal<number[]> = computed(() => {
     const dateSet = new Set<number>();
 

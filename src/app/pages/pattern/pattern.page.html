@@ -41,18 +41,29 @@
             <ion-card-subtitle>{{ pattern.category }}</ion-card-subtitle>
           </ion-card-header>
           <ion-card-content>
-            <ion-chip class="info">Distance: {{ pattern.distance }}ft</ion-chip>
-            <ion-chip class="info">Ratio: {{ pattern.ratio ?? 0 }}</ion-chip> <ion-chip class="info">Pump: {{ pattern.pump }}µL</ion-chip>
-            <ion-chip class="info">Tanks: {{ pattern.tanks }}</ion-chip>
-            <ion-chip class="info">
-              Volume: {{ pattern.volume }}mL (
-              <p style="margin: 0">
-                <ion-icon name="arrow-up-outline" style="vertical-align: text-top; margin-right: -2px"></ion-icon>
-                {{ pattern.forward }}mL ,
-                <ion-icon name="arrow-down-outline" style="vertical-align: text-top; margin-right: -2px"></ion-icon>
-                {{ pattern.reverse }}mL
-              </p>
-              )
+            <ion-chip class="info" *ngIf="pattern.distance">Distance: {{ pattern.distance }}ft</ion-chip>
+            <ion-chip class="info" *ngIf="pattern.ratio">Ratio: {{ pattern.ratio }}</ion-chip>
+            <ion-chip class="info" *ngIf="pattern.pump">Pump: {{ pattern.pump }}µL</ion-chip>
+            <ion-chip class="info" *ngIf="pattern.tanks">Tanks: {{ pattern.tanks }}</ion-chip>
+            <ion-chip class="info" *ngIf="pattern.volume">
+              Volume: {{ pattern.volume }}mL
+              <ng-container *ngIf="pattern.forward || pattern.reverse">
+                (<!--
+                            -->
+                <p style="margin: 0; display: inline">
+                  <ng-container *ngIf="pattern.forward">
+                    <ion-icon name="arrow-up-outline" style="vertical-align: text-top; margin-right: -2px"></ion-icon>
+                    {{ pattern.forward }}mL
+                  </ng-container>
+                  <ng-container *ngIf="pattern.forward && pattern.reverse"> , </ng-container>
+                  <ng-container *ngIf="pattern.reverse">
+                    <ion-icon name="arrow-down-outline" style="vertical-align: text-top; margin-right: -2px"></ion-icon>
+                    {{ pattern.reverse }}mL
+                  </ng-container>
+                </p>
+                <!--
+                            -->)
+              </ng-container>
             </ion-chip>
             <!-- <ion-chip class="info">Oil Forward: {{pattern.forward}}mL</ion-chip>
         <ion-chip class="info">Oil Reverse: {{pattern.reverse}}mL</ion-chip> -->

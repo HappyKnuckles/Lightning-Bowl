@@ -17,6 +17,7 @@ import { UtilsService } from 'src/app/core/services/utils/utils.service';
 })
 export class SpareDisplayComponent {
   @Input({ required: true }) stats!: Stats | SessionStats;
+  @Input() title = '';
   @Input() prevStats?: PrevStats | Stats;
   @Input() id?: string;
   constructor(private utilsService: UtilsService) {

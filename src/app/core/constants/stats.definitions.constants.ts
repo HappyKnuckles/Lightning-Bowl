@@ -54,6 +54,58 @@ export const overallStatDefinitions: StatDefinition[] = [
   },
 ];
 
+export const specialStatDefinitions: StatDefinition[] = [
+  {
+    label: 'Dutch 200s',
+    key: 'dutch200Count',
+    id: 'dutch200Count',
+    toolTip: 'This is the amount of games you bowled with a score of 200, where you had alternating strikes and spares.',
+  },
+  {
+    label: 'Varipapa 300s',
+    key: 'varipapa300Count',
+    id: 'varipapa300Count',
+    toolTip: 'These are 300 games where you bowled 12 consecutive strikes over two games.',
+  },
+  {
+    label: 'Full spare games',
+    key: 'allSparesGameCount',
+    id: 'allSparesGameCount',
+    toolTip: 'This is the amount of games where you bowled all spares.',
+  },
+];
+
+export const playFrequencyStatDefinitions: StatDefinition[] = [
+  {
+    label: 'Average games per week',
+    key: 'averageGamesPerWeek',
+    id: 'averageGamesPerWeek',
+  },
+  {
+    label: 'Average games per month',
+    key: 'averageGamesPerMonth',
+    id: 'averageGamesPerMonth',
+  },
+  {
+    label: 'Average sessions per week',
+    key: 'averageSessionsPerWeek',
+    id: 'averageSessionsPerWeek',
+    toolTip: 'This is how often you usually bowl in a week.',
+  },
+  {
+    label: 'Average sessions per month',
+    key: 'averageSessionsPerMonth',
+    id: 'averageSessionsPerMonth',
+    toolTip: 'This is how often you usually bowl in a month.',
+  },
+  {
+    label: 'Average games per session',
+    key: 'averageGamesPerSession',
+    id: 'averageGamesPerSession',
+    toolTip: 'This is the amount of games you bowl on average in a session.',
+  },
+];
+
 export const seriesStatDefinitions: StatDefinition[] = [
   { label: 'Average 3-series score', key: 'average3SeriesScore', id: 'average3SeriesScore', prevKey: 'average3SeriesScore' },
   { label: 'High 3-series', key: 'high3Series', id: 'high3Series' },
@@ -64,6 +116,7 @@ export const seriesStatDefinitions: StatDefinition[] = [
   { label: 'Average 6-series score', key: 'average6SeriesScore', id: 'average6SeriesScore', prevKey: 'average6SeriesScore' },
   { label: 'High 6-series', key: 'high6Series', id: 'high6Series' },
 ];
+
 export const leagueStatDefinitions: StatDefinition[] = [
   { label: 'Games', key: 'totalGames', id: 'league-totalGames' },
   {
@@ -129,7 +182,45 @@ export const throwStatDefinitions: StatDefinition[] = [
   { label: 'Spares per game', key: 'averageSparesPerGame', id: 'averageSparesPerGame', prevKey: 'averageSparesPerGame' },
   { label: 'Total opens', key: 'totalSparesMissed', id: 'totalSparesMissed' },
   { label: 'Opens per game', key: 'averageOpensPerGame', id: 'averageOpensPerGame', prevKey: 'averageOpensPerGame' },
+  {
+    label: 'Longest open streak',
+    key: 'longestOpenStreak',
+    id: 'longestOpenStreak',
+    toolTip: 'Longest run of frames without a strike or spare (an “open”).',
+  },
 ];
+
+export const strikeStatDefinitions: StatDefinition[] = [
+  { label: 'Turkeys', key: 'turkeyCount', id: 'turkeyCount', toolTip: 'Number of times you threw exactly 3 strikes in a row.' },
+  { label: '4-baggers', key: 'bagger4Count', id: 'fourBaggerCount', toolTip: 'Number of times you threw exactly 4 strikes in a row.' },
+  { label: '5-baggers', key: 'bagger5Count', id: 'bagger5Count', toolTip: 'Number of times you threw exactly 5 strikes in a row.' },
+  { label: '6-baggers', key: 'bagger6Count', id: 'bagger6Count', toolTip: 'Number of times you threw exactly 6 strikes in a row.' },
+  { label: '7-baggers', key: 'bagger7Count', id: 'bagger7Count', toolTip: 'Number of times you threw exactly 7 strikes in a row.' },
+  { label: '8-baggers', key: 'bagger8Count', id: 'bagger8Count', toolTip: 'Number of times you threw exactly 8 strikes in a row.' },
+  { label: '9-baggers', key: 'bagger9Count', id: 'bagger9Count', toolTip: 'Number of times you threw exactly 9 strikes in a row.' },
+  { label: '10-baggers', key: 'bagger10Count', id: 'bagger10Count', toolTip: 'Number of times you threw exactly 10 strikes in a row.' },
+  { label: '11-baggers', key: 'bagger10Count', id: 'bagger11Count', toolTip: 'Number of times you threw exactly 11 strikes in a row.' },
+  {
+    label: 'Longest strike streak',
+    key: 'longestStrikeStreak',
+    id: 'longestStrikeStreak',
+    toolTip: 'This is the amount of consecutive strikes you bowled in a row. It is considered over multiple games on the same day.',
+  },
+  {
+    label: 'Strike to strike percentage',
+    key: 'strikeToStrikePercentage',
+    id: 'strikeToStrikePercentage',
+    isPercentage: true,
+    toolTip: 'This is the probability of how likely you throw a strike after a strike.',
+  },
+  {
+    label: 'Strikeouts',
+    key: 'strikeoutCount',
+    id: 'strikeoutCount',
+    toolTip: 'This is the amount of times you threw 3-strikes in tenth frame.',
+  },
+];
+
 export const sessionStatDefinitions: StatDefinition[] = [
   { label: 'Games', key: 'totalGames', id: 'sessionTotalGames' },
   {

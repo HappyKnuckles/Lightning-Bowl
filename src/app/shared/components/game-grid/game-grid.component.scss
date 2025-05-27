@@ -16,9 +16,7 @@ ion-input {
 
 ion-grid {
   background-color: var(--ion-color-quartiary);
-
   --ion-grid-padding: 0;
-
   border-radius: 3px;
 }
 
@@ -41,11 +39,11 @@ ion-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-padding-top: 6px;
+  padding-top: 6px;
   padding-bottom: 6px;
   padding-left: calc(12px + env(safe-area-inset-left)); 
   padding-right: calc(12px + env(safe-area-inset-right)); 
-   height: 44px;
+  height: 44px;
   background-color: rgba(53, 53, 53, 0.95);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);

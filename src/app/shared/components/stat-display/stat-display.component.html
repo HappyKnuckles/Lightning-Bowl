@@ -1,14 +1,17 @@
-<div class="stat-container">
-  @for (stat of statDefinitions; track stat.key) {
-    <div class="stats">
-      <app-stat-row
-        [label]="stat.label"
-        [currentStat]="getNumericStat(currentStats, stat.key)!"
-        [prevStat]="stat.prevKey ? getNumericStat(prevStats, stat.prevKey) : undefined"
-        [toolTip]="stat.toolTip"
-        [id]="stat.id"
-        [isPercentage]="stat.isPercentage">
-      </app-stat-row>
-    </div>
-  }
-</div>
+<ion-list>
+  <ion-list-header *ngIf="title" style="margin-bottom: 4px">{{ title }}</ion-list-header>
+  <div class="stat-container">
+    @for (stat of statDefinitions; track stat.key) {
+      <div class="stats">
+        <app-stat-row
+          [label]="stat.label"
+          [currentStat]="getNumericStat(currentStats, stat.key)!"
+          [prevStat]="stat.prevKey ? getNumericStat(prevStats, stat.prevKey) : undefined"
+          [toolTip]="stat.toolTip"
+          [id]="stat.id"
+          [isPercentage]="stat.isPercentage">
+        </app-stat-row>
+      </div>
+    }
+  </div>
+</ion-list>
