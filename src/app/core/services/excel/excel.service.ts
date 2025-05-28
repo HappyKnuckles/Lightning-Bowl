@@ -292,6 +292,7 @@ export class ExcelService {
     });
   }
 
+  // TODO add new stats to export
   private getStatsTablesForExport(stats: Stats): {
     overall: Record<string, ExcelCellValue>[];
     spares: Record<string, ExcelCellValue>[];

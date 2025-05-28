@@ -278,10 +278,14 @@ export class GameStatsService {
       let isAllSpares = true;
 
       game.frames.forEach((frame: { throws: any[] }, idx: number) => {
-        const throwsArr = frame.throws.map((t: any) => parseInt(t.value, 10));
-        firstThrowCount += throwsArr[0] || 0;
-        const isStrike = throwsArr[0] === 10;
-        const isSpare = !isStrike && throwsArr[0] + (throwsArr[1] || 0) === 10;
+        const throws = frame.throws.map((t: any) => parseInt(t.value, 10));
+        firstThrowCount += throws[0] || 0;
+        const throw1 = throws[0];
+        const throw2 = throws.length > 1 ? throws[1] : undefined;
+        const throw3 = throws.length > 2 ? throws[2] : undefined;
+
+        const isStrike = throw1 === 10;
+        const isSpare = !isStrike && throw2 !== undefined && throw1 + throw2 === 10;
         const isOpen = !isStrike && !isSpare;
 
         // Strike-to-strike tracking
@@ -306,33 +310,62 @@ export class GameStatsService {
           totalStrikes++;
           currentStrikeStreak++;
           strikesInThisGame++;
-          if (idx === 9 && throwsArr.length >= 2) {
-            if (throwsArr[1] === 10) {
+          if (idx === MAX_FRAMES - 1 && throws.length >= 2) {
+            if (throw2 === 10) {
               totalStrikes++;
               currentStrikeStreak++;
               strikesInThisGame++;
             }
-            if (throwsArr[2] === 10) {
+            if (throw3 === 10) {
               totalStrikes++;
               currentStrikeStreak++;
               strikesInThisGame++;
             }
-            if (throwsArr[0] === 10 && throwsArr[1] === 10 && throwsArr[2] === 10) strikeoutCount++;
+            if (throw1 === 10 && throw2 === 10 && throw3 === 10) strikeoutCount++;
           }
           if (currentStrikeStreak === 12 && strikesInThisGame < 12) varipapa300Count++;
         } else {
           recordStrikeStreak(currentStrikeStreak);
           currentStrikeStreak = 0;
+          // Count strike on fill ball in 10th if previous was spare
+          if (idx === MAX_FRAMES - 1 && isSpare && throw3 === 10) {
+            totalStrikes++;
+          }
         }
         longestStrikeStreak = Math.max(longestStrikeStreak, currentStrikeStreak);
 
         // Pin counts
-        if (isSpare) pinCounts[10 - throwsArr[0]]++;
-        else if (isOpen) missedCounts[10 - throwsArr[0]]++;
-        if (throwsArr.length === 3) {
-          const second = throwsArr[1] || 0;
-          if (!isStrike && throwsArr[0] + second === 10) pinCounts[10 - second]++;
-          else if (!isStrike && second + (throwsArr[2] || 0) !== 10) missedCounts[10 - second]++;
+        if (isSpare) {
+          // Frame was a spare on the first two balls (e.g., 7 /)
+          // This applies to frames 1-9 and the first two balls of the 10th if throw1 < 10.
+          pinCounts[10 - throw1]++;
+        } else if (isOpen) {
+          // Frame was open on the first one or two balls (e.g., 7 2 or 7 -)
+          // This applies to frames 1-9 and the first two balls of the 10th if throw1 < 10.
+          missedCounts[10 - throw1]++;
+        }
+        // If `isStrike` is true, the above `isSpare` and `isOpen` are false.
+        // We then need to check the 10th frame specifically for a spare/open opportunity
+        // on the 2nd and 3rd balls if the first was a strike.
+        if (isStrike && idx === MAX_FRAMES - 1) {
+          // First ball was a strike in the 10th frame.
+          // Check for spare/open on the 2nd and 3rd balls.
+          if (throw2 !== undefined && throw2 < 10) {
+            // Second ball was not a strike
+            if (throw3 !== undefined) {
+              if (throw2 + throw3 === 10) {
+                // Spare on 2nd/3rd balls (e.g., X 7 /)
+                pinCounts[10 - throw2]++;
+              } else if (throw2 + throw3 < 10) {
+                // Open on 2nd/3rd balls (e.g., X 7 2)
+                missedCounts[10 - throw2]++;
+              }
+            } else {
+              // Only two balls after initial strike, second was not a strike (e.g. X 7 -)
+              missedCounts[10 - throw2]++;
+            }
+          }
+          // If throw2 was also a strike (X X ...), then throw3 is a fill ball; no new spare/open opportunity here.
         }
       });
 
