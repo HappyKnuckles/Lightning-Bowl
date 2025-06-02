@@ -199,9 +199,48 @@ export class GameGridComponent implements OnInit, OnDestroy {
     this.patternChanged.emit(pattern);
   }
 
-  getFrameValue(frameIndex: number, inputIndex: number): string {
-    const val = this.game().frames[frameIndex][inputIndex];
-    return val !== undefined ? val.toString() : '';
+  getFrameValue(frameIndex: number, throwIndex: number): string {
+    const frame = this.game().frames[frameIndex];
+    const val = frame[throwIndex];
+
+    if (val === undefined || val === null) {
+      return '';
+    }
+
+    const firstBall = frame[0];
+    const isTenth = frameIndex === 9;
+
+    if (throwIndex === 0) {
+      return val === 10 ? 'X' : val.toString();
+    }
+
+    if (!isTenth) {
+      if (firstBall !== undefined && firstBall !== 10 && firstBall + val === 10) {
+        return '/';
+      }
+      return val.toString();
+    }
+
+    const secondBall = frame[1];
+
+    if (throwIndex === 1) {
+      if (firstBall !== undefined && firstBall !== 10 && firstBall + val === 10) {
+        return '/';
+      }
+      return val === 10 ? 'X' : val.toString();
+    }
+
+    if (throwIndex === 2) {
+      if (firstBall === 10) {
+        if (secondBall === 10) {
+          return val === 10 ? 'X' : val.toString();
+        }
+        return secondBall !== undefined && secondBall + val === 10 ? '/' : val.toString();
+      }
+      return val === 10 ? 'X' : val.toString();
+    }
+
+    return val.toString();
   }
 
   selectSpecialScore(char: string) {
