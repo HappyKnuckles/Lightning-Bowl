@@ -14,30 +14,53 @@ import {
   removeOutline,
   shareSocialOutline,
 } from 'ionicons/icons';
+import { NgFor, NgStyle } from '@angular/common';
+
+interface ToastData {
+  id: number;
+  message: string;
+  icon: string;
+  isError?: boolean;
+}
 
 @Component({
   selector: 'app-toast',
   templateUrl: './toast.component.html',
   styleUrls: ['./toast.component.scss'],
   standalone: true,
-  imports: [IonToast],
+  imports: [IonToast, NgFor, NgStyle],
 })
 export class ToastComponent implements OnDestroy {
-  isOpen = false;
-  message = '';
-  icon = '';
-  isError?: boolean = false;
-  private toastQueue: { message: string; icon: string; error?: boolean }[] = [];
+  activeToasts: ToastData[] = [];
 
+  /** Any additional toasts beyond 5 go into this queue */
+  private toastQueue: ToastData[] = [];
+
+  private nextId = 1;
   private toastSubscription: Subscription;
 
+  /** Maximum number of toasts shown at once */
+  private readonly MAX_ACTIVE = 5;
+
+  /** How long each toast stays open (in ms) */
+  readonly TOAST_DURATION = 3000;
+
   constructor(private toastService: ToastService) {
-    this.toastSubscription = this.toastService.toastState$.subscribe((toast) => {
-      this.toastQueue.push(toast);
-      if (!this.isOpen) {
-        this.showNextToast();
+    this.toastSubscription = this.toastService.toastState$.subscribe((raw) => {
+      const newToast: ToastData = {
+        id: this.nextId++,
+        message: raw.message,
+        icon: raw.icon,
+        isError: raw.error ?? false,
+      };
+
+      if (this.activeToasts.length < this.MAX_ACTIVE) {
+        this.activeToasts.push(newToast);
+      } else {
+        this.toastQueue.push(newToast);
       }
     });
+
     addIcons({
       bug,
       add,
@@ -51,23 +74,19 @@ export class ToastComponent implements OnDestroy {
     });
   }
 
-  showNextToast(): void {
-    if (this.toastQueue.length > 0) {
-      const nextToast = this.toastQueue.shift();
-      if (nextToast) {
-        this.message = nextToast.message;
-        this.icon = nextToast.icon;
-        this.isError = nextToast.error;
-        this.isOpen = true;
-      }
-    }
-  }
+  /**
+   * Called whenever an individual IonToast’s (didDismiss) event fires.
+   * Remove the toast from activeToasts, then immediately pull one from the queue (if any).
+   */
+  onToastDidDismiss(dismissedId: number) {
+    // Remove that toast from the active list
+    this.activeToasts = this.activeToasts.filter((t) => t.id !== dismissedId);
 
-  onToastDismiss(): void {
-    this.isOpen = false;
-    setTimeout(() => {
-      this.showNextToast();
-    }, 100);
+    // If there’s something waiting in the queue, “activate” the next one
+    if (this.toastQueue.length > 0) {
+      const next = this.toastQueue.shift()!;
+      this.activeToasts.push(next);
+    }
   }
 
   ngOnDestroy(): void {
