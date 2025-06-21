@@ -389,6 +389,8 @@ export class LeaguePage {
         this.scoreChart,
         this.gamesByLeagueReverse()[league],
         this.scoreChartInstances[league]!,
+        undefined,
+        undefined,
         isReload,
       );
     } catch (error) {

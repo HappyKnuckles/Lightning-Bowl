@@ -123,6 +123,7 @@ export class StatsPage implements OnInit, AfterViewInit {
 
     return this.statsService.calculateBowlingStats(filteredGames) as SessionStats;
   });
+  chartViewMode: 'week' | 'game' | 'monthly' = 'game';
   selectedSegment = 'Overall';
   segments: string[] = ['Overall', 'Spares', 'Throws', 'Sessions'];
   // Viewchilds and Instances
@@ -286,7 +287,6 @@ export class StatsPage implements OnInit, AfterViewInit {
       }
     }
   }
-
   private generateScoreChart(isReload?: boolean): void {
     try {
       if (!this.scoreChart) {
@@ -297,12 +297,25 @@ export class StatsPage implements OnInit, AfterViewInit {
         this.scoreChart,
         this.sortUtilsService.sortGameHistoryByDate([...this.gameFilterService.filteredGames()], true),
         this.scoreChartInstance!,
+        this.chartViewMode,
+        () => this.toggleChartView(),
         isReload,
       );
     } catch (error) {
       this.toastService.showToast(ToastMessages.chartGenerationError, 'bug', true);
       console.error('Error generating score chart:', error);
     }
+  }
+  private toggleChartView() {
+    if (this.chartViewMode === 'game') {
+      this.chartViewMode = 'week';
+    } else if (this.chartViewMode === 'week') {
+      this.chartViewMode = 'monthly';
+    } else {
+      this.chartViewMode = 'game';
+    }
+
+    this.generateScoreChart(true);
   }
 
   private generateScoreDistributionChart(isReload?: boolean): void {

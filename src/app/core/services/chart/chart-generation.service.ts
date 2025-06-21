@@ -2,7 +2,16 @@ import { ElementRef, Injectable } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { Game } from 'src/app/core/models/game.model';
 import { Stats } from 'src/app/core/models/stats.model';
-import Chart, { ChartConfiguration, ScatterDataPoint, Plugin } from 'chart.js/auto';
+import Chart, {
+  ChartConfiguration,
+  ScatterDataPoint,
+  Plugin,
+  ChartEvent,
+  LegendItem,
+  ChartOptions,
+  LegendElement,
+  ChartDataset,
+} from 'chart.js/auto';
 import * as d3 from 'd3';
 import { Pattern, ForwardsData, ReverseData } from '../../models/pattern.model';
 import { Ball } from '../../models/ball.model';
@@ -139,16 +148,106 @@ const customAxisTitlesPlugin: Plugin<'scatter'> = {
   providedIn: 'root',
 })
 export class ChartGenerationService {
-  generateScoreChart(scoreChart: ElementRef, games: Game[], existingChartInstance: Chart | undefined, isReload?: boolean): Chart {
+  generateScoreChart(
+    scoreChart: ElementRef,
+    games: Game[],
+    existingChartInstance: Chart | undefined,
+    viewMode?: 'week' | 'game' | 'monthly',
+    onToggleView?: () => void,
+    isReload?: boolean,
+  ): Chart {
     try {
-      const { gameLabels, overallAverages, differences, gamesPlayedDaily } = this.calculateScoreChartData(games);
+      const currentViewMode = viewMode || 'game';
+      const { gameLabels, overallAverages, differences, gamesPlayedDaily } = this.calculateScoreChartData(games, currentViewMode);
       const ctx = scoreChart.nativeElement;
       let chartInstance: Chart;
-
       if (isReload && existingChartInstance) {
         existingChartInstance.destroy();
       }
 
+      const plugins: Plugin<'line' | 'bar'>[] = [];
+      const options: ChartOptions<'line' | 'bar'> = {
+        scales: {
+          y: { beginAtZero: true, suggestedMax: 300, ticks: { font: { size: 14 } } },
+          y1: { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false }, ticks: { font: { size: 14 } } },
+        },
+        plugins: {
+          title: { display: true, text: 'Score Analysis', color: 'white', font: { size: 20 } },
+          legend: {
+            display: true,
+            labels: { font: { size: 15 } },
+            onClick: (e: ChartEvent, legendItem: LegendItem, legend: LegendElement<'line' | 'bar'>) => {
+              const index = legendItem.datasetIndex!;
+              const ci = legend.chart;
+              const meta = ci.getDatasetMeta(index);
+              meta.hidden = meta.hidden === null ? !ci.data.datasets[index].hidden : !meta.hidden;
+              const gamesPlayedIndex = ci.data.datasets.findIndex((dataset: ChartDataset) => dataset.label === 'Games played');
+              if (gamesPlayedIndex !== -1) {
+                const gamesPlayedMeta = ci.getDatasetMeta(gamesPlayedIndex);
+                if (ci.options.scales && ci.options.scales['y1']) {
+                  ci.options.scales['y1'].display = !gamesPlayedMeta.hidden;
+                }
+              }
+              ci.update();
+            },
+          },
+        },
+      };
+
+      if (onToggleView && viewMode) {
+        const toggleButtonPlugin = {
+          id: 'toggleButton',
+          afterDraw: (chart: Chart) => {
+            const { ctx } = chart;
+            const titleBlock = (chart as { titleBlock?: { top: number; height: number } }).titleBlock;
+
+            if (!titleBlock || !titleBlock.height) {
+              return;
+            }
+
+            const baseRatio = 35;
+            const minFontSize = 10;
+            const maxFontSize = 14;
+            const padding = 10;
+
+            const fontSize = Math.max(minFontSize, Math.min(maxFontSize, chart.width / baseRatio));
+            ctx.font = `bold ${fontSize}px Arial`;
+
+            const buttonTextMap: Record<string, string> = {
+              game: 'Weekly',
+              week: 'Monthly',
+              monthly: 'By Game',
+            };
+            const buttonText = buttonTextMap[viewMode] || 'By Game';
+            const textMetrics = ctx.measureText(buttonText);
+
+            const button = {
+              width: textMetrics.width + padding * 2,
+              height: fontSize + padding,
+              x: chart.width - (textMetrics.width + padding * 2) - 10,
+              y: titleBlock.top + (titleBlock.height - (fontSize + padding)) / 2,
+            };
+
+            (chart as { toggleButtonBounds?: typeof button }).toggleButtonBounds = button;
+
+            ctx.save();
+            ctx.fillStyle = 'rgba(153, 102, 255, 0.8)';
+            ctx.strokeStyle = 'rgba(153, 102, 255, 1)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.roundRect(button.x, button.y, button.width, button.height, 5);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = 'white';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(buttonText, button.x + button.width / 2, button.y + button.height / 2);
+            ctx.restore();
+          },
+        };
+        plugins.push(toggleButtonPlugin);
+      }
       if (existingChartInstance && !isReload) {
         existingChartInstance.data.labels = gameLabels;
         existingChartInstance.data.datasets[0].data = overallAverages;
@@ -189,71 +288,31 @@ export class ChartGenerationService {
               },
             ],
           },
-          options: {
-            scales: {
-              y: {
-                beginAtZero: true,
-                suggestedMax: 300,
-                ticks: {
-                  font: {
-                    size: 14,
-                  },
-                },
-              },
-              y1: {
-                beginAtZero: true,
-                position: 'right',
-                grid: {
-                  drawOnChartArea: false,
-                },
-                ticks: {
-                  font: {
-                    size: 14,
-                  },
-                },
-              },
-            },
-            plugins: {
-              title: {
-                display: true,
-                text: 'Score Analysis',
-                color: 'white',
-                font: {
-                  size: 20,
-                },
-              },
-              legend: {
-                display: true,
-                labels: {
-                  font: {
-                    size: 15,
-                  },
-                },
-                onClick: (e, legendItem) => {
-                  const index = legendItem.datasetIndex!;
-                  const ci = chartInstance;
-                  if (!ci) {
-                    console.error('Chart instance is not defined.');
-                    return;
-                  }
-                  const meta = ci.getDatasetMeta(index);
-                  meta.hidden = meta.hidden === null ? !ci.data.datasets[index].hidden : !meta.hidden;
-                  const gamesPlayedIndex = ci.data.datasets.findIndex((dataset) => dataset.label === 'Games played');
-                  if (gamesPlayedIndex !== -1) {
-                    const gamesPlayedMeta = ci.getDatasetMeta(gamesPlayedIndex);
-                    const isGamesPlayedHidden = gamesPlayedMeta.hidden;
-                    if (ci.options.scales && ci.options.scales['y1']) {
-                      ci.options.scales['y1'].display = !isGamesPlayedHidden;
-                    }
-                  }
-                  ci.update();
-                },
-              },
-            },
-          },
+          options: options,
+          plugins: plugins,
         });
-        return chartInstance;
+
+        if (onToggleView) {
+          chartInstance.canvas.onclick = (event) => {
+            const rect = chartInstance.canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            const buttonBounds = (chartInstance as { toggleButtonBounds?: { x: number; y: number; width: number; height: number } })
+              .toggleButtonBounds;
+            if (
+              buttonBounds &&
+              x >= buttonBounds.x &&
+              x <= buttonBounds.x + buttonBounds.width &&
+              y >= buttonBounds.y &&
+              y <= buttonBounds.y + buttonBounds.height
+            ) {
+              onToggleView();
+            }
+          };
+        }
       }
+
+      return chartInstance;
     } catch (error) {
       console.error('Error generating score chart:', error);
       throw error;
@@ -1201,43 +1260,162 @@ export class ChartGenerationService {
     }
   }
 
-  private calculateScoreChartData(gameHistory: Game[]) {
+  public calculateScoreChartData(gameHistory: Game[], viewMode: 'week' | 'game' | 'monthly' = 'game') {
+    if (viewMode === 'week') {
+      return this.calculateWeeklyScoreChartData(gameHistory);
+    } else if (viewMode === 'monthly') {
+      return this.calculateMonthlyScoreChartData(gameHistory);
+    } else {
+      return this.calculatePerGameScoreChartData(gameHistory);
+    }
+  }
+
+  private calculatePerGameScoreChartData(gameHistory: Game[]) {
+    const scoresByDate: Record<string, number[]> = {};
+    gameHistory.forEach((game: Game) => {
+      const date = new Date(game.date).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' });
+      if (!scoresByDate[date]) {
+        scoresByDate[date] = [];
+      }
+      scoresByDate[date].push(game.totalScore);
+    });
+
+    const sortedDates = Object.keys(scoresByDate).sort((a, b) => {
+      const [dayA, monthA, yearA] = a.split('.').map(Number);
+      const [dayB, monthB, yearB] = b.split('.').map(Number);
+      return new Date(2000 + yearA, monthA - 1, dayA).getTime() - new Date(2000 + yearB, monthB - 1, dayB).getTime();
+    });
+
+    const gameLabels = sortedDates;
+    let cumulativeSum = 0;
+    let cumulativeCount = 0;
+
+    const overallAverages = gameLabels.map((date) => {
+      cumulativeSum += scoresByDate[date].reduce((sum, score) => sum + score, 0);
+      cumulativeCount += scoresByDate[date].length;
+      return cumulativeSum / cumulativeCount;
+    });
+
+    const differences = gameLabels.map((date, index) => {
+      const dailySum = scoresByDate[date].reduce((sum, score) => sum + score, 0);
+      const dailyAverage = dailySum / scoresByDate[date].length;
+      return dailyAverage - overallAverages[index];
+    });
+
+    const formattedAverages = overallAverages.map((average) => parseFloat(new DecimalPipe('en').transform(average, '1.2-2')!));
+    const formattedDifferences = differences.map((difference) => parseFloat(new DecimalPipe('en').transform(difference, '1.2-2')!));
+    const gamesPlayedDaily = gameLabels.map((date) => scoresByDate[date].length);
+
+    return { gameLabels, overallAverages: formattedAverages, differences: formattedDifferences, gamesPlayedDaily };
+  }
+
+  private calculateWeeklyScoreChartData(gameHistory: Game[]) {
     try {
-      const scoresByDate: Record<string, number[]> = {};
+      const scoresByWeek: Record<string, number[]> = {};
       gameHistory.forEach((game: Game) => {
-        const date = new Date(game.date).toLocaleDateString('de-DE', {
+        const startOfWeek = this.getStartOfWeek(new Date(game.date));
+        const weekKey = startOfWeek.toISOString().split('T')[0];
+
+        if (!scoresByWeek[weekKey]) {
+          scoresByWeek[weekKey] = [];
+        }
+        scoresByWeek[weekKey].push(game.totalScore);
+      });
+
+      const sortedWeekKeys = Object.keys(scoresByWeek).sort();
+
+      const gameLabels = sortedWeekKeys.map((weekKey) => {
+        const startDate = new Date(weekKey);
+        const endDate = new Date(startDate);
+        endDate.setDate(startDate.getDate() + 6);
+
+        const startDateFormatted = startDate.toLocaleDateString(undefined, {
+          day: '2-digit',
+          month: '2-digit',
+        });
+
+        const endDateFormatted = endDate.toLocaleDateString(undefined, {
           day: '2-digit',
           month: '2-digit',
           year: '2-digit',
         });
-        if (!scoresByDate[date]) {
-          scoresByDate[date] = [];
-        }
-        scoresByDate[date].push(game.totalScore);
+
+        return `${startDateFormatted} - ${endDateFormatted}`;
       });
 
-      const gameLabels = Object.keys(scoresByDate).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
       let cumulativeSum = 0;
       let cumulativeCount = 0;
 
-      const overallAverages = gameLabels.map((date) => {
-        cumulativeSum += scoresByDate[date].reduce((sum, score) => sum + score, 0);
-        cumulativeCount += scoresByDate[date].length;
+      const overallAverages = sortedWeekKeys.map((weekKey) => {
+        cumulativeSum += scoresByWeek[weekKey].reduce((sum, score) => sum + score, 0);
+        cumulativeCount += scoresByWeek[weekKey].length;
         return cumulativeSum / cumulativeCount;
       });
-      overallAverages.map((average) => parseFloat(new DecimalPipe('en').transform(average, '1.2-2')!));
 
-      const differences = gameLabels.map((date, index) => {
-        const dailySum = scoresByDate[date].reduce((sum, score) => sum + score, 0);
-        const dailyAverage = dailySum / scoresByDate[date].length;
-        return dailyAverage - overallAverages[index];
+      const differences = sortedWeekKeys.map((weekKey, index) => {
+        const weeklySum = scoresByWeek[weekKey].reduce((sum, score) => sum + score, 0);
+        const weeklyAverage = weeklySum / scoresByWeek[weekKey].length;
+        return weeklyAverage - overallAverages[index];
       });
-      differences.map((difference) => parseFloat(new DecimalPipe('en').transform(difference, '1.2-2')!));
 
-      const gamesPlayedDaily = gameLabels.map((date) => scoresByDate[date].length);
-      return { gameLabels, overallAverages, differences, gamesPlayedDaily };
+      const formattedAverages = overallAverages.map((average) => parseFloat(new DecimalPipe('en').transform(average, '1.2-2')!));
+      const formattedDifferences = differences.map((difference) => parseFloat(new DecimalPipe('en').transform(difference, '1.2-2')!));
+
+      const gamesPlayedWeekly = sortedWeekKeys.map((weekKey) => scoresByWeek[weekKey].length);
+
+      return { gameLabels, overallAverages: formattedAverages, differences: formattedDifferences, gamesPlayedDaily: gamesPlayedWeekly };
     } catch (error) {
       console.error('Error calculating score chart data:', error);
+      throw error;
+    }
+  }
+
+  private calculateMonthlyScoreChartData(gameHistory: Game[]) {
+    try {
+      const scoresByMonth: Record<string, number[]> = {};
+      gameHistory.forEach((game: Game) => {
+        const gameDate = new Date(game.date);
+        const monthKey = `${gameDate.getFullYear()}-${(gameDate.getMonth() + 1).toString().padStart(2, '0')}`;
+
+        if (!scoresByMonth[monthKey]) {
+          scoresByMonth[monthKey] = [];
+        }
+        scoresByMonth[monthKey].push(game.totalScore);
+      });
+
+      const sortedMonthKeys = Object.keys(scoresByMonth).sort();
+
+      const gameLabels = sortedMonthKeys.map((monthKey) => {
+        const [year, month] = monthKey.split('-').map(Number);
+        const date = new Date(year, month - 1, 1);
+        return date.toLocaleDateString(undefined, {
+          month: 'short',
+          year: 'numeric',
+        });
+      });
+
+      let cumulativeSum = 0;
+      let cumulativeCount = 0;
+
+      const overallAverages = sortedMonthKeys.map((monthKey) => {
+        cumulativeSum += scoresByMonth[monthKey].reduce((sum, score) => sum + score, 0);
+        cumulativeCount += scoresByMonth[monthKey].length;
+        return cumulativeSum / cumulativeCount;
+      });
+
+      const differences = sortedMonthKeys.map((monthKey, index) => {
+        const monthlySum = scoresByMonth[monthKey].reduce((sum, score) => sum + score, 0);
+        const monthlyAverage = monthlySum / scoresByMonth[monthKey].length;
+        return monthlyAverage - overallAverages[index];
+      });
+
+      const formattedAverages = overallAverages.map((average) => parseFloat(new DecimalPipe('en').transform(average, '1.2-2')!));
+      const formattedDifferences = differences.map((difference) => parseFloat(new DecimalPipe('en').transform(difference, '1.2-2')!));
+      const gamesPlayedMonthly = sortedMonthKeys.map((monthKey) => scoresByMonth[monthKey].length);
+
+      return { gameLabels, overallAverages: formattedAverages, differences: formattedDifferences, gamesPlayedDaily: gamesPlayedMonthly };
+    } catch (error) {
+      console.error('Error calculating monthly score chart data:', error);
       throw error;
     }
   }
@@ -1279,5 +1457,13 @@ export class ChartGenerationService {
       console.error('Error calculating rate:', error);
       throw error;
     }
+  }
+
+  private getStartOfWeek(date: Date): Date {
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    const day = d.getDay();
+    const diff = d.getDate() - (day === 0 ? 6 : day - 1);
+    return new Date(d.setDate(diff));
   }
 }
