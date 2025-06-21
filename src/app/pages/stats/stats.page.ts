@@ -59,6 +59,7 @@ import { GameFilterActiveComponent } from 'src/app/shared/components/game-filter
 import { GameFilterComponent } from 'src/app/shared/components/game-filter/game-filter.component';
 import { SpareDisplayComponent } from 'src/app/shared/components/spare-display/spare-display.component';
 import { StatDisplayComponent } from 'src/app/shared/components/stat-display/stat-display.component';
+import { BallStatsComponent } from '../../shared/components/ball-stats/ball-stats.component';
 
 @Component({
   selector: 'app-stats',
@@ -88,6 +89,7 @@ import { StatDisplayComponent } from 'src/app/shared/components/stat-display/sta
     StatDisplayComponent,
     SpareDisplayComponent,
     GameFilterActiveComponent,
+    BallStatsComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

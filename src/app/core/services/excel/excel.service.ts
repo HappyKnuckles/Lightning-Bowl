@@ -28,27 +28,41 @@ export class ExcelService {
     private statsService: GameStatsService,
   ) {}
 
+  // TODO make one folder for all and one for each league and in there have stats and game history for the league
   async exportToExcel(): Promise<boolean> {
     try {
-      // Get the data objects for games and stats.
-      const gameData: Record<string, ExcelCellValue>[] = this.getGameDataForExport(this.storageService.games());
-      const { overall, spares, series } = this.getStatsTablesForExport(this.statsService.currentStats());
+      const gameData = this.getGameDataForExport(this.storageService.games());
+      const { overall, spares, throwStats, strike, special, playFrequency, series } = this.getStatsTablesForExport(this.statsService.currentStats());
 
       const workbook = new ExcelJS.Workbook();
       const gameWorksheet = workbook.addWorksheet('Game History');
       const statsWorksheet = workbook.addWorksheet('Statistics');
 
-      // Add tables
+      // Game History Table
       this.addTable(gameWorksheet, 'GameHistoryTable', 'A1', Object.keys(gameData[0]), gameData);
-      this.addTable(statsWorksheet, 'OverallStats', 'A1', ['Overall', 'Value'], overall);
-      this.addTable(statsWorksheet, 'SparesStats', 'D1', ['Spares', 'Value'], spares);
-      this.addTable(statsWorksheet, 'SeriesStats', 'G1', ['Series', 'Value'], series);
 
-      // Set column widths
+      // Stats Tables
+      const sections = [
+        { name: 'OverallStats', start: 'A1', headers: ['Overall', 'Value'], data: overall },
+        { name: 'SparesStats', start: 'D1', headers: ['Spares', 'Value'], data: spares },
+        { name: 'ThrowStats', start: 'G1', headers: ['Throw', 'Value'], data: throwStats },
+        { name: 'StrikeStats', start: 'J1', headers: ['Strike', 'Value'], data: strike },
+        { name: 'SpecialStats', start: 'M1', headers: ['Special', 'Value'], data: special },
+        { name: 'PlayFrequency', start: 'P1', headers: ['Frequency', 'Value'], data: playFrequency },
+        { name: 'SeriesStats', start: 'S1', headers: ['Series', 'Value'], data: series },
+      ];
+
+      sections.forEach(({ name, start, headers, data }) => {
+        this.addTable(statsWorksheet, name, start, headers, data);
+      });
+
+      // Set column widths for each section
+      sections.forEach(({ headers, data }, idx) => {
+        const startColIndex = idx * 3; // each section is 2 cols + 1-col gap
+        this.setColumnWidths(statsWorksheet, headers, data, startColIndex + 1);
+      });
+
       this.setColumnWidths(gameWorksheet, Object.keys(gameData[0]), gameData, 1);
-      this.setColumnWidths(statsWorksheet, Object.keys(overall[0]), overall, 1);
-      this.setColumnWidths(statsWorksheet, Object.keys(spares[0]), spares, Object.keys(overall[0]).length + 2);
-      this.setColumnWidths(statsWorksheet, Object.keys(series[0]), series, Object.keys(overall[0]).length + Object.keys(spares[0]).length + 3);
 
       const date = new Date();
       const formattedDate = date.toLocaleString('de-DE', {
@@ -293,36 +307,38 @@ export class ExcelService {
   }
 
   // TODO add new stats to export
-  private getStatsTablesForExport(stats: Stats): {
-    overall: Record<string, ExcelCellValue>[];
-    spares: Record<string, ExcelCellValue>[];
-    series: Record<string, ExcelCellValue>[];
-  } {
-    const formatPercent = (value: number): string => `${value.toFixed(2)}%`;
-    const formatFixed = (value: number): string => value.toFixed(2);
+  private getStatsTablesForExport(stats: Stats): Record<string, Record<string, ExcelCellValue>[]> {
+    const formatPercent = (v: number) => `${v.toFixed(2)}%`;
+    const formatFixed = (v: number) => v.toFixed(2);
 
-    // Overall Table
-    const overallEntries: [string, ExcelCellValue][] = [
+    // Overall Stats
+    const overallDefs: [string, ExcelCellValue][] = [
       ['Total Games', stats.totalGames.toString()],
-      ['Perfect Game Count', stats.perfectGameCount.toString()],
-      ['Clean Game Count', stats.cleanGameCount.toString()],
-      ['Clean Game Percentage', formatPercent(stats.cleanGamePercentage)],
-      ['Average First Count', formatFixed(stats.averageFirstCount)],
+      ['Perfect Games', stats.perfectGameCount.toString()],
+      ['Clean Games', stats.cleanGameCount.toString()],
+      ['Clean Game %', formatPercent(stats.cleanGamePercentage)],
       ['Average Score', formatFixed(stats.averageScore)],
       ['High Game', stats.highGame.toString()],
       ['Total Pins', stats.totalPins.toString()],
-      ['Total Strikes', stats.totalStrikes.toString()],
-      ['Average Strikes Per Game', formatFixed(stats.averageStrikesPerGame)],
-      ['Average Spares Per Game', formatFixed(stats.averageSparesPerGame)],
-      ['Average Opens Per Game', formatFixed(stats.averageOpensPerGame)],
-      ['Strike Percentage', formatPercent(stats.strikePercentage)],
-      ['Spare Percentage', formatPercent(stats.sparePercentage)],
-      ['Open Percentage', formatPercent(stats.openPercentage)],
+      ['First Ball Avg', formatFixed(stats.averageFirstCount)],
     ];
-    const overallTable = overallEntries.map(([metric, value]) => ({
-      Overall: metric,
-      Value: value,
-    }));
+    const overall = overallDefs.map(([label, val]) => ({ Overall: label, Value: val }));
+
+    // Throw Stats
+    const throwDefs: [string, ExcelCellValue][] = [
+      ['Total Strikes', stats.totalStrikes.toString()],
+      ['Strikes per Game', formatFixed(stats.averageStrikesPerGame)],
+      ['Total Spares', stats.totalSpares.toString()],
+      ['Spares per Game', formatFixed(stats.averageSparesPerGame)],
+      ['Total Opens', stats.totalSparesMissed.toString()],
+      ['Opens per Game', formatFixed(stats.averageOpensPerGame)],
+      ['Spare Conversion %', formatPercent(stats.spareConversionPercentage)],
+      ['Mark %', formatPercent(stats.markPercentage)],
+      ['Strike %', formatPercent(stats.strikePercentage)],
+      ['Spare %', formatPercent(stats.sparePercentage)],
+      ['Open %', formatPercent(stats.openPercentage)],
+    ];
+    const throwStats = throwDefs.map(([label, val]) => ({ Throw: label, Value: val }));
 
     // Spares Table
     const sparesEntries: [string, ExcelCellValue][] = [
@@ -337,28 +353,60 @@ export class ExcelService {
       ['Overall Spare Rate', formatPercent(stats.overallSpareRate)],
       ['Overall Missed Rate', formatPercent(stats.overallMissedRate)],
     ];
-    const sparesTable = sparesEntries.map(([metric, value]) => ({
+    const spares = sparesEntries.map(([metric, value]) => ({
       Spares: metric,
       Value: value,
     }));
 
-    // Series Table
-    const seriesEntries: [string, ExcelCellValue][] = [
-      ['Average 3 Series Score', stats.average3SeriesScore !== undefined ? formatFixed(stats.average3SeriesScore) : ''],
-      ['High 3 Series', stats.high3Series !== undefined ? stats.high3Series.toString() : ''],
-      ['Average 4 Series Score', stats.average4SeriesScore !== undefined ? formatFixed(stats.average4SeriesScore) : ''],
-      ['High 4 Series', stats.high4Series !== undefined ? stats.high4Series.toString() : ''],
-      ['Average 5 Series Score', stats.average5SeriesScore !== undefined ? formatFixed(stats.average5SeriesScore) : ''],
-      ['High 5 Series', stats.high5Series !== undefined ? stats.high5Series.toString() : ''],
-      ['Average 6 Series Score', stats.average6SeriesScore !== undefined ? formatFixed(stats.average6SeriesScore) : ''],
-      ['High 6 Series', stats.high6Series !== undefined ? stats.high6Series.toString() : ''],
+    // Strike Stats
+    const strikeDefs: [string, ExcelCellValue][] = [
+      ['Turkeys', stats.turkeyCount?.toString() || '0'],
+      ['4-Baggers', stats.bagger4Count?.toString() || '0'],
+      ['5-Baggers', stats.bagger5Count?.toString() || '0'],
+      ['6-Baggers', stats.bagger6Count?.toString() || '0'],
+      ['7-Baggers', stats.bagger7Count?.toString() || '0'],
+      ['8-Baggers', stats.bagger8Count?.toString() || '0'],
+      ['9-Baggers', stats.bagger9Count?.toString() || '0'],
+      ['10-Baggers', stats.bagger10Count?.toString() || '0'],
+      ['11-Baggers', stats.bagger11Count?.toString() || '0'],
+      ['Longest Strike Streak', stats['longestStrikeStreak']?.toString() || ''],
+      ['Strike-to-Strike %', formatPercent(stats.strikeToStrikePercentage || 0)],
+      ['Strikeouts (10th Frame)', stats.strikeoutCount?.toString() || '0'],
     ];
-    const seriesTable = seriesEntries.map(([metric, value]) => ({
-      Series: metric,
-      Value: value,
-    }));
+    const strike = strikeDefs.map(([label, val]) => ({ Strike: label, Value: val }));
 
-    return { overall: overallTable, spares: sparesTable, series: seriesTable };
+    // Special Stats
+    const specialDefs: [string, ExcelCellValue][] = [
+      ['Dutch 200s', stats.dutch200Count?.toString() || '0'],
+      ['Varipapa 300s', stats.varipapa300Count?.toString() || '0'],
+      ['Full Spare Games', stats.allSparesGameCount?.toString() || '0'],
+    ];
+    const special = specialDefs.map(([label, val]) => ({ Special: label, Value: val }));
+
+    // Play Frequency
+    const freqDefs: [string, ExcelCellValue][] = [
+      ['Avg Games/Week', stats.averageGamesPerWeek?.toFixed(2) || '0'],
+      ['Avg Games/Month', stats.averageGamesPerMonth?.toFixed(2) || '0'],
+      ['Avg Sessions/Week', stats.averageSessionsPerWeek?.toFixed(2) || '0'],
+      ['Avg Sessions/Month', stats.averageSessionsPerMonth?.toFixed(2) || '0'],
+      ['Avg Games/Session', stats.averageGamesPerSession?.toFixed(2) || '0'],
+    ];
+    const playFrequency = freqDefs.map(([label, val]) => ({ Frequency: label, Value: val }));
+
+    // Series Stats
+    const seriesDefs: [string, ExcelCellValue][] = [
+      ['Avg 3-Series Score', stats.average3SeriesScore?.toFixed(2) || ''],
+      ['High 3-Series', stats.high3Series?.toString() || ''],
+      ['Avg 4-Series Score', stats.average4SeriesScore?.toFixed(2) || ''],
+      ['High 4-Series', stats.high4Series?.toString() || ''],
+      ['Avg 5-Series Score', stats.average5SeriesScore?.toFixed(2) || ''],
+      ['High 5-Series', stats.high5Series?.toString() || ''],
+      ['Avg 6-Series Score', stats.average6SeriesScore?.toFixed(2) || ''],
+      ['High 6-Series', stats.high6Series?.toString() || ''],
+    ];
+    const series = seriesDefs.map(([label, val]) => ({ Series: label, Value: val }));
+
+    return { overall, spares, throwStats, strike, special, playFrequency, series };
   }
 
   private addTable(worksheet: ExcelJS.Worksheet, name: string, ref: string, headers: string[], rows: Record<string, ExcelCellValue>[]): void {

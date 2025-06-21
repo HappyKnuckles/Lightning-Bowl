@@ -1,0 +1,66 @@
+ion-img {
+  width: 100px;
+  height: 100px;
+  margin-left: 8px;
+  margin-bottom: 4px;
+  &::part(image) {
+    border-radius: 50%;
+  }
+}
+
+.ball-stats {
+  display: flex;
+  flex-direction: column;
+  margin-right: 8px;
+}
+
+.header-container {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  align-items: baseline;
+  text-align: center;
+
+  .ball-name {
+    grid-column: 2;
+    align-items: flex-start;
+    display: grid;
+    justify-content: center;
+    padding-left: 0;
+  }
+
+  .game-count-ratio {
+    grid-column: 3;
+    color: var(--ion-color-step-400, var(--ion-text-color-step-600, #999999));
+    font-size: 0.875rem;
+  }
+}
+
+.ball-stats span {
+  line-height: 1.5;
+}
+
+.inner-stat-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-around;
+  gap: 32px;
+}
+.stat-line {
+  display: flex;
+  align-items: baseline; 
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  color: var(--ion-color-step-400, var(--ion-text-color-step-600, #999999));
+  font-size: 0.925rem;
+  width: 45px; 
+  flex-shrink: 0;
+}
+
+.stat-value {
+  font-size: 1.25rem;
+  font-weight: 600; 
+}

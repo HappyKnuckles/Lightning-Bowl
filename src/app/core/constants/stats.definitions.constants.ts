@@ -29,6 +29,14 @@ export const overallStatDefinitions: StatDefinition[] = [
   { label: 'Total pins', key: 'totalPins', id: 'totalPins' },
   { label: 'First ball average', key: 'averageFirstCount', id: 'averageFirstCount', prevKey: 'averageFirstCount' },
   {
+    label: 'Mark-percentage',
+    key: 'markPercentage',
+    id: 'markPercentage',
+    isPercentage: true,
+    toolTip: 'This is the probability of how likely you had any kind of non open.',
+    prevKey: 'markPercentage',
+  },
+  {
     label: 'Strike-percentage',
     key: 'strikePercentage',
     id: 'strikePercentage',
@@ -145,6 +153,7 @@ export const leagueStatDefinitions: StatDefinition[] = [
   { label: 'First ball average', key: 'averageFirstCount', id: 'league-averageFirstCount', prevKey: 'averageFirstCount' },
   { label: 'Total strikes', key: 'totalStrikes', id: 'league-totalStrikes' },
   { label: 'Strikes per game', key: 'averageStrikesPerGame', id: 'league-averageStrikesPerGame', prevKey: 'averageStrikesPerGame' },
+  { label: 'Mark-percentage', key: 'league-markPercentage', id: 'league-markPercentage', isPercentage: true, prevKey: 'markPercentage' },
   {
     label: 'Strike-percentage',
     key: 'strikePercentage',

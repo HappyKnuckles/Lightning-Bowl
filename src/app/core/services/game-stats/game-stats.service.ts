@@ -1,6 +1,6 @@
 import { computed, Injectable, Signal } from '@angular/core';
 import { Game } from 'src/app/core/models/game.model';
-import { SessionStats, Stats } from 'src/app/core/models/stats.model';
+import { BestBallStats, SessionStats, Stats } from 'src/app/core/models/stats.model';
 import { PrevStats } from 'src/app/core/models/stats.model';
 import { GameFilterService } from '../game-filter/game-filter.service';
 import { UtilsService } from '../utils/utils.service';
@@ -53,6 +53,14 @@ export class GameStatsService {
       return prevStats;
     }
   });
+
+  #bestBallStats: Signal<BestBallStats> = computed(() => {
+    return this.calculateBestBallStats(this.gameFilterService.filteredGames());
+  });
+
+  get bestBallStats() {
+    return this.#bestBallStats;
+  }
   get prevStats() {
     return this.#prevStats;
   }
@@ -79,6 +87,44 @@ export class GameStatsService {
     private utilsService: UtilsService,
     private storageService: StorageService,
   ) {}
+
+  calculateBestBallStats(gameHistory: Game[]): BestBallStats {
+    const gamesWithBalls = gameHistory.filter((game) => game.balls && game.balls.length > 0);
+    if (gamesWithBalls.length === 0) {
+      return { ballName: '', ballImage: '', ballAvg: 0, ballHighestGame: 0, ballLowestGame: 0, gameCount: 0 };
+    }
+
+    const ballStats: Record<string, { totalScore: number; count: number; ballHighestGame: number; ballLowestGame: number }> = {};
+
+    gamesWithBalls.forEach((game) => {
+      game.balls!.forEach((ball) => {
+        if (!ballStats[ball]) {
+          ballStats[ball] = { totalScore: 0, count: 0, ballHighestGame: 0, ballLowestGame: 301 };
+        }
+        ballStats[ball].totalScore += game.totalScore;
+        ballStats[ball].count++;
+        if (game.totalScore > ballStats[ball].ballHighestGame) {
+          ballStats[ball].ballHighestGame = game.totalScore;
+        }
+        if (game.totalScore < ballStats[ball].ballLowestGame) {
+          ballStats[ball].ballLowestGame = game.totalScore;
+        }
+      });
+    });
+
+    let bestBall: BestBallStats = { ballName: '', ballImage: '', ballAvg: 0, ballHighestGame: 0, ballLowestGame: 0, gameCount: 0 };
+
+    Object.keys(ballStats).forEach((ballName) => {
+      const { totalScore, count, ballHighestGame, ballLowestGame } = ballStats[ballName];
+      const ballAvg = Math.round((totalScore / count) * 100) / 100;
+      if (ballAvg > bestBall.ballAvg) {
+        const ballImage = this.storageService.allBalls().find((b) => b.ball_name === ballName)?.ball_image || '';
+        bestBall = { ballName, ballImage, ballAvg, ballHighestGame, ballLowestGame, gameCount: count };
+      }
+    });
+
+    return bestBall;
+  }
 
   calculateSeriesStats(gameHistory: Game[]): {
     average3SeriesScore: number;
@@ -418,7 +464,7 @@ export class GameStatsService {
     const spareConversionPercentage = (totalSparesConverted / (totalSparesConverted + totalSparesMissed)) * 100;
     const overallMissedRate = totalSparesMissed > 0 ? 100 - overallSpareRate : 0;
     const seriesStats = this.calculateSeriesStats(gameHistory);
-
+    const markPercentage = ((totalFrames - totalSparesMissed) / totalFrames) * 100 || 0;
     // Frequency metrics
     const msPerDay = 1000 * 60 * 60 * 24;
     const times = gameHistory.map((g) => new Date(g.date).getTime());
@@ -454,6 +500,7 @@ export class GameStatsService {
       averageStrikesPerGame,
       averageSparesPerGame,
       averageOpensPerGame,
+      markPercentage,
       strikePercentage,
       sparePercentage,
       openPercentage,
@@ -534,6 +581,7 @@ export class GameStatsService {
 
   private mapStatsToPrevStats(stats: Stats): PrevStats {
     return {
+      markPercentage: stats.markPercentage,
       strikePercentage: stats.strikePercentage,
       sparePercentage: stats.sparePercentage,
       openPercentage: stats.openPercentage,
@@ -559,6 +607,7 @@ export class GameStatsService {
 
   private getDefaultPrevStats(): PrevStats {
     return {
+      markPercentage: 0,
       strikePercentage: 0,
       sparePercentage: 0,
       openPercentage: 0,
