@@ -1192,11 +1192,11 @@ export class ChartGenerationService {
               padding: 10,
               displayColors: false,
               callbacks: {
-                title: (items) => (items[0]?.raw as any).name || '',
+                title: (items) => (items[0]?.raw as { name: string }).name || '',
                 label: (context) => {
-                  const dp = context.raw as any;
-                  const x = dp.x as number;
-                  const y = dp.y as number;
+                  const dp = context.raw as ScatterDataPoint & { cover: string };
+                  const x = dp.x;
+                  const y = dp.y;
 
                   let rollCat: string;
                   if (y < 2.52) {

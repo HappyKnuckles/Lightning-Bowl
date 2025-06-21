@@ -12,7 +12,6 @@ const MAX_FRAMES = 10;
 })
 export class GameStatsService {
   // Previous Stats
-
   #prevStats = computed(() => {
     const gameHistory = this.storageService.games();
     const lastComparisonDate = parseInt(localStorage.getItem('lastComparisonDate') ?? '0');

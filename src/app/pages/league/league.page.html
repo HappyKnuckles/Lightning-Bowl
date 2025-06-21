@@ -130,8 +130,13 @@
           <ion-segment-view>
             <ion-segment-content id="Overall-{{ league }}">
               <section class="tab">
-                <app-stat-display [statDefinitions]="statDefinitions" [currentStats]="statsByLeague()[league]" [prevStats]="overallStats()">
+                <app-stat-display
+                  [statDefinitions]="statDefinitions"
+                  [title]="'Overall Stats'"
+                  [currentStats]="statsByLeague()[league]"
+                  [prevStats]="overallStats()">
                 </app-stat-display>
+                <app-ball-stats [bestBall]="bestBallsByLeague()[league]" [totalGames]="statsByLeague()[league].totalGames"></app-ball-stats>
                 <div class="stat-container">
                   <canvas #scoreChart style="width: 300px; height: 400px; max-height: 700px"></canvas>
                 </div>
@@ -140,6 +145,7 @@
 
             <ion-segment-content id="Spares-{{ league }}">
               <section class="tab">
+                <ion-list-header>Spares Overview</ion-list-header>
                 <app-spare-display [prevStats]="overallStats()" [stats]="statsByLeague()[league]" id="league-spareStats"> </app-spare-display>
                 <div class="stat-container">
                   <canvas #pinChart style="width: 300px; height: 300px; max-height: 700px"></canvas>
