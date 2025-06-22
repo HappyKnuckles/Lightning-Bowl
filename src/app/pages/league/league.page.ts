@@ -142,6 +142,15 @@ export class LeaguePage {
     return bestBallsByLeague;
   });
 
+  mostPlayedBallsByLeague: Signal<Record<string, BestBallStats>> = computed(() => {
+    const gamesByLeague = this.gamesByLeague();
+    const mostUsedBallsByLeague: Record<string, BestBallStats> = {};
+    Object.keys(gamesByLeague).forEach((league) => {
+      mostUsedBallsByLeague[league] = this.statService.calculateMostPlayedBall(gamesByLeague[league] || []);
+    });
+    return mostUsedBallsByLeague;
+  });
+
   statDefinitions = leagueStatDefinitions;
   private scoreChartInstances: Record<string, Chart> = {};
   private pinChartInstances: Record<string, Chart> = {};

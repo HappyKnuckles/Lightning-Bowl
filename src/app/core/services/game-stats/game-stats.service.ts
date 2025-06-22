@@ -56,6 +56,12 @@ export class GameStatsService {
   #bestBallStats: Signal<BestBallStats> = computed(() => {
     return this.calculateBestBallStats(this.gameFilterService.filteredGames());
   });
+  #mostPlayedBallStats: Signal<BestBallStats> = computed(() => {
+    return this.calculateMostPlayedBall(this.gameFilterService.filteredGames());
+  });
+  get mostPlayedBallStats() {
+    return this.#mostPlayedBallStats;
+  }
 
   get bestBallStats() {
     return this.#bestBallStats;
@@ -88,41 +94,31 @@ export class GameStatsService {
   ) {}
 
   calculateBestBallStats(gameHistory: Game[]): BestBallStats {
-    const gamesWithBalls = gameHistory.filter((game) => game.balls && game.balls.length > 0);
-    if (gamesWithBalls.length === 0) {
-      return { ballName: '', ballImage: '', ballAvg: 0, ballHighestGame: 0, ballLowestGame: 0, gameCount: 0 };
+    const allBallStats = this._calculateAllBallStats(gameHistory);
+    const ballNames = Object.keys(allBallStats);
+    const defaultBall: BestBallStats = { ballName: '', ballImage: '', ballAvg: 0, ballHighestGame: 0, ballLowestGame: 0, gameCount: 0 };
+
+    if (ballNames.length === 0) {
+      return defaultBall;
     }
 
-    const ballStats: Record<string, { totalScore: number; count: number; ballHighestGame: number; ballLowestGame: number }> = {};
+    return ballNames.reduce((best, currentBallName) => {
+      return allBallStats[currentBallName].ballAvg > best.ballAvg ? allBallStats[currentBallName] : best;
+    }, defaultBall);
+  }
 
-    gamesWithBalls.forEach((game) => {
-      game.balls!.forEach((ball) => {
-        if (!ballStats[ball]) {
-          ballStats[ball] = { totalScore: 0, count: 0, ballHighestGame: 0, ballLowestGame: 301 };
-        }
-        ballStats[ball].totalScore += game.totalScore;
-        ballStats[ball].count++;
-        if (game.totalScore > ballStats[ball].ballHighestGame) {
-          ballStats[ball].ballHighestGame = game.totalScore;
-        }
-        if (game.totalScore < ballStats[ball].ballLowestGame) {
-          ballStats[ball].ballLowestGame = game.totalScore;
-        }
-      });
-    });
+  calculateMostPlayedBall(gameHistory: Game[]): BestBallStats {
+    const allBallStats = this._calculateAllBallStats(gameHistory);
+    const ballNames = Object.keys(allBallStats);
+    const defaultBall: BestBallStats = { ballName: '', ballImage: '', ballAvg: 0, ballHighestGame: 0, ballLowestGame: 0, gameCount: 0 };
 
-    let bestBall: BestBallStats = { ballName: '', ballImage: '', ballAvg: 0, ballHighestGame: 0, ballLowestGame: 0, gameCount: 0 };
+    if (ballNames.length === 0) {
+      return defaultBall;
+    }
 
-    Object.keys(ballStats).forEach((ballName) => {
-      const { totalScore, count, ballHighestGame, ballLowestGame } = ballStats[ballName];
-      const ballAvg = Math.round((totalScore / count) * 100) / 100;
-      if (ballAvg > bestBall.ballAvg) {
-        const ballImage = this.storageService.allBalls().find((b) => b.ball_name === ballName)?.ball_image || '';
-        bestBall = { ballName, ballImage, ballAvg, ballHighestGame, ballLowestGame, gameCount: count };
-      }
-    });
-
-    return bestBall;
+    return ballNames.reduce((mostPlayed, currentBallName) => {
+      return allBallStats[currentBallName].gameCount > mostPlayed.gameCount ? allBallStats[currentBallName] : mostPlayed;
+    }, defaultBall);
   }
 
   calculateSeriesStats(gameHistory: Game[]): {
@@ -628,6 +624,44 @@ export class GameStatsService {
       high5Series: 0,
       spareRates: Array(11).fill(0),
     };
+  }
+
+  private _calculateAllBallStats(gameHistory: Game[]): Record<string, BestBallStats> {
+    const gamesWithBalls = gameHistory.filter((game) => game.balls && game.balls.length > 0);
+    const tempStats: Record<string, { totalScore: number; gameCount: number; highestGame: number; lowestGame: number }> = {};
+
+    gamesWithBalls.forEach((game) => {
+      const uniqueBallsInGame = new Set(game.balls);
+      uniqueBallsInGame.forEach((ballName) => {
+        if (!tempStats[ballName]) {
+          tempStats[ballName] = { totalScore: 0, gameCount: 0, highestGame: 0, lowestGame: 301 };
+        }
+        const stats = tempStats[ballName];
+        stats.totalScore += game.totalScore;
+        stats.gameCount++;
+        if (game.totalScore > stats.highestGame) {
+          stats.highestGame = game.totalScore;
+        }
+        if (game.totalScore < stats.lowestGame) {
+          stats.lowestGame = game.totalScore;
+        }
+      });
+    });
+
+    const finalStats: Record<string, BestBallStats> = {};
+    for (const ballName in tempStats) {
+      const stats = tempStats[ballName];
+      const ballImage = this.storageService.allBalls().find((b) => b.ball_name === ballName)?.ball_image || '';
+      finalStats[ballName] = {
+        ballName: ballName,
+        ballImage: ballImage,
+        ballAvg: stats.gameCount > 0 ? Math.round(stats.totalScore / stats.gameCount) : 0,
+        ballHighestGame: stats.highestGame,
+        ballLowestGame: stats.lowestGame === 301 ? 0 : stats.lowestGame,
+        gameCount: stats.gameCount,
+      };
+    }
+    return finalStats;
   }
 
   private getRate(converted: number, missed: number): number {

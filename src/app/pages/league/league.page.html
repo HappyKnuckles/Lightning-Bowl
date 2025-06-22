@@ -136,7 +136,14 @@
                   [currentStats]="statsByLeague()[league]"
                   [prevStats]="overallStats()">
                 </app-stat-display>
-                <app-ball-stats [bestBall]="bestBallsByLeague()[league]" [totalGames]="statsByLeague()[league].totalGames"></app-ball-stats>
+                <app-ball-stats
+                  [title]="'Most used ball'"
+                  [bestBall]="mostPlayedBallsByLeague()[league]"
+                  [totalGames]="statsByLeague()[league].totalGames"></app-ball-stats>
+                <app-ball-stats
+                  [title]="'Best ball'"
+                  [bestBall]="bestBallsByLeague()[league]"
+                  [totalGames]="statsByLeague()[league].totalGames"></app-ball-stats>
                 <div class="stat-container">
                   <canvas #scoreChart style="width: 300px; height: 400px; max-height: 700px"></canvas>
                 </div>

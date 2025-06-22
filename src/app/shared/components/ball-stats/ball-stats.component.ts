@@ -12,6 +12,7 @@ import { StorageService } from 'src/app/core/services/storage/storage.service';
 })
 export class BallStatsComponent {
   bestBall = input.required<BestBallStats>();
+  title = input.required<string>();
 
   totalGames = input.required<number>();
 

@@ -70,7 +70,14 @@
           [currentStats]="statsService.currentStats()"
           [prevStats]="statsService.prevStats()">
         </app-stat-display>
-        <app-ball-stats [bestBall]="statsService.bestBallStats()" [totalGames]="statsService.currentStats().totalGames"></app-ball-stats>
+        <app-ball-stats
+          [title]="'Most used ball'"
+          [bestBall]="statsService.mostPlayedBallStats()"
+          [totalGames]="statsService.currentStats().totalGames"></app-ball-stats>
+        <app-ball-stats
+          [title]="'Best ball'"
+          [bestBall]="statsService.bestBallStats()"
+          [totalGames]="statsService.currentStats().totalGames"></app-ball-stats>
         <app-stat-display
           [title]="'Series Stats'"
           [statDefinitions]="seriesStatDefinitions"
