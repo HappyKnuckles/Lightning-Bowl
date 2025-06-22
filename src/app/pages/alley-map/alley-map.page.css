@@ -1,0 +1,12 @@
+#map_canvas {
+  height: 100%; /* Behält die 100% Höhe bei */
+  width: 100%; /* Behält die 100% Breite bei */
+}
+
+/* Leaflet CSS importieren */
+@import "~leaflet/dist/leaflet.css";
+
+.map-wrapper {
+  height: 100%;
+  width: 100%;
+}

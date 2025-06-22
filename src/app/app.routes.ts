@@ -39,6 +39,10 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/pattern/pattern.page').then((m) => m.PatternPage),
       },
       {
+        path: 'map',
+        loadComponent: () => import('./pages/alley-map/alley-map.page').then((m) => m.AlleyMapPage),
+      },
+      {
         path: '',
         redirectTo: '/tabs/add',
         pathMatch: 'full',
