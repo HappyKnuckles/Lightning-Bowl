@@ -3,7 +3,7 @@
     <ion-title>Alley map</ion-title>
   </ion-toolbar>
   <ion-toolbar>
-    <ion-searchbar placeholder="Ort suchen (z.B. Berlin)" (ionChange)="onSearch($event)" debounce="700"></ion-searchbar>
+    <ion-searchbar appSearchBlur placeholder="Search" (ionInput)="onSearch($event)" debounce="300"></ion-searchbar>
   </ion-toolbar>
 </ion-header>
 <ion-content [fullscreen]="true">

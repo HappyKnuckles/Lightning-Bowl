@@ -184,7 +184,8 @@ out center;`;
           const website = tags.website;
           let popupContent = `<b>${name}</b>`;
           if (openingHours) {
-            popupContent += `<br>Hours: ${openingHours}`;
+            const formattedHours = openingHours.replace(/;\s*/g, '<br>');
+            popupContent += `<br><b>Hours:</b><br>${formattedHours}`;
           }
           if (phone) {
             popupContent += `<br>Phone: ${phone}`;
