@@ -10,18 +10,20 @@
     <div class="inner-stat-container">
       <ion-img [src]="storageService.url + bestBall().ballImage"></ion-img>
       <div class="ball-stats">
-        <div class="stat-line">
-          <span class="stat-label">Avg:</span>
-          <span class="stat-value">{{ bestBall().ballAvg }}</span>
-        </div>
-        <div class="stat-line">
-          <span class="stat-label">High:</span>
-          <span class="stat-value">{{ bestBall().ballHighestGame }}</span>
-        </div>
-        <div class="stat-line">
-          <span class="stat-label">Low:</span>
-          <span class="stat-value">{{ bestBall().ballLowestGame }}</span>
-        </div>
+        <span class="stat-label">Avg:</span>
+        <span class="stat-value">{{ bestBall().ballAvg }}</span>
+
+        <span class="stat-label">High:</span>
+        <span class="stat-value">{{ bestBall().ballHighestGame }}</span>
+
+        <span class="stat-label">Low:</span>
+        <span class="stat-value">{{ bestBall().ballLowestGame }}</span>
+
+        <span class="stat-label">Clean:</span>
+        <span class="stat-value">{{ bestBall().cleanGameCount }}</span>
+
+        <span class="stat-label">Strike %:</span>
+        <span class="stat-value">{{ bestBall().strikeRate }}%</span>
       </div>
     </div>
   </div>

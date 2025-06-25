@@ -107,6 +107,7 @@ export interface BestBallStats {
   ballLowestGame: number;
   gameCount: number;
   strikeRate?: number;
+  cleanGameCount?: number;
 }
 
 export type GameStats = Stats | SessionStats | SeriesStats | PrevStats;
