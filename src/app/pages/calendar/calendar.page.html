@@ -1,0 +1,210 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>Calendar</ion-title>
+    <ion-button fill="clear" slot="end" (click)="goToToday()"> Today </ion-button>
+  </ion-toolbar>
+  <ion-toolbar>
+    <!-- View Mode Selector -->
+    <ion-segment [value]="viewMode" (ionChange)="onViewModeChange($event)">
+      <ion-segment-button value="month">
+        <ion-label>Month</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="week">
+        <ion-label>Week</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+  </ion-toolbar>
+  <ion-toolbar>
+    <!-- Navigation -->
+    <ion-button fill="clear" slot="start" (click)="previousPeriod()">
+      <ion-icon name="chevron-back"></ion-icon>
+    </ion-button>
+
+    <ion-title size="medium" class="period-title">
+      {{ viewMode === "month" ? currentMonthYear : currentWeekRange }}
+    </ion-title>
+
+    <ion-button fill="clear" slot="end" (click)="nextPeriod()">
+      <ion-icon name="chevron-forward"></ion-icon>
+    </ion-button>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <!-- Calendar container with swipe animation support -->
+  <div class="calendar-container" #calendarContainer>
+    <!-- Previous period (for swipe preview) -->
+    <div class="calendar-slide previous-slide" #previousSlide>
+      <!-- Previous Month View -->
+      <div *ngIf="viewMode === 'month'" class="month-view">
+        <ion-grid class="calendar-grid">
+          <ion-row class="day-headers">
+            <ion-col *ngFor="let dayName of dayNames" class="day-header">
+              {{ dayName }}
+            </ion-col>
+          </ion-row>
+          <ion-row *ngFor="let week of previousMonthWeeks" class="calendar-week">
+            <ion-col *ngFor="let day of week.days" class="calendar-day" [class.other-month]="!day.isCurrentMonth" [class.today]="day.isToday">
+              <div class="day-number">{{ day.date.getDate() }}</div>
+              <div class="day-events" *ngIf="day.events.length > 0">
+                <div *ngFor="let event of day.events.slice(0, 2)" class="event-dot" [style.background-color]="getEventTypeColor(event.type)"></div>
+                <div *ngIf="day.events.length > 2" class="more-events">+{{ day.events.length - 2 }}</div>
+              </div>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+      </div>
+      <!-- Previous Week View -->
+      <div *ngIf="viewMode === 'week'" class="week-view">
+        <ion-grid class="week-grid">
+          <ion-row class="week-days">
+            <ion-col *ngFor="let day of previousWeekDays" class="week-day" [class.today]="day.isToday">
+              <div class="day-header">
+                <div class="day-name">{{ dayNames[day.date.getDay()] }}</div>
+                <div class="day-number">{{ day.date.getDate() }}</div>
+              </div>
+              <div class="day-events">
+                <ion-card *ngFor="let event of day.events" class="event-card" [style.border-left]="'4px solid ' + getEventTypeColor(event.type)">
+                  <ion-card-content>
+                    <div class="event-time" *ngIf="event.time">{{ event.time }}</div>
+                    <div class="event-name">{{ event.name }}</div>
+                    <div class="event-location" *ngIf="event.location">{{ event.location }}</div>
+                  </ion-card-content>
+                </ion-card>
+              </div>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+      </div>
+    </div>
+
+    <!-- Current period (main view) -->
+    <div class="calendar-slide current-slide" #currentSlide>
+      <!-- Current Month View -->
+      <div *ngIf="viewMode === 'month'" class="month-view">
+        <ion-grid class="calendar-grid">
+          <ion-row class="day-headers">
+            <ion-col *ngFor="let dayName of dayNames" class="day-header">
+              {{ dayName }}
+            </ion-col>
+          </ion-row>
+          <ion-row *ngFor="let week of monthWeeks" class="calendar-week">
+            <ion-col
+              *ngFor="let day of week.days"
+              class="calendar-day"
+              [class.other-month]="!day.isCurrentMonth"
+              [class.today]="day.isToday"
+              [class.selected]="day.isSelected"
+              (click)="selectDay(day)">
+              <div class="day-number">{{ day.date.getDate() }}</div>
+              <div class="day-events" *ngIf="day.events.length > 0">
+                <div *ngFor="let event of day.events.slice(0, 2)" class="event-dot" [style.background-color]="getEventTypeColor(event.type)"></div>
+                <div *ngIf="day.events.length > 2" class="more-events">+{{ day.events.length - 2 }}</div>
+              </div>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+      </div>
+      <!-- Current Week View -->
+      <div *ngIf="viewMode === 'week'" class="week-view">
+        <ion-grid class="week-grid">
+          <ion-row class="week-days">
+            <ion-col
+              *ngFor="let day of weekDays"
+              class="week-day"
+              [class.today]="day.isToday"
+              [class.selected]="day.isSelected"
+              (click)="selectDay(day)">
+              <div class="day-header">
+                <div class="day-name">{{ dayNames[day.date.getDay()] }}</div>
+                <div class="day-number">{{ day.date.getDate() }}</div>
+              </div>
+              <div class="day-events">
+                <ion-card *ngFor="let event of day.events" class="event-card" [style.border-left]="'4px solid ' + getEventTypeColor(event.type)">
+                  <ion-card-content>
+                    <div class="event-time" *ngIf="event.time">{{ event.time }}</div>
+                    <div class="event-name">{{ event.name }}</div>
+                    <div class="event-location" *ngIf="event.location">{{ event.location }}</div>
+                  </ion-card-content>
+                </ion-card>
+              </div>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+      </div>
+    </div>
+
+    <!-- Next period (for swipe preview) -->
+    <div class="calendar-slide next-slide" #nextSlide>
+      <!-- Next Month View -->
+      <div *ngIf="viewMode === 'month'" class="month-view">
+        <ion-grid class="calendar-grid">
+          <ion-row class="day-headers">
+            <ion-col *ngFor="let dayName of dayNames" class="day-header">
+              {{ dayName }}
+            </ion-col>
+          </ion-row>
+          <ion-row *ngFor="let week of nextMonthWeeks" class="calendar-week">
+            <ion-col *ngFor="let day of week.days" class="calendar-day" [class.other-month]="!day.isCurrentMonth" [class.today]="day.isToday">
+              <div class="day-number">{{ day.date.getDate() }}</div>
+              <div class="day-events" *ngIf="day.events.length > 0">
+                <div *ngFor="let event of day.events.slice(0, 2)" class="event-dot" [style.background-color]="getEventTypeColor(event.type)"></div>
+                <div *ngIf="day.events.length > 2" class="more-events">+{{ day.events.length - 2 }}</div>
+              </div>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+      </div>
+      <!-- Next Week View -->
+      <div *ngIf="viewMode === 'week'" class="week-view">
+        <ion-grid class="week-grid">
+          <ion-row class="week-days">
+            <ion-col *ngFor="let day of nextWeekDays" class="week-day" [class.today]="day.isToday">
+              <div class="day-header">
+                <div class="day-name">{{ dayNames[day.date.getDay()] }}</div>
+                <div class="day-number">{{ day.date.getDate() }}</div>
+              </div>
+              <div class="day-events">
+                <ion-card *ngFor="let event of day.events" class="event-card" [style.border-left]="'4px solid ' + getEventTypeColor(event.type)">
+                  <ion-card-content>
+                    <div class="event-time" *ngIf="event.time">{{ event.time }}</div>
+                    <div class="event-name">{{ event.name }}</div>
+                    <div class="event-location" *ngIf="event.location">{{ event.location }}</div>
+                  </ion-card-content>
+                </ion-card>
+              </div>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+      </div>
+    </div>
+  </div>
+
+  <!-- Selected Day Events (for month view) -->
+  <div *ngIf="viewMode === 'month' && selectedDate" class="selected-day-events">
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title> Events for {{ selectedDate.toLocaleDateString() }} </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div *ngIf="getEventsForSelectedDate().length === 0" class="no-events">No events scheduled for this day</div>
+        <div *ngFor="let event of getEventsForSelectedDate()" class="event-item">
+          <ion-chip [style.background-color]="getEventTypeColor(event.type)">
+            {{ event.type }}
+          </ion-chip>
+          <h3>{{ event.name }}</h3>
+          <p *ngIf="event.time">Time: {{ event.time }}</p>
+          <p *ngIf="event.location">Location: {{ event.location }}</p>
+          <p *ngIf="event.description">{{ event.description }}</p>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
+  <!-- Floating Action Button -->
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button (click)="addEvent()">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+</ion-content>

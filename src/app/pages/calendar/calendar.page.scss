@@ -1,0 +1,246 @@
+// Calendar Styles
+
+// Swipe gesture enhancements
+.month-view,
+.week-view {
+  transition: transform 0.2s ease-out, opacity 0.2s ease-out;
+  will-change: transform;
+
+  // Add smooth touch interaction
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+// Add subtle visual feedback during swipe
+.calendar-swiping {
+
+  .month-view,
+  .week-view {
+    transition: none;
+  }
+}
+
+.period-title {
+  text-align: center;
+}
+
+// Month View Styles
+.month-view {
+  .calendar-grid {
+    padding: 0;
+  }
+
+  .day-headers {
+    background-color: var(--ion-color-light);
+
+    .day-header {
+      text-align: center;
+      font-weight: bold;
+      padding: 8px 4px;
+      font-size: 0.9rem;
+      color: var(--ion-color-medium);
+    }
+  }
+
+  .calendar-week {
+    border-bottom: 1px solid var(--ion-color-light);
+  }
+
+  .calendar-day {
+    min-height: 100px;
+    padding: 4px;
+    border-right: 1px solid var(--ion-color-light);
+    cursor: pointer;
+    transition: background-color 0.2s;
+    position: relative;
+
+    &:hover {
+      background-color: var(--ion-color-light-tint);
+    }
+
+    &.other-month {
+      opacity: 0.4;
+    }
+
+    &.today {
+      background-color: var(--ion-color-primary-tint);
+
+      .day-number {
+        background-color: var(--ion-color-primary);
+        color: black;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+      }
+    }
+
+    &.selected {
+      background-color: var(--ion-color-secondary-tint);
+    }
+
+    .day-number {
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .day-events {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2px;
+
+      .event-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin: 1px;
+      }
+
+      .more-events {
+        font-size: 0.7rem;
+        color: var(--ion-color-medium);
+        margin-left: 2px;
+      }
+    }
+  }
+}
+
+// Week View Styles
+.week-view {
+  .week-grid {
+    padding: 0;
+  }
+
+  .week-days {
+    .week-day {
+      padding: 8px;
+      border-right: 1px solid var(--ion-color-light);
+      min-height: 400px;
+      cursor: pointer;
+
+      &:hover {
+        background-color: var(--ion-color-light-tint);
+      }
+
+      &.today {
+        background-color: var(--ion-color-primary-tint);
+      }
+
+      &.selected {
+        background-color: var(--ion-color-secondary-tint);
+      }
+
+      .day-header {
+        text-align: center;
+        margin-bottom: 12px;
+        border-bottom: 1px solid var(--ion-color-light);
+        padding-bottom: 8px;
+
+        .day-name {
+          font-size: 0.9rem;
+          color: var(--ion-color-medium);
+          margin-bottom: 4px;
+        }
+
+        .day-number {
+          font-size: 1.2rem;
+          font-weight: bold;
+        }
+      }
+
+      .day-events {
+        .event-card {
+          margin: 0 0 8px 0;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+          ion-card-content {
+            padding: 8px;
+
+            .event-time {
+              font-size: 0.8rem;
+              color: var(--ion-color-medium);
+              margin-bottom: 2px;
+            }
+
+            .event-name {
+              font-weight: 600;
+              margin-bottom: 2px;
+            }
+
+            .event-location {
+              font-size: 0.8rem;
+              color: var(--ion-color-medium);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// Selected Day Events
+.selected-day-events {
+  padding: 16px;
+
+  .no-events {
+    text-align: center;
+    color: var(--ion-color-medium);
+    font-style: italic;
+  }
+
+  .event-item {
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--ion-color-light);
+
+    &:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    ion-chip {
+      margin: 0 0 8px 0;
+      color: white;
+      font-weight: 600;
+    }
+
+    h3 {
+      margin: 8px 0;
+      font-size: 1.1rem;
+    }
+
+    p {
+      margin: 4px 0;
+      color: var(--ion-color-medium);
+      font-size: 0.9rem;
+    }
+  }
+}
+
+// Swipe instruction styles
+.swipe-instruction {
+  --background: var(--ion-color-light-tint);
+  opacity: 0.8;
+  margin: 8px 16px;
+  border-radius: 8px;
+
+  ion-label p {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    color: var(--ion-color-medium);
+
+    ion-icon {
+      font-size: 1.2rem;
+    }
+  }
+}
+

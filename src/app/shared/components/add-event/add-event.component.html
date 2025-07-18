@@ -1,0 +1,54 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Add Event</ion-title>
+    <ion-buttons slot="start">
+      <ion-button fill="clear" (click)="onCancel()">
+        <ion-icon name="close"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-buttons slot="end">
+      <ion-button fill="clear" [disabled]="!isFormValid" (click)="onSave()">
+        <ion-icon name="checkmark"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <form [formGroup]="eventForm">
+    <ion-item>
+      <ion-label position="stacked">Event Name *</ion-label>
+      <ion-input formControlName="name" placeholder="Enter event name" clearInput="true"> </ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">Event Type *</ion-label>
+      <ion-select formControlName="type" placeholder="Select event type">
+        <ion-select-option value="tournament">Tournament</ion-select-option>
+        <ion-select-option value="practice">Practice</ion-select-option>
+        <ion-select-option value="league">League</ion-select-option>
+        <ion-select-option value="other">Other</ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">Date *</ion-label>
+      <ion-datetime formControlName="date" presentation="date" [showDefaultButtons]="true"> </ion-datetime>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">Time (Optional)</ion-label>
+      <ion-datetime formControlName="time" presentation="time" [showDefaultButtons]="true"> </ion-datetime>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">Location (Optional)</ion-label>
+      <ion-input formControlName="location" placeholder="Enter location" clearInput="true"> </ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">Description (Optional)</ion-label>
+      <ion-textarea formControlName="description" placeholder="Enter event description" rows="3"> </ion-textarea>
+    </ion-item>
+  </form>
+</ion-content>

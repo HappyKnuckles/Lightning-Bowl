@@ -43,6 +43,10 @@
           <ion-icon src="assets/svg/lane.svg" slot="start"></ion-icon>
           <ion-label>Pattern Library</ion-label>
         </ion-item>
+        <ion-item class="tab-btn" button [routerLink]="'/tabs/calendar'" [class.active-tab]="isActive('/tabs/calendar')" (click)="modal.dismiss()">
+          <ion-icon name="calendar-outline" slot="start"></ion-icon>
+          <ion-label>Calendar</ion-label>
+        </ion-item>
         <ion-item class="tab-btn" button [routerLink]="'/tabs/map'" [class.active-tab]="isActive('/tabs/map')" (click)="modal.dismiss()">
           <ion-icon name="map-outline" slot="start"></ion-icon>
           <ion-label>Map</ion-label>

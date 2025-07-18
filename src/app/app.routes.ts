@@ -43,6 +43,10 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/alley-map/alley-map.page').then((m) => m.AlleyMapPage),
       },
       {
+        path: 'calendar',
+        loadComponent: () => import('./pages/calendar/calendar.page').then((m) => m.CalendarPage),
+      },
+      {
         path: '',
         redirectTo: '/tabs/add',
         pathMatch: 'full',
