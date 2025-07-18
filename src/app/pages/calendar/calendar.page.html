@@ -1,8 +1,16 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
     <ion-title>Calendar</ion-title>
-    <ion-button fill="clear" slot="end" (click)="goToToday()"> Today </ion-button>
+    <ion-buttons slot="start">
+      <ion-button fill="clear" slot="start" (click)="goToToday()"> Today </ion-button>
+    </ion-buttons>
+    <ion-buttons style="padding: 4px; margin-right: 8px" fill="clear" slot="end">
+      <ion-button (click)="addEvent()">
+        <ion-icon name="add" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
+
   <ion-toolbar>
     <!-- View Mode Selector -->
     <ion-segment [value]="viewMode" (ionChange)="onViewModeChange($event)">
@@ -11,6 +19,9 @@
       </ion-segment-button>
       <ion-segment-button value="week">
         <ion-label>Week</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="day">
+        <ion-label>Day</ion-label>
       </ion-segment-button>
     </ion-segment>
   </ion-toolbar>
@@ -21,7 +32,7 @@
     </ion-button>
 
     <ion-title size="medium" class="period-title">
-      {{ viewMode === "month" ? currentMonthYear : currentWeekRange }}
+      {{ viewMode === "month" ? currentMonthYear : viewMode === "week" ? currentWeekRange : currentDayDisplay }}
     </ion-title>
 
     <ion-button fill="clear" slot="end" (click)="nextPeriod()">
@@ -39,11 +50,17 @@
       <div *ngIf="viewMode === 'month'" class="month-view">
         <ion-grid class="calendar-grid">
           <ion-row class="day-headers">
+            <ion-col size="1" class="week-number-header">
+              <div class="week-header-text">W</div>
+            </ion-col>
             <ion-col *ngFor="let dayName of dayNames" class="day-header">
               {{ dayName }}
             </ion-col>
           </ion-row>
           <ion-row *ngFor="let week of previousMonthWeeks" class="calendar-week">
+            <ion-col size="1" class="week-number-cell">
+              <div class="week-number">{{ getWeekNumber(week.days[0].date) }}</div>
+            </ion-col>
             <ion-col *ngFor="let day of week.days" class="calendar-day" [class.other-month]="!day.isCurrentMonth" [class.today]="day.isToday">
               <div class="day-number">{{ day.date.getDate() }}</div>
               <div class="day-events" *ngIf="day.events.length > 0">
@@ -66,7 +83,7 @@
               <div class="day-events">
                 <ion-card *ngFor="let event of day.events" class="event-card" [style.border-left]="'4px solid ' + getEventTypeColor(event.type)">
                   <ion-card-content>
-                    <div class="event-time" *ngIf="event.time">{{ event.time }}</div>
+                    <div class="event-time" *ngIf="event.startTime">{{ event.startTime }} - {{ event.endTime }}</div>
                     <div class="event-name">{{ event.name }}</div>
                     <div class="event-location" *ngIf="event.location">{{ event.location }}</div>
                   </ion-card-content>
@@ -76,6 +93,36 @@
           </ion-row>
         </ion-grid>
       </div>
+      <!-- Previous Day View -->
+      <div *ngIf="viewMode === 'day'" class="day-view">
+        <div class="day-schedule">
+          <div class="time-column">
+            <div *ngFor="let hour of hours" class="hour-slot">
+              <div class="hour-label">{{ hour }}:00</div>
+            </div>
+          </div>
+          <div class="events-column">
+            <div class="hour-grid">
+              <div *ngFor="let hour of hours" class="hour-row"></div>
+            </div>
+            <div class="events-overlay">
+              <div
+                *ngFor="let event of previousDayEvents"
+                class="day-event"
+                [style.top]="getEventTop(event)"
+                [style.height]="getEventHeight(event)"
+                [style.background-color]="getEventTypeColor(event.type)"
+                [style.border-left]="'4px solid ' + getEventTypeColor(event.type)">
+                <div class="event-content">
+                  <div class="event-title">{{ event.name }}</div>
+                  <div class="event-time" *ngIf="event.startTime">{{ event.startTime }} - {{ event.endTime }}</div>
+                  <div class="event-location" *ngIf="event.location">{{ event.location }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Current period (main view) -->
@@ -84,11 +131,17 @@
       <div *ngIf="viewMode === 'month'" class="month-view">
         <ion-grid class="calendar-grid">
           <ion-row class="day-headers">
+            <ion-col size="1" class="week-number-header">
+              <div class="week-header-text">W</div>
+            </ion-col>
             <ion-col *ngFor="let dayName of dayNames" class="day-header">
               {{ dayName }}
             </ion-col>
           </ion-row>
-          <ion-row *ngFor="let week of monthWeeks" class="calendar-week">
+          <ion-row *ngFor="let week of monthWeeks; let weekIndex = index" class="calendar-week">
+            <ion-col size="1" class="week-number-cell">
+              <div class="week-number">{{ getWeekNumber(week.days[0].date) }}</div>
+            </ion-col>
             <ion-col
               *ngFor="let day of week.days"
               class="calendar-day"
@@ -122,7 +175,7 @@
               <div class="day-events">
                 <ion-card *ngFor="let event of day.events" class="event-card" [style.border-left]="'4px solid ' + getEventTypeColor(event.type)">
                   <ion-card-content>
-                    <div class="event-time" *ngIf="event.time">{{ event.time }}</div>
+                    <div class="event-time" *ngIf="event.startTime">{{ event.startTime }} - {{ event.endTime }}</div>
                     <div class="event-name">{{ event.name }}</div>
                     <div class="event-location" *ngIf="event.location">{{ event.location }}</div>
                   </ion-card-content>
@@ -132,6 +185,36 @@
           </ion-row>
         </ion-grid>
       </div>
+      <!-- Current Day View -->
+      <div *ngIf="viewMode === 'day'" class="day-view">
+        <div class="day-schedule">
+          <div class="time-column">
+            <div *ngFor="let hour of hours" class="hour-slot">
+              <div class="hour-label">{{ hour }}:00</div>
+            </div>
+          </div>
+          <div class="events-column">
+            <div class="hour-grid">
+              <div *ngFor="let hour of hours" class="hour-row"></div>
+            </div>
+            <div class="events-overlay">
+              <div
+                *ngFor="let event of currentDayEvents"
+                class="day-event"
+                [style.top]="getEventTop(event)"
+                [style.height]="getEventHeight(event)"
+                [style.background-color]="getEventTypeColor(event.type)"
+                [style.border-left]="'4px solid ' + getEventTypeColor(event.type)">
+                <div class="event-content">
+                  <div class="event-title">{{ event.name }}</div>
+                  <div class="event-time" *ngIf="event.startTime">{{ event.startTime }} - {{ event.endTime }}</div>
+                  <div class="event-location" *ngIf="event.location">{{ event.location }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Next period (for swipe preview) -->
@@ -140,11 +223,17 @@
       <div *ngIf="viewMode === 'month'" class="month-view">
         <ion-grid class="calendar-grid">
           <ion-row class="day-headers">
+            <ion-col size="1" class="week-number-header">
+              <div class="week-header-text">W</div>
+            </ion-col>
             <ion-col *ngFor="let dayName of dayNames" class="day-header">
               {{ dayName }}
             </ion-col>
           </ion-row>
           <ion-row *ngFor="let week of nextMonthWeeks" class="calendar-week">
+            <ion-col size="1" class="week-number-cell">
+              <div class="week-number">{{ getWeekNumber(week.days[0].date) }}</div>
+            </ion-col>
             <ion-col *ngFor="let day of week.days" class="calendar-day" [class.other-month]="!day.isCurrentMonth" [class.today]="day.isToday">
               <div class="day-number">{{ day.date.getDate() }}</div>
               <div class="day-events" *ngIf="day.events.length > 0">
@@ -167,7 +256,7 @@
               <div class="day-events">
                 <ion-card *ngFor="let event of day.events" class="event-card" [style.border-left]="'4px solid ' + getEventTypeColor(event.type)">
                   <ion-card-content>
-                    <div class="event-time" *ngIf="event.time">{{ event.time }}</div>
+                    <div class="event-time" *ngIf="event.startTime">{{ event.startTime }} - {{ event.endTime }}</div>
                     <div class="event-name">{{ event.name }}</div>
                     <div class="event-location" *ngIf="event.location">{{ event.location }}</div>
                   </ion-card-content>
@@ -177,34 +266,57 @@
           </ion-row>
         </ion-grid>
       </div>
+      <!-- Next Day View -->
+      <div *ngIf="viewMode === 'day'" class="day-view">
+        <div class="day-schedule">
+          <div class="time-column">
+            <div *ngFor="let hour of hours" class="hour-slot">
+              <div class="hour-label">{{ hour }}:00</div>
+            </div>
+          </div>
+          <div class="events-column">
+            <div class="hour-grid">
+              <div *ngFor="let hour of hours" class="hour-row"></div>
+            </div>
+            <div class="events-overlay">
+              <div
+                *ngFor="let event of nextDayEvents"
+                class="day-event"
+                [style.top]="getEventTop(event)"
+                [style.height]="getEventHeight(event)"
+                [style.background-color]="getEventTypeColor(event.type)"
+                [style.border-left]="'4px solid ' + getEventTypeColor(event.type)">
+                <div class="event-content">
+                  <div class="event-title">{{ event.name }}</div>
+                  <div class="event-time" *ngIf="event.startTime">{{ event.startTime }} - {{ event.endTime }}</div>
+                  <div class="event-location" *ngIf="event.location">{{ event.location }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
   <!-- Selected Day Events (for month view) -->
   <div *ngIf="viewMode === 'month' && selectedDate" class="selected-day-events">
-    <ion-card>
-      <ion-card-header>
-        <ion-card-title> Events for {{ selectedDate.toLocaleDateString() }} </ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-        <div *ngIf="getEventsForSelectedDate().length === 0" class="no-events">No events scheduled for this day</div>
-        <div *ngFor="let event of getEventsForSelectedDate()" class="event-item">
-          <ion-chip [style.background-color]="getEventTypeColor(event.type)">
-            {{ event.type }}
-          </ion-chip>
+    <ion-list>
+      <ion-list-header>
+        <ion-label> Events for {{ selectedDate.toLocaleDateString() }} </ion-label>
+      </ion-list-header>
+      <ion-item *ngIf="getEventsForSelectedDate().length === 0">No events scheduled for this day</ion-item>
+      <ion-item *ngFor="let event of getEventsForSelectedDate()">
+        <ion-label>
           <h3>{{ event.name }}</h3>
-          <p *ngIf="event.time">Time: {{ event.time }}</p>
+          <p *ngIf="event.startTime">Time: {{ event.startTime }} - {{ event.endTime }}</p>
           <p *ngIf="event.location">Location: {{ event.location }}</p>
           <p *ngIf="event.description">{{ event.description }}</p>
-        </div>
-      </ion-card-content>
-    </ion-card>
+        </ion-label>
+        <ion-chip [style.background-color]="getEventTypeColor(event.type)">
+          {{ event.type.charAt(0).toUpperCase() + event.type.slice(1) }}
+        </ion-chip>
+      </ion-item>
+    </ion-list>
   </div>
-
-  <!-- Floating Action Button -->
-  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-    <ion-fab-button (click)="addEvent()">
-      <ion-icon name="add"></ion-icon>
-    </ion-fab-button>
-  </ion-fab>
 </ion-content>

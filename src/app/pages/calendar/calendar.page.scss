@@ -1,33 +1,22 @@
-// Calendar Styles
-
-// Swipe gesture enhancements
 .month-view,
-.week-view {
-  transition: transform 0.2s ease-out, opacity 0.2s ease-out;
+.week-view,
+.day-view {
+  transition: transform .2s ease-out, opacity .2s ease-out;
   will-change: transform;
-
-  // Add smooth touch interaction
   touch-action: pan-y;
   user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
 }
 
-// Add subtle visual feedback during swipe
-.calendar-swiping {
-
-  .month-view,
-  .week-view {
-    transition: none;
-  }
+.calendar-swiping .month-view,
+.calendar-swiping .week-view,
+.calendar-swiping .day-view {
+  transition: none;
 }
 
 .period-title {
   text-align: center;
 }
 
-// Month View Styles
 .month-view {
   .calendar-grid {
     padding: 0;
@@ -36,12 +25,22 @@
   .day-headers {
     background-color: var(--ion-color-light);
 
+    .week-number-header,
     .day-header {
       text-align: center;
       font-weight: bold;
       padding: 8px 4px;
-      font-size: 0.9rem;
       color: var(--ion-color-medium);
+    }
+
+    .week-number-header {
+      font-size: .8rem;
+      border-right: 1px solid var(--ion-color-medium-shade);
+      background-color: var(--ion-color-light-shade);
+    }
+
+    .day-header {
+      font-size: .9rem;
     }
   }
 
@@ -49,12 +48,33 @@
     border-bottom: 1px solid var(--ion-color-light);
   }
 
+  .week-number-cell {
+    min-height: 70px;
+    max-height: 15vh;
+    padding: 4px;
+    border-right: 1px solid var(--ion-color-medium-shade);
+    background-color: var(--ion-color-light-shade);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .week-number {
+      font-size: .9rem;
+      font-weight: 600;
+      color: var(--ion-color-medium-shade);
+      text-align: center;
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+    }
+  }
+
   .calendar-day {
-    min-height: 100px;
+    min-height: 70px;
+    max-height: 15vh;
     padding: 4px;
     border-right: 1px solid var(--ion-color-light);
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: background-color .2s;
     position: relative;
 
     &:hover {
@@ -62,27 +82,17 @@
     }
 
     &.other-month {
-      opacity: 0.4;
+      opacity: .4;
     }
 
     &.today {
-      background-color: var(--ion-color-primary-tint);
-
-      .day-number {
-        background-color: var(--ion-color-primary);
-        color: black;
-        border-radius: 50%;
-        width: 24px;
-        height: 24px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-      }
+      background-color: var(--ion-color-dark);
+      font-weight: bold;
     }
 
     &.selected {
-      background-color: var(--ion-color-secondary-tint);
+      background-color: var(--ion-color-primary-tint);
+      color: black;
     }
 
     .day-number {
@@ -103,7 +113,7 @@
       }
 
       .more-events {
-        font-size: 0.7rem;
+        font-size: .7rem;
         color: var(--ion-color-medium);
         margin-left: 2px;
       }
@@ -111,7 +121,6 @@
   }
 }
 
-// Week View Styles
 .week-view {
   .week-grid {
     padding: 0;
@@ -123,17 +132,23 @@
       border-right: 1px solid var(--ion-color-light);
       min-height: 400px;
       cursor: pointer;
+      flex: 1;
+      max-width: 14.28%;
+      min-width: 0;
+      overflow: hidden;
 
       &:hover {
         background-color: var(--ion-color-light-tint);
       }
 
       &.today {
-        background-color: var(--ion-color-primary-tint);
+        background-color: var(--ion-color-dark);
+        font-weight: bold;
       }
 
       &.selected {
-        background-color: var(--ion-color-secondary-tint);
+        background-color: var(--ion-color-primary-tint);
+        color: black;
       }
 
       .day-header {
@@ -141,11 +156,15 @@
         margin-bottom: 12px;
         border-bottom: 1px solid var(--ion-color-light);
         padding-bottom: 8px;
+        overflow: hidden;
 
         .day-name {
-          font-size: 0.9rem;
+          font-size: .9rem;
           color: var(--ion-color-medium);
           margin-bottom: 4px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
         .day-number {
@@ -155,27 +174,40 @@
       }
 
       .day-events {
+        overflow: hidden;
+
         .event-card {
           margin: 0 0 8px 0;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+          box-shadow: 0 1px 3px rgba(0, 0, 0, .1);
+          min-width: 0;
 
           ion-card-content {
             padding: 8px;
+            overflow: hidden;
 
             .event-time {
-              font-size: 0.8rem;
+              font-size: .8rem;
               color: var(--ion-color-medium);
               margin-bottom: 2px;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
             }
 
             .event-name {
               font-weight: 600;
               margin-bottom: 2px;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
             }
 
             .event-location {
-              font-size: 0.8rem;
+              font-size: .8rem;
               color: var(--ion-color-medium);
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
             }
           }
         }
@@ -184,63 +216,128 @@
   }
 }
 
-// Selected Day Events
-.selected-day-events {
-  padding: 16px;
-
-  .no-events {
-    text-align: center;
-    color: var(--ion-color-medium);
-    font-style: italic;
-  }
-
-  .event-item {
-    margin-bottom: 16px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid var(--ion-color-light);
-
-    &:last-child {
-      border-bottom: none;
-      margin-bottom: 0;
-      padding-bottom: 0;
-    }
-
-    ion-chip {
-      margin: 0 0 8px 0;
-      color: white;
-      font-weight: 600;
-    }
-
-    h3 {
-      margin: 8px 0;
-      font-size: 1.1rem;
-    }
-
-    p {
-      margin: 4px 0;
-      color: var(--ion-color-medium);
-      font-size: 0.9rem;
-    }
-  }
-}
-
-// Swipe instruction styles
-.swipe-instruction {
-  --background: var(--ion-color-light-tint);
-  opacity: 0.8;
-  margin: 8px 16px;
-  border-radius: 8px;
-
-  ion-label p {
+// Day View Styles
+.day-view {
+  .day-schedule {
     display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.9rem;
-    color: var(--ion-color-medium);
+    height: calc(100vh - 200px); // Adjust based on header height
+    overflow: hidden;
+  }
 
-    ion-icon {
-      font-size: 1.2rem;
+  .time-column {
+    width: 60px;
+    flex-shrink: 0;
+    border-right: 1px solid var(--ion-color-light);
+    background-color: var(--ion-color-light-tint);
+
+    .hour-slot {
+      height: 60px;
+      border-bottom: 1px solid var(--ion-color-light);
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding-top: 4px;
+
+      .hour-label {
+        font-size: 0.8rem;
+        color: var(--ion-color-medium);
+        font-weight: 500;
+      }
+    }
+  }
+
+  .events-column {
+    flex: 1;
+    position: relative;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .hour-grid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1;
+
+    .hour-row {
+      height: 60px;
+      border-bottom: 1px solid var(--ion-color-light);
+      background-color: var(--ion-background);
+    }
+  }
+
+  .events-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 2;
+    padding: 0 8px;
+
+    .day-event {
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      border-radius: 4px;
+      opacity: 0.9;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+      transition: opacity 0.2s, transform 0.2s;
+      min-height: fit-content;
+
+      // Special styling for all-day events (events with 00:00 times)
+      &.all-day-event {
+        margin: 2px 0;
+        position: static;
+        height: auto !important;
+        min-height: 30px;
+      }
+
+      &:hover {
+        opacity: 1;
+        transform: scale(1.02);
+        z-index: 10;
+      }
+
+      .event-content {
+        padding: 4px 8px;
+        color: white;
+        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+
+        .event-title {
+          font-weight: 600;
+          font-size: 0.9rem;
+          margin-bottom: 2px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .event-time {
+          font-size: 0.8rem;
+          opacity: 0.9;
+          margin-bottom: 2px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .event-location {
+          font-size: 0.8rem;
+          opacity: 0.8;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+      }
     }
   }
 }
 
+// Selected day events section
+.selected-day-events {
+  margin-top: 16px;
+  padding: 0 16px;
+}

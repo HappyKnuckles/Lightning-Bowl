@@ -17,13 +17,11 @@
 <ion-content>
   <form [formGroup]="eventForm">
     <ion-item>
-      <ion-label position="stacked">Event Name *</ion-label>
-      <ion-input formControlName="name" placeholder="Enter event name" clearInput="true"> </ion-input>
+      <ion-input formControlName="name" placeholder="Enter event name" clearInput="true" label="Event Name *"> </ion-input>
     </ion-item>
 
     <ion-item>
-      <ion-label position="stacked">Event Type *</ion-label>
-      <ion-select formControlName="type" placeholder="Select event type">
+      <ion-select formControlName="type" placeholder="Select event type" label="Event Type *">
         <ion-select-option value="tournament">Tournament</ion-select-option>
         <ion-select-option value="practice">Practice</ion-select-option>
         <ion-select-option value="league">League</ion-select-option>
@@ -32,23 +30,50 @@
     </ion-item>
 
     <ion-item>
-      <ion-label position="stacked">Date *</ion-label>
-      <ion-datetime formControlName="date" presentation="date" [showDefaultButtons]="true"> </ion-datetime>
+      <ion-checkbox formControlName="isAllDay" (ionChange)="onAllDayChange($event)">All Day</ion-checkbox>
     </ion-item>
 
     <ion-item>
-      <ion-label position="stacked">Time (Optional)</ion-label>
-      <ion-datetime formControlName="time" presentation="time" [showDefaultButtons]="true"> </ion-datetime>
+      <ion-label>Starts *</ion-label>
+      <ion-datetime-button datetime="starts"></ion-datetime-button>
     </ion-item>
 
     <ion-item>
-      <ion-label position="stacked">Location (Optional)</ion-label>
-      <ion-input formControlName="location" placeholder="Enter location" clearInput="true"> </ion-input>
+      <ion-label>Ends *</ion-label>
+      <ion-datetime-button datetime="ends"></ion-datetime-button>
     </ion-item>
 
     <ion-item>
-      <ion-label position="stacked">Description (Optional)</ion-label>
-      <ion-textarea formControlName="description" placeholder="Enter event description" rows="3"> </ion-textarea>
+      <ion-input formControlName="location" placeholder="Enter location" clearInput="true" label="Location (Optional)"> </ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-textarea formControlName="description" placeholder="Enter event description" rows="3" label="Description (Optional)"> </ion-textarea>
     </ion-item>
   </form>
 </ion-content>
+
+<!-- DateTime Picker Modal -->
+<ion-modal [keepContentsMounted]="true">
+  <ng-template>
+    <ion-datetime
+      id="starts"
+      [value]="eventForm.get('starts')?.value"
+      [presentation]="isAllDay ? 'date' : 'date-time'"
+      [showDefaultButtons]="true"
+      (ionChange)="onStartsChange($event)">
+    </ion-datetime>
+  </ng-template>
+</ion-modal>
+
+<ion-modal [keepContentsMounted]="true">
+  <ng-template>
+    <ion-datetime
+      id="ends"
+      [value]="eventForm.get('ends')?.value"
+      [presentation]="isAllDay ? 'date' : 'date-time'"
+      [showDefaultButtons]="true"
+      (ionChange)="onEndsChange($event)">
+    </ion-datetime>
+  </ng-template>
+</ion-modal>

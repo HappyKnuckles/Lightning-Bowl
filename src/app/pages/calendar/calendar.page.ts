@@ -17,11 +17,13 @@ import {
   IonCol,
   IonCard,
   IonCardContent,
-  IonCardHeader,
-  IonCardTitle,
   IonChip,
   IonFab,
   IonFabButton,
+  IonItem,
+  IonList,
+  IonListHeader,
+  IonButtons,
 } from '@ionic/angular/standalone';
 import { Subscription } from 'rxjs';
 import { CalendarService } from '../../core/services/calendar/calendar.service';
@@ -37,6 +39,10 @@ import { Gesture, GestureDetail } from '@ionic/angular';
   styleUrls: ['./calendar.page.scss'],
   standalone: true,
   imports: [
+    IonButtons,
+    IonListHeader,
+    IonList,
+    IonItem,
     CommonModule,
     FormsModule,
     IonContent,
@@ -53,8 +59,6 @@ import { Gesture, GestureDetail } from '@ionic/angular';
     IonCol,
     IonCard,
     IonCardContent,
-    IonCardHeader,
-    IonCardTitle,
     IonChip,
     IonFab,
     IonFabButton,
@@ -90,6 +94,19 @@ export class CalendarPage implements OnInit, OnDestroy, AfterViewInit {
   previousWeekDays: CalendarDay[] = [];
   nextMonthWeeks: CalendarWeek[] = [];
   nextWeekDays: CalendarDay[] = [];
+
+  // Day view data
+  currentDayData: CalendarDay | null = null;
+  previousDayData: CalendarDay | null = null;
+  nextDayData: CalendarDay | null = null;
+
+  // Hour slots for day view (24-hour format)
+  hours = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
+
+  // Events for each day view
+  currentDayEvents: CalendarEvent[] = [];
+  previousDayEvents: CalendarEvent[] = [];
+  nextDayEvents: CalendarEvent[] = [];
 
   // Animation state
   isAnimating = false;
@@ -141,6 +158,11 @@ export class CalendarPage implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
+  get currentDayDisplay(): string {
+    if (this.viewMode !== 'day') return '';
+    return `${this.monthNames[this.currentDate.getMonth()]} ${this.currentDate.getDate()}, ${this.currentDate.getFullYear()}`;
+  }
+
   onViewModeChange(event: CustomEvent) {
     this.viewMode = event.detail.value;
     this.updateCalendarDisplay();
@@ -151,8 +173,10 @@ export class CalendarPage implements OnInit, OnDestroy, AfterViewInit {
 
     if (this.viewMode === 'month') {
       this.currentDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() - 1, 1);
-    } else {
+    } else if (this.viewMode === 'week') {
       this.currentDate = new Date(this.currentDate.getTime() - 7 * 24 * 60 * 60 * 1000);
+    } else if (this.viewMode === 'day') {
+      this.currentDate = new Date(this.currentDate.getTime() - 24 * 60 * 60 * 1000);
     }
     this.updateCalendarDisplay();
   }
@@ -163,8 +187,10 @@ export class CalendarPage implements OnInit, OnDestroy, AfterViewInit {
 
     if (this.viewMode === 'month') {
       this.currentDate = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() + 1, 1);
-    } else {
+    } else if (this.viewMode === 'week') {
       this.currentDate = new Date(this.currentDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+    } else if (this.viewMode === 'day') {
+      this.currentDate = new Date(this.currentDate.getTime() + 24 * 60 * 60 * 1000);
     }
     this.updateCalendarDisplay();
   }
@@ -198,10 +224,14 @@ export class CalendarPage implements OnInit, OnDestroy, AfterViewInit {
       this.generateMonthView();
       this.generatePreviousMonthView();
       this.generateNextMonthView();
-    } else {
+    } else if (this.viewMode === 'week') {
       this.generateWeekView();
       this.generatePreviousWeekView();
       this.generateNextWeekView();
+    } else if (this.viewMode === 'day') {
+      this.generateDayView();
+      this.generatePreviousDayView();
+      this.generateNextDayView();
     }
 
     // Reinitialize swipe gestures after view update
@@ -288,7 +318,7 @@ export class CalendarPage implements OnInit, OnDestroy, AfterViewInit {
 
   private getEventsForDate(date: Date): CalendarEvent[] {
     const dateString = this.formatDateForInput(date);
-    return this.events.filter((event) => event.date === dateString);
+    return this.events.filter((event) => event.startDate === dateString);
   }
 
   // Public method for template access
@@ -400,16 +430,52 @@ export class CalendarPage implements OnInit, OnDestroy, AfterViewInit {
 
   private showPreviousSlide() {
     if (this.previousSlideRef) {
-      this.previousSlideRef.nativeElement.style.display = 'block';
-      this.previousSlideRef.nativeElement.style.transform = 'translateX(-100%)';
+      const element = this.previousSlideRef.nativeElement;
+      element.style.display = 'block';
+      element.style.position = 'absolute';
+      element.style.top = '0';
+      element.style.left = '0';
+      element.style.width = '100%';
+      element.style.transform = 'translateX(-100%)';
+      element.style.zIndex = '0';
     }
   }
 
   private showNextSlide() {
     if (this.nextSlideRef) {
-      this.nextSlideRef.nativeElement.style.display = 'block';
-      this.nextSlideRef.nativeElement.style.transform = 'translateX(100%)';
+      const element = this.nextSlideRef.nativeElement;
+      element.style.display = 'block';
+      element.style.position = 'absolute';
+      element.style.top = '0';
+      element.style.left = '0';
+      element.style.width = '100%';
+      element.style.transform = 'translateX(100%)';
+      element.style.zIndex = '0';
     }
+  }
+
+  get currentWeekNumber(): number {
+    return this.getWeekNumber(this.currentDate);
+  }
+
+  getWeekNumber(date: Date): number {
+    // Create a new date object to avoid modifying the original
+    const currentDate = new Date(date.getTime());
+
+    // Set to January 1st of the year
+    const startOfYear = new Date(currentDate.getFullYear(), 0, 1);
+
+    // Calculate the number of days since January 1st
+    const daysSinceStart = Math.floor((currentDate.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000));
+
+    // Add 1 because January 1st is day 1, not day 0
+    // Add the day of week of January 1st to properly align weeks
+    const dayOfWeekJan1 = startOfYear.getDay();
+
+    // Calculate week number (ISO 8601 standard)
+    const weekNumber = Math.ceil((daysSinceStart + dayOfWeekJan1 + 1) / 7);
+
+    return weekNumber;
   }
 
   private animateToSlide(direction: 'previous' | 'current' | 'next', callback: () => void) {
@@ -558,5 +624,49 @@ export class CalendarPage implements OnInit, OnDestroy, AfterViewInit {
     }
 
     return weekDays;
+  }
+
+  // Day view event positioning methods
+  getEventTop(event: CalendarEvent): string {
+    if (!event.startTime) return '0px';
+
+    const [hours, minutes] = event.startTime.split(':').map(Number);
+    const hourHeight = 60; // 60px per hour
+    const topPosition = hours * hourHeight + (minutes * hourHeight) / 60;
+
+    return `${topPosition}px`;
+  }
+
+  getEventHeight(event: CalendarEvent): string {
+    if (!event.startTime || !event.endTime) return '60px'; // Default 1 hour
+
+    const [startHours, startMinutes] = event.startTime.split(':').map(Number);
+    const [endHours, endMinutes] = event.endTime.split(':').map(Number);
+
+    const startTotalMinutes = startHours * 60 + startMinutes;
+    const endTotalMinutes = endHours * 60 + endMinutes;
+    const durationMinutes = endTotalMinutes - startTotalMinutes;
+
+    const hourHeight = 60; // 60px per hour
+    const height = (durationMinutes / 60) * hourHeight;
+
+    return `${Math.max(height, 30)}px`; // Minimum 30px height
+  }
+
+  // Generate day view data
+  private generateDayView() {
+    this.currentDayEvents = this.getEventsForDate(this.currentDate);
+  }
+
+  private generatePreviousDayView() {
+    const previousDay = new Date(this.currentDate);
+    previousDay.setDate(previousDay.getDate() - 1);
+    this.previousDayEvents = this.getEventsForDate(previousDay);
+  }
+
+  private generateNextDayView() {
+    const nextDay = new Date(this.currentDate);
+    nextDay.setDate(nextDay.getDate() + 1);
+    this.nextDayEvents = this.getEventsForDate(nextDay);
   }
 }

@@ -40,11 +40,11 @@ export class CalendarService {
   }
 
   getEventsForDate(date: string): CalendarEvent[] {
-    return this.getEvents().filter((event) => event.date === date);
+    return this.getEvents().filter((event) => event.startDate === date);
   }
 
   getEventsForDateRange(startDate: string, endDate: string): CalendarEvent[] {
-    return this.getEvents().filter((event) => event.date >= startDate && event.date <= endDate);
+    return this.getEvents().filter((event) => event.startDate >= startDate && event.endDate! <= endDate);
   }
 
   addEvent(event: Omit<CalendarEvent, 'id' | 'createdAt' | 'updatedAt'>): CalendarEvent {
