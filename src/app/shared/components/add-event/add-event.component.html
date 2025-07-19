@@ -2,9 +2,7 @@
   <ion-toolbar>
     <ion-title>Add Event</ion-title>
     <ion-buttons slot="start">
-      <ion-button fill="clear" (click)="onCancel()">
-        <ion-icon name="close"></ion-icon>
-      </ion-button>
+      <ion-button fill="clear" color="medium" (click)="onCancel()"> Cancel </ion-button>
     </ion-buttons>
     <ion-buttons slot="end">
       <ion-button fill="clear" [disabled]="!isFormValid" (click)="onSave()">

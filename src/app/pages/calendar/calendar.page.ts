@@ -18,8 +18,6 @@ import {
   IonCard,
   IonCardContent,
   IonChip,
-  IonFab,
-  IonFabButton,
   IonItem,
   IonList,
   IonListHeader,
@@ -60,8 +58,6 @@ import { Gesture, GestureDetail } from '@ionic/angular';
     IonCard,
     IonCardContent,
     IonChip,
-    IonFab,
-    IonFabButton,
   ],
   providers: [ModalController],
 })

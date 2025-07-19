@@ -218,17 +218,21 @@
 
 // Day View Styles
 .day-view {
+  height: 100%;
+  overflow: hidden;
+
   .day-schedule {
     display: flex;
     height: calc(100vh - 200px); // Adjust based on header height
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: relative;
   }
 
   .time-column {
     width: 60px;
     flex-shrink: 0;
     border-right: 1px solid var(--ion-color-light);
-    background-color: var(--ion-color-light-tint);
 
     .hour-slot {
       height: 60px;
@@ -236,7 +240,9 @@
       display: flex;
       align-items: flex-start;
       justify-content: center;
-      padding-top: 4px;
+      padding-top: 4px;    
+      background-color: var(--ion-color-light-tint);
+
 
       .hour-label {
         font-size: 0.8rem;
@@ -249,8 +255,7 @@
   .events-column {
     flex: 1;
     position: relative;
-    overflow-y: auto;
-    overflow-x: hidden;
+    min-height: 1440px; // 24 hours * 60px per hour = 1440px total height
   }
 
   .hour-grid {
