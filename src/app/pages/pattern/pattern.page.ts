@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -79,6 +79,7 @@ export class PatternPage implements OnInit {
   patterns: Pattern[] = [];
   currentPage = 1;
   hasMoreData = true;
+  isPageLoading = signal(false);
 
   constructor(
     private patternService: PatternService,
@@ -100,7 +101,7 @@ export class PatternPage implements OnInit {
   async handleRefresh(event: RefresherCustomEvent): Promise<void> {
     try {
       this.hapticService.vibrate(ImpactStyle.Medium);
-      this.loadingService.setLoading(true);
+      this.isPageLoading.set(true);
       this.currentPage = 1;
       this.hasMoreData = true;
       this.patterns = [];
@@ -110,14 +111,14 @@ export class PatternPage implements OnInit {
       this.toastService.showToast(ToastMessages.ballLoadError, 'bug', true);
     } finally {
       event.target.complete();
-      this.loadingService.setLoading(false);
+      this.isPageLoading.set(false);
     }
   }
 
   async loadPatterns(event?: InfiniteScrollCustomEvent): Promise<void> {
     try {
       if (!event) {
-        this.loadingService.setLoading(true);
+        this.isPageLoading.set(true);
       }
       const response = await this.patternService.getPatterns(this.currentPage);
       const patterns = response.patterns;
@@ -132,7 +133,7 @@ export class PatternPage implements OnInit {
       this.toastService.showToast(ToastMessages.patternLoadError, 'bug', true);
     } finally {
       if (!event) {
-        this.loadingService.setLoading(false);
+        this.isPageLoading.set(false);
       }
       if (event) {
         event.target.complete();

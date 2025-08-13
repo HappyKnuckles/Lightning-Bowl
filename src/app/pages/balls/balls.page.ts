@@ -94,7 +94,7 @@ export class BallsPage implements OnInit {
   searchSubject = new Subject<string>();
   searchTerm = signal('');
   currentPage = 0;
-  componentLoading = false;
+  isPageLoading = signal(false);
   hasMoreData = true;
   filterDisplayCount = 100;
 
@@ -173,20 +173,20 @@ export class BallsPage implements OnInit {
   }
 
   async ngOnInit(): Promise<void> {
-    this.loadingService.setLoading(true);
+    this.isPageLoading.set(true);
     try {
       await this.loadBalls();
     } catch (error) {
       console.error('Error loading balls:', error);
     } finally {
-      this.loadingService.setLoading(false);
+      this.isPageLoading.set(false);
     }
   }
 
   async handleRefresh(event: RefresherCustomEvent): Promise<void> {
     try {
       this.hapticService.vibrate(ImpactStyle.Medium);
-      this.loadingService.setLoading(true);
+      this.isPageLoading.set(true);
       this.currentPage = 0;
       this.hasMoreData = true;
       this.balls.set([]);
@@ -201,7 +201,7 @@ export class BallsPage implements OnInit {
       this.toastService.showToast(ToastMessages.ballLoadError, 'bug', true);
     } finally {
       event.target.complete();
-      this.loadingService.setLoading(false);
+      this.isPageLoading.set(false);
     }
   }
 
@@ -252,7 +252,7 @@ export class BallsPage implements OnInit {
   async loadBalls(event?: InfiniteScrollCustomEvent): Promise<void> {
     try {
       if (!event) {
-        this.loadingService.setLoading(true);
+        // this.loadingService.setLoading(true);
       }
       // If filters are active and an infinite scroll event is triggered, increase the display count.
       if (this.isFilterActive() && event) {
@@ -318,7 +318,6 @@ export class BallsPage implements OnInit {
   async getSameCoreBalls(ball: Ball): Promise<void> {
     try {
       this.hapticService.vibrate(ImpactStyle.Light);
-      this.componentLoading = true;
       this.loadingService.setLoading(true);
       this.coreBalls = await this.ballService.getBallsByCore(ball);
       if (this.coreBalls.length > 0) {
@@ -330,7 +329,6 @@ export class BallsPage implements OnInit {
       console.error('Error fetching core balls:', error);
       this.toastService.showToast(`Error fetching balls for core ${ball.core_name}`, 'bug', true);
     } finally {
-      this.componentLoading = false;
       this.loadingService.setLoading(false);
     }
   }
@@ -338,7 +336,6 @@ export class BallsPage implements OnInit {
   async getSameCoverstockBalls(ball: Ball): Promise<void> {
     try {
       this.hapticService.vibrate(ImpactStyle.Light);
-      this.componentLoading = true;
       this.loadingService.setLoading(true);
       this.coverstockBalls = await this.ballService.getBallsByCoverstock(ball);
       if (this.coverstockBalls.length > 0) {
@@ -350,7 +347,6 @@ export class BallsPage implements OnInit {
       console.error('Error fetching coverstock balls:', error);
       this.toastService.showToast(`Error fetching balls for coverstock ${ball.coverstock_name}`, 'bug', true);
     } finally {
-      this.componentLoading = false;
       this.loadingService.setLoading(false);
     }
   }

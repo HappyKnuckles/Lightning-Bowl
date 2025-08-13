@@ -75,7 +75,6 @@ export class AlleyMapPage implements OnInit, OnDestroy {
       await this.loadBowlingAlleys();
     }
   }
-
   private initializeMapAndAttemptGeolocation(): void {
     if (this.map) {
       this.map.off();
