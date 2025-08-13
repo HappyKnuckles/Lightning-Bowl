@@ -173,7 +173,7 @@ export class ExcelService {
           isPerfect: (row['Perfect'] as string)?.trim().toLowerCase() === 'true',
           isSeries: (row['Series'] as string)?.trim().toLowerCase() === 'true',
           seriesId: row['Series ID'] as string,
-          pattern: row['Pattern'] as string,
+          patterns: (row['Patterns'] as string)?.trim() ? (row['Patterns'] as string).split(', ').slice(0, 2) : [],
           balls: (row['Balls'] as string)?.trim() ? (row['Balls'] as string).split(', ') : [],
           note: row['Notes'] as string,
         };
@@ -259,7 +259,7 @@ export class ExcelService {
       'Perfect',
       'Series',
       'Series ID',
-      'Pattern',
+      'Patterns',
       'Balls',
       'Notes',
     ];
@@ -291,7 +291,7 @@ export class ExcelService {
         game.isPerfect ? 'true' : 'false',
         game.isSeries ? 'true' : 'false',
         game.seriesId || '',
-        game.pattern || '',
+        game.patterns?.join(', ') || '',
         game.balls?.join(', ') || '',
         game.note || '',
       ];

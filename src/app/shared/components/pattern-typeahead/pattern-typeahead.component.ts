@@ -10,8 +10,7 @@ import {
   IonInfiniteScroll,
   IonInfiniteScrollContent,
   IonItem,
-  IonRadio,
-  IonRadioGroup,
+  IonCheckbox,
   IonText,
   IonLabel,
   IonButtons,
@@ -33,8 +32,7 @@ import { SearchBlurDirective } from 'src/app/core/directives/search-blur/search-
     IonLabel,
     NgIf,
     IonText,
-    IonRadioGroup,
-    IonRadio,
+    IonCheckbox,
     IonItem,
     IonInfiniteScrollContent,
     IonInfiniteScroll,
@@ -51,12 +49,12 @@ import { SearchBlurDirective } from 'src/app/core/directives/search-blur/search-
 })
 export class PatternTypeaheadComponent implements OnInit, OnDestroy {
   patterns = input<Partial<Pattern>[]>([]);
-  prevSelectedPattern = input<string>('');
-  @Output() selectedPatternsChange = new EventEmitter<string>();
+  prevSelectedPatterns = input<string[]>([]);
+  @Output() selectedPatternsChange = new EventEmitter<string[]>();
   @ViewChild(IonContent, { static: false }) content!: IonContent;
   @ViewChild('infiniteScroll') infiniteScroll!: IonInfiniteScroll;
   filteredPatterns = signal<Partial<Pattern>[]>([]);
-  selectedPattern = '';
+  selectedPatterns: string[] = [];
   displayedPatterns = computed(() => this.filteredPatterns().slice(0, this.loadedCount()));
   private batchSize = 100;
   public loadedCount = signal(0);
@@ -71,11 +69,11 @@ export class PatternTypeaheadComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.filteredPatterns.set([...this.patterns()]);
-    this.selectedPattern = this.prevSelectedPattern() || '';
+    this.selectedPatterns = [...(this.prevSelectedPatterns() || [])];
 
-    // If there's a previously selected pattern, put it at the top
-    if (this.selectedPattern) {
-      this.reorderPatterns(this.selectedPattern);
+    // If there are previously selected patterns, put them at the top
+    if (this.selectedPatterns.length > 0) {
+      this.reorderPatternsForSelected();
     }
 
     this.loadedCount.set(Math.min(this.batchSize, this.filteredPatterns().length));
@@ -83,14 +81,15 @@ export class PatternTypeaheadComponent implements OnInit, OnDestroy {
   }
 
   resetPatternSelection() {
-    this.selectedPattern = '';
+    this.selectedPatterns = [];
   }
 
   savePatternSelection() {
     this.modalCtrl.dismiss();
   }
+
   ngOnDestroy(): void {
-    this.selectedPatternsChange.emit(this.selectedPattern);
+    this.selectedPatternsChange.emit(this.selectedPatterns);
   }
 
   async searchPatterns(event: CustomEvent) {
@@ -106,8 +105,8 @@ export class PatternTypeaheadComponent implements OnInit, OnDestroy {
         this.filteredPatterns.set(patterns);
       }
 
-      if (this.selectedPattern && this.filteredPatterns().some((p) => p.title === this.selectedPattern)) {
-        this.reorderPatterns(this.selectedPattern);
+      if (this.selectedPatterns.length > 0) {
+        this.reorderPatternsForSelected();
       }
 
       this.loadedCount.set(Math.min(this.batchSize, this.filteredPatterns().length));
@@ -138,14 +137,37 @@ export class PatternTypeaheadComponent implements OnInit, OnDestroy {
     }, 50);
   }
 
-  radioGroupChange(event: CustomEvent): void {
-    this.selectedPattern = event.detail.value;
-    this.reorderPatterns(this.selectedPattern);
+  checkboxChange(event: CustomEvent, patternTitle: string): void {
+    if (event.detail.checked) {
+      if (!this.selectedPatterns.includes(patternTitle) && this.selectedPatterns.length < 2) {
+        this.selectedPatterns.push(patternTitle);
+      }
+    } else {
+      this.selectedPatterns = this.selectedPatterns.filter((p) => p !== patternTitle);
+    }
+    this.reorderPatternsForSelected();
+  }
+
+  isPatternSelected(patternTitle: string): boolean {
+    return this.selectedPatterns.includes(patternTitle);
+  }
+
+  canSelectMorePatterns(): boolean {
+    return this.selectedPatterns.length < 2;
   }
 
   getRatioValue(ratio: string): number {
     const numericPart = ratio.split(':')[0];
     return parseFloat(numericPart);
+  }
+
+  private reorderPatternsForSelected(): void {
+    if (this.selectedPatterns.length === 0) return;
+
+    const selectedPatternObjects = this.filteredPatterns().filter((p) => this.selectedPatterns.includes(p.title || ''));
+    const unselectedPatterns = this.filteredPatterns().filter((p) => !this.selectedPatterns.includes(p.title || ''));
+
+    this.filteredPatterns.set([...selectedPatternObjects, ...unselectedPatterns]);
   }
 
   private reorderPatterns(selectedPatternTitle: string): void {

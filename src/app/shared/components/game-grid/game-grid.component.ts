@@ -75,7 +75,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
   @Output() totalScoreChanged = new EventEmitter<number>();
   @Output() leagueChanged = new EventEmitter<string>();
   @Output() isPracticeChanged = new EventEmitter<boolean>();
-  patternChanged = output<string>();
+  patternChanged = output<string[]>();
   @ViewChildren(IonInput) inputs!: QueryList<IonInput>;
   @ViewChild('leagueSelector') leagueSelector!: LeagueSelectorComponent;
   @ViewChild('checkbox') checkbox!: IonCheckbox;
@@ -86,7 +86,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
     totalScore: 0,
     note: '',
     balls: [],
-    pattern: '',
+    patterns: [],
     league: '',
     isPractice: true,
     gameId: '',
@@ -194,9 +194,12 @@ export class GameGridComponent implements OnInit, OnDestroy {
     this.leagueChanged.emit(league);
   }
 
-  onPatternChanged(pattern: string): void {
-    this.game().pattern = pattern;
-    this.patternChanged.emit(pattern);
+  onPatternChanged(patterns: string[]): void {
+    if (patterns.length > 2) {
+      patterns = patterns.slice(-2);
+    }
+    this.game().patterns = patterns;
+    this.patternChanged.emit(patterns);
   }
 
   getFrameValue(frameIndex: number, throwIndex: number): string {
@@ -293,7 +296,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
       this.game().note = '';
       this.game().league = '';
       this.leagueSelector.selectedLeague = '';
-      this.game().pattern = '';
+      this.game().patterns = [];
       this.game().isPractice = true;
       this.game().balls = [];
     }
@@ -328,7 +331,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
         isSeries,
         seriesId,
         this.game().note,
-        this.game().pattern,
+        this.game().patterns,
         this.game().balls,
         this.game().gameId,
         this.game().date,

@@ -203,9 +203,13 @@ export class AddGamePage implements OnInit {
     });
   }
 
-  onPatternChange(pattern: string): void {
+  onPatternChange(patterns: string[]): void {
+    // Limit to maximum of 2 patterns
+    if (patterns.length > 2) {
+      patterns = patterns.slice(-2);
+    }
     this.gameGrids.forEach((trackGrid: GameGridComponent) => {
-      trackGrid.game().pattern = pattern;
+      trackGrid.game().patterns = [...patterns];
     });
   }
 
@@ -334,7 +338,7 @@ export class AddGamePage implements OnInit {
         league: gameGrid.game().league,
         note: gameGrid.game().note,
         balls: gameGrid.game().balls,
-        pattern: gameGrid.game().pattern,
+        patterns: gameGrid.game().patterns,
         isPractice: gameGrid.game().isPractice,
       }));
 
@@ -351,8 +355,8 @@ export class AddGamePage implements OnInit {
         gameGrid.game().note = data.note!;
         gameGrid.game().balls = data.balls!;
         gameGrid.game().isPractice = data.isPractice!;
-        gameGrid.game().pattern = data.pattern!;
-        gameGrid.onPatternChanged(data.pattern!);
+        gameGrid.game().patterns = data.patterns!;
+        gameGrid.onPatternChanged(data.patterns!);
         gameGrid.onLeagueChanged(data.league!);
         gameGrid.updateScores();
       });
@@ -438,7 +442,7 @@ export class AddGamePage implements OnInit {
   private parseBowlingScores(input: string): void {
     try {
       const { frames, frameScores, totalScore } = this.gameUtilsService.parseBowlingScores(input, this.username!);
-      this.gameData = this.transformGameService.transformGameData(frames, frameScores, totalScore, false, '', false, '', '', '', []);
+      this.gameData = this.transformGameService.transformGameData(frames, frameScores, totalScore, false, '', false, '', '', [], []);
       this.gameData.isPractice = true;
       if (this.gameData.frames.length === 10 && this.gameData.frameScores.length === 10 && this.gameData.totalScore <= 300) {
         this.isModalOpen = true;

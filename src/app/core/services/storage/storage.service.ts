@@ -98,6 +98,18 @@ export class StorageService {
     this.loadingService.setLoading(true);
     try {
       const gameHistory = await this.loadData<Game>('game');
+
+      // Temporary transformation: convert legacy single pattern string to patterns array
+      gameHistory.forEach((game) => {
+        const legacyGame = game as Game & { pattern?: string };
+        if (legacyGame.pattern && !game.patterns) {
+          game.patterns = [legacyGame.pattern];
+          delete legacyGame.pattern;
+        } else if (!game.patterns) {
+          game.patterns = [];
+        }
+      });
+
       this.sortUtilsService.sortGameHistoryByDate(gameHistory, false);
       this.games.set(gameHistory);
       return gameHistory;

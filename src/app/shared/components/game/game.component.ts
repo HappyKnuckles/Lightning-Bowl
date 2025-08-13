@@ -97,10 +97,10 @@ import { GameGridComponent } from '../game-grid/game-grid.component';
     IonSelectOption,
     ReactiveFormsModule,
     FormsModule,
-    PatternTypeaheadComponent,
     LongPressDirective,
     DatePipe,
     GameGridComponent,
+    PatternTypeaheadComponent,
   ],
   standalone: true,
 })
@@ -267,7 +267,7 @@ export class GameComponent implements OnChanges, OnInit {
     }
 
     if (game.isSeries) {
-      this.updateSeries(game, game.league, game.pattern);
+      this.updateSeries(game, game.league, game.patterns);
     }
 
     this.isEditMode[game.gameId] = false;
@@ -278,7 +278,7 @@ export class GameComponent implements OnChanges, OnInit {
     delete this.delayedCloseMap[game.gameId];
   }
 
-  updateSeries(game: Game, league?: string, pattern?: string): void {
+  updateSeries(game: Game, league?: string, patterns?: string[]): void {
     if (!game.isSeries) return;
 
     this.storageService.games.update((gamesArr) =>
@@ -287,7 +287,7 @@ export class GameComponent implements OnChanges, OnInit {
           return {
             ...g,
             ...(league !== undefined && { league }),
-            ...(pattern !== undefined && { pattern }),
+            ...(patterns !== undefined && { patterns }),
           };
         }
         return g;
@@ -312,15 +312,15 @@ export class GameComponent implements OnChanges, OnInit {
       // 3) Compute isPractice on the current grid data
       editedGameFromGrid.isPractice = !editedGameFromGrid.league;
 
-      // 4) Did we change league or pattern? Compare original with current grid data.
+      // 4) Did we change league or patterns? Compare original with current grid data.
       const originalGameSnapshot = this.originalGameState[game.gameId];
       const leagueChanged = originalGameSnapshot && originalGameSnapshot.league !== editedGameFromGrid.league;
-      const patternChanged = originalGameSnapshot && originalGameSnapshot.pattern !== editedGameFromGrid.pattern;
-      // 5) If part of a series and league/pattern changed → update everyone
-      if (editedGameFromGrid.isSeries && (leagueChanged || patternChanged)) {
+      const patternsChanged = originalGameSnapshot && JSON.stringify(originalGameSnapshot.patterns) !== JSON.stringify(editedGameFromGrid.patterns);
+      // 5) If part of a series and league/patterns changed → update everyone
+      if (editedGameFromGrid.isSeries && (leagueChanged || patternsChanged)) {
         const seriesIdToUpdate = editedGameFromGrid.seriesId;
         const newLeague = editedGameFromGrid.league;
-        const newPattern = editedGameFromGrid.pattern;
+        const newPatterns = editedGameFromGrid.patterns;
         const newIsPractice = !newLeague;
 
         // First, save the primary edited game
@@ -333,7 +333,7 @@ export class GameComponent implements OnChanges, OnInit {
           .map((g) => ({
             ...g,
             league: newLeague,
-            pattern: newPattern,
+            patterns: newPatterns,
             isPractice: newIsPractice,
           }));
         await this.storageService.saveGamesToLocalStorage(gamesToUpdateInStorage);
@@ -466,7 +466,7 @@ export class GameComponent implements OnChanges, OnInit {
             : `Bowled with: ${game.balls.join(', ')}`
           : null,
 
-        game.pattern ? `Pattern: ${game.pattern}` : null,
+        game.patterns && game.patterns.length > 0 ? `Patterns: ${game.patterns.join(', ')}` : null,
       ];
 
       const message = messageParts.filter((part) => part !== null).join('\n');
