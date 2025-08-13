@@ -98,6 +98,7 @@ export class StorageService {
     this.loadingService.setLoading(true);
     try {
       const gameHistory = await this.loadData<Game>('game');
+      let needsUpdate = false;
 
       // Temporary transformation: convert legacy single pattern string to patterns array
       gameHistory.forEach((game) => {
@@ -105,10 +106,39 @@ export class StorageService {
         if (legacyGame.pattern && !game.patterns) {
           game.patterns = [legacyGame.pattern];
           delete legacyGame.pattern;
+          needsUpdate = true;
         } else if (!game.patterns) {
           game.patterns = [];
+          needsUpdate = true;
+        }
+
+        // Remove old pattern property if it still exists
+        if (legacyGame.pattern !== undefined) {
+          delete legacyGame.pattern;
+          needsUpdate = true;
+        }
+
+        // Sort patterns and balls arrays alphabetically and check if they were already sorted
+        if (game.patterns && Array.isArray(game.patterns)) {
+          const originalPatternsStr = JSON.stringify(game.patterns);
+          game.patterns.sort();
+          if (JSON.stringify(game.patterns) !== originalPatternsStr) {
+            needsUpdate = true;
+          }
+        }
+        if (game.balls && Array.isArray(game.balls)) {
+          const originalBallsStr = JSON.stringify(game.balls);
+          game.balls.sort();
+          if (JSON.stringify(game.balls) !== originalBallsStr) {
+            needsUpdate = true;
+          }
         }
       });
+
+      // Save updated games back to storage if any changes were made
+      if (needsUpdate) {
+        await this.saveGamesToLocalStorage(gameHistory);
+      }
 
       this.sortUtilsService.sortGameHistoryByDate(gameHistory, false);
       this.games.set(gameHistory);

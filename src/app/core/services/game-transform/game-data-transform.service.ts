@@ -46,8 +46,8 @@ export class GameDataTransformerService {
         league: league,
         isClean: isClean,
         isPerfect: isPerfect,
-        patterns: patterns || [],
-        balls: balls,
+        patterns: patterns ? [...patterns].sort() : [],
+        balls: balls ? [...balls].sort() : undefined,
       };
     } catch (error) {
       throw new Error(`Error transforming game data: ${error}`);
