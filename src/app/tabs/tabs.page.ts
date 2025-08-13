@@ -26,7 +26,7 @@ import { AsyncPipe } from '@angular/common';
 })
 export class TabsPage {
   activeMoreTab$ = new BehaviorSubject<boolean>(false);
-  readonly moreTabs = ['/tabs/balls', '/tabs/settings', '/tabs/arsenal', '/tabs/pattern', '/tabs/map'];
+  readonly moreTabs = ['/tabs/arsenal', '/tabs/balls', '/tabs/pattern', '/tabs/map', '/tabs/settings'];
 
   constructor(private router: Router) {
     addIcons({ add, statsChartOutline, receipt, medalOutline, ellipsisHorizontal, bowlingBallOutline, mapOutline, settingsOutline, bagAddOutline });
