@@ -8,6 +8,7 @@ import { LoadingService } from '../loader/loading.service';
 import { BallService } from '../ball/ball.service';
 import { Pattern } from '../../models/pattern.model';
 import { PatternService } from '../pattern/pattern.service';
+import { AlertController } from '@ionic/angular';
 
 @Injectable({
   providedIn: 'root',
@@ -42,6 +43,7 @@ export class StorageService {
     private loadingService: LoadingService,
     private ballService: BallService,
     private patternService: PatternService,
+    private alertController: AlertController,
   ) {
     this.init();
   }
@@ -238,6 +240,10 @@ export class StorageService {
   async saveGameToLocalStorage(gameData: Game): Promise<void> {
     try {
       const key = 'game' + gameData.gameId;
+
+      // Check if this is a new game (not an update)
+      const isNewGame = !this.games().find((game) => game.gameId === gameData.gameId);
+
       await this.save(key, gameData);
       this.games.update((games) => {
         const index = games.findIndex((game) => game.gameId === gameData.gameId);
@@ -247,6 +253,11 @@ export class StorageService {
           return [gameData, ...games];
         }
       });
+
+      // Check for high score achievements only for new games
+      if (isNewGame) {
+        await this.checkAndDisplayHighScoreAlerts(gameData);
+      }
     } catch (error) {
       console.error('Error saving game to local storage:', error);
       throw error;
@@ -358,6 +369,188 @@ export class StorageService {
       console.error(`Error loading data for prefix "${prefix}":`, error);
       throw error;
     }
+  }
+
+  /**
+   * Check if a new game achieves any new high scores and display alerts
+   */
+  private async checkAndDisplayHighScoreAlerts(newGame: Game): Promise<void> {
+    const records = await this.checkForNewRecords(newGame);
+
+    for (const record of records) {
+      await this.displayHighScoreAlert(record);
+    }
+  }
+
+  /**
+   * Check for new high score records
+   */
+  private async checkForNewRecords(newGame: Game): Promise<
+    {
+      type: 'single_game' | 'series';
+      newRecord: number;
+      previousRecord: number;
+      details: string;
+    }[]
+  > {
+    const records: {
+      type: 'single_game' | 'series';
+      newRecord: number;
+      previousRecord: number;
+      details: string;
+    }[] = [];
+
+    const allGames = this.games();
+
+    // Get previous stats (all games except the new one)
+    const previousGames = allGames.filter((game: Game) => game.gameId !== newGame.gameId);
+
+    // Calculate previous high game
+    const previousHighGame = previousGames.length > 0 ? Math.max(...previousGames.map((g) => g.totalScore)) : 0;
+
+    // Check for new single game high score
+    if (newGame.totalScore > previousHighGame) {
+      records.push({
+        type: 'single_game',
+        newRecord: newGame.totalScore,
+        previousRecord: previousHighGame,
+        details: this.getGameDetails(newGame),
+      });
+    }
+
+    // Check for new series high score if this game is part of a series
+    if (newGame.isSeries && newGame.seriesId) {
+      const seriesGames = allGames.filter((game: Game) => game.seriesId === newGame.seriesId);
+      const seriesGameCount = seriesGames.length;
+
+      // Only alert for series of 3, 4, 5, or 6 games (standard series formats)
+      if (seriesGameCount >= 3 && seriesGameCount <= 6) {
+        const seriesTotal = seriesGames.reduce((total: number, game: Game) => total + game.totalScore, 0);
+
+        // Get previous best series of the same length
+        const previousSeriesScores = this.getPreviousSeriesScores(allGames, newGame.seriesId, seriesGameCount);
+        const previousBestSeries = Math.max(...previousSeriesScores, 0);
+
+        if (seriesTotal > previousBestSeries) {
+          records.push({
+            type: 'series',
+            newRecord: seriesTotal,
+            previousRecord: previousBestSeries,
+            details: this.getSeriesDetails(seriesGames, seriesGameCount),
+          });
+        }
+      }
+    }
+
+    return records;
+  }
+
+  /**
+   * Display congratulatory alert for new high score
+   */
+  private async displayHighScoreAlert(record: {
+    type: 'single_game' | 'series';
+    newRecord: number;
+    previousRecord: number;
+    details: string;
+  }): Promise<void> {
+    const isNewRecord = record.previousRecord === 0;
+    const improvementText = isNewRecord ? 'Your first record!' : `Previous best: ${record.previousRecord}`;
+
+    // Extract series info for better subheader
+    let subHeaderText = record.type === 'single_game' ? 'Single Game Record' : 'Series Record';
+    if (record.type === 'series' && record.details.includes('-Game Series')) {
+      const gameCountMatch = record.details.match(/(\d+)-Game Series/);
+      if (gameCountMatch) {
+        subHeaderText = `${gameCountMatch[1]}-Game Series Record`;
+      }
+    }
+
+    const alert = await this.alertController.create({
+      header: '🎉 NEW HIGH SCORE! 🎉',
+      subHeader: subHeaderText,
+      message: `
+        <div style="text-align: center; padding: 10px;">
+          <h2 style="color: #4CAF50; margin: 10px 0;">${record.newRecord}</h2>
+          <p style="margin: 5px 0;"><strong>${improvementText}</strong></p>
+          <p style="margin: 5px 0; font-size: 0.9em;">${record.details}</p>
+        </div>
+      `,
+      buttons: [
+        {
+          text: '🎊 Awesome!',
+          role: 'confirm',
+          cssClass: 'alert-button-confirm',
+        },
+      ],
+      cssClass: 'high-score-alert',
+    });
+
+    await alert.present();
+  }
+
+  /**
+   * Get formatted game details for display
+   */
+  private getGameDetails(game: Game): string {
+    const details = [];
+
+    if (game.league) {
+      details.push(`League: ${game.league}`);
+    }
+
+    if (game.patterns && game.patterns.length > 0) {
+      details.push(`Patterns: ${game.patterns.join(', ')}`);
+    }
+
+    if (game.balls && game.balls.length > 0) {
+      details.push(`Balls: ${game.balls.join(', ')}`);
+    }
+
+    details.push(`Date: ${new Date(game.date).toLocaleDateString()}`);
+
+    return details.join(' • ');
+  }
+
+  /**
+   * Get formatted series details for display
+   */
+  private getSeriesDetails(seriesGames: Game[], gameCount?: number): string {
+    const details = [];
+    const scores = seriesGames.map((g) => g.totalScore).join(', ');
+
+    const seriesTypeText = gameCount ? `${gameCount}-Game Series` : 'Series';
+    details.push(`${seriesTypeText}: ${scores}`);
+
+    if (seriesGames[0]?.league) {
+      details.push(`League: ${seriesGames[0].league}`);
+    }
+
+    details.push(`Date: ${new Date(seriesGames[0]?.date || Date.now()).toLocaleDateString()}`);
+
+    return details.join(' • ');
+  }
+
+  /**
+   * Get all previous series scores excluding the current series, optionally filtered by game count
+   */
+  private getPreviousSeriesScores(allGames: Game[], currentSeriesId: string, targetGameCount?: number): number[] {
+    const seriesMap = new Map<string, Game[]>();
+
+    // Group games by series ID, excluding current series
+    allGames
+      .filter((game: Game) => game.isSeries && game.seriesId && game.seriesId !== currentSeriesId)
+      .forEach((game: Game) => {
+        if (!seriesMap.has(game.seriesId!)) {
+          seriesMap.set(game.seriesId!, []);
+        }
+        seriesMap.get(game.seriesId!)!.push(game);
+      });
+
+    // Calculate total score for each series, optionally filtering by game count
+    return Array.from(seriesMap.values())
+      .filter((seriesGames: Game[]) => !targetGameCount || seriesGames.length === targetGameCount)
+      .map((seriesGames: Game[]) => seriesGames.reduce((total: number, game: Game) => total + game.totalScore, 0));
   }
 
   private async save(key: string, data: unknown) {
