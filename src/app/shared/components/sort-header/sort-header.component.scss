@@ -1,22 +1,22 @@
-:host {
-  display: inline-block;
-  transition: transform 0.3s ease-in-out;
-}
+// :host {
+//   display: inline-block;
+//   transition: transform 0.3s ease-in-out;
+// }
 
-ion-button {
-  --color: var(--ion-color-primary);
-}
+// ion-button {
+//   --color: var(--ion-color-primary);
+// }
 
-ion-popover ion-list {
-  max-height: 300px;
-  overflow-y: auto;
-}
+// ion-popover ion-list {
+//   max-height: 300px;
+//   overflow-y: auto;
+// }
 
-ion-item {
-  --inner-padding-start: 16px;
-  --inner-padding-end: 16px;
-}
+// ion-item {
+//   --inner-padding-start: 16px;
+//   --inner-padding-end: 16px;
+// }
 
-ion-item[button] {
-  cursor: pointer;
-}
+// ion-item[button] {
+//   cursor: pointer;
+// }
