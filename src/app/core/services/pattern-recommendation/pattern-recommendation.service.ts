@@ -57,34 +57,40 @@ export class PatternRecommendationService {
 
     if (volume === 'Very High' || volume === 'High') {
       if (difficulty === 'Hard') {
-        recommendations.push('Storm Phaze II - Strong solid reactive for heavy oil');
-        recommendations.push('Hammer Black Widow 2.0 - Aggressive solid for tough conditions');
-        recommendations.push('Brunswick Kingpin Max - Strong backend motion through heavy oil');
+        recommendations.push('Storm Phaze II (2018) - Proven strong solid reactive for heavy oil patterns');
+        recommendations.push('Motiv Jackal Ghost (2021) - Modern aggressive asymmetric with strong backend');
+        recommendations.push('Brunswick Kingpin Max (2020) - Strong continuous motion through heavy oil');
+        recommendations.push('Arsenal Note: Pair with a medium-strength ball and urethane for complete coverage');
       } else {
-        recommendations.push('Motiv Venom Shock - Controlled reaction in heavy oil');
-        recommendations.push('Track Mako Attack - Smooth strong motion');
-        recommendations.push('Columbia 300 Eruption Pro - Predictable heavy oil ball');
+        recommendations.push('Storm IQ Tour Emerald (2023) - Latest benchmark ball technology for heavy oil');
+        recommendations.push('Hammer Black Widow 2.0 (2019) - Reliable heavy oil option with proven track record');
+        recommendations.push('Columbia 300 Eruption Pro (2017) - Older but effective heavy oil ball');
+        recommendations.push('Arsenal Note: Add a pearl reactive for transitioning lanes and a spare ball');
       }
     } else if (volume === 'Medium') {
       if (length === 'Long') {
-        recommendations.push('Storm IQ Tour - Benchmark ball for medium conditions');
-        recommendations.push('Roto Grip Hustle Ink - Versatile medium oil option');
-        recommendations.push('DV8 Freakshow Flip - Strong backend on medium oil');
+        recommendations.push('Storm IQ Tour (2020) - Modern benchmark ball for medium-long patterns');
+        recommendations.push('Roto Grip Hustle Ink (2019) - Versatile medium oil workhorse');
+        recommendations.push('DV8 Misfit (2023) - New release with controlled backend reaction');
+        recommendations.push('Arsenal Note: Complement with solid reactive for heavier oil and urethane for tight conditions');
       } else {
-        recommendations.push('Hammer Raw Hammer - Versatile medium oil ball');
-        recommendations.push('Brunswick Rhino - Reliable medium oil performance');
-        recommendations.push('Storm Tropical Surge - Smooth reaction for medium conditions');
+        recommendations.push('Hammer Raw Hammer (2022) - Recent versatile medium oil release');
+        recommendations.push('Brunswick Rhino (2018) - Proven medium oil performance');
+        recommendations.push('Storm Tropical Surge (2021) - Smooth reaction for medium-short patterns');
+        recommendations.push('Arsenal Note: Build around this with stronger and weaker options for lane transition');
       }
     } else {
       // Light volume
       if (difficulty === 'Hard') {
-        recommendations.push('Storm Mix - Urethane for light oil control');
-        recommendations.push('Hammer Purple Pearl Urethane - Controlled motion');
-        recommendations.push('Brunswick T-Zone - Polyester for straight shots');
+        recommendations.push('Storm Mix (2022) - Modern urethane for controlled light oil play');
+        recommendations.push('Hammer Purple Pearl Urethane (2020) - Predictable motion on challenging conditions');
+        recommendations.push('Brunswick T-Zone (Classic) - Reliable polyester for straight shots');
+        recommendations.push('Arsenal Note: Essential to have alongside reactive balls for versatility');
       } else {
-        recommendations.push('Storm Tropical Breeze - Light oil reactive');
-        recommendations.push('Columbia 300 White Dot - Entry-level light oil');
-        recommendations.push('Motiv Freestyle Rush - Light oil pearl reactive');
+        recommendations.push('Storm Tropical Breeze (2021) - Recent light oil reactive technology');
+        recommendations.push('Motiv Freestyle Rush (2023) - New pearl reactive for light conditions');
+        recommendations.push('Columbia 300 Scout Reactive (2022) - Entry-level reactive with modern coverstock');
+        recommendations.push('Arsenal Note: Perfect starter balls that work well with heavier oil options');
       }
     }
 
@@ -145,22 +151,22 @@ export class PatternRecommendationService {
 
     if (length === 'Short') {
       if (volume === 'High' || volume === 'Very High') {
-        return 'Target breakpoint around 28-32 feet. The ball needs to start hooking early due to the short pattern length. Focus on getting the ball into a roll sooner.';
+        return 'Target breakpoint at board 8-12. Heavy oil on short patterns requires the ball to start its move earlier. Focus on creating consistent entry angle at this breakpoint.';
       } else {
-        return 'Target breakpoint around 25-30 feet. Short patterns with lighter oil allow for later breakpoints and sharper angles to the pocket.';
+        return 'Target breakpoint at board 5-8. Short patterns with lighter oil allow for sharper breakpoints closer to the channel. This creates more backend motion to the pocket.';
       }
     } else if (length === 'Medium') {
       if (difficulty === 'Hard') {
-        return 'Target breakpoint around 35-38 feet. Medium sport patterns require precise breakpoint control. Avoid breakpoints that are too early or too late.';
+        return 'Target breakpoint at board 10-12. Medium sport patterns require precise breakpoint control. Maintain consistency at this board range for optimal pocket entry.';
       } else {
-        return 'Target breakpoint around 32-38 feet. You have some flexibility with breakpoint timing. Adjust based on ball reaction and carry.';
+        return 'Target breakpoint at board 8-12. You have some flexibility with breakpoint location. Adjust based on ball reaction and pin carry.';
       }
     } else {
       // Long patterns
       if (volume === 'High' || volume === 'Very High') {
-        return 'Target breakpoint around 40-45 feet. Long heavy patterns require patience - the ball needs distance to store energy before making its move to the pocket.';
+        return 'Target breakpoint at board 12-15. Long heavy patterns require patience - aim for a controlled breakpoint further from the channel to maintain energy through the pins.';
       } else {
-        return 'Target breakpoint around 38-42 feet. Long patterns give you room to work with, but don\'t let the ball hook too early or you\'ll run out of energy.';
+        return 'Target breakpoint at board 10-13. Long patterns give you room to work with, but maintain a consistent breakpoint to avoid erratic ball motion.';
       }
     }
   }
