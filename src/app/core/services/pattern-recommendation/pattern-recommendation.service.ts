@@ -263,7 +263,7 @@ export class PatternRecommendationService {
       if (arsenal && arsenal.length > 0) {
         const arsenalMatch = this.findSimilarBallInArsenal(ball.name, arsenal, ballCategory);
         if (arsenalMatch) {
-          recommendation += ` | ✅ Consider your ${arsenalMatch.ball_name} - similar performance for ${patternType}`;
+          recommendation += ` | You have a similar ball in your arsenal: ${arsenalMatch.ball_name} - similar performance for ${patternType}`;
         }
       }
       
