@@ -23,6 +23,7 @@ import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { HiddenLeagueSelectionService } from 'src/app/core/services/hidden-league/hidden-league.service';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
+import { League, LeagueData, isLeagueObject } from 'src/app/core/models/league.model';
 
 @Component({
   selector: 'app-league-selector',
@@ -56,6 +57,17 @@ export class LeagueSelectorComponent {
   leaguesToDelete: string[] = [];
   leagueToChange = '';
   isModalOpen = false;
+  
+  // Helper method to get display name for leagues
+  getLeagueDisplayName(league: LeagueData): string {
+    return this.storageService.getLeagueDisplayName(league);
+  }
+  
+  // Helper method to get league value for form binding
+  getLeagueValue(league: LeagueData): string {
+    // For form binding, we always use the league name
+    return this.getLeagueDisplayName(league);
+  }
   leagues = computed(() => {
     const savedLeagues = this.storageService.leagues();
     this.hiddenLeagueSelectionService.selectionState();
@@ -65,7 +77,8 @@ export class LeagueSelectorComponent {
     }
     const savedSelection: Record<string, boolean> = savedJson ? JSON.parse(savedJson) : {};
     return savedLeagues.filter((league) => {
-      return savedSelection[league] !== false;
+      const leagueName = this.storageService.getLeagueDisplayName(league);
+      return savedSelection[leagueName] !== false;
     });
   });
   constructor(
@@ -143,11 +156,12 @@ export class LeagueSelectorComponent {
         header: 'Delete League',
         message: 'Select the leagues to delete',
         inputs: this.storageService.leagues().map((league) => {
+          const leagueName = this.getLeagueDisplayName(league);
           return {
-            name: league,
-            type: 'checkbox',
-            label: league,
-            value: league,
+            name: leagueName,
+            type: 'checkbox' as const,
+            label: leagueName,
+            value: leagueName,
           };
         }),
         buttons: [
