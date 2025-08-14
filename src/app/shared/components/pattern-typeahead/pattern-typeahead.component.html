@@ -32,9 +32,9 @@
           'green-card': getRatioValue(pattern?.ratio ?? '0') >= 8,
         }"
         lines="none">
-        <!-- <ion-avatar slot="start">
-            <img [src]="pattern.chartImageSrcVertical" alt="">
-        </ion-avatar> -->
+        <ion-avatar slot="start" *ngIf="pattern.chartImageSrc">
+          <img [src]="pattern.chartImageSrc" [alt]="'Pattern preview for ' + pattern.title">
+        </ion-avatar>
         <ion-checkbox
           [checked]="isPatternSelected(pattern.title || '')"
           [disabled]="!isPatternSelected(pattern.title || '') && !canSelectMorePatterns()"

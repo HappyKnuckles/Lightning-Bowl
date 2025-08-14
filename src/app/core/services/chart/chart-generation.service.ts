@@ -1092,6 +1092,48 @@ export class ChartGenerationService {
     return 'data:image/svg+xml;base64,' + encodedString;
   }
 
+  /**
+   * Generate a small pattern preview chart optimized for typeahead display
+   * @param pattern The pattern data
+   * @param previewSize Size for the preview (width and height will be the same)
+   * @param showPins Whether to show bowling pins in the preview
+   * @param showArrows Whether to show lane arrows in the preview
+   * @returns Data URI string for the SVG image
+   */
+  generatePatternPreviewDataUri(
+    pattern: Partial<Pattern>,
+    previewSize = 60,
+    showPins = true,
+    showArrows = false
+  ): string {
+    // Use much smaller viewBox for better visibility in preview
+    // Focus on the core pattern area: boards 1-38 and distances 0-60
+    // Use minimal margins to maximize pattern visibility
+    const margin = 2; // Much smaller margin for previews
+    const svgWidth = previewSize;
+    const svgHeight = previewSize;
+    const viewBoxWidth = LANE_WIDTH + margin; // ~41 units (much smaller)
+    const viewBoxHeight = 60 + margin; // ~62 units (focus on pattern area, not full lane)
+    const pinRadius = Math.max(0.5, previewSize / 60); // Smaller pins for preview
+    const pinStrokeWidth = Math.max(0.1, previewSize / 400); // Thinner stroke
+    const arrowSize = showArrows ? Math.max(2, previewSize / 30) : 0; // Smaller arrows
+
+    // Use the showPins parameter to control pin display
+    const actualPinRadius = showPins ? pinRadius : 0;
+
+    return this.generatePatternChartDataUri(
+      pattern,
+      svgWidth,
+      svgHeight,
+      viewBoxWidth,
+      viewBoxHeight,
+      actualPinRadius,
+      pinStrokeWidth,
+      arrowSize,
+      false // Always use vertical orientation for previews
+    );
+  }
+
   generateBallDistributionChart(
     ballDistributionChartCanvas: ElementRef,
     balls: Ball[],
