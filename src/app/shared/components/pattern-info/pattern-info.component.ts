@@ -2,6 +2,7 @@ import { Component, input, computed } from '@angular/core';
 import { Pattern } from '../../../core/models/pattern.model';
 import { RecommendationCriteria } from '../../../core/models/pattern-recommendation.model';
 import { PatternRecommendationService } from '../../../core/services/pattern-recommendation/pattern-recommendation.service';
+import { StorageService } from '../../../core/services/storage/storage.service';
 import { IonCol, IonRow, IonGrid, IonLabel, IonChip, IonText, IonItem, IonIcon, IonList, IonListHeader } from '@ionic/angular/standalone';
 
 @Component({
@@ -14,7 +15,10 @@ import { IonCol, IonRow, IonGrid, IonLabel, IonChip, IonText, IonItem, IonIcon, 
 export class PatternInfoComponent {
   pattern = input.required<Pattern>();
 
-  constructor(private recommendationService: PatternRecommendationService) {}
+  constructor(
+    private recommendationService: PatternRecommendationService,
+    private storageService: StorageService
+  ) {}
 
   recommendations = computed(() => {
     const criteria: RecommendationCriteria = {
@@ -23,6 +27,7 @@ export class PatternInfoComponent {
       volume: this.getVolume(),
       ratio: this.pattern().ratio,
       category: this.pattern().category,
+      arsenal: this.storageService.arsenal(),
     };
     return this.recommendationService.generateRecommendations(criteria);
   });
