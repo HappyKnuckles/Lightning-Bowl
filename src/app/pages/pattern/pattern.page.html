@@ -15,9 +15,15 @@
       showCancelButton="focus"
       debounce="300"></ion-searchbar>
   </ion-toolbar>
+  <app-sort-header 
+    #sortHeader
+    [sortOptions]="sortService.PATTERN_SORT_OPTIONS" 
+    [selectedSort]="currentSortOption"
+    (sortChanged)="onSortChanged($event)">
+  </app-sort-header>
 </ion-header>
 
-<ion-content [fullscreen]="true">
+<ion-content [fullscreen]="true" (ionScroll)="onScroll($event)">
   <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
@@ -59,7 +65,7 @@
       <ion-text class="no-game-text"> No patterns found! </ion-text>
     </ng-container>
     <ng-template #allPatterns>
-      @for (pattern of patterns; track pattern.url) {
+      @for (pattern of displayedPatterns; track pattern.url) {
         <ion-card
           [ngClass]="{
             'red-card': getRatioValue(pattern.ratio ?? '0') >= 1 && getRatioValue(pattern.ratio ?? '0') < 4,
@@ -111,7 +117,7 @@
 </ion-content>
 
 @if (!loadingService.isLoading()) {
-  @for (pattern of patterns; track pattern.url) {
+  @for (pattern of displayedPatterns; track pattern.url) {
     <ion-modal trigger="{{ pattern.url }}" #modal>
       <ng-template>
         <ion-header translucent="true">
