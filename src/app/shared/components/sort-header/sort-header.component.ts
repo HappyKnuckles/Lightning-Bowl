@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, ElementRef } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, ElementRef, OnChanges, SimpleChanges } from '@angular/core';
 import { 
   IonButton, 
   IonIcon, 
@@ -34,9 +34,10 @@ import { SortOption, BallSortField, PatternSortField } from 'src/app/core/models
     IonRadio,
   ],
 })
-export class SortHeaderComponent implements OnInit {
+export class SortHeaderComponent implements OnInit, OnChanges {
   @Input() sortOptions: SortOption<BallSortField | PatternSortField>[] = [];
   @Input() selectedSort?: SortOption<BallSortField | PatternSortField>;
+  @Input() storageKey = ''; // Key for localStorage persistence
   @Output() sortChanged = new EventEmitter<SortOption<BallSortField | PatternSortField>>();
 
   isOpen = false;
@@ -50,7 +51,45 @@ export class SortHeaderComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.loadSortFromStorage();
     this.updateSelectedSortKey();
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['selectedSort'] && !changes['selectedSort'].firstChange) {
+      this.updateSelectedSortKey();
+    }
+  }
+
+  private loadSortFromStorage() {
+    if (this.storageKey && typeof localStorage !== 'undefined') {
+      const saved = localStorage.getItem(this.storageKey);
+      if (saved) {
+        try {
+          const parsedSort = JSON.parse(saved);
+          // Find matching option in available sortOptions
+          const matchingOption = this.sortOptions.find(option => 
+            option.field === parsedSort.field && option.direction === parsedSort.direction
+          );
+          if (matchingOption) {
+            this.selectedSort = matchingOption;
+            // Emit the loaded sort option to parent component
+            setTimeout(() => {
+              this.sortChanged.emit(matchingOption);
+            });
+          }
+        } catch (error) {
+          // If parsing fails, ignore and use default
+          console.warn('Failed to parse saved sort option:', error);
+        }
+      }
+    }
+  }
+
+  private saveSortToStorage(sortOption: SortOption<BallSortField | PatternSortField>) {
+    if (this.storageKey && typeof localStorage !== 'undefined') {
+      localStorage.setItem(this.storageKey, JSON.stringify(sortOption));
+    }
   }
 
   private updateSelectedSortKey() {
@@ -70,6 +109,7 @@ export class SortHeaderComponent implements OnInit {
     // Direct option selection method that ensures responsiveness
     this.selectedSort = option;
     this.selectedSortKey = `${option.field}_${option.direction}`;
+    this.saveSortToStorage(option);
     this.sortChanged.emit(option);
     this.isOpen = false;
   }
@@ -82,6 +122,7 @@ export class SortHeaderComponent implements OnInit {
     if (selectedOption) {
       this.selectedSort = selectedOption;
       this.selectedSortKey = selectedKey;
+      this.saveSortToStorage(selectedOption);
       this.sortChanged.emit(selectedOption);
       this.isOpen = false;
     }
