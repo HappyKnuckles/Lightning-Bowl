@@ -1106,14 +1106,17 @@ export class ChartGenerationService {
     showPins = true,
     showArrows = false
   ): string {
-    // Use smaller, optimized parameters for preview
+    // Use properly scaled viewBox that encompasses the lane dimensions
+    // Lane dimensions: LANE_WIDTH = 39, LANE_HEIGHT = 70
+    // Add margins for proper display
+    const margin = 10;
     const svgWidth = previewSize;
     const svgHeight = previewSize;
-    const viewBoxWidth = previewSize * 2;
-    const viewBoxHeight = previewSize * 2;
-    const pinRadius = Math.max(1, previewSize / 30); // Scale pin size relative to preview size
-    const pinStrokeWidth = Math.max(0.3, previewSize / 200); // Scale stroke width
-    const arrowSize = showArrows ? Math.max(5, previewSize / 12) : 0; // Scale arrow size
+    const viewBoxWidth = LANE_WIDTH + (margin * 2); // ~59 units
+    const viewBoxHeight = LANE_HEIGHT + (margin * 2); // ~90 units
+    const pinRadius = Math.max(0.8, previewSize / 40); // Scale pin size relative to preview size
+    const pinStrokeWidth = Math.max(0.2, previewSize / 300); // Scale stroke width
+    const arrowSize = showArrows ? Math.max(3, previewSize / 20) : 0; // Scale arrow size
 
     // Use the showPins parameter to control pin display in a future enhancement
     const actualPinRadius = showPins ? pinRadius : 0;
