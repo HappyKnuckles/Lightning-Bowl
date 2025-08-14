@@ -29,6 +29,7 @@ describe('SpareDisplayComponent', () => {
       averageStrikesPerGame: 0,
       averageSparesPerGame: 0,
       averageOpensPerGame: 0,
+      markPercentage: 0,
       strikePercentage: 0,
       sparePercentage: 0,
       openPercentage: 0,
