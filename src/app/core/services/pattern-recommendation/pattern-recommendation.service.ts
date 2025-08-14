@@ -258,17 +258,38 @@ export class PatternRecommendationService {
     ballCategory: string
   ): void {
     recommendedBalls.forEach(ball => {
-      let recommendation = `${ball.name} (${ball.year}) - ${ball.description}`;
-      
       if (arsenal && arsenal.length > 0) {
         const arsenalMatch = this.findSimilarBallInArsenal(ball.name, arsenal, ballCategory);
         if (arsenalMatch) {
-          recommendation += ` | You have a similar ball in your arsenal: ${arsenalMatch.ball_name} - similar performance for ${patternType}`;
+          // Recommend the arsenal ball first with purpose description
+          const purpose = this.getBallPurpose(patternType, ballCategory);
+          const arsenalRecommendation = `${arsenalMatch.ball_name} - ${purpose}`;
+          const alternativeRecommendation = `Alternative: ${ball.name} (${ball.year}) - ${ball.description}`;
+          
+          recommendations.push(arsenalRecommendation);
+          recommendations.push(alternativeRecommendation);
+          return;
         }
       }
       
-      recommendations.push(recommendation);
+      // No arsenal match, recommend the suggested ball
+      recommendations.push(`${ball.name} (${ball.year}) - ${ball.description}`);
     });
+  }
+
+  private getBallPurpose(patternType: string, ballCategory: string): string {
+    if (ballCategory.includes('solid reactive') || ballCategory.includes('heavy oil')) {
+      return 'good for early games and heavy oil conditions';
+    } else if (ballCategory.includes('benchmark') || ballCategory.includes('versatile')) {
+      return 'good for transitions and medium oil conditions';
+    } else if (ballCategory.includes('urethane')) {
+      return 'good for control and challenging conditions';
+    } else if (ballCategory.includes('pearl reactive') || ballCategory.includes('light oil')) {
+      return 'good for late games and light oil conditions';
+    } else if (ballCategory.includes('strong reactive')) {
+      return 'good for heavy oil patterns and consistent control';
+    }
+    return `good for ${patternType} conditions`;
   }
 
   private findSimilarBallInArsenal(recommendedBallName: string, arsenal: Ball[], category: string): Ball | null {

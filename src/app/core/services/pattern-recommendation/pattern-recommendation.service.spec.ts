@@ -100,12 +100,18 @@ describe('PatternRecommendationService', () => {
     expect(recommendations).toBeDefined();
     expect(recommendations.specificBallRecommendations).toBeDefined();
     
-    // Should find the Phaze II in recommendations and mention the user's arsenal ball
-    const phaze2Recommendation = recommendations.specificBallRecommendations.find(rec => 
-      rec.includes('Storm Phaze II') && rec.includes('You have a similar ball in your arsenal:')
+    // Should find the Phaze II in recommendations and recommend the user's arsenal ball first
+    const arsenalRecommendation = recommendations.specificBallRecommendations.find(rec => 
+      rec.includes('Storm Phaze II') && rec.includes('good for')
     );
-    expect(phaze2Recommendation).toBeTruthy();
-    expect(phaze2Recommendation).toContain('You have a similar ball in your arsenal: Storm Phaze II');
+    expect(arsenalRecommendation).toBeTruthy();
+    expect(arsenalRecommendation).toContain('Storm Phaze II - good for early games and heavy oil conditions');
+    
+    // Should have an alternative recommendation
+    const alternativeRecommendation = recommendations.specificBallRecommendations.find(rec => 
+      rec.includes('Alternative:')
+    );
+    expect(alternativeRecommendation).toBeTruthy();
   });
 
   it('should work without arsenal data', () => {
@@ -124,7 +130,7 @@ describe('PatternRecommendationService', () => {
     expect(recommendations.specificBallRecommendations.length).toBeGreaterThan(0);
     
     // Should not contain arsenal match indicators when no arsenal is provided
-    const hasArsenalMatches = recommendations.specificBallRecommendations.some(rec => rec.includes('You have a similar ball in your arsenal:'));
+    const hasArsenalMatches = recommendations.specificBallRecommendations.some(rec => rec.includes('Alternative:'));
     expect(hasArsenalMatches).toBeFalsy();
   });
 });
