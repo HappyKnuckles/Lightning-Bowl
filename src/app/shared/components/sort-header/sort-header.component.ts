@@ -43,7 +43,6 @@ export class SortHeaderComponent implements OnInit {
   selectedSortKey = '';
 
   constructor(
-    private popoverController: PopoverController,
   ) {
     addIcons({ swapVertical });
   }
@@ -95,7 +94,6 @@ export class SortHeaderComponent implements OnInit {
     this.selectedSortKey = `${option.field}_${option.direction}`;
     this.saveSortToStorage(option);
     this.sortChanged.emit(option);
-    this.popoverController.dismiss();
   }
 
   onSortChange(selectedKey: string) {
@@ -108,7 +106,6 @@ export class SortHeaderComponent implements OnInit {
       this.selectedSortKey = selectedKey;
       this.saveSortToStorage(selectedOption);
       this.sortChanged.emit(selectedOption);
-      this.popoverController.dismiss();
     }
   }
 
