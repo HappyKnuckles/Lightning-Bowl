@@ -2,9 +2,10 @@
   <ion-toolbar>
     <ion-title>Pattern Library</ion-title>
     <ion-buttons slot="end" class="action-sheet">
-      <app-sort-header 
+      <app-sort-header
         #sortHeader
-        [sortOptions]="sortService.PATTERN_SORT_OPTIONS" 
+        [id]="'pattern-sort-header'"
+        [sortOptions]="sortService.PATTERN_SORT_OPTIONS"
         [selectedSort]="currentSortOption"
         [storageKey]="'patterns-sort-option'"
         (sortChanged)="onSortChanged($event)">

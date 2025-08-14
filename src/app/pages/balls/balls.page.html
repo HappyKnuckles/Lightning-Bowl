@@ -8,9 +8,10 @@
       </ion-button>
     </ion-buttons>
     <ion-buttons slot="end" class="action-sheet">
-      <app-sort-header 
+      <app-sort-header
         #sortHeader
-        [sortOptions]="sortService.BALL_SORT_OPTIONS" 
+        [id]="'ball-sort-header'"
+        [sortOptions]="sortService.BALL_SORT_OPTIONS"
         [selectedSort]="currentSortOption"
         [storageKey]="'balls-sort-option'"
         (sortChanged)="onSortChanged($event)">

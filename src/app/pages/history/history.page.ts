@@ -1,4 +1,4 @@
-import { Component, ViewChild, signal } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import {
   AlertController,
   IonHeader,
@@ -42,8 +42,6 @@ import { GameFilterActiveComponent } from 'src/app/shared/components/game-filter
 import { GameFilterComponent } from 'src/app/shared/components/game-filter/game-filter.component';
 import { GameComponent } from 'src/app/shared/components/game/game.component';
 import { SortHeaderComponent } from 'src/app/shared/components/sort-header/sort-header.component';
-import { GameSortService } from 'src/app/core/services/game-sort/game-sort.service';
-import { GameSortOption, GameSortField, SortDirection, SortOption, BallSortField, PatternSortField } from 'src/app/core/models/sort.model';
 
 @Component({
   selector: 'app-history',
@@ -73,13 +71,17 @@ import { GameSortOption, GameSortField, SortDirection, SortOption, BallSortField
 })
 export class HistoryPage {
   @ViewChild('accordionGroup') accordionGroup!: IonAccordionGroup;
-  
-  gameSortOptions = this.gameSortService.gameSortOptions;
-  currentSortOption: GameSortOption = {
-    field: GameSortField.DATE,
-    direction: SortDirection.DESC,
-    label: 'Date (Newest First)'
-  };
+  @ViewChild(IonContent, { static: false }) content!: IonContent;
+
+  // currentSortOption: GameSortOption = {
+  //   field: GameSortField.DATE,
+  //   direction: SortDirection.DESC,
+  //   label: 'Date (Newest First)'
+  // };
+
+  // get displayedGames() {
+  //   return this.sortService.sortGames(this.gameFilterService.filteredGames(), this.currentSortOption);
+  // }
 
   constructor(
     private alertController: AlertController,
@@ -90,7 +92,7 @@ export class HistoryPage {
     private modalCtrl: ModalController,
     public gameFilterService: GameFilterService,
     private excelService: ExcelService,
-    private gameSortService: GameSortService,
+    // public sortService: SortService,
   ) {
     addIcons({
       cloudUploadOutline,
@@ -105,14 +107,14 @@ export class HistoryPage {
     });
   }
 
-  onSortChanged(sortOption: SortOption<BallSortField | PatternSortField | GameSortField>): void {
-    // Type guard to ensure we're working with GameSortOption
-    if (Object.values(GameSortField).includes(sortOption.field as GameSortField)) {
-      const gameSortOption = sortOption as GameSortOption;
-      this.currentSortOption = gameSortOption;
-      this.gameSortService.updateSelectedSort(gameSortOption);
-    }
-  }
+  //  onSortChanged(sortOption: any): void {
+  //     this.currentSortOption = sortOption as GameSortOption;
+  //     if (this.content) {
+  //       setTimeout(() => {
+  //         this.content.scrollToTop(300);
+  //       }, 100);
+  //     }
+  //   }
 
   async openFilterModal() {
     const modal = await this.modalCtrl.create({
