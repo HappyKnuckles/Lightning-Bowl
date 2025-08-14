@@ -8,16 +8,16 @@
       </ion-button>
     </ion-buttons>
     <ion-buttons slot="end" class="action-sheet">
-      <ion-button fill="clear" (click)="openFilterModal()">
-        <ion-icon slot="icon-only" name="filter-outline"></ion-icon>
-        <ion-text class="filter-indicator" *ngIf="isFilterActive()">{{ ballFilterService.activeFilterCount() }}</ion-text>
-      </ion-button>
       <app-sort-header 
         #sortHeader
         [sortOptions]="sortService.BALL_SORT_OPTIONS" 
         [selectedSort]="currentSortOption"
         (sortChanged)="onSortChanged($event)">
       </app-sort-header>
+      <ion-button fill="clear" (click)="openFilterModal()">
+        <ion-icon slot="icon-only" name="filter-outline"></ion-icon>
+        <ion-text class="filter-indicator" *ngIf="isFilterActive()">{{ ballFilterService.activeFilterCount() }}</ion-text>
+      </ion-button>
     </ion-buttons>
   </ion-toolbar>
   <ion-toolbar>
