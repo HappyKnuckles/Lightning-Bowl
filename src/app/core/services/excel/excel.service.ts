@@ -173,7 +173,11 @@ export class ExcelService {
           isPerfect: (row['Perfect'] as string)?.trim().toLowerCase() === 'true',
           isSeries: (row['Series'] as string)?.trim().toLowerCase() === 'true',
           seriesId: row['Series ID'] as string,
-          patterns: (row['Patterns'] as string)?.trim() ? (row['Patterns'] as string).split(', ').slice(0, 2) : [],
+          patterns: (row['Patterns'] as string)?.trim() 
+            ? (row['Patterns'] as string).split(', ').slice(0, 2) 
+            : (row['Pattern'] as string)?.trim() 
+              ? (row['Pattern'] as string).split(', ').slice(0, 2) 
+              : [],
           balls: (row['Balls'] as string)?.trim() ? (row['Balls'] as string).split(', ') : [],
           note: row['Notes'] as string,
         };
