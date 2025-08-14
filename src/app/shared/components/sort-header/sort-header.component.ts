@@ -92,10 +92,10 @@ export class SortHeaderComponent implements OnInit {
   }
 
   onPopoverWillPresent() {
-    // Use setTimeout to ensure the popover content is rendered
+    // Use setTimeout to ensure the popover content is fully rendered and measured
     setTimeout(() => {
       this.scrollToSelectedItem();
-    }, 100);
+    }, 200);
   }
 
   private scrollToSelectedItem() {
@@ -103,42 +103,92 @@ export class SortHeaderComponent implements OnInit {
       return;
     }
 
+    const listElement = this.sortListRef.nativeElement;
+    let selectedItem: HTMLElement | null = null;
+
     try {
-      const listElement = this.sortListRef.nativeElement;
-      const selectedItem = listElement.querySelector(`ion-item:has(ion-radio[value="${this.selectedSortKey}"])`);
+      // Try using modern :has() selector first
+      selectedItem = listElement.querySelector(`ion-item:has(ion-radio[value="${this.selectedSortKey}"])`);
+    } catch (error) {
+      // :has() not supported, use fallback
+      console.debug('Using fallback element selection method');
+    }
+
+    // Fallback method if :has() failed or not supported
+    if (!selectedItem) {
+      const radioElements = Array.from(listElement.querySelectorAll('ion-radio')) as HTMLIonRadioElement[];
+      for (const radio of radioElements) {
+        if (radio.getAttribute('value') === this.selectedSortKey) {
+          selectedItem = radio.closest('ion-item') as HTMLElement;
+          break;
+        }
+      }
+    }
+
+    if (selectedItem) {
+      // Find the scroll container (typically the popover content)
+      const scrollContainer = this.findScrollContainer(selectedItem);
       
-      if (selectedItem) {
+      if (scrollContainer) {
+        this.scrollContainerToShowItem(scrollContainer, selectedItem);
+      } else {
+        // Fallback to scrollIntoView if we can't find the proper container
         selectedItem.scrollIntoView({
           behavior: 'smooth',
-          block: 'nearest'
+          block: 'center',
+          inline: 'nearest'
         });
       }
-    } catch (error) {
-      // Fallback approach if querySelector with :has() is not supported
-      console.warn('Primary scroll method failed, using fallback:', error);
-      this.scrollToSelectedItemFallback();
     }
   }
 
-  private scrollToSelectedItemFallback() {
-    if (!this.sortListRef || !this.selectedSortKey) {
-      return;
-    }
-
-    const listElement = this.sortListRef.nativeElement;
-    const radioElements = Array.from(listElement.querySelectorAll('ion-radio')) as HTMLIonRadioElement[];
+  private findScrollContainer(element: HTMLElement): HTMLElement | null {
+    let current = element.parentElement;
     
-    for (const radio of radioElements) {
-      if (radio.getAttribute('value') === this.selectedSortKey) {
-        const ionItem = radio.closest('ion-item') as HTMLElement;
-        if (ionItem) {
-          ionItem.scrollIntoView({
-            behavior: 'smooth',
-            block: 'nearest'
-          });
-        }
+    while (current) {
+      const style = getComputedStyle(current);
+      const overflow = style.overflow || style.overflowY;
+      
+      // Look for scrollable containers or ion-content
+      if (overflow === 'auto' || overflow === 'scroll' || current.tagName.toLowerCase() === 'ion-content') {
+        return current;
+      }
+      
+      // Stop at popover boundary
+      if (current.tagName.toLowerCase() === 'ion-popover') {
         break;
       }
+      
+      current = current.parentElement;
+    }
+    
+    return null;
+  }
+
+  private scrollContainerToShowItem(container: HTMLElement, item: HTMLElement) {
+    const containerRect = container.getBoundingClientRect();
+    const itemRect = item.getBoundingClientRect();
+    
+    const itemTop = itemRect.top - containerRect.top + container.scrollTop;
+    const itemBottom = itemTop + itemRect.height;
+    const containerTop = container.scrollTop;
+    const containerBottom = containerTop + containerRect.height;
+    
+    let scrollTo: number | undefined;
+    
+    if (itemTop < containerTop) {
+      // Item is above visible area
+      scrollTo = itemTop - 10; // Add small margin
+    } else if (itemBottom > containerBottom) {
+      // Item is below visible area  
+      scrollTo = itemBottom - containerRect.height + 10; // Add small margin
+    }
+    
+    if (scrollTo !== undefined) {
+      container.scrollTo({
+        top: Math.max(0, scrollTo),
+        behavior: 'smooth'
+      });
     }
   }
 }
