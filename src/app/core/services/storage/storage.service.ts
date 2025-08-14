@@ -371,6 +371,53 @@ export class StorageService {
     }
   }
 
+  async copyBallToArsenal(ball: Ball, fromArsenal: string, toArsenal: string) {
+    try {
+      // Copy the ball to the target arsenal
+      await this.saveBallToArsenal(ball, toArsenal);
+    } catch (error) {
+      console.error('Error copying ball to arsenal:', error);
+      throw error;
+    }
+  }
+
+  async moveBallToArsenal(ball: Ball, fromArsenal: string, toArsenal: string) {
+    try {
+      // Add to target arsenal first
+      await this.saveBallToArsenal(ball, toArsenal);
+      
+      // Then remove from source arsenal (only if it's not the same arsenal)
+      if (fromArsenal !== toArsenal) {
+        await this.removeFromArsenal(ball, fromArsenal);
+      }
+    } catch (error) {
+      console.error('Error moving ball to arsenal:', error);
+      throw error;
+    }
+  }
+
+  async copyBallsToArsenal(balls: Ball[], fromArsenal: string, toArsenal: string) {
+    try {
+      for (const ball of balls) {
+        await this.copyBallToArsenal(ball, fromArsenal, toArsenal);
+      }
+    } catch (error) {
+      console.error('Error copying balls to arsenal:', error);
+      throw error;
+    }
+  }
+
+  async moveBallsToArsenal(balls: Ball[], fromArsenal: string, toArsenal: string) {
+    try {
+      for (const ball of balls) {
+        await this.moveBallToArsenal(ball, fromArsenal, toArsenal);
+      }
+    } catch (error) {
+      console.error('Error moving balls to arsenal:', error);
+      throw error;
+    }
+  }
+
   async editArsenal(newArsenal: string, oldArsenal: string) {
     try {
       // Get all balls from old arsenal

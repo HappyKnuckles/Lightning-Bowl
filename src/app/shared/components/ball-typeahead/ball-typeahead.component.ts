@@ -155,18 +155,18 @@ export class BallTypeaheadComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Multiple arsenals, ask user to select
+    // Multiple arsenals, ask user to select (support multiple selections)
     const inputs = arsenals.map(arsenal => ({
-      name: 'arsenal',
-      type: 'radio' as const,
+      name: 'arsenals',
+      type: 'checkbox' as const,
       label: arsenal,
       value: arsenal,
       checked: arsenal === this.storageService.currentArsenal()
     }));
 
     const alert = await this.alertController.create({
-      header: 'Select Arsenal',
-      message: 'Which arsenal would you like to add these balls to?',
+      header: 'Select Arsenals',
+      message: 'Which arsenal(s) would you like to add these balls to? You can select multiple.',
       inputs,
       buttons: [
         {
@@ -175,29 +175,47 @@ export class BallTypeaheadComponent implements OnInit, OnDestroy {
         },
         {
           text: 'Add',
-          handler: async (selectedArsenal) => {
-            if (selectedArsenal) {
-              // Save balls to selected arsenal
-              let successCount = 0;
-              let errorCount = 0;
+          handler: async (selectedArsenals: string[]) => {
+            if (selectedArsenals && selectedArsenals.length > 0) {
+              let totalSuccessCount = 0;
+              let totalErrorCount = 0;
+              const addedToArsenals: string[] = [];
               
-              for (const ball of this.selectedBalls) {
-                try {
-                  await this.storageService.saveBallToArsenal(ball, selectedArsenal);
-                  successCount++;
-                } catch (error) {
-                  console.error(`Error saving ball ${ball.ball_name}:`, error);
-                  errorCount++;
+              // Save balls to each selected arsenal
+              for (const arsenalName of selectedArsenals) {
+                let arsenalSuccessCount = 0;
+                let arsenalErrorCount = 0;
+                
+                for (const ball of this.selectedBalls) {
+                  try {
+                    await this.storageService.saveBallToArsenal(ball, arsenalName);
+                    arsenalSuccessCount++;
+                    totalSuccessCount++;
+                  } catch (error) {
+                    console.error(`Error saving ball ${ball.ball_name} to ${arsenalName}:`, error);
+                    arsenalErrorCount++;
+                    totalErrorCount++;
+                  }
+                }
+                
+                if (arsenalSuccessCount > 0) {
+                  addedToArsenals.push(arsenalName);
                 }
               }
               
-              if (successCount > 0) {
-                const ballNames = this.selectedBalls.slice(0, Math.min(successCount, this.selectedBalls.length)).map(b => b.ball_name).join(', ');
-                this.toastService.showToast(`${successCount} ball(s) added to ${selectedArsenal}`, 'checkmark-outline');
+              // Show success message
+              if (totalSuccessCount > 0) {
+                const arsenalList = addedToArsenals.join(', ');
+                const ballCount = this.selectedBalls.length;
+                const message = selectedArsenals.length === 1 
+                  ? `${ballCount} ball(s) added to ${arsenalList}`
+                  : `${ballCount} ball(s) added to ${addedToArsenals.length} arsenal(s): ${arsenalList}`;
+                this.toastService.showToast(message, 'checkmark-outline');
               }
               
-              if (errorCount > 0) {
-                this.toastService.showToast(`Failed to add ${errorCount} ball(s)`, 'bug', true);
+              // Show error message if any
+              if (totalErrorCount > 0) {
+                this.toastService.showToast(`Failed to add ${totalErrorCount} ball(s)`, 'bug', true);
               }
               
               this.modalCtrl.dismiss();

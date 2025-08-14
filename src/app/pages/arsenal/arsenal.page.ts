@@ -38,8 +38,8 @@ import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { Ball } from 'src/app/core/models/ball.model';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { addIcons } from 'ionicons';
-import { chevronBack, add, openOutline, trashOutline, ellipsisVerticalOutline } from 'ionicons/icons';
-import { AlertController, ItemReorderCustomEvent, ModalController } from '@ionic/angular';
+import { chevronBack, add, openOutline, trashOutline, ellipsisVerticalOutline, copyOutline, swapHorizontalOutline } from 'ionicons/icons';
+import { AlertController, ItemReorderCustomEvent, ModalController, ActionSheetController } from '@ionic/angular';
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import { ImpactStyle } from '@capacitor/haptics';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
@@ -119,8 +119,9 @@ export class ArsenalPage implements OnInit {
     public modalCtrl: ModalController,
     private ballService: BallService,
     private chartGenerationService: ChartGenerationService,
+    private actionSheetController: ActionSheetController,
   ) {
-    addIcons({ add, ellipsisVerticalOutline, trashOutline, chevronBack, openOutline });
+    addIcons({ add, ellipsisVerticalOutline, trashOutline, chevronBack, openOutline, copyOutline, swapHorizontalOutline });
     effect(() => {
       if (this.selectedSegment() === 'compare') {
         this.generateBallDistributionChart();
@@ -221,6 +222,143 @@ export class ArsenalPage implements OnInit {
     } catch (error) {
       console.error('Error saving balls to arsenal:', error);
       this.toastService.showToast(ToastMessages.ballSaveError, 'bug', true);
+    }
+  }
+
+  async showBallOptionsActionSheet(ball: Ball): Promise<void> {
+    try {
+      const availableArsenals = this.storageService.arsenals().filter(a => a !== this.storageService.currentArsenal());
+      
+      if (availableArsenals.length === 0) {
+        this.toastService.showToast('No other arsenals available', 'information-circle-outline');
+        return;
+      }
+
+      const actionSheet = await this.actionSheetController.create({
+        header: `${ball.ball_name} Options`,
+        buttons: [
+          {
+            text: 'Copy to Another Arsenal',
+            icon: 'copy-outline',
+            handler: () => {
+              this.showArsenalSelection(ball, 'copy');
+            }
+          },
+          {
+            text: 'Move to Another Arsenal',
+            icon: 'swap-horizontal-outline',
+            handler: () => {
+              this.showArsenalSelection(ball, 'move');
+            }
+          },
+          {
+            text: 'Remove from Arsenal',
+            icon: 'trash-outline',
+            role: 'destructive',
+            handler: () => {
+              this.removeFromArsenal(ball);
+            }
+          },
+          {
+            text: 'Cancel',
+            icon: 'close',
+            role: 'cancel'
+          }
+        ]
+      });
+
+      await actionSheet.present();
+    } catch (error) {
+      console.error('Error showing ball options:', error);
+      this.toastService.showToast('Error showing options', 'bug', true);
+    }
+  }
+
+  async showArsenalSelection(ball: Ball, operation: 'copy' | 'move'): Promise<void> {
+    try {
+      const currentArsenal = this.storageService.currentArsenal();
+      const availableArsenals = this.storageService.arsenals().filter(a => a !== currentArsenal);
+      
+      if (availableArsenals.length === 0) {
+        this.toastService.showToast('No other arsenals available', 'information-circle-outline');
+        return;
+      }
+
+      const operationText = operation === 'copy' ? 'Copy' : 'Move';
+      const inputs = availableArsenals.map(arsenal => ({
+        name: 'arsenals',
+        type: 'checkbox' as const,
+        label: arsenal,
+        value: arsenal
+      }));
+
+      const alert = await this.alertController.create({
+        header: `${operationText} Ball`,
+        message: `Select which arsenal(s) to ${operation.toLowerCase()} "${ball.ball_name}" to:`,
+        inputs,
+        buttons: [
+          {
+            text: 'Cancel',
+            role: 'cancel'
+          },
+          {
+            text: operationText,
+            handler: async (selectedArsenals: string[]) => {
+              if (selectedArsenals && selectedArsenals.length > 0) {
+                await this.performBallOperation(ball, selectedArsenals, operation);
+              }
+            }
+          }
+        ]
+      });
+
+      await alert.present();
+    } catch (error) {
+      console.error(`Error showing arsenal selection for ${operation}:`, error);
+      this.toastService.showToast(`Error showing ${operation} options`, 'bug', true);
+    }
+  }
+
+  async performBallOperation(ball: Ball, targetArsenals: string[], operation: 'copy' | 'move'): Promise<void> {
+    try {
+      const currentArsenal = this.storageService.currentArsenal();
+      let successCount = 0;
+      let errorCount = 0;
+      const successfulArsenals: string[] = [];
+
+      for (const targetArsenal of targetArsenals) {
+        try {
+          if (operation === 'copy') {
+            await this.storageService.copyBallToArsenal(ball, currentArsenal, targetArsenal);
+          } else {
+            await this.storageService.moveBallToArsenal(ball, currentArsenal, targetArsenal);
+          }
+          successCount++;
+          successfulArsenals.push(targetArsenal);
+        } catch (error) {
+          console.error(`Error ${operation}ing ball to ${targetArsenal}:`, error);
+          errorCount++;
+        }
+      }
+
+      // Show success message
+      if (successCount > 0) {
+        const operationPastTense = operation === 'copy' ? 'copied' : 'moved';
+        const arsenalList = successfulArsenals.join(', ');
+        const message = targetArsenals.length === 1 
+          ? `Ball ${operationPastTense} to ${arsenalList}`
+          : `Ball ${operationPastTense} to ${successCount} arsenal(s): ${arsenalList}`;
+        this.toastService.showToast(message, 'checkmark-outline');
+      }
+
+      // Show error message if any
+      if (errorCount > 0) {
+        this.toastService.showToast(`Failed to ${operation} to ${errorCount} arsenal(s)`, 'bug', true);
+      }
+
+    } catch (error) {
+      console.error(`Error performing ${operation} operation:`, error);
+      this.toastService.showToast(`Error ${operation}ing ball`, 'bug', true);
     }
   }
 
