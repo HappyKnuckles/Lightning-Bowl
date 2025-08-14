@@ -14,7 +14,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { addIcons } from 'ionicons';
 import { swapVertical } from 'ionicons/icons';
-import { SortOption, BallSortField, PatternSortField } from 'src/app/core/models/sort.model';
+import { SortOption, BallSortField, PatternSortField, GameSortField } from 'src/app/core/models/sort.model';
 
 @Component({
   selector: 'app-sort-header',
@@ -35,10 +35,10 @@ import { SortOption, BallSortField, PatternSortField } from 'src/app/core/models
   ],
 })
 export class SortHeaderComponent implements OnInit {
-  sortOptions = model.required<SortOption<BallSortField | PatternSortField>[]>();
-  selectedSort = model.required<SortOption<BallSortField | PatternSortField>>();
+  sortOptions = model.required<SortOption<BallSortField | PatternSortField | GameSortField>[]>();
+  selectedSort = model.required<SortOption<BallSortField | PatternSortField | GameSortField>>();
   @Input() storageKey = '';
-  @Output() sortChanged = new EventEmitter<SortOption<BallSortField | PatternSortField>>();
+  @Output() sortChanged = new EventEmitter<SortOption<BallSortField | PatternSortField | GameSortField>>();
 
   selectedSortKey = '';
 
@@ -77,7 +77,7 @@ export class SortHeaderComponent implements OnInit {
     }
   }
 
-  private saveSortToStorage(sortOption: SortOption<BallSortField | PatternSortField>) {
+  private saveSortToStorage(sortOption: SortOption<BallSortField | PatternSortField | GameSortField>) {
     if (this.storageKey && typeof localStorage !== 'undefined') {
       localStorage.setItem(this.storageKey, JSON.stringify(sortOption));
     }
@@ -89,7 +89,7 @@ export class SortHeaderComponent implements OnInit {
     }
   }
 
-  selectOption(option: SortOption<BallSortField | PatternSortField>) {
+  selectOption(option: SortOption<BallSortField | PatternSortField | GameSortField>) {
     this.selectedSort.set(option);
     this.selectedSortKey = `${option.field}_${option.direction}`;
     this.saveSortToStorage(option);
@@ -109,7 +109,7 @@ export class SortHeaderComponent implements OnInit {
     }
   }
 
-  getSortKey(option: SortOption<BallSortField | PatternSortField>): string {
+  getSortKey(option: SortOption<BallSortField | PatternSortField | GameSortField>): string {
     return `${option.field}_${option.direction}`;
   }
 }

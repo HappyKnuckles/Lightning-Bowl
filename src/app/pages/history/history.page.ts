@@ -1,4 +1,4 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component, ViewChild, signal } from '@angular/core';
 import {
   AlertController,
   IonHeader,
@@ -25,6 +25,7 @@ import {
   documentTextOutline,
   filterOutline,
   medalOutline,
+  swapVertical,
 } from 'ionicons/icons';
 import { NgIf, DatePipe } from '@angular/common';
 import { ImpactStyle } from '@capacitor/haptics';
@@ -40,6 +41,9 @@ import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { GameFilterActiveComponent } from 'src/app/shared/components/game-filter-active/game-filter-active.component';
 import { GameFilterComponent } from 'src/app/shared/components/game-filter/game-filter.component';
 import { GameComponent } from 'src/app/shared/components/game/game.component';
+import { SortHeaderComponent } from 'src/app/shared/components/sort-header/sort-header.component';
+import { GameSortService } from 'src/app/core/services/game-sort/game-sort.service';
+import { GameSortOption, GameSortField, SortDirection, SortOption, BallSortField, PatternSortField } from 'src/app/core/models/sort.model';
 
 @Component({
   selector: 'app-history',
@@ -64,10 +68,19 @@ import { GameComponent } from 'src/app/shared/components/game/game.component';
     FormsModule,
     GameComponent,
     GameFilterActiveComponent,
+    SortHeaderComponent,
   ],
 })
 export class HistoryPage {
   @ViewChild('accordionGroup') accordionGroup!: IonAccordionGroup;
+  
+  gameSortOptions = this.gameSortService.gameSortOptions;
+  currentSortOption: GameSortOption = {
+    field: GameSortField.DATE,
+    direction: SortDirection.DESC,
+    label: 'Date (Newest First)'
+  };
+
   constructor(
     private alertController: AlertController,
     private toastService: ToastService,
@@ -77,6 +90,7 @@ export class HistoryPage {
     private modalCtrl: ModalController,
     public gameFilterService: GameFilterService,
     private excelService: ExcelService,
+    private gameSortService: GameSortService,
   ) {
     addIcons({
       cloudUploadOutline,
@@ -87,7 +101,17 @@ export class HistoryPage {
       shareOutline,
       documentTextOutline,
       medalOutline,
+      swapVertical,
     });
+  }
+
+  onSortChanged(sortOption: SortOption<BallSortField | PatternSortField | GameSortField>): void {
+    // Type guard to ensure we're working with GameSortOption
+    if (Object.values(GameSortField).includes(sortOption.field as GameSortField)) {
+      const gameSortOption = sortOption as GameSortOption;
+      this.currentSortOption = gameSortOption;
+      this.gameSortService.updateSelectedSort(gameSortOption);
+    }
   }
 
   async openFilterModal() {

@@ -26,6 +26,15 @@ export enum PatternSortField {
   PUMP = 'pump',
 }
 
+export enum GameSortField {
+  TOTAL_SCORE = 'totalScore',
+  DATE = 'date',
+  LEAGUE = 'league',
+  IS_PRACTICE = 'isPractice',
+  IS_CLEAN = 'isClean',
+  IS_PERFECT = 'isPerfect',
+}
+
 export interface SortOption<T> {
   field: T;
   direction: SortDirection;
@@ -34,3 +43,4 @@ export interface SortOption<T> {
 
 export type BallSortOption = SortOption<BallSortField>;
 export type PatternSortOption = SortOption<PatternSortField>;
+export type GameSortOption = SortOption<GameSortField>;
