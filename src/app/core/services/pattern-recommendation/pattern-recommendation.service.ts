@@ -192,8 +192,8 @@ export class PatternRecommendationService {
     const recommendations: string[] = [];
     const usedArsenalBalls = new Set<string>();
 
-    // Define the three ball categories needed
-    const ballCategories = this.getRequiredBallCategories(criteria);
+    // Define the three ball categories needed based on pattern transition strategy
+    const ballCategories = this.getPatternSpecificBallCategories(criteria);
     
     ballCategories.forEach(category => {
       const { categoryName, ballOptions, purpose } = category;
@@ -219,73 +219,137 @@ export class PatternRecommendationService {
       }
     });
 
-    // Add arsenal note
-    recommendations.push(`Arsenal Note: These three balls provide complete coverage for lane transition - start with the heavy oil ball and move to lighter options as the pattern breaks down`);
+    // Add pattern-specific arsenal note
+    const transitionNote = this.getTransitionNote(criteria);
+    recommendations.push(`Arsenal Note: ${transitionNote}`);
 
     return recommendations;
   }
 
-  private getRequiredBallCategories(criteria: RecommendationCriteria) {
+  private getPatternSpecificBallCategories(criteria: RecommendationCriteria) {
     const { volume, difficulty, length } = criteria;
     
-    // Always recommend a 3-ball strategy: Heavy Oil, Benchmark/Medium, Light Oil
+    // Build a flexible 3-ball strategy based on pattern characteristics
     const categories = [];
 
-    // Heavy oil ball
-    if (volume === 'Very High' || volume === 'High') {
+    // Determine starting ball strategy based on pattern conditions
+    if (volume === 'Light' && (length === 'Short' || length === 'Medium')) {
+      // Light oil patterns: Start with weaker/control balls first
       categories.push({
-        categoryName: 'solid reactive',
-        purpose: 'good for early games and heavy oil conditions',
+        categoryName: 'control',
+        purpose: 'good to start with on light oil patterns',
         ballOptions: [
-          { name: 'Storm Phaze II', year: '2018', description: 'Proven strong solid reactive for heavy oil patterns' },
-          { name: 'Motiv Jackal Ghost', year: '2021', description: 'Modern aggressive asymmetric with strong backend' },
-          { name: 'Brunswick Kingpin Max', year: '2020', description: 'Strong continuous motion through heavy oil' }
-        ]
-      });
-    } else {
-      categories.push({
-        categoryName: 'strong reactive',
-        purpose: 'good for early games and heavier oil sections',
-        ballOptions: [
-          { name: 'Storm IQ Tour Emerald', year: '2023', description: 'Latest benchmark ball technology' },
-          { name: 'Hammer Black Widow 2.0', year: '2019', description: 'Reliable strong option with proven track record' },
-          { name: 'Columbia 300 Eruption Pro', year: '2017', description: 'Effective strong reactive ball' }
-        ]
-      });
-    }
-
-    // Benchmark/Transition ball
-    categories.push({
-      categoryName: 'benchmark',
-      purpose: 'good for transitions and medium oil conditions',
-      ballOptions: [
-        { name: 'Storm IQ Tour', year: '2020', description: 'Modern benchmark ball for medium patterns' },
-        { name: 'Roto Grip Hustle Ink', year: '2019', description: 'Versatile medium oil workhorse' },
-        { name: 'DV8 Misfit', year: '2023', description: 'New release with controlled backend reaction' }
-      ]
-    });
-
-    // Light oil/Control ball
-    if (difficulty === 'Hard' || volume === 'Light') {
-      categories.push({
-        categoryName: 'urethane',
-        purpose: 'good for control and challenging conditions',
-        ballOptions: [
-          { name: 'Storm Mix', year: '2022', description: 'Modern urethane for controlled play' },
-          { name: 'Hammer Purple Pearl Urethane', year: '2020', description: 'Predictable motion on challenging conditions' },
+          { name: 'Storm Mix', year: '2022', description: 'Modern urethane for early control on light oil' },
+          { name: 'Hammer Purple Pearl Urethane', year: '2020', description: 'Predictable motion for light conditions' },
           { name: 'Brunswick T-Zone', year: 'Classic', description: 'Reliable polyester for straight shots' }
         ]
       });
-    } else {
+
       categories.push({
-        categoryName: 'pearl reactive',
-        purpose: 'good for late games and light oil conditions',
+        categoryName: 'benchmark',
+        purpose: 'good for when oil gets pushed back and conditions change',
         ballOptions: [
-          { name: 'Storm Tropical Breeze', year: '2021', description: 'Recent light oil reactive technology' },
-          { name: 'Motiv Freestyle Rush', year: '2023', description: 'New pearl reactive for light conditions' },
-          { name: 'Columbia 300 Scout Reactive', year: '2022', description: 'Entry-level reactive with modern coverstock' }
+          { name: 'Storm IQ Tour', year: '2020', description: 'Modern benchmark for medium transition' },
+          { name: 'Roto Grip Hustle Ink', year: '2019', description: 'Versatile for changing conditions' },
+          { name: 'DV8 Misfit', year: '2023', description: 'Controlled backend for transitions' }
         ]
       });
+
+      categories.push({
+        categoryName: 'stronger reactive',
+        purpose: 'good for later games when more backend reaction is needed',
+        ballOptions: [
+          { name: 'Storm IQ Tour Emerald', year: '2023', description: 'Latest technology for increased hook' },
+          { name: 'Motiv Jackal Ghost', year: '2021', description: 'Strong backend when conditions open up' },
+          { name: 'Hammer Black Widow 2.0', year: '2019', description: 'Proven strong option for late games' }
+        ]
+      });
+
+    } else if (volume === 'Very High' || volume === 'High') {
+      // Heavy oil patterns: Start with strong balls, then move to lighter options
+      categories.push({
+        categoryName: 'solid reactive',
+        purpose: 'good to start with on heavy oil patterns',
+        ballOptions: [
+          { name: 'Storm Phaze II', year: '2018', description: 'Proven strong solid reactive for heavy oil start' },
+          { name: 'Motiv Jackal Ghost', year: '2021', description: 'Modern aggressive asymmetric for heavy conditions' },
+          { name: 'Brunswick Kingpin Max', year: '2020', description: 'Strong continuous motion through heavy oil' }
+        ]
+      });
+
+      categories.push({
+        categoryName: 'benchmark',
+        purpose: 'good for mid-game transitions as oil carries down',
+        ballOptions: [
+          { name: 'Storm IQ Tour', year: '2020', description: 'Modern benchmark for oil transition' },
+          { name: 'Roto Grip Hustle Ink', year: '2019', description: 'Versatile for changing heavy oil conditions' },
+          { name: 'DV8 Misfit', year: '2023', description: 'Controlled reaction as pattern breaks down' }
+        ]
+      });
+
+      categories.push({
+        categoryName: 'control',
+        purpose: 'good for later games when pattern has broken down significantly',
+        ballOptions: [
+          { name: 'Storm Mix', year: '2022', description: 'Modern urethane for control on broken-down patterns' },
+          { name: 'Storm Tropical Breeze', year: '2021', description: 'Light oil reactive for late-game conditions' },
+          { name: 'Motiv Freestyle Rush', year: '2023', description: 'Pearl reactive for light transition' }
+        ]
+      });
+
+    } else {
+      // Medium oil patterns: Balanced approach
+      categories.push({
+        categoryName: 'moderate reactive',
+        purpose: 'good to start with on medium oil patterns',
+        ballOptions: [
+          { name: 'Storm IQ Tour', year: '2020', description: 'Perfect starting point for medium conditions' },
+          { name: 'Roto Grip Hustle Ink', year: '2019', description: 'Reliable medium oil starter' },
+          { name: 'DV8 Misfit', year: '2023', description: 'Modern medium strength option' }
+        ]
+      });
+
+      if (difficulty === 'Hard') {
+        categories.push({
+          categoryName: 'control',
+          purpose: 'good for challenging medium patterns requiring precision',
+          ballOptions: [
+            { name: 'Storm Mix', year: '2022', description: 'Modern urethane for control on sport patterns' },
+            { name: 'Hammer Purple Pearl Urethane', year: '2020', description: 'Predictable motion for difficult conditions' },
+            { name: 'Brunswick T-Zone', year: 'Classic', description: 'Straight ball option for tough patterns' }
+          ]
+        });
+
+        categories.push({
+          categoryName: 'stronger reactive',
+          purpose: 'good for when medium patterns start to break down',
+          ballOptions: [
+            { name: 'Storm IQ Tour Emerald', year: '2023', description: 'Step up when more hook is needed' },
+            { name: 'Hammer Black Widow 2.0', year: '2019', description: 'Strong option for pattern transition' },
+            { name: 'Columbia 300 Eruption Pro', year: '2017', description: 'Reliable strong reactive' }
+          ]
+        });
+      } else {
+        categories.push({
+          categoryName: 'lighter reactive',
+          purpose: 'good for when medium patterns get lighter or shorter',
+          ballOptions: [
+            { name: 'Storm Tropical Breeze', year: '2021', description: 'Light reactive for pattern changes' },
+            { name: 'Motiv Freestyle Rush', year: '2023', description: 'Pearl reactive for lighter transitions' },
+            { name: 'Columbia 300 Scout Reactive', year: '2022', description: 'Entry-level reactive for light conditions' }
+          ]
+        });
+
+        categories.push({
+          categoryName: 'stronger reactive',
+          purpose: 'good for when you need more backend reaction',
+          ballOptions: [
+            { name: 'Storm IQ Tour Emerald', year: '2023', description: 'Step up for increased hook potential' },
+            { name: 'Motiv Jackal Ghost', year: '2021', description: 'Strong backend when conditions open up' },
+            { name: 'Hammer Black Widow 2.0', year: '2019', description: 'Proven strong option' }
+          ]
+        });
+      }
     }
 
     return categories;
@@ -319,39 +383,57 @@ export class PatternRecommendationService {
          ball.ball_name.toLowerCase().includes('jackal') ||
          ball.ball_name.toLowerCase().includes('kingpin'))
       );
-    } else if (categoryName.includes('benchmark')) {
+    } else if (categoryName.includes('benchmark') || categoryName.includes('moderate reactive')) {
       match = arsenal.find(ball =>
         !usedBalls.has(ball.ball_name) &&
         (ball.ball_name.toLowerCase().includes('iq tour') ||
          ball.ball_name.toLowerCase().includes('hustle') ||
          ball.ball_name.toLowerCase().includes('rhino') ||
+         ball.ball_name.toLowerCase().includes('misfit') ||
          ball.coverstock_type?.toLowerCase().includes('hybrid'))
       );
-    } else if (categoryName.includes('urethane')) {
+    } else if (categoryName.includes('control') || categoryName.includes('urethane')) {
       match = arsenal.find(ball =>
         !usedBalls.has(ball.ball_name) &&
         (ball.coverstock_type?.toLowerCase().includes('urethane') ||
          ball.coverstock_type?.toLowerCase().includes('polyester') ||
          ball.ball_name.toLowerCase().includes('mix') ||
-         ball.ball_name.toLowerCase().includes('purple pearl'))
+         ball.ball_name.toLowerCase().includes('purple pearl') ||
+         ball.ball_name.toLowerCase().includes('t-zone'))
       );
-    } else if (categoryName.includes('pearl reactive')) {
+    } else if (categoryName.includes('pearl reactive') || categoryName.includes('lighter reactive')) {
       match = arsenal.find(ball =>
         !usedBalls.has(ball.ball_name) &&
         (ball.coverstock_type?.toLowerCase().includes('pearl') ||
          ball.ball_name.toLowerCase().includes('tropical') ||
-         ball.ball_name.toLowerCase().includes('freestyle'))
+         ball.ball_name.toLowerCase().includes('freestyle') ||
+         ball.ball_name.toLowerCase().includes('scout'))
       );
-    } else if (categoryName.includes('strong reactive')) {
+    } else if (categoryName.includes('strong reactive') || categoryName.includes('stronger reactive')) {
       match = arsenal.find(ball =>
         !usedBalls.has(ball.ball_name) &&
         (ball.coverstock_type?.toLowerCase().includes('solid') ||
          ball.coverstock_type?.toLowerCase().includes('hybrid') ||
          ball.ball_name.toLowerCase().includes('black widow') ||
-         ball.ball_name.toLowerCase().includes('eruption'))
+         ball.ball_name.toLowerCase().includes('eruption') ||
+         ball.ball_name.toLowerCase().includes('emerald'))
       );
     }
 
     return match || null;
+  }
+
+  private getTransitionNote(criteria: RecommendationCriteria): string {
+    const { volume, difficulty, length } = criteria;
+
+    if (volume === 'Light' && (length === 'Short' || length === 'Medium')) {
+      return 'On light oil patterns, start with the control ball to avoid over-reaction, then move to stronger options as the oil gets pushed back and conditions change';
+    } else if (volume === 'Very High' || volume === 'High') {
+      return 'On heavy oil patterns, start with the strongest ball to get through the oil, then transition to weaker balls as the oil carries down and the pattern breaks down';
+    } else if (difficulty === 'Hard') {
+      return 'On challenging sport patterns, prioritize control and precision - use the moderate ball first, then adjust to control or stronger options based on how the pattern plays';
+    } else {
+      return 'These three balls provide flexible coverage for pattern transitions - start with the moderate option and adjust based on ball reaction and lane conditions';
+    }
   }
 }
