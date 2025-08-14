@@ -211,8 +211,8 @@ export class PatternPage implements OnInit {
     });
   }
 
-  onSortChanged(sortOption: PatternSortOption): void {
-    this.currentSortOption = sortOption;
+  onSortChanged(sortOption: any): void {
+    this.currentSortOption = sortOption as PatternSortOption;
     if (this.content) {
       setTimeout(() => {
         this.content.scrollToTop(300);

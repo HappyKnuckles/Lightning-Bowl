@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { Ball } from '../models/ball.model';
-import { Pattern } from '../models/pattern.model';
-import { BallSortField, PatternSortField, SortDirection, BallSortOption, PatternSortOption } from '../models/sort.model';
+import { Ball } from '../../models/ball.model';
+import { Pattern } from '../../models/pattern.model';
+import { BallSortField, PatternSortField, SortDirection, BallSortOption, PatternSortOption } from '../../models/sort.model';
 
 @Injectable({
   providedIn: 'root',
@@ -39,23 +39,21 @@ export class SortService {
   sortBalls(balls: Ball[], sortOption: BallSortOption): Ball[] {
     return [...balls].sort((a, b) => {
       const { field, direction } = sortOption;
-      let aValue = a[field];
-      let bValue = b[field];
+      let aValue: any = a[field];
+      let bValue: any = b[field];
 
       // Handle numeric fields
       if (field === BallSortField.CORE_RG || field === BallSortField.CORE_DIFF || field === BallSortField.CORE_INT_DIFF) {
         aValue = parseFloat(aValue as string) || 0;
         bValue = parseFloat(bValue as string) || 0;
       }
-
       // Handle date fields
-      if (field === BallSortField.RELEASE_DATE) {
+      else if (field === BallSortField.RELEASE_DATE) {
         aValue = new Date(aValue as string).getTime();
         bValue = new Date(bValue as string).getTime();
       }
-
       // Handle string fields
-      if (typeof aValue === 'string' && typeof bValue === 'string') {
+      else if (typeof aValue === 'string' && typeof bValue === 'string') {
         aValue = aValue.toLowerCase();
         bValue = bValue.toLowerCase();
       }
@@ -74,8 +72,8 @@ export class SortService {
   sortPatterns(patterns: Pattern[], sortOption: PatternSortOption): Pattern[] {
     return [...patterns].sort((a, b) => {
       const { field, direction } = sortOption;
-      let aValue = a[field];
-      let bValue = b[field];
+      let aValue: any = a[field];
+      let bValue: any = b[field];
 
       // Handle numeric fields
       if (field === PatternSortField.DISTANCE || field === PatternSortField.VOLUME || 
@@ -84,20 +82,22 @@ export class SortService {
         aValue = parseFloat(aValue as string) || 0;
         bValue = parseFloat(bValue as string) || 0;
       }
-
       // Handle ratio field (extract numeric value from "X:Y" format)
-      if (field === PatternSortField.RATIO && aValue && bValue) {
+      else if (field === PatternSortField.RATIO && aValue && bValue) {
         const aRatio = this.extractRatioValue(aValue as string);
         const bRatio = this.extractRatioValue(bValue as string);
         aValue = aRatio;
         bValue = bRatio;
       }
-
       // Handle string fields
-      if (typeof aValue === 'string' && typeof bValue === 'string') {
+      else if (typeof aValue === 'string' && typeof bValue === 'string') {
         aValue = aValue.toLowerCase();
         bValue = bValue.toLowerCase();
       }
+
+      // Ensure values are defined for comparison
+      if (aValue === undefined || aValue === null) aValue = '';
+      if (bValue === undefined || bValue === null) bValue = '';
 
       let comparison = 0;
       if (aValue < bValue) {
