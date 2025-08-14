@@ -13,6 +13,11 @@
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
+  @if (storageService.arsenals().length > 0) {
+    <ion-toolbar>
+      <app-arsenal-selector (arsenalChanged)="onArsenalChange($event)"></app-arsenal-selector>
+    </ion-toolbar>
+  }
   @if (storageService.arsenal().length > 0) {
     <ion-toolbar>
       <ion-segment [(ngModel)]="selectedSegment">

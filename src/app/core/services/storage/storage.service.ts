@@ -17,6 +17,8 @@ export class StorageService {
   #leagues = signal<string[]>([]);
   #games = signal<Game[]>([]);
   #arsenal = signal<Ball[]>([]);
+  #arsenals = signal<string[]>([]);
+  #currentArsenal = signal<string>('Main Arsenal');
   #allBalls = signal<Ball[]>([]);
   #allPatterns = signal<Partial<Pattern>[]>([]);
 
@@ -28,6 +30,12 @@ export class StorageService {
   }
   get arsenal() {
     return this.#arsenal;
+  }
+  get arsenals() {
+    return this.#arsenals;
+  }
+  get currentArsenal() {
+    return this.#currentArsenal;
   }
   get allBalls() {
     return this.#allBalls;
@@ -74,11 +82,44 @@ export class StorageService {
 
   async loadArsenal(): Promise<void> {
     try {
-      const arsenal = await this.loadData<Ball>('arsenal');
+      const currentArsenal = this.#currentArsenal();
+      const arsenal = await this.loadData<Ball>(`arsenal_${currentArsenal}`);
       const sortedArsenal = arsenal.sort((a, b) => (a.position || arsenal.length + 1) - (b.position || arsenal.length + 1));
       this.arsenal.set(sortedArsenal);
     } catch (error) {
       console.error('Error loading arsenal:', error);
+      throw error;
+    }
+  }
+
+  async loadArsenals(): Promise<string[]> {
+    try {
+      const arsenals = await this.loadData<string>('arsenalList');
+      if (arsenals.length === 0) {
+        // Check if there are existing arsenal items to migrate
+        const existingArsenalItems = await this.loadData<Ball>('arsenal');
+        if (existingArsenalItems.length > 0) {
+          // Migrate existing arsenal to 'Main Arsenal'
+          await this.addArsenal('Main Arsenal');
+          for (const ball of existingArsenalItems) {
+            const oldKey = `arsenal_${ball.ball_id}_${ball.core_weight}`;
+            const newKey = `arsenal_Main Arsenal_${ball.ball_id}_${ball.core_weight}`;
+            await this.save(newKey, ball);
+            await this.delete(oldKey);
+          }
+          this.arsenals.set(['Main Arsenal']);
+          return ['Main Arsenal'];
+        } else {
+          // Initialize with default arsenal
+          await this.addArsenal('Main Arsenal');
+          this.arsenals.set(['Main Arsenal']);
+          return ['Main Arsenal'];
+        }
+      }
+      this.arsenals.set(arsenals.reverse());
+      return arsenals.reverse();
+    } catch (error) {
+      console.error('Error loading arsenals:', error);
       throw error;
     }
   }
@@ -171,30 +212,40 @@ export class StorageService {
     }
   }
 
-  async saveBallToArsenal(ball: Ball) {
+  async saveBallToArsenal(ball: Ball, arsenalName?: string) {
     try {
-      const key = 'arsenal' + '_' + ball.ball_id + '_' + ball.core_weight;
+      const targetArsenal = arsenalName || this.#currentArsenal();
+      const key = `arsenal_${targetArsenal}_${ball.ball_id}_${ball.core_weight}`;
       await this.save(key, ball);
-      this.arsenal.update((balls) => {
-        const isUnique = !balls.some((b) => b.ball_id === ball.ball_id && b.core_weight === ball.core_weight);
-        if (isUnique) {
-          return [...balls, ball];
-        }
-        return balls;
-      });
+      
+      // Only update the current arsenal view if we're saving to the current arsenal
+      if (!arsenalName || arsenalName === this.#currentArsenal()) {
+        this.arsenal.update((balls) => {
+          const isUnique = !balls.some((b) => b.ball_id === ball.ball_id && b.core_weight === ball.core_weight);
+          if (isUnique) {
+            return [...balls, ball];
+          }
+          return balls;
+        });
+      }
     } catch (error) {
       console.error('Error saving ball to arsenal:', error);
       throw error;
     }
   }
 
-  async saveBallsToArsenal(balls: Ball[]) {
+  async saveBallsToArsenal(balls: Ball[], arsenalName?: string) {
     try {
+      const targetArsenal = arsenalName || this.#currentArsenal();
       for (const ball of balls) {
-        const key = 'arsenal' + '_' + ball.ball_id + '_' + ball.core_weight;
+        const key = `arsenal_${targetArsenal}_${ball.ball_id}_${ball.core_weight}`;
         await this.save(key, ball);
       }
-      this.arsenal.update(() => [...balls]);
+      
+      // Only update the current arsenal view if we're saving to the current arsenal
+      if (!arsenalName || arsenalName === this.#currentArsenal()) {
+        this.arsenal.update(() => [...balls]);
+      }
     } catch (error) {
       console.error('Error saving balls to arsenal:', error);
       throw error;
@@ -208,6 +259,27 @@ export class StorageService {
       this.leagues.update((leagues) => [...leagues, league]);
     } catch (error) {
       console.error('Error adding league:', error);
+      throw error;
+    }
+  }
+
+  async addArsenal(arsenal: string) {
+    try {
+      const key = 'arsenalList' + '_' + arsenal;
+      await this.save(key, arsenal);
+      this.arsenals.update((arsenals) => [...arsenals, arsenal]);
+    } catch (error) {
+      console.error('Error adding arsenal:', error);
+      throw error;
+    }
+  }
+
+  async setCurrentArsenal(arsenalName: string) {
+    try {
+      this.#currentArsenal.set(arsenalName);
+      await this.loadArsenal();
+    } catch (error) {
+      console.error('Error setting current arsenal:', error);
       throw error;
     }
   }
@@ -253,14 +325,82 @@ export class StorageService {
     }
   }
 
-  async removeFromArsenal(ball: Ball) {
+  async removeFromArsenal(ball: Ball, arsenalName?: string) {
     try {
-      const key = 'arsenal' + '_' + ball.ball_id + '_' + ball.core_weight;
-      await this.delete('arsenal' + '_' + ball.ball_id);
+      const targetArsenal = arsenalName || this.#currentArsenal();
+      const key = `arsenal_${targetArsenal}_${ball.ball_id}_${ball.core_weight}`;
       await this.delete(key);
-      this.arsenal.update((balls) => balls.filter((b) => !(b.ball_id === ball.ball_id && b.core_weight === ball.core_weight)));
+      
+      // Only update the current arsenal view if we're removing from the current arsenal
+      if (!arsenalName || arsenalName === this.#currentArsenal()) {
+        this.arsenal.update((balls) => balls.filter((b) => !(b.ball_id === ball.ball_id && b.core_weight === ball.core_weight)));
+      }
     } catch (error) {
       console.error('Error removing ball from arsenal:', error);
+      throw error;
+    }
+  }
+
+  async deleteArsenal(arsenal: string) {
+    try {
+      // Remove all balls from this arsenal
+      const arsenalBalls = await this.loadData<Ball>(`arsenal_${arsenal}`);
+      for (const ball of arsenalBalls) {
+        const key = `arsenal_${arsenal}_${ball.ball_id}_${ball.core_weight}`;
+        await this.delete(key);
+      }
+      
+      // Remove arsenal from list
+      const key = 'arsenalList' + '_' + arsenal;
+      await this.storage.remove(key);
+      this.arsenals.update((arsenals) => arsenals.filter((a) => a !== arsenal));
+      
+      // If deleting current arsenal, switch to first available or create default
+      if (this.#currentArsenal() === arsenal) {
+        const remaining = this.arsenals();
+        if (remaining.length > 0) {
+          await this.setCurrentArsenal(remaining[0]);
+        } else {
+          await this.addArsenal('Main Arsenal');
+          await this.setCurrentArsenal('Main Arsenal');
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting arsenal:', error);
+      throw error;
+    }
+  }
+
+  async editArsenal(newArsenal: string, oldArsenal: string) {
+    try {
+      // Get all balls from old arsenal
+      const arsenalBalls = await this.loadData<Ball>(`arsenal_${oldArsenal}`);
+      
+      // Save balls to new arsenal name
+      for (const ball of arsenalBalls) {
+        const oldKey = `arsenal_${oldArsenal}_${ball.ball_id}_${ball.core_weight}`;
+        const newKey = `arsenal_${newArsenal}_${ball.ball_id}_${ball.core_weight}`;
+        await this.save(newKey, ball);
+        await this.delete(oldKey);
+      }
+      
+      // Remove old arsenal from list and add new one
+      const oldKey = 'arsenalList' + '_' + oldArsenal;
+      await this.storage.remove(oldKey);
+      const newKey = 'arsenalList' + '_' + newArsenal;
+      await this.save(newKey, newArsenal);
+      
+      // Update arsenals list
+      this.arsenals.update((arsenals) => 
+        arsenals.map(a => a === oldArsenal ? newArsenal : a)
+      );
+      
+      // Update current arsenal if needed
+      if (this.#currentArsenal() === oldArsenal) {
+        await this.setCurrentArsenal(newArsenal);
+      }
+    } catch (error) {
+      console.error('Error editing arsenal:', error);
       throw error;
     }
   }
@@ -329,11 +469,12 @@ export class StorageService {
         this.loadAllBalls(undefined, weight),
         this.loadLeagues(),
         this.loadGameHistory(),
-        this.loadArsenal(),
+        this.loadArsenals(),
         this.ballService.getBrands(),
         this.ballService.getCores(),
         this.ballService.getCoverstocks(),
       ]);
+      await this.loadArsenal(); // Load arsenal after arsenals are loaded
       if (this.games().length > 0) {
         if (localStorage.getItem('first-game') === null) {
           localStorage.setItem('first-game', this.games()[this.games().length - 1].date.toString());

@@ -18,8 +18,9 @@ import {
   IonButtons,
   IonButton,
 } from '@ionic/angular/standalone';
-import { InfiniteScrollCustomEvent, ModalController, SearchbarCustomEvent } from '@ionic/angular';
+import { InfiniteScrollCustomEvent, ModalController, SearchbarCustomEvent, AlertController } from '@ionic/angular';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
+import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { Keyboard } from '@capacitor/keyboard';
 import { SearchBlurDirective } from 'src/app/core/directives/search-blur/search-blur.directive';
 
@@ -69,6 +70,8 @@ export class BallTypeaheadComponent implements OnInit, OnDestroy {
   constructor(
     public storageService: StorageService,
     private modalCtrl: ModalController,
+    private alertController: AlertController,
+    private toastService: ToastService,
   ) {}
 
   blur(search: IonSearchbar): void {
@@ -138,8 +141,73 @@ export class BallTypeaheadComponent implements OnInit, OnDestroy {
     this.selectedBalls = [];
   }
 
-  saveBallSelection() {
-    this.modalCtrl.dismiss();
+  async saveBallSelection() {
+    if (this.selectedBalls.length === 0) {
+      this.modalCtrl.dismiss();
+      return;
+    }
+
+    const arsenals = this.storageService.arsenals();
+    if (arsenals.length === 1) {
+      // Only one arsenal, save directly
+      this.selectedBallsChange.emit(this.selectedBalls);
+      this.modalCtrl.dismiss();
+      return;
+    }
+
+    // Multiple arsenals, ask user to select
+    const inputs = arsenals.map(arsenal => ({
+      name: 'arsenal',
+      type: 'radio' as const,
+      label: arsenal,
+      value: arsenal,
+      checked: arsenal === this.storageService.currentArsenal()
+    }));
+
+    const alert = await this.alertController.create({
+      header: 'Select Arsenal',
+      message: 'Which arsenal would you like to add these balls to?',
+      inputs,
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel'
+        },
+        {
+          text: 'Add',
+          handler: async (selectedArsenal) => {
+            if (selectedArsenal) {
+              // Save balls to selected arsenal
+              let successCount = 0;
+              let errorCount = 0;
+              
+              for (const ball of this.selectedBalls) {
+                try {
+                  await this.storageService.saveBallToArsenal(ball, selectedArsenal);
+                  successCount++;
+                } catch (error) {
+                  console.error(`Error saving ball ${ball.ball_name}:`, error);
+                  errorCount++;
+                }
+              }
+              
+              if (successCount > 0) {
+                const ballNames = this.selectedBalls.slice(0, Math.min(successCount, this.selectedBalls.length)).map(b => b.ball_name).join(', ');
+                this.toastService.showToast(`${successCount} ball(s) added to ${selectedArsenal}`, 'checkmark-outline');
+              }
+              
+              if (errorCount > 0) {
+                this.toastService.showToast(`Failed to add ${errorCount} ball(s)`, 'bug', true);
+              }
+              
+              this.modalCtrl.dismiss();
+            }
+          }
+        }
+      ]
+    });
+
+    await alert.present();
   }
 
   checkboxChange(event: CustomEvent): void {
@@ -157,8 +225,7 @@ export class BallTypeaheadComponent implements OnInit, OnDestroy {
     return this.selectedBalls.includes(ball);
   }
   ngOnDestroy(): void {
-    if (this.selectedBalls.length > 0) {
-      this.selectedBallsChange.emit(this.selectedBalls);
-    }
+    // Balls are now saved manually through the save button
+    // This method intentionally left empty as cleanup is not needed
   }
 }

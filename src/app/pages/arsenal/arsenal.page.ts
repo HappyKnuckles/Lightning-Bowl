@@ -47,6 +47,7 @@ import { BallService } from 'src/app/core/services/ball/ball.service';
 import { BallListComponent } from 'src/app/shared/components/ball-list/ball-list.component';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { BallTypeaheadComponent } from 'src/app/shared/components/ball-typeahead/ball-typeahead.component';
+import { ArsenalSelectorComponent } from 'src/app/shared/components/arsenal-selector/arsenal-selector.component';
 import { Chart } from 'chart.js';
 import { ChartGenerationService } from 'src/app/core/services/chart/chart-generation.service';
 
@@ -90,6 +91,7 @@ import { ChartGenerationService } from 'src/app/core/services/chart/chart-genera
     FormsModule,
     BallListComponent,
     BallTypeaheadComponent,
+    ArsenalSelectorComponent,
     IonSegmentContent,
     IonSegmentView,
   ],
@@ -128,6 +130,16 @@ export class ArsenalPage implements OnInit {
 
   ngOnInit() {
     this.presentingElement = document.querySelector('.ion-page')!;
+  }
+
+  async onArsenalChange(arsenalName: string): Promise<void> {
+    try {
+      await this.storageService.setCurrentArsenal(arsenalName);
+      this.toastService.showToast(`Switched to ${arsenalName}`, 'checkmark-outline');
+    } catch (error) {
+      console.error('Error switching arsenal:', error);
+      this.toastService.showToast('Error switching arsenal', 'bug', true);
+    }
   }
 
   private generateBallDistributionChart(): void {
@@ -192,6 +204,8 @@ export class ArsenalPage implements OnInit {
   }
 
   saveBallToArsenal(ball: Ball[]): void {
+    // This method is now mainly for backward compatibility
+    // The ball typeahead component handles arsenal selection internally
     try {
       ball.forEach(async (ball) => {
         try {
