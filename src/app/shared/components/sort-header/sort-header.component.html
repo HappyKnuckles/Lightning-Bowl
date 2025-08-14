@@ -1,0 +1,28 @@
+<ion-toolbar>
+  <ion-button 
+    fill="clear" 
+    slot="end" 
+    (click)="openSortPopover($event)"
+    id="sort-trigger">
+    <ion-icon slot="icon-only" name="swap-vertical"></ion-icon>
+  </ion-button>
+
+  <ion-popover 
+    trigger="sort-trigger" 
+    [isOpen]="isOpen"
+    (didDismiss)="onPopoverDismiss()"
+    showBackdrop="true"
+    side="bottom"
+    alignment="end">
+    <ng-template>
+      <ion-list>
+        <ion-radio-group [(ngModel)]="selectedSortKey" (ngModelChange)="onSortChange($event)">
+          <ion-item *ngFor="let option of sortOptions">
+            <ion-label>{{ option.label }}</ion-label>
+            <ion-radio slot="start" [value]="getSortKey(option)"></ion-radio>
+          </ion-item>
+        </ion-radio-group>
+      </ion-list>
+    </ng-template>
+  </ion-popover>
+</ion-toolbar>

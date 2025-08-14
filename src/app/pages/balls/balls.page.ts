@@ -45,6 +45,9 @@ import { BallFilterComponent } from 'src/app/shared/components/ball-filter/ball-
 import { BallListComponent } from 'src/app/shared/components/ball-list/ball-list.component';
 import { ActivatedRoute } from '@angular/router';
 import { SearchBlurDirective } from 'src/app/core/directives/search-blur/search-blur.directive';
+import { SortHeaderComponent } from 'src/app/shared/components/sort-header/sort-header.component';
+import { SortService } from 'src/app/core/services/sort/sort.service';
+import { BallSortOption, BallSortField, SortDirection } from 'src/app/core/models/sort.model';
 
 @Component({
   selector: 'app-balls',
@@ -81,6 +84,7 @@ import { SearchBlurDirective } from 'src/app/core/directives/search-blur/search-
     BallListComponent,
     BallFilterActiveComponent,
     SearchBlurDirective,
+    SortHeaderComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -88,6 +92,7 @@ export class BallsPage implements OnInit {
   @ViewChild('core', { static: false }) coreModal!: IonModal;
   @ViewChild('coverstock', { static: false }) coverstockModal!: IonModal;
   @ViewChild(IonContent, { static: false }) content!: IonContent;
+  @ViewChild('sortHeader', { static: false }) sortHeader!: SortHeaderComponent;
   balls = signal<Ball[]>([]);
   coreBalls: Ball[] = [];
   coverstockBalls: Ball[] = [];
@@ -97,6 +102,11 @@ export class BallsPage implements OnInit {
   isPageLoading = signal(false);
   hasMoreData = true;
   filterDisplayCount = 100;
+  currentSortOption: BallSortOption = {
+    field: BallSortField.RELEASE_DATE,
+    direction: SortDirection.DESC,
+    label: 'Newest First',
+  };
 
   // Computed getter for displayed balls.
   // • If a search term exists, we build a Fuse instance over the correct data source.
@@ -139,11 +149,11 @@ export class BallsPage implements OnInit {
       if (this.isFilterActive()) {
         result = result.slice(0, this.filterDisplayCount);
       }
-      result = result.sort((a, b) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime());
       this.hasMoreData = true;
     }
 
-    return result;
+    // Apply sorting to the result
+    return this.sortService.sortBalls(result, this.currentSortOption);
   }
 
   constructor(
@@ -155,6 +165,7 @@ export class BallsPage implements OnInit {
     private ballService: BallService,
     public ballFilterService: BallFilterService,
     private route: ActivatedRoute,
+    public sortService: SortService,
   ) {
     addIcons({ filterOutline, closeCircle, globeOutline, openOutline, addOutline, camera });
     this.searchSubject.subscribe((query) => {
@@ -357,5 +368,27 @@ export class BallsPage implements OnInit {
 
   isFilterActive(): boolean {
     return this.ballFilterService.activeFilterCount() > 0;
+  }
+
+  onSortChanged(sortOption: BallSortOption): void {
+    this.currentSortOption = sortOption;
+    if (this.content) {
+      setTimeout(() => {
+        this.content.scrollToTop(300);
+      }, 100);
+    }
+  }
+
+  onScroll(event: any): void {
+    const scrollTop = event.detail.scrollTop;
+    const threshold = 100;
+    
+    if (this.sortHeader) {
+      if (scrollTop > threshold) {
+        this.sortHeader.hide();
+      } else {
+        this.sortHeader.show();
+      }
+    }
   }
 }

@@ -26,9 +26,15 @@
   <ion-toolbar style="text-align: center">
     <app-ball-filter-active></app-ball-filter-active>
   </ion-toolbar>
+  <app-sort-header 
+    #sortHeader
+    [sortOptions]="sortService.BALL_SORT_OPTIONS" 
+    [selectedSort]="currentSortOption"
+    (sortChanged)="onSortChanged($event)">
+  </app-sort-header>
 </ion-header>
 
-<ion-content [fullscreen]="true" role="feed">
+<ion-content [fullscreen]="true" role="feed" (ionScroll)="onScroll($event)">
   <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>

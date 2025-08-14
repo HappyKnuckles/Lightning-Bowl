@@ -40,6 +40,9 @@ import { ChartGenerationService } from 'src/app/core/services/chart/chart-genera
 import { DomSanitizer } from '@angular/platform-browser';
 import { PatternFormComponent } from '../../shared/components/pattern-form/pattern-form.component';
 import { SearchBlurDirective } from 'src/app/core/directives/search-blur/search-blur.directive';
+import { SortHeaderComponent } from 'src/app/shared/components/sort-header/sort-header.component';
+import { SortService } from 'src/app/core/services/sort/sort.service';
+import { PatternSortOption, PatternSortField, SortDirection } from 'src/app/core/models/sort.model';
 
 @Component({
   selector: 'app-pattern',
@@ -72,14 +75,26 @@ import { SearchBlurDirective } from 'src/app/core/directives/search-blur/search-
     FormsModule,
     PatternInfoComponent,
     SearchBlurDirective,
+    SortHeaderComponent,
   ],
 })
 export class PatternPage implements OnInit {
   @ViewChild(IonContent, { static: false }) content!: IonContent;
+  @ViewChild('sortHeader', { static: false }) sortHeader!: SortHeaderComponent;
   patterns: Pattern[] = [];
   currentPage = 1;
   hasMoreData = true;
   isPageLoading = signal(false);
+  currentSortOption: PatternSortOption = {
+    field: PatternSortField.TITLE,
+    direction: SortDirection.ASC,
+    label: 'Title (A-Z)',
+  };
+
+  // Computed getter for displayed patterns with sorting applied
+  get displayedPatterns(): Pattern[] {
+    return this.sortService.sortPatterns(this.patterns, this.currentSortOption);
+  }
 
   constructor(
     private patternService: PatternService,
@@ -89,6 +104,7 @@ export class PatternPage implements OnInit {
     private chartService: ChartGenerationService,
     private sanitizer: DomSanitizer,
     private modalCtrl: ModalController,
+    public sortService: SortService,
   ) {
     addIcons({ addOutline, arrowUpOutline, arrowDownOutline, chevronBack, add });
   }
@@ -193,5 +209,27 @@ export class PatternPage implements OnInit {
         }
       }
     });
+  }
+
+  onSortChanged(sortOption: PatternSortOption): void {
+    this.currentSortOption = sortOption;
+    if (this.content) {
+      setTimeout(() => {
+        this.content.scrollToTop(300);
+      }, 100);
+    }
+  }
+
+  onScroll(event: any): void {
+    const scrollTop = event.detail.scrollTop;
+    const threshold = 100;
+    
+    if (this.sortHeader) {
+      if (scrollTop > threshold) {
+        this.sortHeader.hide();
+      } else {
+        this.sortHeader.show();
+      }
+    }
   }
 }
