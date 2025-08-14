@@ -15,6 +15,7 @@ import {
   IonLabel,
   IonButtons,
   IonButton,
+  IonAvatar,
 } from '@ionic/angular/standalone';
 import { InfiniteScrollCustomEvent, ModalController } from '@ionic/angular';
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
@@ -43,6 +44,7 @@ import { SearchBlurDirective } from 'src/app/core/directives/search-blur/search-
     IonHeader,
     NgClass,
     SearchBlurDirective,
+    IonAvatar,
   ],
   templateUrl: './pattern-typeahead.component.html',
   styleUrl: './pattern-typeahead.component.scss',
@@ -77,7 +79,7 @@ export class PatternTypeaheadComponent implements OnInit, OnDestroy {
     }
 
     this.loadedCount.set(Math.min(this.batchSize, this.filteredPatterns().length));
-    // this.generateChartImages();
+    this.generateChartImages(); // Enable chart image generation
   }
 
   resetPatternSelection() {
@@ -110,6 +112,9 @@ export class PatternTypeaheadComponent implements OnInit, OnDestroy {
       }
 
       this.loadedCount.set(Math.min(this.batchSize, this.filteredPatterns().length));
+      
+      // Generate chart images for any new patterns loaded
+      this.generateChartImages();
 
       if (this.infiniteScroll) {
         this.infiniteScroll.disabled = this.loadedCount() >= this.filteredPatterns().length;
@@ -128,6 +133,9 @@ export class PatternTypeaheadComponent implements OnInit, OnDestroy {
     setTimeout(() => {
       if (this.loadedCount() < this.filteredPatterns().length) {
         this.loadedCount.update((count) => Math.min(count + this.batchSize, this.filteredPatterns().length));
+        
+        // Generate chart images for newly loaded patterns
+        this.generateChartImages();
       }
       event.target.complete();
 
@@ -184,10 +192,13 @@ export class PatternTypeaheadComponent implements OnInit, OnDestroy {
     this.patterns().forEach((pattern) => {
       if (!pattern.chartImageSrc) {
         try {
-          const svgDataUri = this.chartService.generatePatternChartDataUri(pattern, 325, 1300, 1300, 400, 2, 0.05, 0.2, true);
+          // Generate a small preview image optimized for the typeahead list
+          const previewDataUri = this.chartService.generatePatternPreviewDataUri(pattern, 60, true, false);
+          pattern.chartImageSrc = this.sanitizer.bypassSecurityTrustUrl(previewDataUri);
+          
+          // Optionally generate horizontal version if needed elsewhere
           const svgDataUriHor = this.chartService.generatePatternChartDataUri(pattern, 20, 100, 400, 1500, 2, 0.05, 0.2, false);
           pattern.chartImageSrcHorizontal = this.sanitizer.bypassSecurityTrustUrl(svgDataUriHor);
-          pattern.chartImageSrc = this.sanitizer.bypassSecurityTrustUrl(svgDataUri);
         } catch (error) {
           console.error(`Error generating chart for pattern ${pattern.title}:`, error);
         }
