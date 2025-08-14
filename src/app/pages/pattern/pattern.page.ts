@@ -90,7 +90,6 @@ export class PatternPage implements OnInit {
     label: 'Title (A-Z)',
   };
 
-  // Computed getter for displayed patterns with sorting applied
   get displayedPatterns(): Pattern[] {
     return this.sortService.sortPatterns(this.patterns, this.currentSortOption);
   }
@@ -210,7 +209,7 @@ export class PatternPage implements OnInit {
     });
   }
 
-  onSortChanged(sortOption: any): void {
+  onSortChanged(sortOption: unknown): void {
     this.currentSortOption = sortOption as PatternSortOption;
     if (this.content) {
       setTimeout(() => {

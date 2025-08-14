@@ -3,7 +3,6 @@ import { GameFilter, TimeRange } from 'src/app/core/models/filter.model';
 import { Game } from 'src/app/core/models/game.model';
 import { UtilsService } from '../utils/utils.service';
 import { StorageService } from '../storage/storage.service';
-import { GameSortService } from '../game-sort/game-sort.service';
 
 @Injectable({
   providedIn: 'root',
@@ -45,9 +44,7 @@ export class GameFilterService {
   #filteredGames = computed(() => {
     const games = this.storageService.games();
     const filters = this.filters();
-    const filtered = this.filterGames(games, filters);
-    // Apply sorting to filtered games
-    return this.gameSortService.sortGames(filtered);
+    return this.filterGames(games, filters);
   });
   get filteredGames() {
     return this.#filteredGames;
@@ -61,7 +58,6 @@ export class GameFilterService {
   constructor(
     private utilsService: UtilsService,
     private storageService: StorageService,
-    private gameSortService: GameSortService,
   ) {
     this.setDefaultFilters();
   }
