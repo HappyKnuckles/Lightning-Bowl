@@ -1,10 +1,5 @@
-ion-toolbar {
-  --background: transparent;
-  transition: transform 0.3s ease-in-out;
-}
-
 :host {
-  display: block;
+  display: inline-block;
   transition: transform 0.3s ease-in-out;
 }
 
@@ -20,4 +15,8 @@ ion-popover ion-list {
 ion-item {
   --inner-padding-start: 16px;
   --inner-padding-end: 16px;
+}
+
+ion-item[button] {
+  cursor: pointer;
 }

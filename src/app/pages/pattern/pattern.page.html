@@ -1,11 +1,14 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <!-- <ion-buttons slot="end">
-      <ion-button (click)="openAddPatternModal()" class="action-sheet">
-        <ion-icon name="add-outline" slot="icon-only"></ion-icon>
-      </ion-button>
-    </ion-buttons> -->
     <ion-title>Pattern Library</ion-title>
+    <ion-buttons slot="end" class="action-sheet">
+      <app-sort-header 
+        #sortHeader
+        [sortOptions]="sortService.PATTERN_SORT_OPTIONS" 
+        [selectedSort]="currentSortOption"
+        (sortChanged)="onSortChanged($event)">
+      </app-sort-header>
+    </ion-buttons>
   </ion-toolbar>
   <ion-toolbar>
     <ion-searchbar
@@ -15,12 +18,6 @@
       showCancelButton="focus"
       debounce="300"></ion-searchbar>
   </ion-toolbar>
-  <app-sort-header 
-    #sortHeader
-    [sortOptions]="sortService.PATTERN_SORT_OPTIONS" 
-    [selectedSort]="currentSortOption"
-    (sortChanged)="onSortChanged($event)">
-  </app-sort-header>
 </ion-header>
 
 <ion-content [fullscreen]="true" (ionScroll)="onScroll($event)">
