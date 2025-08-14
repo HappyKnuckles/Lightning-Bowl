@@ -1106,19 +1106,19 @@ export class ChartGenerationService {
     showPins = true,
     showArrows = false
   ): string {
-    // Use properly scaled viewBox that encompasses the lane dimensions
-    // Lane dimensions: LANE_WIDTH = 39, LANE_HEIGHT = 70
-    // Add margins for proper display
-    const margin = 10;
+    // Use much smaller viewBox for better visibility in preview
+    // Focus on the core pattern area: boards 1-38 and distances 0-60
+    // Use minimal margins to maximize pattern visibility
+    const margin = 2; // Much smaller margin for previews
     const svgWidth = previewSize;
     const svgHeight = previewSize;
-    const viewBoxWidth = LANE_WIDTH + (margin * 2); // ~59 units
-    const viewBoxHeight = LANE_HEIGHT + (margin * 2); // ~90 units
-    const pinRadius = Math.max(0.8, previewSize / 40); // Scale pin size relative to preview size
-    const pinStrokeWidth = Math.max(0.2, previewSize / 300); // Scale stroke width
-    const arrowSize = showArrows ? Math.max(3, previewSize / 20) : 0; // Scale arrow size
+    const viewBoxWidth = LANE_WIDTH + margin; // ~41 units (much smaller)
+    const viewBoxHeight = 60 + margin; // ~62 units (focus on pattern area, not full lane)
+    const pinRadius = Math.max(0.5, previewSize / 60); // Smaller pins for preview
+    const pinStrokeWidth = Math.max(0.1, previewSize / 400); // Thinner stroke
+    const arrowSize = showArrows ? Math.max(2, previewSize / 30) : 0; // Smaller arrows
 
-    // Use the showPins parameter to control pin display in a future enhancement
+    // Use the showPins parameter to control pin display
     const actualPinRadius = showPins ? pinRadius : 0;
 
     return this.generatePatternChartDataUri(
