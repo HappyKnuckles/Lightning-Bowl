@@ -7,12 +7,12 @@
 </ion-button>
 
 <ion-popover 
-  trigger="sort-trigger"
+  [trigger]="sortTrigger"
   [isOpen]="isOpen"
   (didDismiss)="onPopoverDismiss()"
   showBackdrop="true"
   side="bottom"
-  alignment="end">
+  alignment="center">
   <ng-template>
     <ion-list>
       <ion-radio-group [(ngModel)]="selectedSortKey" (ngModelChange)="onSortChange($event)">

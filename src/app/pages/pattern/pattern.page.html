@@ -6,6 +6,7 @@
         #sortHeader
         [sortOptions]="sortService.PATTERN_SORT_OPTIONS" 
         [selectedSort]="currentSortOption"
+        [storageKey]="'patterns-sort-option'"
         (sortChanged)="onSortChanged($event)">
       </app-sort-header>
     </ion-buttons>
