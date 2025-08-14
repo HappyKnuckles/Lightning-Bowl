@@ -37,9 +37,9 @@ import { BallSortOption, PatternSortOption } from 'src/app/core/models/sort.mode
   ],
 })
 export class SortHeaderComponent implements OnInit {
-  @Input() sortOptions: (BallSortOption | PatternSortOption)[] = [];
-  @Input() selectedSort?: BallSortOption | PatternSortOption;
-  @Output() sortChanged = new EventEmitter<BallSortOption | PatternSortOption>();
+  @Input() sortOptions: any[] = [];
+  @Input() selectedSort?: any;
+  @Output() sortChanged = new EventEmitter<any>();
 
   isOpen = false;
   selectedSortKey = '';
@@ -82,7 +82,7 @@ export class SortHeaderComponent implements OnInit {
     this.isOpen = false;
   }
 
-  getSortKey(option: BallSortOption | PatternSortOption): string {
+  getSortKey(option: any): string {
     return `${option.field}_${option.direction}`;
   }
 
