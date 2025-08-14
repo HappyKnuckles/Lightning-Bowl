@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, model } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, model, ViewChild, ElementRef } from '@angular/core';
 import { IonButton, IonIcon, IonPopover, IonList, IonItem, IonLabel, IonRadioGroup, IonRadio } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -19,6 +19,9 @@ export class SortHeaderComponent implements OnInit {
   id = model.required<string>();
   @Input() storageKey = '';
   @Output() sortChanged = new EventEmitter<SortOption<BallSortField | PatternSortField | GameSortField>>();
+
+  @ViewChild('sortPopover') sortPopover!: IonPopover;
+  @ViewChild('sortList', { read: ElementRef }) sortListRef!: ElementRef<HTMLIonListElement>;
 
   selectedSortKey = '';
 
@@ -86,5 +89,56 @@ export class SortHeaderComponent implements OnInit {
 
   getSortKey(option: SortOption<BallSortField | PatternSortField | GameSortField>): string {
     return `${option.field}_${option.direction}`;
+  }
+
+  onPopoverWillPresent() {
+    // Use setTimeout to ensure the popover content is rendered
+    setTimeout(() => {
+      this.scrollToSelectedItem();
+    }, 100);
+  }
+
+  private scrollToSelectedItem() {
+    if (!this.sortListRef || !this.selectedSortKey) {
+      return;
+    }
+
+    try {
+      const listElement = this.sortListRef.nativeElement;
+      const selectedItem = listElement.querySelector(`ion-item:has(ion-radio[value="${this.selectedSortKey}"])`);
+      
+      if (selectedItem) {
+        selectedItem.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest'
+        });
+      }
+    } catch (error) {
+      // Fallback approach if querySelector with :has() is not supported
+      console.warn('Primary scroll method failed, using fallback:', error);
+      this.scrollToSelectedItemFallback();
+    }
+  }
+
+  private scrollToSelectedItemFallback() {
+    if (!this.sortListRef || !this.selectedSortKey) {
+      return;
+    }
+
+    const listElement = this.sortListRef.nativeElement;
+    const radioElements = Array.from(listElement.querySelectorAll('ion-radio')) as HTMLIonRadioElement[];
+    
+    for (const radio of radioElements) {
+      if (radio.getAttribute('value') === this.selectedSortKey) {
+        const ionItem = radio.closest('ion-item') as HTMLElement;
+        if (ionItem) {
+          ionItem.scrollIntoView({
+            behavior: 'smooth',
+            block: 'nearest'
+          });
+        }
+        break;
+      }
+    }
   }
 }
