@@ -32,5 +32,5 @@ export interface SortOption<T> {
   label: string;
 }
 
-export interface BallSortOption extends SortOption<BallSortField> {}
-export interface PatternSortOption extends SortOption<PatternSortField> {}
+export type BallSortOption = SortOption<BallSortField>;
+export type PatternSortOption = SortOption<PatternSortField>;

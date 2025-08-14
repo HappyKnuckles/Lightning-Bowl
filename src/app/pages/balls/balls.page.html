@@ -12,6 +12,12 @@
         <ion-icon slot="icon-only" name="filter-outline"></ion-icon>
         <ion-text class="filter-indicator" *ngIf="isFilterActive()">{{ ballFilterService.activeFilterCount() }}</ion-text>
       </ion-button>
+      <app-sort-header 
+        #sortHeader
+        [sortOptions]="sortService.BALL_SORT_OPTIONS" 
+        [selectedSort]="currentSortOption"
+        (sortChanged)="onSortChanged($event)">
+      </app-sort-header>
     </ion-buttons>
   </ion-toolbar>
   <ion-toolbar>
@@ -26,12 +32,6 @@
   <ion-toolbar style="text-align: center">
     <app-ball-filter-active></app-ball-filter-active>
   </ion-toolbar>
-  <app-sort-header 
-    #sortHeader
-    [sortOptions]="sortService.BALL_SORT_OPTIONS" 
-    [selectedSort]="currentSortOption"
-    (sortChanged)="onSortChanged($event)">
-  </app-sort-header>
 </ion-header>
 
 <ion-content [fullscreen]="true" role="feed" (ionScroll)="onScroll($event)">

@@ -1,6 +1,5 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, ElementRef } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, ElementRef } from '@angular/core';
 import { 
-  IonToolbar, 
   IonButton, 
   IonIcon, 
   IonPopover, 
@@ -15,7 +14,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { addIcons } from 'ionicons';
 import { swapVertical } from 'ionicons/icons';
-import { BallSortOption, PatternSortOption } from 'src/app/core/models/sort.model';
+import { SortOption, BallSortField, PatternSortField } from 'src/app/core/models/sort.model';
 
 @Component({
   selector: 'app-sort-header',
@@ -25,7 +24,6 @@ import { BallSortOption, PatternSortOption } from 'src/app/core/models/sort.mode
   imports: [
     CommonModule,
     FormsModule,
-    IonToolbar,
     IonButton,
     IonIcon,
     IonPopover,
@@ -37,9 +35,9 @@ import { BallSortOption, PatternSortOption } from 'src/app/core/models/sort.mode
   ],
 })
 export class SortHeaderComponent implements OnInit {
-  @Input() sortOptions: any[] = [];
-  @Input() selectedSort?: any;
-  @Output() sortChanged = new EventEmitter<any>();
+  @Input() sortOptions: SortOption<BallSortField | PatternSortField>[] = [];
+  @Input() selectedSort?: SortOption<BallSortField | PatternSortField>;
+  @Output() sortChanged = new EventEmitter<SortOption<BallSortField | PatternSortField>>();
 
   isOpen = false;
   selectedSortKey = '';
@@ -62,7 +60,18 @@ export class SortHeaderComponent implements OnInit {
   }
 
   async openSortPopover(event: Event) {
+    // Prevent event bubbling and set isOpen to trigger popover
+    event.stopPropagation();
+    event.preventDefault();
     this.isOpen = true;
+  }
+
+  selectOption(option: SortOption<BallSortField | PatternSortField>) {
+    // Direct option selection method that ensures responsiveness
+    this.selectedSort = option;
+    this.selectedSortKey = `${option.field}_${option.direction}`;
+    this.sortChanged.emit(option);
+    this.isOpen = false;
   }
 
   onSortChange(selectedKey: string) {
@@ -82,15 +91,17 @@ export class SortHeaderComponent implements OnInit {
     this.isOpen = false;
   }
 
-  getSortKey(option: any): string {
+  getSortKey(option: SortOption<BallSortField | PatternSortField>): string {
     return `${option.field}_${option.direction}`;
   }
 
   hide() {
-    this.elementRef.nativeElement.style.transform = 'translateY(-100%)';
+    this.elementRef.nativeElement.style.opacity = '0.5';
+    this.elementRef.nativeElement.style.pointerEvents = 'none';
   }
 
   show() {
-    this.elementRef.nativeElement.style.transform = 'translateY(0)';
+    this.elementRef.nativeElement.style.opacity = '1';
+    this.elementRef.nativeElement.style.pointerEvents = 'auto';
   }
 }
