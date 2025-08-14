@@ -92,7 +92,6 @@ export class BallsPage implements OnInit {
   @ViewChild('core', { static: false }) coreModal!: IonModal;
   @ViewChild('coverstock', { static: false }) coverstockModal!: IonModal;
   @ViewChild(IonContent, { static: false }) content!: IonContent;
-  @ViewChild('sortHeader', { static: false }) sortHeader!: SortHeaderComponent;
   balls = signal<Ball[]>([]);
   coreBalls: Ball[] = [];
   coverstockBalls: Ball[] = [];
@@ -376,19 +375,6 @@ export class BallsPage implements OnInit {
       setTimeout(() => {
         this.content.scrollToTop(300);
       }, 100);
-    }
-  }
-
-  onScroll(event: any): void {
-    const scrollTop = event.detail.scrollTop;
-    const threshold = 100;
-    
-    if (this.sortHeader) {
-      if (scrollTop > threshold) {
-        this.sortHeader.hide();
-      } else {
-        this.sortHeader.show();
-      }
     }
   }
 }

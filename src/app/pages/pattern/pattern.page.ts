@@ -80,7 +80,6 @@ import { PatternSortOption, PatternSortField, SortDirection } from 'src/app/core
 })
 export class PatternPage implements OnInit {
   @ViewChild(IonContent, { static: false }) content!: IonContent;
-  @ViewChild('sortHeader', { static: false }) sortHeader!: SortHeaderComponent;
   patterns: Pattern[] = [];
   currentPage = 1;
   hasMoreData = true;
@@ -217,19 +216,6 @@ export class PatternPage implements OnInit {
       setTimeout(() => {
         this.content.scrollToTop(300);
       }, 100);
-    }
-  }
-
-  onScroll(event: any): void {
-    const scrollTop = event.detail.scrollTop;
-    const threshold = 100;
-    
-    if (this.sortHeader) {
-      if (scrollTop > threshold) {
-        this.sortHeader.hide();
-      } else {
-        this.sortHeader.show();
-      }
     }
   }
 }

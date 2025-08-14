@@ -1,23 +1,18 @@
 <ion-button 
   fill="clear" 
-  (click)="openSortPopover($event)"
   #sortTrigger
   id="sort-trigger">
   <ion-icon slot="icon-only" name="swap-vertical"></ion-icon>
 </ion-button>
 
 <ion-popover 
-  [trigger]="sortTrigger"
-  [isOpen]="isOpen"
-  (didDismiss)="onPopoverDismiss()"
-  showBackdrop="true"
-  side="bottom"
-  alignment="end">
+  trigger="sort-trigger"
+ >
   <ng-template>
     <ion-list>
       <ion-radio-group [(ngModel)]="selectedSortKey" (ngModelChange)="onSortChange($event)">
         <ion-item 
-          *ngFor="let option of sortOptions" 
+          *ngFor="let option of sortOptions()" 
           button="true"
           (click)="selectOption(option)">
           <ion-radio slot="start" [value]="getSortKey(option)"></ion-radio>

@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, ElementRef, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, model } from '@angular/core';
 import { 
   IonButton, 
   IonIcon, 
@@ -34,18 +34,16 @@ import { SortOption, BallSortField, PatternSortField } from 'src/app/core/models
     IonRadio,
   ],
 })
-export class SortHeaderComponent implements OnInit, OnChanges {
-  @Input() sortOptions: SortOption<BallSortField | PatternSortField>[] = [];
-  @Input() selectedSort?: SortOption<BallSortField | PatternSortField>;
-  @Input() storageKey = ''; // Key for localStorage persistence
+export class SortHeaderComponent implements OnInit {
+  sortOptions = model.required<SortOption<BallSortField | PatternSortField>[]>();
+  selectedSort = model.required<SortOption<BallSortField | PatternSortField>>();
+  @Input() storageKey = '';
   @Output() sortChanged = new EventEmitter<SortOption<BallSortField | PatternSortField>>();
 
-  isOpen = false;
   selectedSortKey = '';
 
   constructor(
     private popoverController: PopoverController,
-    private elementRef: ElementRef
   ) {
     addIcons({ swapVertical });
   }
@@ -55,12 +53,6 @@ export class SortHeaderComponent implements OnInit, OnChanges {
     this.updateSelectedSortKey();
   }
 
-  ngOnChanges(changes: SimpleChanges) {
-    if (changes['selectedSort'] && !changes['selectedSort'].firstChange) {
-      this.updateSelectedSortKey();
-    }
-  }
-
   private loadSortFromStorage() {
     if (this.storageKey && typeof localStorage !== 'undefined') {
       const saved = localStorage.getItem(this.storageKey);
@@ -68,11 +60,11 @@ export class SortHeaderComponent implements OnInit, OnChanges {
         try {
           const parsedSort = JSON.parse(saved);
           // Find matching option in available sortOptions
-          const matchingOption = this.sortOptions.find(option => 
+          const matchingOption = this.sortOptions().find(option => 
             option.field === parsedSort.field && option.direction === parsedSort.direction
           );
           if (matchingOption) {
-            this.selectedSort = matchingOption;
+            this.selectedSort.set(matchingOption);
             // Emit the loaded sort option to parent component
             setTimeout(() => {
               this.sortChanged.emit(matchingOption);
@@ -93,56 +85,34 @@ export class SortHeaderComponent implements OnInit, OnChanges {
   }
 
   private updateSelectedSortKey() {
-    if (this.selectedSort) {
-      this.selectedSortKey = `${this.selectedSort.field}_${this.selectedSort.direction}`;
+    if (this.selectedSort()) {
+      this.selectedSortKey = `${this.selectedSort().field}_${this.selectedSort().direction}`;
     }
   }
 
-  async openSortPopover(event: Event) {
-    // Prevent event bubbling and set isOpen to trigger popover
-    event.stopPropagation();
-    event.preventDefault();
-    this.isOpen = true;
-  }
-
   selectOption(option: SortOption<BallSortField | PatternSortField>) {
-    // Direct option selection method that ensures responsiveness
-    this.selectedSort = option;
+    this.selectedSort.set(option);
     this.selectedSortKey = `${option.field}_${option.direction}`;
     this.saveSortToStorage(option);
     this.sortChanged.emit(option);
-    this.isOpen = false;
+    this.popoverController.dismiss();
   }
 
   onSortChange(selectedKey: string) {
-    const selectedOption = this.sortOptions.find(option => 
+    const selectedOption = this.sortOptions().find(option => 
       `${option.field}_${option.direction}` === selectedKey
     );
     
     if (selectedOption) {
-      this.selectedSort = selectedOption;
+      this.selectedSort.set(selectedOption);
       this.selectedSortKey = selectedKey;
       this.saveSortToStorage(selectedOption);
       this.sortChanged.emit(selectedOption);
-      this.isOpen = false;
+      this.popoverController.dismiss();
     }
-  }
-
-  onPopoverDismiss() {
-    this.isOpen = false;
   }
 
   getSortKey(option: SortOption<BallSortField | PatternSortField>): string {
     return `${option.field}_${option.direction}`;
-  }
-
-  hide() {
-    this.elementRef.nativeElement.style.opacity = '0.5';
-    this.elementRef.nativeElement.style.pointerEvents = 'none';
-  }
-
-  show() {
-    this.elementRef.nativeElement.style.opacity = '1';
-    this.elementRef.nativeElement.style.pointerEvents = 'auto';
   }
 }
