@@ -28,10 +28,38 @@
   </ion-item>
 
   <ion-item>
+    <ion-icon name="list-outline" slot="start" color="primary"></ion-icon>
+    <ion-label class="ion-text-wrap">
+      <h3>Specific Ball Recommendations</h3>
+      <div class="ball-recommendations">
+        @for (ball of recommendations().specificBallRecommendations; track ball) {
+          <p class="ball-item">• {{ ball }}</p>
+        }
+      </div>
+    </ion-label>
+  </ion-item>
+
+  <ion-item>
     <ion-icon name="location-outline" slot="start" color="secondary"></ion-icon>
     <ion-label class="ion-text-wrap">
       <h3>Targeting Strategy</h3>
       <p>{{ recommendations().targetingStrategy }}</p>
+    </ion-label>
+  </ion-item>
+
+  <ion-item>
+    <ion-icon name="navigate-outline" slot="start" color="secondary"></ion-icon>
+    <ion-label class="ion-text-wrap">
+      <h3>Arrow Targeting</h3>
+      <p>{{ recommendations().arrowTargeting }}</p>
+    </ion-label>
+  </ion-item>
+
+  <ion-item>
+    <ion-icon name="flag-outline" slot="start" color="tertiary"></ion-icon>
+    <ion-label class="ion-text-wrap">
+      <h3>Breakpoint Strategy</h3>
+      <p>{{ recommendations().breakpointStrategy }}</p>
     </ion-label>
   </ion-item>
 

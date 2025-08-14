@@ -1,6 +1,9 @@
 export interface PatternRecommendation {
   ballSelection: string;
+  specificBallRecommendations: string[];
   targetingStrategy: string;
+  arrowTargeting: string;
+  breakpointStrategy: string;
   speedAdjustment: string;
   generalTips: string[];
 }

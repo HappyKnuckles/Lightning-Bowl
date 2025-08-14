@@ -28,6 +28,10 @@ describe('PatternRecommendationService', () => {
 
     expect(recommendations).toBeDefined();
     expect(recommendations.ballSelection).toContain('urethane');
+    expect(recommendations.specificBallRecommendations).toBeDefined();
+    expect(recommendations.specificBallRecommendations.length).toBeGreaterThan(0);
+    expect(recommendations.arrowTargeting).toContain('1st-2nd arrow');
+    expect(recommendations.breakpointStrategy).toContain('25-30 feet');
     expect(recommendations.generalTips).toContain('Focus on consistency over power - precision is key on difficult patterns');
     expect(recommendations.speedAdjustment).toContain('Reduce ball speed');
   });
@@ -45,6 +49,10 @@ describe('PatternRecommendationService', () => {
 
     expect(recommendations).toBeDefined();
     expect(recommendations.ballSelection).toContain('strong coverstock');
+    expect(recommendations.specificBallRecommendations).toBeDefined();
+    expect(recommendations.specificBallRecommendations.length).toBeGreaterThan(0);
+    expect(recommendations.arrowTargeting).toContain('2nd arrow');
+    expect(recommendations.breakpointStrategy).toContain('40-45 feet');
     expect(recommendations.generalTips).toContain('Take advantage of the forgiving nature - you can be more aggressive with angles');
     expect(recommendations.speedAdjustment).toContain('increasing ball speed');
   });

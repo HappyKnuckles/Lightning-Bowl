@@ -88,6 +88,19 @@ ion-grid {
           }
         }
       }
+
+      .ball-recommendations {
+        .ball-item {
+          margin-bottom: 4px;
+          font-size: 0.9em;
+          color: var(--ion-color-primary-shade);
+          font-weight: 500;
+
+          &:last-child {
+            margin-bottom: 0;
+          }
+        }
+      }
     }
 
     ion-icon {
