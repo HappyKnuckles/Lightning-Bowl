@@ -1,0 +1,17 @@
+.no-data-text {
+  text-align: center;
+  padding: 20px;
+  color: var(--ion-color-medium);
+}
+
+.red-card {
+  --background: rgba(255, 0, 0, 0.1);
+}
+
+.yellow-card {
+  --background: rgba(255, 255, 0, 0.1);
+}
+
+.green-card {
+  --background: rgba(0, 255, 0, 0.1);
+}

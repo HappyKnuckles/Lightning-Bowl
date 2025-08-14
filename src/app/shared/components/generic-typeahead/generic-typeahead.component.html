@@ -1,0 +1,71 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button color="medium" (click)="resetSelection()">Reset</ion-button>
+    </ion-buttons>
+    <ion-title>{{ config().title }}</ion-title>
+    <ion-buttons slot="end" strong="true" (click)="saveSelection()">
+      <ion-button>Save</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-searchbar
+      appSearchBlur
+      (ionInput)="searchItems($event)"
+      [placeholder]="config().searchPlaceholder"
+      debounce="300"
+      showCancelButton="focus"
+    ></ion-searchbar>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" role="feed">
+  <ng-container *ngIf="displayedItems().length <= 0 && config().noDataText; else itemsList">
+    <ion-text class="no-data-text">{{ config().noDataText }}</ion-text>
+  </ng-container>
+  
+  <ng-template #itemsList>
+    <ion-list>
+      @for (item of displayedItems(); track getItemIdentifier(item)) {
+        <ion-item 
+          role="article" 
+          [ngClass]="getCustomDisplayLogic(item).cssClass"
+          lines="none"
+        >
+          <ion-avatar slot="start" *ngIf="config().showImages">
+            <ion-img [src]="getImageUrl(item)"></ion-img>
+          </ion-avatar>
+          
+          <ion-checkbox 
+            [value]="item" 
+            [checked]="isItemSelected(item)" 
+            [disabled]="!isItemSelected(item) && !canSelectMoreItems() || getCustomDisplayLogic(item).disabled"
+            (ionChange)="checkboxChange($event, item)"
+            justify="space-between"
+          >
+            <ion-label>
+              @for (field of config().displayFields; track field.key) {
+                @if (field.isSecondary) {
+                  <p>{{ getItemDisplayValue(item, field.key) }}</p>
+                }
+                @if (field.isPrimary) {
+                  <h2 style="overflow: hidden">{{ getItemDisplayValue(item, field.key) }}</h2>
+                }
+                @if (!field.isPrimary && !field.isSecondary) {
+                  <span>{{ getItemDisplayValue(item, field.key) }}</span>
+                }
+              }
+            </ion-label>
+          </ion-checkbox>
+        </ion-item>
+      }
+    </ion-list>
+
+    <ion-infinite-scroll threshold="90%" (ionInfinite)="loadData($event)" #infiniteScroll>
+      <ion-infinite-scroll-content 
+        loadingSpinner="crescent" 
+        [loadingText]="config().loadingText"
+      ></ion-infinite-scroll-content>
+    </ion-infinite-scroll>
+  </ng-template>
+</ion-content>
