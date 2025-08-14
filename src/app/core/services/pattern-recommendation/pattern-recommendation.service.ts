@@ -54,72 +54,9 @@ export class PatternRecommendationService {
 
   private getSpecificBallRecommendations(criteria: RecommendationCriteria): string[] {
     const { volume, difficulty, length, arsenal } = criteria;
-    const recommendations: string[] = [];
-
-    if (volume === 'Very High' || volume === 'High') {
-      if (difficulty === 'Hard') {
-        const recommendedBalls = [
-          { name: 'Storm Phaze II', year: '2018', description: 'Proven strong solid reactive for heavy oil patterns' },
-          { name: 'Motiv Jackal Ghost', year: '2021', description: 'Modern aggressive asymmetric with strong backend' },
-          { name: 'Brunswick Kingpin Max', year: '2020', description: 'Strong continuous motion through heavy oil' }
-        ];
-        
-        this.addBallRecommendationsWithArsenalCheck(recommendations, recommendedBalls, arsenal, 'heavy oil', 'solid reactive');
-        recommendations.push('Arsenal Note: Pair with a medium-strength ball and urethane for complete coverage');
-      } else {
-        const recommendedBalls = [
-          { name: 'Storm IQ Tour Emerald', year: '2023', description: 'Latest benchmark ball technology for heavy oil' },
-          { name: 'Hammer Black Widow 2.0', year: '2019', description: 'Reliable heavy oil option with proven track record' },
-          { name: 'Columbia 300 Eruption Pro', year: '2017', description: 'Older but effective heavy oil ball' }
-        ];
-        
-        this.addBallRecommendationsWithArsenalCheck(recommendations, recommendedBalls, arsenal, 'heavy oil', 'strong reactive');
-        recommendations.push('Arsenal Note: Add a pearl reactive for transitioning lanes and a spare ball');
-      }
-    } else if (volume === 'Medium') {
-      if (length === 'Long') {
-        const recommendedBalls = [
-          { name: 'Storm IQ Tour', year: '2020', description: 'Modern benchmark ball for medium-long patterns' },
-          { name: 'Roto Grip Hustle Ink', year: '2019', description: 'Versatile medium oil workhorse' },
-          { name: 'DV8 Misfit', year: '2023', description: 'New release with controlled backend reaction' }
-        ];
-        
-        this.addBallRecommendationsWithArsenalCheck(recommendations, recommendedBalls, arsenal, 'medium oil', 'benchmark');
-        recommendations.push('Arsenal Note: Complement with solid reactive for heavier oil and urethane for tight conditions');
-      } else {
-        const recommendedBalls = [
-          { name: 'Hammer Raw Hammer', year: '2022', description: 'Recent versatile medium oil release' },
-          { name: 'Brunswick Rhino', year: '2018', description: 'Proven medium oil performance' },
-          { name: 'Storm Tropical Surge', year: '2021', description: 'Smooth reaction for medium-short patterns' }
-        ];
-        
-        this.addBallRecommendationsWithArsenalCheck(recommendations, recommendedBalls, arsenal, 'medium oil', 'versatile');
-        recommendations.push('Arsenal Note: Build around this with stronger and weaker options for lane transition');
-      }
-    } else {
-      // Light volume
-      if (difficulty === 'Hard') {
-        const recommendedBalls = [
-          { name: 'Storm Mix', year: '2022', description: 'Modern urethane for controlled light oil play' },
-          { name: 'Hammer Purple Pearl Urethane', year: '2020', description: 'Predictable motion on challenging conditions' },
-          { name: 'Brunswick T-Zone', year: 'Classic', description: 'Reliable polyester for straight shots' }
-        ];
-        
-        this.addBallRecommendationsWithArsenalCheck(recommendations, recommendedBalls, arsenal, 'light oil', 'urethane');
-        recommendations.push('Arsenal Note: Essential to have alongside reactive balls for versatility');
-      } else {
-        const recommendedBalls = [
-          { name: 'Storm Tropical Breeze', year: '2021', description: 'Recent light oil reactive technology' },
-          { name: 'Motiv Freestyle Rush', year: '2023', description: 'New pearl reactive for light conditions' },
-          { name: 'Columbia 300 Scout Reactive', year: '2022', description: 'Entry-level reactive with modern coverstock' }
-        ];
-        
-        this.addBallRecommendationsWithArsenalCheck(recommendations, recommendedBalls, arsenal, 'light oil', 'pearl reactive');
-        recommendations.push('Arsenal Note: Perfect starter balls that work well with heavier oil options');
-      }
-    }
-
-    return recommendations;
+    
+    // Build a 3-ball arsenal strategy
+    return this.buildThreeBallArsenalStrategy(criteria);
   }
 
   private getTargetingStrategy(criteria: RecommendationCriteria): string {
@@ -250,84 +187,168 @@ export class PatternRecommendationService {
     return tips;
   }
 
-  private addBallRecommendationsWithArsenalCheck(
-    recommendations: string[], 
-    recommendedBalls: {name: string, year: string, description: string}[], 
-    arsenal: Ball[] | undefined,
-    patternType: string,
-    ballCategory: string
-  ): void {
-    recommendedBalls.forEach(ball => {
-      if (arsenal && arsenal.length > 0) {
-        const arsenalMatch = this.findSimilarBallInArsenal(ball.name, arsenal, ballCategory);
-        if (arsenalMatch) {
-          // Recommend the arsenal ball first with purpose description
-          const purpose = this.getBallPurpose(patternType, ballCategory);
-          const arsenalRecommendation = `${arsenalMatch.ball_name} - ${purpose}`;
-          const alternativeRecommendation = `Alternative: ${ball.name} (${ball.year}) - ${ball.description}`;
-          
-          recommendations.push(arsenalRecommendation);
-          recommendations.push(alternativeRecommendation);
-          return;
-        }
-      }
-      
-      // No arsenal match, recommend the suggested ball
-      recommendations.push(`${ball.name} (${ball.year}) - ${ball.description}`);
-    });
-  }
+  private buildThreeBallArsenalStrategy(criteria: RecommendationCriteria): string[] {
+    const { volume, difficulty, length, arsenal } = criteria;
+    const recommendations: string[] = [];
+    const usedArsenalBalls = new Set<string>();
 
-  private getBallPurpose(patternType: string, ballCategory: string): string {
-    if (ballCategory.includes('solid reactive') || ballCategory.includes('heavy oil')) {
-      return 'good for early games and heavy oil conditions';
-    } else if (ballCategory.includes('benchmark') || ballCategory.includes('versatile')) {
-      return 'good for transitions and medium oil conditions';
-    } else if (ballCategory.includes('urethane')) {
-      return 'good for control and challenging conditions';
-    } else if (ballCategory.includes('pearl reactive') || ballCategory.includes('light oil')) {
-      return 'good for late games and light oil conditions';
-    } else if (ballCategory.includes('strong reactive')) {
-      return 'good for heavy oil patterns and consistent control';
-    }
-    return `good for ${patternType} conditions`;
-  }
-
-  private findSimilarBallInArsenal(recommendedBallName: string, arsenal: Ball[], category: string): Ball | null {
-    // First, try exact name match (case insensitive)
-    let match = arsenal.find(ball => 
-      ball.ball_name.toLowerCase().includes(recommendedBallName.toLowerCase()) ||
-      recommendedBallName.toLowerCase().includes(ball.ball_name.toLowerCase())
-    );
+    // Define the three ball categories needed
+    const ballCategories = this.getRequiredBallCategories(criteria);
     
-    if (match) return match;
+    ballCategories.forEach(category => {
+      const { categoryName, ballOptions, purpose } = category;
+      
+      // Check if user has a suitable ball in their arsenal for this category
+      let arsenalMatch: Ball | null = null;
+      if (arsenal && arsenal.length > 0) {
+        arsenalMatch = this.findBestArsenalMatch(ballOptions, arsenal, categoryName, usedArsenalBalls);
+      }
+
+      if (arsenalMatch) {
+        // User has a suitable ball - recommend it first
+        usedArsenalBalls.add(arsenalMatch.ball_name);
+        recommendations.push(`${arsenalMatch.ball_name} - ${purpose}`);
+        
+        // Add an alternative suggestion
+        const alternativeBall = ballOptions[0]; // Use the first recommended ball as alternative
+        recommendations.push(`Alternative: ${alternativeBall.name} (${alternativeBall.year}) - ${alternativeBall.description}`);
+      } else {
+        // User doesn't have a suitable ball - recommend the best option
+        const recommendedBall = ballOptions[0];
+        recommendations.push(`${recommendedBall.name} (${recommendedBall.year}) - ${recommendedBall.description}`);
+      }
+    });
+
+    // Add arsenal note
+    recommendations.push(`Arsenal Note: These three balls provide complete coverage for lane transition - start with the heavy oil ball and move to lighter options as the pattern breaks down`);
+
+    return recommendations;
+  }
+
+  private getRequiredBallCategories(criteria: RecommendationCriteria) {
+    const { volume, difficulty, length } = criteria;
+    
+    // Always recommend a 3-ball strategy: Heavy Oil, Benchmark/Medium, Light Oil
+    const categories = [];
+
+    // Heavy oil ball
+    if (volume === 'Very High' || volume === 'High') {
+      categories.push({
+        categoryName: 'solid reactive',
+        purpose: 'good for early games and heavy oil conditions',
+        ballOptions: [
+          { name: 'Storm Phaze II', year: '2018', description: 'Proven strong solid reactive for heavy oil patterns' },
+          { name: 'Motiv Jackal Ghost', year: '2021', description: 'Modern aggressive asymmetric with strong backend' },
+          { name: 'Brunswick Kingpin Max', year: '2020', description: 'Strong continuous motion through heavy oil' }
+        ]
+      });
+    } else {
+      categories.push({
+        categoryName: 'strong reactive',
+        purpose: 'good for early games and heavier oil sections',
+        ballOptions: [
+          { name: 'Storm IQ Tour Emerald', year: '2023', description: 'Latest benchmark ball technology' },
+          { name: 'Hammer Black Widow 2.0', year: '2019', description: 'Reliable strong option with proven track record' },
+          { name: 'Columbia 300 Eruption Pro', year: '2017', description: 'Effective strong reactive ball' }
+        ]
+      });
+    }
+
+    // Benchmark/Transition ball
+    categories.push({
+      categoryName: 'benchmark',
+      purpose: 'good for transitions and medium oil conditions',
+      ballOptions: [
+        { name: 'Storm IQ Tour', year: '2020', description: 'Modern benchmark ball for medium patterns' },
+        { name: 'Roto Grip Hustle Ink', year: '2019', description: 'Versatile medium oil workhorse' },
+        { name: 'DV8 Misfit', year: '2023', description: 'New release with controlled backend reaction' }
+      ]
+    });
+
+    // Light oil/Control ball
+    if (difficulty === 'Hard' || volume === 'Light') {
+      categories.push({
+        categoryName: 'urethane',
+        purpose: 'good for control and challenging conditions',
+        ballOptions: [
+          { name: 'Storm Mix', year: '2022', description: 'Modern urethane for controlled play' },
+          { name: 'Hammer Purple Pearl Urethane', year: '2020', description: 'Predictable motion on challenging conditions' },
+          { name: 'Brunswick T-Zone', year: 'Classic', description: 'Reliable polyester for straight shots' }
+        ]
+      });
+    } else {
+      categories.push({
+        categoryName: 'pearl reactive',
+        purpose: 'good for late games and light oil conditions',
+        ballOptions: [
+          { name: 'Storm Tropical Breeze', year: '2021', description: 'Recent light oil reactive technology' },
+          { name: 'Motiv Freestyle Rush', year: '2023', description: 'New pearl reactive for light conditions' },
+          { name: 'Columbia 300 Scout Reactive', year: '2022', description: 'Entry-level reactive with modern coverstock' }
+        ]
+      });
+    }
+
+    return categories;
+  }
+
+  private findBestArsenalMatch(
+    ballOptions: {name: string, year: string, description: string}[], 
+    arsenal: Ball[], 
+    categoryName: string,
+    usedBalls: Set<string>
+  ): Ball | null {
+    
+    // First, try exact name match for any of the recommended balls
+    for (const recommendedBall of ballOptions) {
+      const exactMatch = arsenal.find(ball => 
+        !usedBalls.has(ball.ball_name) &&
+        (ball.ball_name.toLowerCase().includes(recommendedBall.name.toLowerCase()) ||
+         recommendedBall.name.toLowerCase().includes(ball.ball_name.toLowerCase()))
+      );
+      if (exactMatch) return exactMatch;
+    }
 
     // Then try to match by characteristics based on category
-    if (category.includes('solid reactive') || category.includes('heavy oil')) {
+    let match: Ball | undefined;
+    
+    if (categoryName.includes('solid reactive')) {
       match = arsenal.find(ball => 
-        ball.coverstock_type?.toLowerCase().includes('solid') ||
-        ball.ball_name.toLowerCase().includes('phaze') ||
-        ball.ball_name.toLowerCase().includes('jackal') ||
-        ball.ball_name.toLowerCase().includes('kingpin')
+        !usedBalls.has(ball.ball_name) &&
+        (ball.coverstock_type?.toLowerCase().includes('solid') ||
+         ball.ball_name.toLowerCase().includes('phaze') ||
+         ball.ball_name.toLowerCase().includes('jackal') ||
+         ball.ball_name.toLowerCase().includes('kingpin'))
       );
-    } else if (category.includes('benchmark')) {
+    } else if (categoryName.includes('benchmark')) {
       match = arsenal.find(ball =>
-        ball.ball_name.toLowerCase().includes('iq tour') ||
-        ball.ball_name.toLowerCase().includes('hustle') ||
-        ball.ball_name.toLowerCase().includes('rhino') ||
-        ball.coverstock_type?.toLowerCase().includes('hybrid')
+        !usedBalls.has(ball.ball_name) &&
+        (ball.ball_name.toLowerCase().includes('iq tour') ||
+         ball.ball_name.toLowerCase().includes('hustle') ||
+         ball.ball_name.toLowerCase().includes('rhino') ||
+         ball.coverstock_type?.toLowerCase().includes('hybrid'))
       );
-    } else if (category.includes('urethane') || category.includes('light oil')) {
+    } else if (categoryName.includes('urethane')) {
       match = arsenal.find(ball =>
-        ball.coverstock_type?.toLowerCase().includes('urethane') ||
-        ball.coverstock_type?.toLowerCase().includes('polyester') ||
-        ball.ball_name.toLowerCase().includes('mix') ||
-        ball.ball_name.toLowerCase().includes('purple pearl')
+        !usedBalls.has(ball.ball_name) &&
+        (ball.coverstock_type?.toLowerCase().includes('urethane') ||
+         ball.coverstock_type?.toLowerCase().includes('polyester') ||
+         ball.ball_name.toLowerCase().includes('mix') ||
+         ball.ball_name.toLowerCase().includes('purple pearl'))
       );
-    } else if (category.includes('pearl reactive')) {
+    } else if (categoryName.includes('pearl reactive')) {
       match = arsenal.find(ball =>
-        ball.coverstock_type?.toLowerCase().includes('pearl') ||
-        ball.ball_name.toLowerCase().includes('tropical') ||
-        ball.ball_name.toLowerCase().includes('freestyle')
+        !usedBalls.has(ball.ball_name) &&
+        (ball.coverstock_type?.toLowerCase().includes('pearl') ||
+         ball.ball_name.toLowerCase().includes('tropical') ||
+         ball.ball_name.toLowerCase().includes('freestyle'))
+      );
+    } else if (categoryName.includes('strong reactive')) {
+      match = arsenal.find(ball =>
+        !usedBalls.has(ball.ball_name) &&
+        (ball.coverstock_type?.toLowerCase().includes('solid') ||
+         ball.coverstock_type?.toLowerCase().includes('hybrid') ||
+         ball.ball_name.toLowerCase().includes('black widow') ||
+         ball.ball_name.toLowerCase().includes('eruption'))
       );
     }
 
