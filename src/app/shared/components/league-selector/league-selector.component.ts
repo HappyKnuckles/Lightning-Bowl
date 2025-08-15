@@ -23,7 +23,7 @@ import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { HiddenLeagueSelectionService } from 'src/app/core/services/hidden-league/hidden-league.service';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
-import { League, LeagueData, isLeagueObject } from 'src/app/core/models/league.model';
+import { League, LeagueData, isLeagueObject, EventType } from 'src/app/core/models/league.model';
 
 @Component({
   selector: 'app-league-selector',
@@ -54,6 +54,7 @@ export class LeagueSelectorComponent {
   @Output() leagueChanged = new EventEmitter<string>();
   selectedLeague = '';
   newLeague = '';
+  newLeagueEventType: EventType = 'League';
   leaguesToDelete: string[] = [];
   leagueToChange = '';
   isModalOpen = false;
@@ -107,10 +108,18 @@ export class LeagueSelectorComponent {
 
   async saveLeague(): Promise<void> {
     try {
-      await this.storageService.addLeague(this.newLeague);
+      // Create new League object with all required properties
+      const newLeagueObj: League = {
+        Name: this.newLeague,
+        Show: true, // Default to visible
+        Event: this.newLeagueEventType
+      };
+      
+      await this.storageService.addLeague(newLeagueObj);
       this.selectedLeague = this.newLeague;
       this.leagueChanged.emit(this.selectedLeague);
       this.newLeague = '';
+      this.newLeagueEventType = 'League';
       this.toastService.showToast(ToastMessages.leagueSaveSuccess, 'add');
       this.isModalOpen = false;
     } catch (error) {
@@ -186,14 +195,28 @@ export class LeagueSelectorComponent {
   private async openAddAlert(): Promise<void> {
     await this.alertController
       .create({
-        header: 'Add League',
-        message: 'Enter the league name',
+        header: 'Add League/Tournament',
+        message: 'Enter the league information',
         inputs: [
           {
             name: 'league',
             type: 'text',
             placeholder: 'League name',
             cssClass: 'league-alert-input',
+          },
+          {
+            name: 'eventType',
+            type: 'radio',
+            label: 'League',
+            value: 'League',
+            checked: true,
+          },
+          {
+            name: 'eventType',
+            type: 'radio',
+            label: 'Tournament',
+            value: 'Tournament',
+            checked: false,
           },
         ],
         buttons: [
@@ -209,6 +232,7 @@ export class LeagueSelectorComponent {
             text: 'Add',
             handler: async (data) => {
               this.newLeague = data.league;
+              this.newLeagueEventType = data.eventType || 'League';
               await this.saveLeague();
             },
           },
