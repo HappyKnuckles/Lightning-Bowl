@@ -307,7 +307,8 @@ export class LeaguePage {
     // This method can be removed or used for any additional setup if needed
   }
 
-  handleLeagueOperation(operation: LeagueData): void {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  handleLeagueOperation(_operation: LeagueData): void {
     // The league selector component handles add/edit/delete operations internally
     // This handler can be used for any additional processing if needed
   }
