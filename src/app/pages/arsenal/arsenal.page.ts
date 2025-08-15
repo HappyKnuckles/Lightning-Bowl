@@ -36,12 +36,29 @@ import {
   IonInput,
   IonSelect,
   IonSelectOption,
+  IonActionSheet,
 } from '@ionic/angular/standalone';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { Ball } from 'src/app/core/models/ball.model';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { addIcons } from 'ionicons';
-import { chevronBack, add, openOutline, trashOutline, ellipsisVerticalOutline, copyOutline, swapHorizontalOutline, documentTextOutline, pricetagOutline, settingsOutline, addOutline, createOutline, chevronDown, checkmark, close } from 'ionicons/icons';
+import {
+  chevronBack,
+  add,
+  openOutline,
+  trashOutline,
+  ellipsisVerticalOutline,
+  copyOutline,
+  swapHorizontalOutline,
+  documentTextOutline,
+  pricetagOutline,
+  settingsOutline,
+  addOutline,
+  createOutline,
+  chevronDown,
+  checkmark,
+  close,
+} from 'ionicons/icons';
 import { AlertController, ItemReorderCustomEvent, ModalController, ActionSheetController } from '@ionic/angular';
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import { ImpactStyle } from '@capacitor/haptics';
@@ -98,11 +115,13 @@ import { ChartGenerationService } from 'src/app/core/services/chart/chart-genera
     IonInput,
     IonSelect,
     IonSelectOption,
+    IonActionSheet,
   ],
 })
 export class ArsenalPage implements OnInit {
   @ViewChild('core', { static: false }) coreModal!: IonModal;
   @ViewChild('coverstock', { static: false }) coverstockModal!: IonModal;
+  @ViewChild('balls', { static: false }) ballChart?: ElementRef;
   coverstockBalls: Ball[] = [];
   coreBalls: Ball[] = [];
   presentingElement?: HTMLElement;
@@ -112,14 +131,41 @@ export class ArsenalPage implements OnInit {
       .filter((ball) => !this.storageService.arsenal().some((b) => b.ball_id === ball.ball_id && b.core_weight === ball.core_weight)),
   );
   selectedSegment = model('arsenal');
-  @ViewChild('balls', { static: false }) ballChart?: ElementRef;
   private ballsChartInstance: Chart | null = null;
-  
+  actionSheetButtons = [
+    {
+      text: 'Add Arsenal',
+      icon: addOutline,
+      handler: () => {
+        this.openAddArsenalAlert();
+      },
+    },
+    {
+      text: 'Edit Arsenal',
+      icon: createOutline,
+      handler: () => {
+        this.openEditArsenalModal();
+      },
+    },
+    {
+      text: 'Delete Arsenal',
+      icon: trashOutline,
+      role: 'destructive',
+      handler: () => {
+        this.openDeleteArsenalAlert();
+      },
+    },
+    {
+      text: 'Close',
+      icon: close,
+      role: 'cancel',
+    },
+  ];
   // Arsenal management properties
   isEditArsenalModalOpen = false;
   arsenalToEdit = '';
   newArsenalName = '';
-  
+
   constructor(
     public storageService: StorageService,
     private hapticService: HapticService,
@@ -131,7 +177,23 @@ export class ArsenalPage implements OnInit {
     private chartGenerationService: ChartGenerationService,
     private actionSheetController: ActionSheetController,
   ) {
-    addIcons({ add, ellipsisVerticalOutline, trashOutline, chevronBack, openOutline, copyOutline, swapHorizontalOutline, documentTextOutline, pricetagOutline, settingsOutline, addOutline, createOutline, chevronDown, checkmark, close });
+    addIcons({
+      add,
+      ellipsisVerticalOutline,
+      trashOutline,
+      chevronBack,
+      openOutline,
+      copyOutline,
+      swapHorizontalOutline,
+      documentTextOutline,
+      pricetagOutline,
+      settingsOutline,
+      addOutline,
+      createOutline,
+      chevronDown,
+      checkmark,
+      close,
+    });
     effect(() => {
       if (this.selectedSegment() === 'compare') {
         this.generateBallDistributionChart();
@@ -248,19 +310,19 @@ export class ArsenalPage implements OnInit {
             name: 'notes',
             type: 'textarea',
             placeholder: 'Add your notes here...',
-            value: currentNotes
+            value: currentNotes,
           },
           {
             name: 'tags',
             type: 'text',
             placeholder: 'Enter tags separated by commas...',
-            value: currentTags
-          }
+            value: currentTags,
+          },
         ],
         buttons: [
           {
             text: 'Cancel',
-            role: 'cancel'
+            role: 'cancel',
           },
           {
             text: 'Save',
@@ -268,8 +330,11 @@ export class ArsenalPage implements OnInit {
               try {
                 const notes = data.notes?.trim() || '';
                 const tagsString = data.tags?.trim() || '';
-                const tags = tagsString 
-                  ? tagsString.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag.length > 0)
+                const tags = tagsString
+                  ? tagsString
+                      .split(',')
+                      .map((tag: string) => tag.trim())
+                      .filter((tag: string) => tag.length > 0)
                   : [];
 
                 await this.storageService.updateBallNotesAndTags(ball, notes, tags);
@@ -278,9 +343,9 @@ export class ArsenalPage implements OnInit {
                 console.error('Error updating notes and tags:', error);
                 this.toastService.showToast('Error updating notes and tags', 'bug', true);
               }
-            }
-          }
-        ]
+            },
+          },
+        ],
       });
 
       await alert.present();
@@ -292,8 +357,8 @@ export class ArsenalPage implements OnInit {
 
   async showBallOptionsActionSheet(ball: Ball): Promise<void> {
     try {
-      const availableArsenals = this.storageService.arsenals().filter(a => a !== this.storageService.currentArsenal());
-      
+      const availableArsenals = this.storageService.arsenals().filter((a) => a !== this.storageService.currentArsenal());
+
       // Build the buttons array dynamically based on available arsenals
       const buttons: any[] = [
         {
@@ -301,8 +366,8 @@ export class ArsenalPage implements OnInit {
           icon: 'document-text-outline',
           handler: () => {
             this.editNotesAndTags(ball);
-          }
-        }
+          },
+        },
       ];
 
       // Only add copy and move options if there are other arsenals available
@@ -313,15 +378,15 @@ export class ArsenalPage implements OnInit {
             icon: 'copy-outline',
             handler: () => {
               this.showArsenalSelection(ball, 'copy');
-            }
+            },
           },
           {
             text: 'Move to Another Arsenal',
             icon: 'swap-horizontal-outline',
             handler: () => {
               this.showArsenalSelection(ball, 'move');
-            }
-          }
+            },
+          },
         );
       }
 
@@ -333,18 +398,18 @@ export class ArsenalPage implements OnInit {
           role: 'destructive',
           handler: () => {
             this.removeFromArsenal(ball);
-          }
+          },
         },
         {
           text: 'Cancel',
           icon: 'close',
-          role: 'cancel'
-        }
+          role: 'cancel',
+        },
       );
 
       const actionSheet = await this.actionSheetController.create({
         header: `${ball.ball_name} Options`,
-        buttons
+        buttons,
       });
 
       await actionSheet.present();
@@ -357,8 +422,8 @@ export class ArsenalPage implements OnInit {
   async showArsenalSelection(ball: Ball, operation: 'copy' | 'move'): Promise<void> {
     try {
       const currentArsenal = this.storageService.currentArsenal();
-      const allArsenals = this.storageService.arsenals().filter(a => a !== currentArsenal);
-      
+      const allArsenals = this.storageService.arsenals().filter((a) => a !== currentArsenal);
+
       if (allArsenals.length === 0) {
         this.toastService.showToast('No other arsenals available', 'information-circle-outline');
         return;
@@ -374,19 +439,16 @@ export class ArsenalPage implements OnInit {
       }
 
       if (availableArsenals.length === 0) {
-        this.toastService.showToast(
-          `${ball.ball_name} (${ball.core_weight}lbs) already exists in all other arsenals`, 
-          'information-circle-outline'
-        );
+        this.toastService.showToast(`${ball.ball_name} (${ball.core_weight}lbs) already exists in all other arsenals`, 'information-circle-outline');
         return;
       }
 
       const operationText = operation === 'copy' ? 'Copy' : 'Move';
-      const inputs = availableArsenals.map(arsenal => ({
+      const inputs = availableArsenals.map((arsenal) => ({
         name: 'arsenals',
         type: 'checkbox' as const,
         label: arsenal,
-        value: arsenal
+        value: arsenal,
       }));
 
       const alert = await this.alertController.create({
@@ -396,7 +458,7 @@ export class ArsenalPage implements OnInit {
         buttons: [
           {
             text: 'Cancel',
-            role: 'cancel'
+            role: 'cancel',
           },
           {
             text: operationText,
@@ -404,9 +466,9 @@ export class ArsenalPage implements OnInit {
               if (selectedArsenals && selectedArsenals.length > 0) {
                 await this.performBallOperation(ball, selectedArsenals, operation);
               }
-            }
-          }
-        ]
+            },
+          },
+        ],
       });
 
       await alert.present();
@@ -447,9 +509,10 @@ export class ArsenalPage implements OnInit {
       if (successCount > 0) {
         const operationPastTense = operation === 'copy' ? 'copied' : 'moved';
         const arsenalList = successfulArsenals.join(', ');
-        const message = targetArsenals.length === 1 
-          ? `Ball ${operationPastTense} to ${arsenalList}`
-          : `Ball ${operationPastTense} to ${successCount} arsenal(s): ${arsenalList}`;
+        const message =
+          targetArsenals.length === 1
+            ? `Ball ${operationPastTense} to ${arsenalList}`
+            : `Ball ${operationPastTense} to ${successCount} arsenal(s): ${arsenalList}`;
         this.toastService.showToast(message, 'checkmark-outline');
       }
 
@@ -462,7 +525,6 @@ export class ArsenalPage implements OnInit {
       if (errorCount > 0) {
         this.toastService.showToast(`Failed to ${operation} to ${errorCount} arsenal(s)`, 'bug', true);
       }
-
     } catch (error) {
       console.error(`Error performing ${operation} operation:`, error);
       this.toastService.showToast(`Error ${operation}ing ball`, 'bug', true);
@@ -512,40 +574,38 @@ export class ArsenalPage implements OnInit {
   async openArsenalSelector(): Promise<void> {
     try {
       const availableArsenals = this.storageService.arsenals();
-      
+
       // Only show selector if there are multiple arsenals
       if (availableArsenals.length <= 1) {
         return;
       }
 
       const currentArsenal = this.storageService.currentArsenal();
-      
+
       const buttons: any[] = [];
-      
+
       // Add arsenal buttons
-      availableArsenals.forEach(arsenal => {
+      availableArsenals.forEach((arsenal) => {
         buttons.push({
           text: arsenal,
-          icon: arsenal === currentArsenal ? 'checkmark' : undefined,
           cssClass: arsenal === currentArsenal ? 'action-sheet-selected' : undefined,
           handler: async () => {
             if (arsenal !== currentArsenal) {
               await this.onArsenalChange(arsenal);
             }
-          }
+          },
         });
       });
 
       // Add cancel button
       buttons.push({
         text: 'Cancel',
-        icon: 'close',
-        role: 'cancel'
+        role: 'cancel',
       });
 
       const actionSheet = await this.actionSheetController.create({
         header: 'Select Arsenal',
-        buttons
+        buttons,
       });
 
       await actionSheet.present();
@@ -553,11 +613,6 @@ export class ArsenalPage implements OnInit {
       console.error('Error showing arsenal selector:', error);
       this.toastService.showToast('Error showing arsenal selector', 'bug', true);
     }
-  }
-
-  // Arsenal Management Methods
-  closeArsenalManagement(): void {
-    this.modalCtrl.dismiss();
   }
 
   async openAddArsenalAlert(): Promise<void> {
@@ -644,7 +699,7 @@ export class ArsenalPage implements OnInit {
                 this.toastService.showToast('Cannot delete all arsenals. At least one must remain.', 'warning', true);
                 return false;
               }
-              
+
               for (const arsenal of data) {
                 try {
                   await this.storageService.deleteArsenal(arsenal);
