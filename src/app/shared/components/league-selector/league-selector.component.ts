@@ -18,7 +18,7 @@ import {
 } from '@ionic/angular/standalone';
 import { IonSelectCustomEvent } from '@ionic/core';
 import { addIcons } from 'ionicons';
-import { addOutline, medalOutline, createOutline } from 'ionicons/icons';
+import { addOutline, medalOutline, createOutline, flagOutline } from 'ionicons/icons';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { HiddenLeagueSelectionService } from 'src/app/core/services/hidden-league/hidden-league.service';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
@@ -57,7 +57,9 @@ export class LeagueSelectorComponent {
   newLeagueEventType: EventType = 'League';
   leaguesToDelete: string[] = [];
   leagueToChange = '';
-  isModalOpen = false;
+  isAddModalOpen = false;
+  isEditModalOpen = false;
+  selectedLeagueForEdit: LeagueData | null = null;
   
   // Helper method to check if a league is a string (legacy)
   isLegacyLeague(league: LeagueData): boolean {
@@ -117,14 +119,14 @@ export class LeagueSelectorComponent {
     //     this.getLeagues();
     //   })
     // );
-    addIcons({ medalOutline, addOutline, createOutline });
+    addIcons({ medalOutline, addOutline, createOutline, flagOutline });
   }
 
   async onLeagueChange(event: IonSelectCustomEvent<SelectChangeEventDetail>): Promise<void> {
     if (event.detail.value === 'new') {
-      await this.openAddAlert();
+      this.isAddModalOpen = true;
     } else if (event.detail.value === 'edit') {
-      this.isModalOpen = true;
+      this.isEditModalOpen = true;
     } else if (event.detail.value === 'delete') {
       await this.openDeleteAlert();
     }
@@ -145,25 +147,64 @@ export class LeagueSelectorComponent {
       this.newLeague = '';
       this.newLeagueEventType = 'League';
       this.toastService.showToast(ToastMessages.leagueSaveSuccess, 'add');
-      this.isModalOpen = false;
+      this.isAddModalOpen = false;
     } catch (error) {
       console.error(error);
       this.toastService.showToast(ToastMessages.leagueSaveError, 'bug', true);
     }
   }
 
-  cancel(): void {
+  cancelAdd(): void {
+    this.newLeague = '';
+    this.newLeagueEventType = 'League';
+    this.selectedLeague = '';
+    this.leagueChanged.emit(this.selectedLeague);
+    this.isAddModalOpen = false;
+  }
+
+  cancelEdit(): void {
     this.leaguesToDelete = [];
-    this.isModalOpen = false;
+    this.newLeague = '';
+    this.leagueToChange = '';
+    this.selectedLeagueForEdit = null;
+    this.isEditModalOpen = false;
+  }
+
+  onLeagueToChangeSelect(): void {
+    // Find the selected league object
+    this.selectedLeagueForEdit = this.leagues().find(league => 
+      this.getLeagueValue(league) === this.leagueToChange
+    ) || null;
+    
+    // Set the new league name to the current name
+    this.newLeague = this.leagueToChange;
+    
+    // If it's a League object, set the event type
+    if (this.selectedLeagueForEdit && isLeagueObject(this.selectedLeagueForEdit)) {
+      this.newLeagueEventType = this.selectedLeagueForEdit.Event;
+    }
   }
 
   async editLeague(): Promise<void> {
     try {
-      await this.storageService.editLeague(this.newLeague, this.leagueToChange);
+      if (this.selectedLeagueForEdit && isLeagueObject(this.selectedLeagueForEdit)) {
+        // Create updated League object with new name and event type
+        const updatedLeague: League = {
+          Name: this.newLeague,
+          Show: this.selectedLeagueForEdit.Show, // Preserve Show setting
+          Event: this.newLeagueEventType
+        };
+        await this.storageService.editLeague(updatedLeague, this.selectedLeagueForEdit);
+      } else {
+        // For legacy string leagues, convert to string editing
+        await this.storageService.editLeague(this.newLeague, this.leagueToChange);
+      }
+      
       this.newLeague = '';
       this.leagueToChange = '';
+      this.selectedLeagueForEdit = null;
       this.toastService.showToast(ToastMessages.leagueEditSuccess, 'checkmark-outline');
-      this.isModalOpen = false;
+      this.isEditModalOpen = false;
     } catch (error) {
       console.error(error);
       this.toastService.showToast(ToastMessages.leagueEditError, 'bug', true);
@@ -199,7 +240,7 @@ export class LeagueSelectorComponent {
         await this.storageService.deleteLeague(league);
       }
       this.toastService.showToast(ToastMessages.leagueDeleteSuccess, 'checkmark-outline');
-      this.isModalOpen = false;
+      this.isEditModalOpen = false;
     } catch (error) {
       console.error(error);
       this.toastService.showToast(ToastMessages.leagueDeleteError, 'bug', true);
@@ -230,58 +271,6 @@ export class LeagueSelectorComponent {
             handler: async (data: string[]) => {
               this.leaguesToDelete = data;
               await this.deleteLeague();
-            },
-          },
-        ],
-      })
-      .then((alert) => {
-        alert.present();
-      });
-  }
-
-  private async openAddAlert(): Promise<void> {
-    await this.alertController
-      .create({
-        header: 'Add League/Tournament',
-        message: 'Enter the league information',
-        inputs: [
-          {
-            name: 'league',
-            type: 'text',
-            placeholder: 'League name',
-            cssClass: 'league-alert-input',
-          },
-          {
-            name: 'eventType',
-            type: 'radio',
-            label: 'League',
-            value: 'League',
-            checked: true,
-          },
-          {
-            name: 'eventType', 
-            type: 'radio',
-            label: 'Tournament',
-            value: 'Tournament',
-            checked: false,
-          },
-        ],
-        cssClass: 'league-alert-class',
-        buttons: [
-          {
-            text: 'Cancel',
-            role: 'cancel',
-            handler: () => {
-              this.selectedLeague = '';
-              this.leagueChanged.emit(this.selectedLeague);
-            },
-          },
-          {
-            text: 'Add',
-            handler: async (data) => {
-              this.newLeague = data.league;
-              this.newLeagueEventType = data.eventType || 'League';
-              await this.saveLeague();
             },
           },
         ],
