@@ -58,7 +58,7 @@ export class GenericTypeaheadComponent<T> implements OnInit, OnDestroy {
   @Output() selectedItemsChange = new EventEmitter<any[]>();
   @ViewChild(IonContent, { static: false }) content!: IonContent;
   @ViewChild('infiniteScroll') infiniteScroll!: IonInfiniteScroll;
-  
+
   filteredItems = signal<T[]>([]);
   selectedItems: T[] = [];
   displayedItems = computed(() => this.filteredItems().slice(0, this.loadedCount()));
@@ -68,7 +68,7 @@ export class GenericTypeaheadComponent<T> implements OnInit, OnDestroy {
 
   constructor(
     private modalCtrl: ModalController,
-    private loadingService: LoadingService
+    private loadingService: LoadingService,
   ) {}
 
   ngOnInit() {
@@ -77,9 +77,7 @@ export class GenericTypeaheadComponent<T> implements OnInit, OnDestroy {
 
     const prevSelected = this.prevSelectedItems();
     if (prevSelected && prevSelected.length > 0) {
-      this.selectedItems = this.items().filter((item) => 
-        prevSelected.includes(this.getItemIdentifier(item))
-      );
+      this.selectedItems = this.items().filter((item) => prevSelected.includes(this.getItemIdentifier(item)));
     }
 
     if (this.config().searchMode === 'local') {
@@ -117,7 +115,7 @@ export class GenericTypeaheadComponent<T> implements OnInit, OnDestroy {
 
   async searchItems(event: CustomEvent) {
     const searchTerm = event.detail.value?.toLowerCase() ?? '';
-    
+
     if (this.config().searchMode === 'api' && this.config().apiSearchFn) {
       try {
         this.loadingService.setLoading(true);
@@ -180,18 +178,14 @@ export class GenericTypeaheadComponent<T> implements OnInit, OnDestroy {
         }
       }
     } else {
-      this.selectedItems = this.selectedItems.filter((selected) => 
-        this.getItemIdentifier(selected) !== this.getItemIdentifier(item)
-      );
+      this.selectedItems = this.selectedItems.filter((selected) => this.getItemIdentifier(selected) !== this.getItemIdentifier(item));
     }
 
     this.reorderItemsForSelected();
   }
 
   isItemSelected(item: T): boolean {
-    return this.selectedItems.some((selected) => 
-      this.getItemIdentifier(selected) === this.getItemIdentifier(item)
-    );
+    return this.selectedItems.some((selected) => this.getItemIdentifier(selected) === this.getItemIdentifier(item));
   }
 
   canSelectMoreItems(): boolean {
@@ -222,19 +216,17 @@ export class GenericTypeaheadComponent<T> implements OnInit, OnDestroy {
   private reorderItemsForSelected(): void {
     if (this.selectedItems.length === 0) return;
 
-    const selectedIdentifiers = this.selectedItems.map(item => this.getItemIdentifier(item));
-    const selectedItemObjects = this.filteredItems().filter((item) => 
-      selectedIdentifiers.includes(this.getItemIdentifier(item))
-    );
-    const unselectedItems = this.filteredItems().filter((item) => 
-      !selectedIdentifiers.includes(this.getItemIdentifier(item))
-    );
+    const selectedIdentifiers = this.selectedItems.map((item) => this.getItemIdentifier(item));
+    const selectedItemObjects = this.filteredItems().filter((item) => selectedIdentifiers.includes(this.getItemIdentifier(item)));
+    const unselectedItems = this.filteredItems().filter((item) => !selectedIdentifiers.includes(this.getItemIdentifier(item)));
 
     this.filteredItems.set([...selectedItemObjects, ...unselectedItems]);
   }
 
   ngOnDestroy(): void {
-    const selectedIdentifiers = this.selectedItems.map(item => this.getItemIdentifier(item));
-    this.selectedItemsChange.emit(selectedIdentifiers);
+    const selectedIdentifiers = this.selectedItems.map((item) => this.getItemIdentifier(item));
+    if (selectedIdentifiers.length !== 0) {
+      this.selectedItemsChange.emit(selectedIdentifiers);
+    }
   }
 }

@@ -8,16 +8,17 @@ export function createBallCoreTypeaheadConfig(): TypeaheadConfig<Core> {
     title: 'Select Cores',
     searchPlaceholder: 'Search for cores',
     loadingText: 'Loading more cores...',
+    noDataText: 'No cores found!',
     displayFields: [
       { key: 'brand', isSecondary: true },
-      { key: 'core_name', isPrimary: true }
+      { key: 'core_name', isPrimary: true },
     ],
     searchKeys: [
       { name: 'core_name', weight: 1 },
-      { name: 'brand', weight: 0.7 }
+      { name: 'brand', weight: 0.7 },
     ],
     identifierKey: 'core_name',
-    searchMode: 'local'
+    searchMode: 'local',
   };
 }
 
@@ -26,16 +27,17 @@ export function createBallCoverstockTypeaheadConfig(): TypeaheadConfig<Coverstoc
     title: 'Select Coverstocks',
     searchPlaceholder: 'Search for coverstocks',
     loadingText: 'Loading more coverstocks...',
+    noDataText: 'No coverstocks found!',
     displayFields: [
       { key: 'brand', isSecondary: true },
-      { key: 'coverstock_name', isPrimary: true }
+      { key: 'coverstock_name', isPrimary: true },
     ],
     searchKeys: [
       { name: 'coverstock_name', weight: 1 },
-      { name: 'brand', weight: 0.7 }
+      { name: 'brand', weight: 0.7 },
     ],
     identifierKey: 'coverstock_name',
-    searchMode: 'local'
+    searchMode: 'local',
   };
 }
 
@@ -44,16 +46,17 @@ export function createBallTypeaheadConfig(storageService: StorageService): Typea
     title: 'New Ball',
     searchPlaceholder: 'Search for balls',
     loadingText: 'Loading more balls...',
+    noDataText: 'No balls found!',
     displayFields: [
       { key: 'brand_name_with_date', isSecondary: true }, // Special combined field
-      { key: 'ball_name', isPrimary: true }
+      { key: 'ball_name', isPrimary: true },
     ],
     searchKeys: [
       { name: 'ball_name', weight: 1 },
       { name: 'brand_name', weight: 0.9 },
       { name: 'core_name', weight: 0.7 },
       { name: 'coverstock_name', weight: 0.7 },
-      { name: 'factory_finish', weight: 0.5 }
+      { name: 'factory_finish', weight: 0.5 },
     ],
     identifierKey: 'ball_id',
     searchMode: 'local',
@@ -64,7 +67,7 @@ export function createBallTypeaheadConfig(storageService: StorageService): Typea
         return `${item.brand_name} (${item.release_date})`;
       }
       return (item as any)[fieldKey] || '';
-    }
+    },
   };
 }
 
@@ -76,7 +79,7 @@ export function createPatternTypeaheadConfig(searchFn: (term: string) => Promise
     noDataText: 'No patterns found!',
     displayFields: [
       { key: 'category', isSecondary: true },
-      { key: 'title', isPrimary: true }
+      { key: 'title', isPrimary: true },
     ],
     searchKeys: [], // Not used for API search
     identifierKey: 'title',
@@ -89,7 +92,7 @@ export function createPatternTypeaheadConfig(searchFn: (term: string) => Promise
     customDisplayLogic: (pattern: Pattern) => {
       const ratio = pattern.ratio ?? '0';
       const ratioValue = parseFloat(ratio.split(':')[0]);
-      
+
       let cssClass = '';
       if (ratioValue >= 1 && ratioValue < 4) {
         cssClass = 'red-card';
@@ -98,9 +101,9 @@ export function createPatternTypeaheadConfig(searchFn: (term: string) => Promise
       } else if (ratioValue >= 8) {
         cssClass = 'green-card';
       }
-      
+
       return { cssClass };
-    }
+    },
   };
 }
 
@@ -112,7 +115,7 @@ export function createPartialPatternTypeaheadConfig(searchFn: (term: string) => 
     noDataText: 'No patterns found!',
     displayFields: [
       { key: 'category', isSecondary: true },
-      { key: 'title', isPrimary: true }
+      { key: 'title', isPrimary: true },
     ],
     searchKeys: [], // Not used for API search
     identifierKey: 'title',
@@ -125,7 +128,7 @@ export function createPartialPatternTypeaheadConfig(searchFn: (term: string) => 
     customDisplayLogic: (pattern: Partial<Pattern>) => {
       const ratio = pattern.ratio ?? '0';
       const ratioValue = parseFloat(ratio.split(':')[0]);
-      
+
       let cssClass = '';
       if (ratioValue >= 1 && ratioValue < 4) {
         cssClass = 'red-card';
@@ -134,8 +137,8 @@ export function createPartialPatternTypeaheadConfig(searchFn: (term: string) => 
       } else if (ratioValue >= 8) {
         cssClass = 'green-card';
       }
-      
+
       return { cssClass };
-    }
+    },
   };
 }
