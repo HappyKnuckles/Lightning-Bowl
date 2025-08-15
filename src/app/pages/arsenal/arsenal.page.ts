@@ -102,7 +102,7 @@ export class ArsenalPage implements OnInit {
   coverstockBalls: Ball[] = [];
   coreBalls: Ball[] = [];
   presentingElement?: HTMLElement;
-  ballTypeaheadConfig: TypeaheadConfig<Ball>;
+  ballTypeaheadConfig!: TypeaheadConfig<Ball>;
   ballsWithoutArsenal: Signal<Ball[]> = computed(() =>
     this.storageService
       .allBalls()

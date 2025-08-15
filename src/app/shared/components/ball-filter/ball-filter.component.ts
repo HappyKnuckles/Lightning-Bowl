@@ -70,8 +70,8 @@ export class BallFilterComponent implements OnInit {
   coverstockTypes: CoverstockType[] = Object.values(CoverstockType);
   weights: string[] = ['12', '13', '14', '15', '16'];
   presentingElement?: HTMLElement;
-  coreTypeaheadConfig: TypeaheadConfig<Core>;
-  coverstockTypeaheadConfig: TypeaheadConfig<Coverstock>;
+  coreTypeaheadConfig!: TypeaheadConfig<Core>;
+  coverstockTypeaheadConfig!: TypeaheadConfig<Coverstock>;
 
   constructor(
     public ballFilterService: BallFilterService,

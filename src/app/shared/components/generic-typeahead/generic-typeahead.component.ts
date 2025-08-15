@@ -124,8 +124,11 @@ export class GenericTypeaheadComponent<T> implements OnInit, OnDestroy {
         if (searchTerm === '') {
           this.filteredItems.set([...this.items()]);
         } else {
-          const response = await this.config().apiSearchFn(searchTerm);
-          this.filteredItems.set(response.items);
+          const apiSearchFn = this.config().apiSearchFn;
+          if (apiSearchFn) {
+            const response = await apiSearchFn(searchTerm);
+            this.filteredItems.set(response.items);
+          }
         }
       } catch (error) {
         console.error('Error searching items:', error);

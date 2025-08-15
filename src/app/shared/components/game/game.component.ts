@@ -53,7 +53,7 @@ import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { UtilsService } from 'src/app/core/services/utils/utils.service';
 import { GenericTypeaheadComponent } from '../generic-typeahead/generic-typeahead.component';
-import { createPatternTypeaheadConfig } from '../generic-typeahead/typeahead-configs';
+import { createPartialPatternTypeaheadConfig } from '../generic-typeahead/typeahead-configs';
 import { TypeaheadConfig } from '../generic-typeahead/typeahead-config.interface';
 import { PatternService } from 'src/app/core/services/pattern/pattern.service';
 import { Pattern } from 'src/app/core/models/pattern.model';
@@ -156,7 +156,7 @@ export class GameComponent implements OnChanges, OnInit {
   private closeTimers: Record<string, NodeJS.Timeout> = {};
   public delayedCloseMap: Record<string, boolean> = {};
   private originalGameState: Record<string, Game> = {};
-  patternTypeaheadConfig: TypeaheadConfig<Partial<Pattern>>;
+  patternTypeaheadConfig!: TypeaheadConfig<Partial<Pattern>>;
 
   constructor(
     private alertController: AlertController,
@@ -188,7 +188,7 @@ export class GameComponent implements OnChanges, OnInit {
 
   ngOnInit(): void {
     this.presentingElement = document.querySelector('.ion-page')!;
-    this.patternTypeaheadConfig = createPatternTypeaheadConfig(
+    this.patternTypeaheadConfig = createPartialPatternTypeaheadConfig(
       (searchTerm: string) => this.patternService.searchPattern(searchTerm)
     );
   }
