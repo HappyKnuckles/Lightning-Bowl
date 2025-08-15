@@ -216,16 +216,16 @@ export class StatsPage implements OnInit, AfterViewInit {
       this.loadingService.setLoading(true);
       const input = event.target as HTMLInputElement;
       if (!input.files || input.files.length === 0) return;
-      
+
       const file = input.files[0];
       const gameData = await this.excelService.readExcelData(file);
-      
+
       // Extract league names to check if we need user input
       const leagueNames = this.excelService.extractLeagueNamesFromData(gameData);
-      
+
       // Disable loading screen for league association alerts
       this.loadingService.setLoading(false);
-      
+
       // Handle league association for imported leagues
       let leagueAssociationMap = new Map();
       if (leagueNames.size > 0) {
@@ -240,12 +240,12 @@ export class StatsPage implements OnInit, AfterViewInit {
           throw error;
         }
       }
-      
+
       // Re-enable loading screen for data transformation
       this.loadingService.setLoading(true);
-      
+
       await this.excelService.transformData(gameData, leagueAssociationMap);
-      this.toastService.showToast(ToastMessages.excelFileUploadSuccess, 'checkmark-outline');
+      // this.toastService.showToast(ToastMessages.excelFileUploadSuccess, 'checkmark-outline');
     } catch (error) {
       this.toastService.showToast(ToastMessages.excelFileUploadError, 'bug', true);
       console.error(error);

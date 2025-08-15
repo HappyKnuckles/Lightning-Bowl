@@ -1,7 +1,7 @@
 import { NgFor, NgIf } from '@angular/common';
 import { Component, EventEmitter, Input, Output, computed } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { AlertController, SelectChangeEventDetail } from '@ionic/angular';
+import { AlertController, SelectChangeEventDetail, ActionSheetController } from '@ionic/angular';
 import {
   IonSelect,
   IonInput,
@@ -60,28 +60,28 @@ export class LeagueSelectorComponent {
   isAddModalOpen = false;
   isEditModalOpen = false;
   selectedLeagueForEdit: LeagueData | null = null;
-  
+
   // Helper method to check if a league is a string (legacy)
   isLegacyLeague(league: LeagueData): boolean {
     return typeof league === 'string';
   }
-  
+
   // Helper method to check if a league is a League object
   isLeagueObjectType(league: LeagueData): league is League {
     return isLeagueObject(league);
   }
-  
+
   // Helper method to get display name for leagues
   getLeagueDisplayName(league: LeagueData): string {
     return this.storageService.getLeagueDisplayName(league);
   }
-  
+
   // Helper method to get league value for form binding
   getLeagueValue(league: LeagueData): string {
     // For form binding, we always use the league name
     return this.getLeagueDisplayName(league);
   }
-  
+
   // Helper method to get League object (with type assertion)
   asLeagueObject(league: LeagueData): League {
     return league as League;
@@ -90,21 +90,21 @@ export class LeagueSelectorComponent {
     const savedLeagues = this.storageService.leagues();
     this.hiddenLeagueSelectionService.selectionState();
     const savedJson = localStorage.getItem('leagueSelection');
-    
+
     return savedLeagues.filter((league) => {
       const leagueName = this.storageService.getLeagueDisplayName(league);
-      
+
       // Check Show property for League objects
       if (isLeagueObject(league) && !league.Show) {
         return false;
       }
-      
+
       // Check localStorage selection state
       if (savedJson) {
         const savedSelection: Record<string, boolean> = JSON.parse(savedJson);
         return savedSelection[leagueName] !== false;
       }
-      
+
       return true;
     });
   });
@@ -112,6 +112,7 @@ export class LeagueSelectorComponent {
     public storageService: StorageService,
     private toastService: ToastService,
     private alertController: AlertController,
+    private actionSheetController: ActionSheetController,
     private hiddenLeagueSelectionService: HiddenLeagueSelectionService,
   ) {
     // this.leagueSubscriptions.add(
@@ -124,18 +125,16 @@ export class LeagueSelectorComponent {
 
   onLeagueSelectionChange(event: IonSelectCustomEvent<SelectChangeEventDetail>): void {
     const selectedValue = event.detail.value;
-    
+
     // Handle special cases
     if (!selectedValue || selectedValue === 'new' || selectedValue === 'edit' || selectedValue === 'delete') {
       this.leagueChanged.emit(selectedValue);
       return;
     }
-    
+
     // Find the actual League object based on selected value
-    const selectedLeague = this.leagues().find(league => 
-      this.getLeagueValue(league) === selectedValue
-    );
-    
+    const selectedLeague = this.leagues().find((league) => this.getLeagueValue(league) === selectedValue);
+
     if (selectedLeague) {
       this.leagueChanged.emit(selectedLeague);
     } else {
@@ -160,9 +159,9 @@ export class LeagueSelectorComponent {
       const newLeagueObj: League = {
         Name: this.newLeague,
         Show: true, // Default to visible
-        Event: this.newLeagueEventType
+        Event: this.newLeagueEventType,
       };
-      
+
       await this.storageService.addLeague(newLeagueObj);
       this.selectedLeague = this.newLeague;
       this.leagueChanged.emit(newLeagueObj); // Emit the new League object
@@ -194,13 +193,11 @@ export class LeagueSelectorComponent {
 
   onLeagueToChangeSelect(): void {
     // Find the selected league object
-    this.selectedLeagueForEdit = this.leagues().find(league => 
-      this.getLeagueValue(league) === this.leagueToChange
-    ) || null;
-    
+    this.selectedLeagueForEdit = this.leagues().find((league) => this.getLeagueValue(league) === this.leagueToChange) || null;
+
     // Set the new league name to the current name
     this.newLeague = this.leagueToChange;
-    
+
     // If it's a League object, set the event type
     if (this.selectedLeagueForEdit && isLeagueObject(this.selectedLeagueForEdit)) {
       this.newLeagueEventType = this.selectedLeagueForEdit.Event;
@@ -214,14 +211,14 @@ export class LeagueSelectorComponent {
         const updatedLeague: League = {
           Name: this.newLeague,
           Show: this.selectedLeagueForEdit.Show, // Preserve Show setting
-          Event: this.newLeagueEventType
+          Event: this.newLeagueEventType,
         };
         await this.storageService.editLeague(updatedLeague, this.selectedLeagueForEdit);
       } else {
         // For legacy string leagues, convert to string editing
         await this.storageService.editLeague(this.newLeague, this.leagueToChange);
       }
-      
+
       this.newLeague = '';
       this.leagueToChange = '';
       this.selectedLeagueForEdit = null;
@@ -240,7 +237,7 @@ export class LeagueSelectorComponent {
         // Create updated league with toggled Show property
         const updatedLeague: League = {
           ...league,
-          Show: !league.Show
+          Show: !league.Show,
         };
         await this.storageService.editLeague(updatedLeague, league);
         const statusText = updatedLeague.Show ? 'shown' : 'hidden';
@@ -300,5 +297,43 @@ export class LeagueSelectorComponent {
       .then((alert) => {
         alert.present();
       });
+  }
+
+  // Method to programmatically trigger league management action sheet
+  async showLeagueManagementOptions(): Promise<void> {
+    // Create an action sheet with the same options as the select
+    const actionSheet = await this.actionSheetController.create({
+      header: 'Manage Leagues',
+      buttons: [
+        {
+          text: 'Add League',
+          handler: () => {
+            this.isAddModalOpen = true;
+          },
+        },
+        ...(this.leagues().length > 0
+          ? [
+              {
+                text: 'Edit League',
+                handler: () => {
+                  this.isEditModalOpen = true;
+                },
+              },
+              {
+                text: 'Delete League',
+                handler: async () => {
+                  await this.openDeleteAlert();
+                },
+              },
+            ]
+          : []),
+        {
+          text: 'Cancel',
+          role: 'cancel',
+        },
+      ],
+    });
+
+    await actionSheet.present();
   }
 }

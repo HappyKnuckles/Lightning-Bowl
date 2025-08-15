@@ -101,6 +101,7 @@ export class LeaguePage {
   @ViewChildren('modal') modals!: QueryList<IonModal>;
   @ViewChild('scoreChart', { static: false }) scoreChart?: ElementRef;
   @ViewChild('pinChart', { static: false }) pinChart?: ElementRef;
+  @ViewChild('leagueSelector') leagueSelector!: LeagueSelectorComponent;
   selectedSegment = 'Overall';
   segments: string[] = ['Overall', 'Spares', 'Games'];
   isEditMode: Record<string, boolean> = {};
@@ -303,8 +304,10 @@ export class LeaguePage {
   }
 
   openLeagueSelector(): void {
-    // The league selector component will handle this through its own UI
-    // This method can be removed or used for any additional setup if needed
+    // Trigger the league selector's management interface
+    if (this.leagueSelector) {
+      this.leagueSelector.showLeagueManagementOptions();
+    }
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
