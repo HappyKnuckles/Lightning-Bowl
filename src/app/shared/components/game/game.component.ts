@@ -539,7 +539,7 @@ export class GameComponent implements OnChanges, OnInit {
     if (typeof league === 'string') {
       return league;
     } else if (isLeagueObject(league)) {
-      return league.Event; // Show only "League" or "Tournament"
+      return `${league.Event}: ${league.Name}`; // Show "League: Name" or "Tournament: Name"
     }
     return '';
   }

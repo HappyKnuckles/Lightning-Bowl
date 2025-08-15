@@ -55,6 +55,8 @@ import { StatDisplayComponent } from 'src/app/shared/components/stat-display/sta
 import { LongPressDirective } from 'src/app/core/directives/long-press/long-press.directive';
 import { HiddenLeagueSelectionService } from 'src/app/core/services/hidden-league/hidden-league.service';
 import { BallStatsComponent } from '../../shared/components/ball-stats/ball-stats.component';
+import { LeagueSelectorComponent } from '../../shared/components/league-selector/league-selector.component';
+import { LeagueData } from 'src/app/core/models/league.model';
 
 @Component({
   selector: 'app-league',
@@ -90,6 +92,7 @@ import { BallStatsComponent } from '../../shared/components/ball-stats/ball-stat
     IonSegmentContent,
     LongPressDirective,
     BallStatsComponent,
+    LeagueSelectorComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
@@ -299,38 +302,14 @@ export class LeaguePage {
     }
   }
 
-  async addLeague() {
-    const alert = await this.alertController.create({
-      header: 'Add League',
-      message: 'Enter the league name',
-      inputs: [
-        {
-          name: 'league',
-          type: 'text',
-          placeholder: 'League name',
-          cssClass: 'league-alert-input',
-        },
-      ],
-      buttons: [
-        {
-          text: 'Cancel',
-          role: 'cancel',
-        },
-        {
-          text: 'Add',
-          handler: async (data: { league: string }) => {
-            try {
-              await this.storageService.addLeague(data.league);
-              this.toastService.showToast(ToastMessages.leagueSaveSuccess, 'add');
-            } catch (error) {
-              this.toastService.showToast(ToastMessages.leagueSaveError, 'bug', true);
-              console.error('Error saving league:', error);
-            }
-          },
-        },
-      ],
-    });
-    await alert.present();
+  openLeagueSelector(): void {
+    // The league selector component will handle this through its own UI
+    // This method can be removed or used for any additional setup if needed
+  }
+
+  handleLeagueOperation(operation: LeagueData): void {
+    // The league selector component handles add/edit/delete operations internally
+    // This handler can be used for any additional processing if needed
   }
 
   async deleteLeague(league: string): Promise<void> {
@@ -353,44 +332,6 @@ export class LeaguePage {
             } catch (error) {
               this.toastService.showToast(ToastMessages.leagueDeleteError, 'bug', true);
               console.error('Error deleting league:', error);
-            }
-          },
-        },
-      ],
-    });
-
-    await alert.present();
-  }
-
-  async editLeague(league: string): Promise<void> {
-    const alert = await this.alertController.create({
-      header: 'Edit League',
-      message: 'Enter the new league name',
-      inputs: [
-        {
-          name: 'league',
-          type: 'text',
-          value: league,
-          placeholder: 'League name',
-          cssClass: 'alert-input',
-        },
-      ],
-      buttons: [
-        {
-          text: 'Cancel',
-          role: 'cancel',
-        },
-        {
-          text: 'Edit',
-          handler: async (data: { league: string }) => {
-            const newLeagueName = data.league;
-            const oldLeagueName = league;
-            try {
-              await this.storageService.editLeague(newLeagueName, oldLeagueName);
-              this.toastService.showToast(ToastMessages.leagueEditSuccess, 'checkmark-outline');
-            } catch (error) {
-              this.toastService.showToast(ToastMessages.leagueEditError, 'bug', true);
-              console.error('Error editing league:', error);
             }
           },
         },

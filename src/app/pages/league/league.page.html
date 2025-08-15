@@ -2,7 +2,7 @@
   <ion-toolbar>
     @if (!isVisibilityEdit()) {
       <ion-buttons slot="end">
-        <ion-button type="button" class="action-sheet" fill="clear" (click)="addLeague()">
+        <ion-button type="button" class="action-sheet" fill="clear" (click)="openLeagueSelector()">
           <ion-icon slot="icon-only" name="add-outline"></ion-icon>
         </ion-button>
       </ion-buttons>
@@ -22,6 +22,9 @@
   <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
+  
+  <!-- League Selector Component for League Management -->
+  <app-league-selector [isAddPage]="false" (leagueChanged)="handleLeagueOperation($event)" *ngIf="!isVisibilityEdit()"></app-league-selector>
   <!-- Show this message if there are no game history items and it's not loading -->
   <ng-container *ngIf="storageService.games().length <= 0 && !loadingService.isLoading(); else noLeagues">
     <ion-text class="no-game-text"> Start playing a few games to see your leagues here! </ion-text>
@@ -71,12 +74,6 @@
                 <ion-item-options side="end" (ionSwipe)="deleteLeague(league); slidingItem.closeOpened()">
                   <ion-item-option color="danger" expandable (click)="deleteLeague(league); slidingItem.closeOpened()">
                     <ion-icon class="title" style="transform: translateY(-2px)" name="trash-outline"></ion-icon>
-                  </ion-item-option>
-                </ion-item-options>
-
-                <ion-item-options side="start" (ionSwipe)="editLeague(league); slidingItem.closeOpened()">
-                  <ion-item-option expandable (click)="editLeague(league); slidingItem.closeOpened()">
-                    <ion-icon class="title" style="transform: translateY(-2px)" name="create-outline"></ion-icon>
                   </ion-item-option>
                 </ion-item-options>
 

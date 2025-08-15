@@ -1,6 +1,6 @@
 @if (isAddPage) {
   <ion-item>
-    <ion-select label="League/Tournament" [(ngModel)]="selectedLeague" (ionChange)="leagueChanged.emit(this.selectedLeague); onLeagueChange($event)">
+    <ion-select label="League/Tournament" [(ngModel)]="selectedLeague" (ionChange)="onLeagueSelectionChange($event); onLeagueChange($event)">
       <ion-select-option value="new">Add new</ion-select-option>
       <ion-select-option value="">None</ion-select-option>
       <ion-select-option *ngFor="let league of leagues()" [value]="getLeagueValue(league)">

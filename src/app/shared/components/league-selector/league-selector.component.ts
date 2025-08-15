@@ -51,7 +51,7 @@ import { League, LeagueData, isLeagueObject, EventType } from 'src/app/core/mode
 })
 export class LeagueSelectorComponent {
   @Input() isAddPage = false;
-  @Output() leagueChanged = new EventEmitter<string>();
+  @Output() leagueChanged = new EventEmitter<LeagueData>();
   selectedLeague = '';
   newLeague = '';
   newLeagueEventType: EventType = 'League';
@@ -122,6 +122,28 @@ export class LeagueSelectorComponent {
     addIcons({ medalOutline, addOutline, createOutline, flagOutline });
   }
 
+  onLeagueSelectionChange(event: IonSelectCustomEvent<SelectChangeEventDetail>): void {
+    const selectedValue = event.detail.value;
+    
+    // Handle special cases
+    if (!selectedValue || selectedValue === 'new' || selectedValue === 'edit' || selectedValue === 'delete') {
+      this.leagueChanged.emit(selectedValue);
+      return;
+    }
+    
+    // Find the actual League object based on selected value
+    const selectedLeague = this.leagues().find(league => 
+      this.getLeagueValue(league) === selectedValue
+    );
+    
+    if (selectedLeague) {
+      this.leagueChanged.emit(selectedLeague);
+    } else {
+      // Fallback to string if league not found
+      this.leagueChanged.emit(selectedValue);
+    }
+  }
+
   async onLeagueChange(event: IonSelectCustomEvent<SelectChangeEventDetail>): Promise<void> {
     if (event.detail.value === 'new') {
       this.isAddModalOpen = true;
@@ -143,7 +165,7 @@ export class LeagueSelectorComponent {
       
       await this.storageService.addLeague(newLeagueObj);
       this.selectedLeague = this.newLeague;
-      this.leagueChanged.emit(this.selectedLeague);
+      this.leagueChanged.emit(newLeagueObj); // Emit the new League object
       this.newLeague = '';
       this.newLeagueEventType = 'League';
       this.toastService.showToast(ToastMessages.leagueSaveSuccess, 'add');
@@ -158,7 +180,7 @@ export class LeagueSelectorComponent {
     this.newLeague = '';
     this.newLeagueEventType = 'League';
     this.selectedLeague = '';
-    this.leagueChanged.emit(this.selectedLeague);
+    this.leagueChanged.emit(''); // Emit empty string for no selection
     this.isAddModalOpen = false;
   }
 

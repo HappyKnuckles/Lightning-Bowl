@@ -185,8 +185,17 @@ export class AddGamePage implements OnInit {
     this.modal.dismiss(null, 'cancel');
   }
 
-  onLeagueChange(league: string, isModal = false): void {
-    const isPractice = league === '' || league === 'New';
+  onLeagueChange(league: LeagueData, isModal = false): void {
+    // Helper function to determine if a league selection means "practice"
+    const isPracticeLeague = (leagueData: LeagueData): boolean => {
+      if (!leagueData) return true;
+      if (typeof leagueData === 'string') {
+        return leagueData === '' || leagueData === 'New';
+      }
+      return false; // League objects are never practice
+    };
+    
+    const isPractice = isPracticeLeague(league);
 
     if (isModal) {
       this.gameData.league = league;
@@ -195,7 +204,7 @@ export class AddGamePage implements OnInit {
       this.modalCheckbox.disabled = !isPractice;
     } else {
       this.gameGrids.forEach((trackGrid: GameGridComponent) => {
-        trackGrid.leagueSelector.selectedLeague = league;
+        trackGrid.leagueSelector.selectedLeague = this.getLeagueName(league);
         trackGrid.game().league = league;
         trackGrid.game().isPractice = isPractice;
         trackGrid.checkbox.checked = isPractice;
