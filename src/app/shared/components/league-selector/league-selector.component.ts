@@ -59,6 +59,16 @@ export class LeagueSelectorComponent {
   leagueToChange = '';
   isModalOpen = false;
   
+  // Helper method to check if a league is a string (legacy)
+  isLegacyLeague(league: LeagueData): boolean {
+    return typeof league === 'string';
+  }
+  
+  // Helper method to check if a league is a League object
+  isLeagueObjectType(league: LeagueData): league is League {
+    return isLeagueObject(league);
+  }
+  
   // Helper method to get display name for leagues
   getLeagueDisplayName(league: LeagueData): string {
     return this.storageService.getLeagueDisplayName(league);
@@ -69,17 +79,31 @@ export class LeagueSelectorComponent {
     // For form binding, we always use the league name
     return this.getLeagueDisplayName(league);
   }
+  
+  // Helper method to get League object (with type assertion)
+  asLeagueObject(league: LeagueData): League {
+    return league as League;
+  }
   leagues = computed(() => {
     const savedLeagues = this.storageService.leagues();
     this.hiddenLeagueSelectionService.selectionState();
     const savedJson = localStorage.getItem('leagueSelection');
-    if (!savedJson) {
-      return savedLeagues;
-    }
-    const savedSelection: Record<string, boolean> = savedJson ? JSON.parse(savedJson) : {};
+    
     return savedLeagues.filter((league) => {
       const leagueName = this.storageService.getLeagueDisplayName(league);
-      return savedSelection[leagueName] !== false;
+      
+      // Check Show property for League objects
+      if (isLeagueObject(league) && !league.Show) {
+        return false;
+      }
+      
+      // Check localStorage selection state
+      if (savedJson) {
+        const savedSelection: Record<string, boolean> = JSON.parse(savedJson);
+        return savedSelection[leagueName] !== false;
+      }
+      
+      return true;
     });
   });
   constructor(
@@ -143,6 +167,29 @@ export class LeagueSelectorComponent {
     } catch (error) {
       console.error(error);
       this.toastService.showToast(ToastMessages.leagueEditError, 'bug', true);
+    }
+  }
+
+  // Method to toggle the Show property of a league
+  async toggleLeagueVisibility(league: LeagueData): Promise<void> {
+    try {
+      if (isLeagueObject(league)) {
+        // Create updated league with toggled Show property
+        const updatedLeague: League = {
+          ...league,
+          Show: !league.Show
+        };
+        await this.storageService.editLeague(updatedLeague, league);
+        const statusText = updatedLeague.Show ? 'shown' : 'hidden';
+        this.toastService.showToast(`${league.Name} is now ${statusText}`, updatedLeague.Show ? 'eye' : 'eye-off');
+      } else {
+        // For legacy string leagues, we can't toggle Show property directly
+        // This would need to be converted to League object first
+        this.toastService.showToast('Legacy leagues cannot be toggled. Please edit to update.', 'information-circle');
+      }
+    } catch (error) {
+      console.error(error);
+      this.toastService.showToast('Error toggling league visibility', 'bug', true);
     }
   }
 

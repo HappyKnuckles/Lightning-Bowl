@@ -4,10 +4,10 @@
       <ion-select-option value="new">Add new</ion-select-option>
       <ion-select-option value="">None</ion-select-option>
       <ion-select-option *ngFor="let league of leagues()" [value]="getLeagueValue(league)">
-        @if (typeof league === 'string') {
+        @if (isLegacyLeague(league)) {
           {{ league }}
         } @else {
-          {{ league.Name }} ({{ league.Event }})
+          {{ asLeagueObject(league).Name }} ({{ asLeagueObject(league).Event }})
         }
       </ion-select-option>
     </ion-select>
@@ -46,10 +46,10 @@
         <ion-icon name="medal-outline" slot="start"></ion-icon>
         <ion-select label="Choose League" [(ngModel)]="leagueToChange">
           <ion-select-option *ngFor="let league of leagues()" [value]="getLeagueValue(league)">
-            @if (typeof league === 'string') {
+            @if (isLegacyLeague(league)) {
               {{ league }}
             } @else {
-              {{ league.Name }} ({{ league.Event }})
+              {{ asLeagueObject(league).Name }} ({{ asLeagueObject(league).Event }})
             }
           </ion-select-option>
         </ion-select>
