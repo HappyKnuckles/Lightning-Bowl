@@ -277,10 +277,28 @@ export class ArsenalPage implements OnInit {
   async showArsenalSelection(ball: Ball, operation: 'copy' | 'move'): Promise<void> {
     try {
       const currentArsenal = this.storageService.currentArsenal();
-      const availableArsenals = this.storageService.arsenals().filter(a => a !== currentArsenal);
+      const allArsenals = this.storageService.arsenals().filter(a => a !== currentArsenal);
       
-      if (availableArsenals.length === 0) {
+      if (allArsenals.length === 0) {
         this.toastService.showToast('No other arsenals available', 'information-circle-outline');
+        return;
+      }
+
+      // Filter out arsenals that already contain this ball
+      const availableArsenals: string[] = [];
+      for (const arsenal of allArsenals) {
+        const ballExists = await this.storageService.ballExistsInArsenal(ball, arsenal);
+        if (!ballExists) {
+          availableArsenals.push(arsenal);
+        }
+      }
+
+      if (availableArsenals.length === 0) {
+        const operationText = operation === 'copy' ? 'copy' : 'move';
+        this.toastService.showToast(
+          `${ball.ball_name} (${ball.core_weight}lbs) already exists in all other arsenals`, 
+          'information-circle-outline'
+        );
         return;
       }
 
@@ -324,6 +342,7 @@ export class ArsenalPage implements OnInit {
       const currentArsenal = this.storageService.currentArsenal();
       let successCount = 0;
       let errorCount = 0;
+      let duplicateCount = 0;
       const successfulArsenals: string[] = [];
 
       for (const targetArsenal of targetArsenals) {
@@ -337,7 +356,11 @@ export class ArsenalPage implements OnInit {
           successfulArsenals.push(targetArsenal);
         } catch (error) {
           console.error(`Error ${operation}ing ball to ${targetArsenal}:`, error);
-          errorCount++;
+          if (error instanceof Error && error.message.includes('already exists')) {
+            duplicateCount++;
+          } else {
+            errorCount++;
+          }
         }
       }
 
@@ -349,6 +372,11 @@ export class ArsenalPage implements OnInit {
           ? `Ball ${operationPastTense} to ${arsenalList}`
           : `Ball ${operationPastTense} to ${successCount} arsenal(s): ${arsenalList}`;
         this.toastService.showToast(message, 'checkmark-outline');
+      }
+
+      // Show duplicate message
+      if (duplicateCount > 0) {
+        this.toastService.showToast(`Ball already exists in ${duplicateCount} arsenal(s)`, 'information-circle-outline');
       }
 
       // Show error message if any

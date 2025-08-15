@@ -147,16 +147,86 @@ export class BallTypeaheadComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const arsenals = this.storageService.arsenals();
-    if (arsenals.length === 1) {
-      // Only one arsenal, save directly
+    const allArsenals = this.storageService.arsenals();
+    if (allArsenals.length === 1) {
+      // Only one arsenal, check if any balls already exist there
+      const existingBalls: string[] = [];
+      const validBalls: Ball[] = [];
+      
+      for (const ball of this.selectedBalls) {
+        const ballExists = await this.storageService.ballExistsInArsenal(ball, allArsenals[0]);
+        if (ballExists) {
+          existingBalls.push(`${ball.ball_name} (${ball.core_weight}lbs)`);
+        } else {
+          validBalls.push(ball);
+        }
+      }
+      
+      if (existingBalls.length > 0) {
+        const message = existingBalls.length === 1
+          ? `${existingBalls[0]} already exists in ${allArsenals[0]}.`
+          : `The following balls already exist in ${allArsenals[0]}:\n${existingBalls.join('\n')}`;
+        
+        if (validBalls.length > 0) {
+          const alert = await this.alertController.create({
+            header: 'Some Balls Already Exist',
+            message: message + `\n\nWould you like to add the remaining ${validBalls.length} ball(s)?`,
+            buttons: [
+              {
+                text: 'Cancel',
+                role: 'cancel'
+              },
+              {
+                text: 'Add Others',
+                handler: () => {
+                  this.selectedBallsChange.emit(validBalls);
+                  this.modalCtrl.dismiss();
+                }
+              }
+            ]
+          });
+          await alert.present();
+        } else {
+          this.toastService.showToast('All selected balls already exist in the arsenal', 'information-circle-outline');
+          this.modalCtrl.dismiss();
+        }
+        return;
+      }
+      
       this.selectedBallsChange.emit(this.selectedBalls);
       this.modalCtrl.dismiss();
       return;
     }
 
-    // Multiple arsenals, ask user to select (support multiple selections)
-    const inputs = arsenals.map(arsenal => ({
+    // Multiple arsenals, ask user to select (but filter out arsenals that already contain balls)
+    const availableArsenalsByBall: { [key: string]: string[] } = {};
+    
+    // For each ball, determine which arsenals it can be added to
+    for (const ball of this.selectedBalls) {
+      const ballKey = `${ball.ball_id}_${ball.core_weight}`;
+      availableArsenalsByBall[ballKey] = [];
+      
+      for (const arsenal of allArsenals) {
+        const ballExists = await this.storageService.ballExistsInArsenal(ball, arsenal);
+        if (!ballExists) {
+          availableArsenalsByBall[ballKey].push(arsenal);
+        }
+      }
+    }
+    
+    // Find arsenals that can accept at least one ball
+    const viableArsenals = new Set<string>();
+    Object.values(availableArsenalsByBall).forEach(arsenals => {
+      arsenals.forEach(arsenal => viableArsenals.add(arsenal));
+    });
+    
+    if (viableArsenals.size === 0) {
+      this.toastService.showToast('All selected balls already exist in all arsenals', 'information-circle-outline');
+      this.modalCtrl.dismiss();
+      return;
+    }
+
+    const inputs = Array.from(viableArsenals).map(arsenal => ({
       name: 'arsenals',
       type: 'checkbox' as const,
       label: arsenal,
@@ -166,7 +236,7 @@ export class BallTypeaheadComponent implements OnInit, OnDestroy {
 
     const alert = await this.alertController.create({
       header: 'Select Arsenals',
-      message: 'Which arsenal(s) would you like to add these balls to? You can select multiple.',
+      message: 'Which arsenal(s) would you like to add these balls to? Only arsenals that don\'t already contain these balls are shown.',
       inputs,
       buttons: [
         {
@@ -179,22 +249,28 @@ export class BallTypeaheadComponent implements OnInit, OnDestroy {
             if (selectedArsenals && selectedArsenals.length > 0) {
               let totalSuccessCount = 0;
               let totalErrorCount = 0;
+              let duplicateCount = 0;
               const addedToArsenals: string[] = [];
               
               // Save balls to each selected arsenal
               for (const arsenalName of selectedArsenals) {
                 let arsenalSuccessCount = 0;
-                let arsenalErrorCount = 0;
                 
                 for (const ball of this.selectedBalls) {
-                  try {
-                    await this.storageService.saveBallToArsenal(ball, arsenalName);
-                    arsenalSuccessCount++;
-                    totalSuccessCount++;
-                  } catch (error) {
-                    console.error(`Error saving ball ${ball.ball_name} to ${arsenalName}:`, error);
-                    arsenalErrorCount++;
-                    totalErrorCount++;
+                  const ballKey = `${ball.ball_id}_${ball.core_weight}`;
+                  
+                  // Check if this ball can be added to this arsenal
+                  if (availableArsenalsByBall[ballKey].includes(arsenalName)) {
+                    try {
+                      await this.storageService.saveBallToArsenal(ball, arsenalName);
+                      arsenalSuccessCount++;
+                      totalSuccessCount++;
+                    } catch (error) {
+                      console.error(`Error saving ball ${ball.ball_name} to ${arsenalName}:`, error);
+                      totalErrorCount++;
+                    }
+                  } else {
+                    duplicateCount++;
                   }
                 }
                 
@@ -208,14 +284,19 @@ export class BallTypeaheadComponent implements OnInit, OnDestroy {
                 const arsenalList = addedToArsenals.join(', ');
                 const ballCount = this.selectedBalls.length;
                 const message = selectedArsenals.length === 1 
-                  ? `${ballCount} ball(s) added to ${arsenalList}`
-                  : `${ballCount} ball(s) added to ${addedToArsenals.length} arsenal(s): ${arsenalList}`;
+                  ? `${totalSuccessCount} ball(s) added to ${arsenalList}`
+                  : `${totalSuccessCount} ball(s) added to ${addedToArsenals.length} arsenal(s): ${arsenalList}`;
                 this.toastService.showToast(message, 'checkmark-outline');
               }
               
               // Show error message if any
               if (totalErrorCount > 0) {
                 this.toastService.showToast(`Failed to add ${totalErrorCount} ball(s)`, 'bug', true);
+              }
+              
+              // Show duplicate message if any
+              if (duplicateCount > 0) {
+                this.toastService.showToast(`${duplicateCount} ball(s) were skipped (already exist)`, 'information-circle-outline');
               }
               
               this.modalCtrl.dismiss();

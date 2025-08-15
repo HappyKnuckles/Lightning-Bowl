@@ -212,9 +212,27 @@ export class StorageService {
     }
   }
 
+  async ballExistsInArsenal(ball: Ball, arsenalName: string): Promise<boolean> {
+    try {
+      const key = `arsenal_${arsenalName}_${ball.ball_id}_${ball.core_weight}`;
+      const existingBall = await this.storage.get(key);
+      return existingBall !== null;
+    } catch (error) {
+      console.error('Error checking if ball exists in arsenal:', error);
+      return false;
+    }
+  }
+
   async saveBallToArsenal(ball: Ball, arsenalName?: string) {
     try {
       const targetArsenal = arsenalName || this.#currentArsenal();
+      
+      // Check if ball already exists in target arsenal
+      const ballExists = await this.ballExistsInArsenal(ball, targetArsenal);
+      if (ballExists) {
+        throw new Error(`Ball ${ball.ball_name} (${ball.core_weight}lbs) already exists in ${targetArsenal}`);
+      }
+      
       const key = `arsenal_${targetArsenal}_${ball.ball_id}_${ball.core_weight}`;
       await this.save(key, ball);
       
@@ -373,8 +391,14 @@ export class StorageService {
 
   async copyBallToArsenal(ball: Ball, fromArsenal: string, toArsenal: string) {
     try {
-      // Copy the ball to the target arsenal
-      await this.saveBallToArsenal(ball, toArsenal);
+      // Check if ball already exists in target arsenal
+      const ballExists = await this.ballExistsInArsenal(ball, toArsenal);
+      if (ballExists) {
+        throw new Error(`Ball ${ball.ball_name} (${ball.core_weight}lbs) already exists in ${toArsenal}`);
+      }
+      
+      // Copy the ball to the target arsenal (bypass duplicate check since we already checked)
+      await this.saveBallToArsenalInternal(ball, toArsenal);
     } catch (error) {
       console.error('Error copying ball to arsenal:', error);
       throw error;
@@ -383,8 +407,16 @@ export class StorageService {
 
   async moveBallToArsenal(ball: Ball, fromArsenal: string, toArsenal: string) {
     try {
-      // Add to target arsenal first
-      await this.saveBallToArsenal(ball, toArsenal);
+      // Check if ball already exists in target arsenal (unless moving within same arsenal)
+      if (fromArsenal !== toArsenal) {
+        const ballExists = await this.ballExistsInArsenal(ball, toArsenal);
+        if (ballExists) {
+          throw new Error(`Ball ${ball.ball_name} (${ball.core_weight}lbs) already exists in ${toArsenal}`);
+        }
+      }
+      
+      // Add to target arsenal first (bypass duplicate check since we already checked)
+      await this.saveBallToArsenalInternal(ball, toArsenal);
       
       // Then remove from source arsenal (only if it's not the same arsenal)
       if (fromArsenal !== toArsenal) {
@@ -392,6 +424,27 @@ export class StorageService {
       }
     } catch (error) {
       console.error('Error moving ball to arsenal:', error);
+      throw error;
+    }
+  }
+
+  private async saveBallToArsenalInternal(ball: Ball, arsenalName: string) {
+    try {
+      const key = `arsenal_${arsenalName}_${ball.ball_id}_${ball.core_weight}`;
+      await this.save(key, ball);
+      
+      // Only update the current arsenal view if we're saving to the current arsenal
+      if (arsenalName === this.#currentArsenal()) {
+        this.arsenal.update((balls) => {
+          const isUnique = !balls.some((b) => b.ball_id === ball.ball_id && b.core_weight === ball.core_weight);
+          if (isUnique) {
+            return [...balls, ball];
+          }
+          return balls;
+        });
+      }
+    } catch (error) {
+      console.error('Error saving ball to arsenal internally:', error);
       throw error;
     }
   }
