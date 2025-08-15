@@ -13,16 +13,20 @@ export class GameUtilsService {
       if (index < 9) {
         // For frames 1 to 9
         const frameValid =
-          (throws[0] === 10 && isNaN(parseInt(throws[1]))) ||
+          (throws[0] === 10 && (throws.length === 1 || isNaN(throws[1]))) ||
           (throws[0] !== 10 &&
             throws.length === 2 &&
             throws.reduce((acc: number, curr: number) => acc + curr, 0) <= 10 &&
             throws.every((throwValue: number) => throwValue >= 0 && throwValue <= 10));
         if (!frameValid) {
           isValid = false;
-          frame.isInvalid = true;
+          if (!Array.isArray(frame)) {
+            frame.isInvalid = true;
+          }
         } else {
-          frame.isInvalid = false;
+          if (!Array.isArray(frame)) {
+            frame.isInvalid = false;
+          }
         }
       } else {
         // For frame 10
@@ -35,9 +39,13 @@ export class GameUtilsService {
             throws.every((throwValue: number) => throwValue >= 0 && throwValue <= 10));
         if (!frameValid) {
           isValid = false;
-          frame.isInvalid = true;
+          if (!Array.isArray(frame)) {
+            frame.isInvalid = true;
+          }
         } else {
-          frame.isInvalid = false;
+          if (!Array.isArray(frame)) {
+            frame.isInvalid = false;
+          }
         }
       }
     });

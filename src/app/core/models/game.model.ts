@@ -6,6 +6,7 @@ export interface Throw {
 export interface Frame {
   frameIndex: number;
   throws: Throw[];
+  isInvalid?: boolean;
 }
 
 export interface Game {
@@ -23,4 +24,9 @@ export interface Game {
   league?: string;
   patterns: string[];
   balls?: string[];
+}
+
+// Working format for components that manipulate frames during gameplay
+export interface WorkingGame extends Omit<Game, 'frames'> {
+  frames: number[][];
 }

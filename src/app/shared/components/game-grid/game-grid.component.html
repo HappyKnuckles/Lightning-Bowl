@@ -25,7 +25,7 @@
           inputmode="numeric"
           autocapitalize="on"
           debounce="500"
-          [disabled]="game().frames[frameIndex][0] === 10 && i !== 10"
+          [disabled]="workingFrames[frameIndex][0] === 10 && i !== 10"
           [value]="getFrameValue(frameIndex, 1)"
           (ionInput)="simulateScore($event, frameIndex, 1)"
           (ionFocus)="handleInputFocus(frameIndex, 1)"
@@ -39,7 +39,7 @@
           inputmode="numeric"
           autocapitalize="on"
           debounce="500"
-          [disabled]="game().frames[frameIndex][0] === 10 && i !== 10"
+          [disabled]="workingFrames[frameIndex][0] === 10 && i !== 10"
           [value]="getFrameValue(frameIndex, 1)"
           (ionInput)="simulateScore($event, frameIndex, 1)"
           (ionFocus)="handleInputFocus(frameIndex, 1)"
@@ -54,7 +54,7 @@
           autocapitalize="on"
           debounce="500"
           [value]="getFrameValue(frameIndex, 2)"
-          [disabled]="game().frames[frameIndex][0] !== 10 && game().frames[frameIndex][0] + (game().frames[frameIndex][1] || 0) !== 10"
+          [disabled]="workingFrames[frameIndex][0] !== 10 && workingFrames[frameIndex][0] + (workingFrames[frameIndex][1] || 0) !== 10"
           (ionInput)="simulateScore($event, frameIndex, 2)"
           (ionFocus)="handleInputFocus(frameIndex, 2)"
           (ionBlur)="handleInputBlur()">
@@ -63,9 +63,9 @@
     </ion-row>
     <ion-row
       *ngIf="
-        (game().frames[frameIndex][0] !== undefined ||
-          game().frames[frameIndex][1] !== undefined ||
-          (i === 10 && game().frames[frameIndex][0] !== undefined)) &&
+        (workingFrames[frameIndex][0] !== undefined ||
+          workingFrames[frameIndex][1] !== undefined ||
+          (i === 10 && workingFrames[frameIndex][0] !== undefined)) &&
         isNumber(game().frameScores[i - 1])
       ">
       <ion-col class="middle count">{{ game().frameScores[i - 1] }}</ion-col>
@@ -73,9 +73,9 @@
     <ion-row
       *ngIf="
         !(
-          (game().frames[frameIndex][0] !== undefined ||
-            game().frames[frameIndex][1] !== undefined ||
-            (i === 10 && game().frames[frameIndex][0] !== undefined)) &&
+          (workingFrames[frameIndex][0] !== undefined ||
+            workingFrames[frameIndex][1] !== undefined ||
+            (i === 10 && workingFrames[frameIndex][0] !== undefined)) &&
           isNumber(game().frameScores[i - 1])
         )
       ">

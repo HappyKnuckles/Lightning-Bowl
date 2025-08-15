@@ -39,7 +39,7 @@ import { GameDataTransformerService } from 'src/app/core/services/game-transform
 import { InputCustomEvent } from '@ionic/angular';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { UtilsService } from 'src/app/core/services/utils/utils.service';
-import { Game } from 'src/app/core/models/game.model';
+import { Game, WorkingGame } from 'src/app/core/models/game.model';
 import { PatternTypeaheadComponent } from '../pattern-typeahead/pattern-typeahead.component';
 import { Keyboard } from '@capacitor/keyboard';
 
@@ -123,6 +123,11 @@ export class GameGridComponent implements OnInit, OnDestroy {
     this.initializeKeyboardListeners();
   }
 
+  // Getter for frames in working format (number[][])
+  get workingFrames(): number[][] {
+    return (this.game() as any).frames as number[][];
+  }
+
   async ngOnInit(): Promise<void> {
     const currentGame = this.game();
     if (this.game().date != 0) {
@@ -136,9 +141,11 @@ export class GameGridComponent implements OnInit, OnDestroy {
           newFrames.push([]);
         }
       }
-      this.game().frames = newFrames;
+      // Temporarily convert to working format - type assertion needed here
+      (this.game() as any).frames = newFrames;
     } else {
-      this.game().frames = Array.from({ length: 10 }, () => []);
+      // Temporarily convert to working format - type assertion needed here
+      (this.game() as any).frames = Array.from({ length: 10 }, () => []);
     }
     this.presentingElement = document.querySelector('.ion-page')!;
   }
@@ -203,7 +210,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
   }
 
   getFrameValue(frameIndex: number, throwIndex: number): string {
-    const frame = this.game().frames[frameIndex];
+    const frame = ((this.game() as any).frames as number[][])[frameIndex];
     const val = frame[throwIndex];
 
     if (val === undefined || val === null) {
@@ -261,10 +268,10 @@ export class GameGridComponent implements OnInit, OnDestroy {
 
   simulateScore(event: InputCustomEvent, frameIndex: number, inputIndex: number): void {
     const inputValue = event.detail.value!;
-    const parsedValue = this.gameUtilsService.parseInputValue(inputValue, frameIndex, inputIndex, this.game().frames);
+    const parsedValue = this.gameUtilsService.parseInputValue(inputValue, frameIndex, inputIndex, (this.game() as any).frames as number[][]);
 
     if (inputValue.length === 0) {
-      this.game().frames[frameIndex].splice(inputIndex, 1);
+      ((this.game() as any).frames as number[][])[frameIndex].splice(inputIndex, 1);
       this.updateScores();
       return;
     }
@@ -272,18 +279,18 @@ export class GameGridComponent implements OnInit, OnDestroy {
       this.handleInvalidInput(event);
       return;
     }
-    if (!this.gameUtilsService.isValidFrameScore(parsedValue, frameIndex, inputIndex, this.game().frames)) {
+    if (!this.gameUtilsService.isValidFrameScore(parsedValue, frameIndex, inputIndex, (this.game() as any).frames as number[][])) {
       this.handleInvalidInput(event);
       return;
     }
 
-    this.game().frames[frameIndex][inputIndex] = parsedValue;
+    ((this.game() as any).frames as number[][])[frameIndex][inputIndex] = parsedValue;
     this.updateScores();
     this.focusNextInput(frameIndex, inputIndex);
   }
 
   clearFrames(isSave: boolean): void {
-    this.game().frames = Array.from({ length: 10 }, () => []);
+    (this.game() as any).frames = Array.from({ length: 10 }, () => []);
     this.game().frameScores = [];
     this.game().totalScore = 0;
     this.maxScore = 300;
@@ -307,11 +314,11 @@ export class GameGridComponent implements OnInit, OnDestroy {
   }
 
   updateScores(): void {
-    const scoreResult = this.gameScoreCalculatorService.calculateScore(this.game().frames);
+    const scoreResult = this.gameScoreCalculatorService.calculateScore((this.game() as any).frames as number[][]);
     this.game().totalScore = scoreResult.totalScore;
     this.game().frameScores = scoreResult.frameScores;
 
-    this.maxScore = this.gameScoreCalculatorService.calculateMaxScore(this.game().frames, this.game().totalScore);
+    this.maxScore = this.gameScoreCalculatorService.calculateMaxScore((this.game() as any).frames as number[][], this.game().totalScore);
     this.totalScoreChanged.emit(this.game().totalScore);
     this.maxScoreChanged.emit(this.maxScore);
   }
@@ -323,7 +330,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
         return;
       }
       const gameData = this.transformGameService.transformGameData(
-        this.game().frames,
+        (this.game() as any).frames as number[][],
         this.game().frameScores,
         this.game().totalScore,
         this.game().isPractice,
@@ -347,7 +354,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
   }
 
   isGameValid(): boolean {
-    return this.gameUtilsService.isGameValid(undefined, this.game().frames);
+    return this.gameUtilsService.isGameValid(undefined, (this.game() as any).frames as number[][]);
   }
 
   isNumber(value: unknown): boolean {
@@ -364,7 +371,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
       return rollIndex !== 0;
     }
 
-    const frame = this.game().frames[9];
+    const frame = ((this.game() as any).frames as number[][])[9];
     const first = frame[0];
     const second = frame[1];
 
@@ -394,7 +401,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
       return rollIndex !== 1;
     }
 
-    const frame = this.game().frames[9];
+    const frame = ((this.game() as any).frames as number[][])[9];
     const first = frame[0];
     const second = frame[1];
 
