@@ -42,7 +42,7 @@ export class ExcelService {
    * @param importedLeagueNames Set of league names from imported Excel data
    * @returns Map from league name to League object
    */
-  private async associateImportedLeagues(importedLeagueNames: Set<string>): Promise<Map<string, League>> {
+  public async associateImportedLeagues(importedLeagueNames: Set<string>): Promise<Map<string, League>> {
     const leagueMap = new Map<string, League>();
     const existingLeagues = this.storageService.leagues();
     const newLeagueNames: string[] = [];
@@ -98,7 +98,7 @@ export class ExcelService {
    * @param leagueNames Array of league names that need event types
    * @returns Map from league name to event type, or null if cancelled
    */
-  private async collectEventTypesForImport(leagueNames: string[]): Promise<Map<string, EventType> | null> {
+  public async collectEventTypesForImport(leagueNames: string[]): Promise<Map<string, EventType> | null> {
     const eventTypeMap = new Map<string, EventType>();
     
     // Show introduction first
@@ -122,7 +122,7 @@ export class ExcelService {
   /**
    * Shows introduction alert for league import
    */
-  private async showImportLeagueIntroduction(leagueCount: number): Promise<boolean> {
+  public async showImportLeagueIntroduction(leagueCount: number): Promise<boolean> {
     return new Promise((resolve) => {
       this.alertController.create({
         header: 'League Import',
@@ -149,7 +149,7 @@ export class ExcelService {
   /**
    * Shows alert to ask user for event type of a specific imported league
    */
-  private async askForLeagueEventType(leagueName: string): Promise<EventType | null> {
+  public async askForLeagueEventType(leagueName: string): Promise<EventType | null> {
     return new Promise((resolve) => {
       this.alertController.create({
         header: 'League Setup',
@@ -175,6 +175,25 @@ export class ExcelService {
         alert.present();
       });
     });
+  }
+
+  /**
+   * Extracts league names from Excel data without transforming it
+   * @param data Raw Excel data
+   * @returns Set of league names found in the data
+   */
+  public extractLeagueNamesFromData(data: ExcelRow[]): Set<string> {
+    const leagueMap = new Set<string>();
+
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      const leagueName = row['League'] as string;
+      if (leagueName && leagueName.trim() !== '') {
+        leagueMap.add(leagueName);
+      }
+    }
+
+    return leagueMap;
   }
 
   // TODO make one folder for all and one for each league and in there have stats and game history for the league
@@ -281,10 +300,9 @@ export class ExcelService {
     }
   }
 
-  async transformData(data: ExcelRow[]): Promise<void> {
+  async transformData(data: ExcelRow[], leagueAssociationMap = new Map<string, League>()): Promise<void> {
     try {
       const gameData: Game[] = [];
-      const leagueMap = new Set<string>();
       const ballMap = new Set<string>();
 
       for (let i = 1; i < data.length; i++) {
@@ -331,11 +349,6 @@ export class ExcelService {
           note: row['Notes'] as string,
         };
 
-        const leagueName = this.getLeagueName(game.league);
-        if (leagueName !== '') {
-          leagueMap.add(leagueName);
-        }
-
         if (game.balls) {
           for (const ball of game.balls) {
             ballMap.add(ball);
@@ -343,21 +356,6 @@ export class ExcelService {
         }
 
         gameData.push(game);
-      }
-
-      // Handle league association for imported leagues
-      let leagueAssociationMap = new Map<string, League>();
-      if (leagueMap.size > 0) {
-        try {
-          leagueAssociationMap = await this.associateImportedLeagues(leagueMap);
-        } catch (error) {
-          // If user cancelled or error occurred, don't continue with import
-          if (error instanceof Error && error.message.includes('cancelled')) {
-            this.toastService.showToast('Import cancelled by user', 'information', false);
-            return;
-          }
-          throw error;
-        }
       }
 
       // Update games to use League objects instead of strings
