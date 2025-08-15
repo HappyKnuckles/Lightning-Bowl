@@ -114,19 +114,29 @@ export class GameComponent implements OnChanges, OnInit {
 
   leagues = computed(() => {
     const savedLeagues = this.storageService.leagues();
-    const leagueKeys: string[] = this.games.reduce((acc: string[], game: Game) => {
+    const gameLeagues: LeagueData[] = this.games.reduce((acc: LeagueData[], game: Game) => {
       if (game.league) {
-        const leagueValue = this.getLeagueValue(game.league);
-        if (!acc.includes(leagueValue)) {
-          acc.push(leagueValue);
+        const leagueName = this.getLeagueValue(game.league);
+        // Check if we already have this league by name
+        const exists = acc.some(existingLeague => this.getLeagueValue(existingLeague) === leagueName);
+        if (!exists) {
+          acc.push(game.league);
         }
       }
       return acc;
     }, []);
     
-    // Get display names from saved leagues and combine with game league keys
-    const savedLeagueNames = savedLeagues.map(league => this.getLeagueValue(league));
-    return [...new Set([...leagueKeys, ...savedLeagueNames])];
+    // Combine saved leagues with game leagues, avoiding duplicates by name
+    const allLeagues = [...savedLeagues];
+    gameLeagues.forEach(gameLeague => {
+      const gameLeagueName = this.getLeagueValue(gameLeague);
+      const existsInSaved = allLeagues.some(savedLeague => this.getLeagueValue(savedLeague) === gameLeagueName);
+      if (!existsInSaved) {
+        allLeagues.push(gameLeague);
+      }
+    });
+    
+    return allLeagues;
   });
 
   // leagues = computed(() => {
@@ -561,9 +571,17 @@ export class GameComponent implements OnChanges, OnInit {
     if (selectedValue === '') {
       game.league = undefined;
     } else {
-      // For now, keep it as string - when user adds new leagues with the selector component
-      // they will be League objects, but existing games can continue using strings
-      game.league = selectedValue;
+      // Find the actual League object based on selected value
+      const selectedLeague = this.leagues().find(league => 
+        this.getLeagueValue(league) === selectedValue
+      );
+      
+      if (selectedLeague) {
+        game.league = selectedLeague; // Set the full League object
+      } else {
+        // Fallback to string if league not found (shouldn't happen, but safety)
+        game.league = selectedValue;
+      }
     }
     this.updateSeries(game, game.league);
   }
