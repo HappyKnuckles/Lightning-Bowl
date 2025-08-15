@@ -6,6 +6,7 @@ import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { ImpactStyle } from '@capacitor/haptics';
 import { Game } from 'src/app/core/models/game.model';
+import { LeagueData } from 'src/app/core/models/league.model';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { SortUtilsService } from '../sort-utils/sort-utils.service';
 import { GameFilterService } from '../game-filter/game-filter.service';
@@ -27,6 +28,12 @@ export class ExcelService {
     private gameFilterService: GameFilterService,
     private statsService: GameStatsService,
   ) {}
+
+  // Helper method to get league name from LeagueData
+  private getLeagueName(league: LeagueData | undefined): string {
+    if (!league) return '';
+    return typeof league === 'string' ? league : league.Name;
+  }
 
   // TODO make one folder for all and one for each league and in there have stats and game history for the league
   async exportToExcel(): Promise<boolean> {
@@ -182,8 +189,9 @@ export class ExcelService {
           note: row['Notes'] as string,
         };
 
-        if (game.league !== undefined && game.league !== '') {
-          leagueMap.add(game.league);
+        const leagueName = this.getLeagueName(game.league);
+        if (leagueName !== '') {
+          leagueMap.add(leagueName);
         }
 
         if (game.balls) {
@@ -289,7 +297,7 @@ export class ExcelService {
         ...frameValues,
         game.totalScore.toString(),
         game.frameScores.map((s) => s.toString()).join(', '),
-        game.league || '',
+        this.getLeagueName(game.league),
         game.isPractice ? 'true' : 'false',
         game.isClean ? 'true' : 'false',
         game.isPerfect ? 'true' : 'false',

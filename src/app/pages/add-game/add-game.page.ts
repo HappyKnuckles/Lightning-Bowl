@@ -23,6 +23,7 @@ import {
 } from '@ionic/angular/standalone';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Game } from 'src/app/core/models/game.model';
+import { LeagueData } from 'src/app/core/models/league.model';
 import { addIcons } from 'ionicons';
 import { add, chevronDown, chevronUp, cameraOutline, documentTextOutline, medalOutline } from 'ionicons/icons';
 import { NgIf, NgFor } from '@angular/common';
@@ -125,6 +126,12 @@ export class AddGamePage implements OnInit {
     private gameUtilsService: GameUtilsService,
   ) {
     addIcons({ cameraOutline, chevronDown, chevronUp, medalOutline, documentTextOutline, add });
+  }
+
+  // Helper method to get league name from LeagueData
+  private getLeagueName(league: LeagueData | undefined): string {
+    if (!league) return '';
+    return typeof league === 'string' ? league : league.Name;
   }
 
   async ngOnInit(): Promise<void> {
@@ -357,7 +364,7 @@ export class AddGamePage implements OnInit {
         gameGrid.game().isPractice = data.isPractice!;
         gameGrid.game().patterns = data.patterns!;
         gameGrid.onPatternChanged(data.patterns!);
-        gameGrid.onLeagueChanged(data.league!);
+        gameGrid.onLeagueChanged(this.getLeagueName(data.league!));
         gameGrid.updateScores();
       });
     });

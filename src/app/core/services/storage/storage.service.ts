@@ -297,7 +297,8 @@ export class StorageService {
   }
 
   // Helper method to get league name from LeagueData
-  private getLeagueName(league: LeagueData): string {
+  private getLeagueName(league: LeagueData | undefined): string {
+    if (!league) return '';
     return typeof league === 'string' ? league : league.Name;
   }
   
@@ -353,8 +354,11 @@ export class StorageService {
       
       const games = await this.loadData<Game>('game');
       const updatedGames = games.map((game) => {
-        if (game.league === oldLeagueName) {
-          game.league = newLeagueName;
+        const currentLeagueName = this.getLeagueName(game.league);
+        if (currentLeagueName === oldLeagueName) {
+          // For backward compatibility, update as string if newLeague is string
+          // Otherwise update with the League object
+          game.league = typeof newLeague === 'string' ? newLeague : newLeague;
         }
         return game;
       });

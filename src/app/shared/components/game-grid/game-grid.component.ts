@@ -40,6 +40,7 @@ import { InputCustomEvent } from '@ionic/angular';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { UtilsService } from 'src/app/core/services/utils/utils.service';
 import { Game } from 'src/app/core/models/game.model';
+import { LeagueData } from 'src/app/core/models/league.model';
 import { PatternTypeaheadComponent } from '../pattern-typeahead/pattern-typeahead.component';
 import { Keyboard } from '@capacitor/keyboard';
 
@@ -121,6 +122,12 @@ export class GameGridComponent implements OnInit, OnDestroy {
     private platform: Platform,
   ) {
     this.initializeKeyboardListeners();
+  }
+
+  // Helper method to get league name from LeagueData
+  private getLeagueName(league: LeagueData | undefined): string {
+    if (!league) return '';
+    return typeof league === 'string' ? league : league.Name;
   }
 
   async ngOnInit(): Promise<void> {
@@ -294,7 +301,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
 
     if (isSave) {
       this.game().note = '';
-      this.game().league = '';
+      this.game().league = undefined;
       this.leagueSelector.selectedLeague = '';
       this.game().patterns = [];
       this.game().isPractice = true;
@@ -318,7 +325,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
 
   async saveGameToLocalStorage(isSeries: boolean, seriesId: string): Promise<void> {
     try {
-      if (this.game().league === 'New') {
+      if (this.getLeagueName(this.game().league) === 'New') {
         this.toastService.showToast(ToastMessages.selectLeague, 'bug', true);
         return;
       }
@@ -327,7 +334,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
         this.game().frameScores,
         this.game().totalScore,
         this.game().isPractice,
-        this.game().league,
+        this.getLeagueName(this.game().league),
         isSeries,
         seriesId,
         this.game().note,

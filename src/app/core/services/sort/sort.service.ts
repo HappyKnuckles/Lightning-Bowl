@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Ball } from '../../models/ball.model';
 import { Pattern } from '../../models/pattern.model';
+import { LeagueData } from '../../models/league.model';
 import {
   BallSortField,
   PatternSortField,
@@ -61,6 +62,12 @@ export class SortService {
     { field: GameSortField.IS_PERFECT, direction: SortDirection.DESC, label: 'Perfect Games First' },
   ];
 
+  // Helper method to get league name from LeagueData
+  private getLeagueName(league: LeagueData | undefined): string {
+    if (!league) return '';
+    return typeof league === 'string' ? league : league.Name;
+  }
+
   sortGames(games: Game[], sortOption?: GameSortOption): Game[] {
     const option = sortOption;
     const sortedGames = [...games];
@@ -76,8 +83,8 @@ export class SortService {
           comparison = a.date - b.date;
           break;
         case GameSortField.LEAGUE: {
-          const leagueA = a.league || '';
-          const leagueB = b.league || '';
+          const leagueA = this.getLeagueName(a.league);
+          const leagueB = this.getLeagueName(b.league);
           comparison = leagueA.localeCompare(leagueB);
           break;
         }
