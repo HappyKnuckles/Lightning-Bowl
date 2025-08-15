@@ -9,6 +9,7 @@ import { BallService } from '../ball/ball.service';
 import { Pattern } from '../../models/pattern.model';
 import { PatternService } from '../pattern/pattern.service';
 import { League, LeagueData, isLeagueObject } from '../../models/league.model';
+import { LeagueMigrationService } from '../league-migration/league-migration.service';
 
 @Injectable({
   providedIn: 'root',
@@ -43,6 +44,7 @@ export class StorageService {
     private loadingService: LoadingService,
     private ballService: BallService,
     private patternService: PatternService,
+    private migrationService: LeagueMigrationService,
   ) {
     this.init();
   }
@@ -394,6 +396,11 @@ export class StorageService {
         this.ballService.getCores(),
         this.ballService.getCoverstocks(),
       ]);
+      
+      // After loading initial data, run migration if needed
+      // We don't await this to avoid blocking the app initialization
+      this.runMigrationIfNeeded();
+      
       if (this.games().length > 0) {
         if (localStorage.getItem('first-game') === null) {
           localStorage.setItem('first-game', this.games()[this.games().length - 1].date.toString());
@@ -402,6 +409,20 @@ export class StorageService {
     } catch (error) {
       console.error('Error during initial data load:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Runs league migration if needed, called after initial data load
+   */
+  private async runMigrationIfNeeded(): Promise<void> {
+    try {
+      // Add a small delay to ensure the UI is ready
+      setTimeout(async () => {
+        await this.migrationService.migrateLeagues(this);
+      }, 1000);
+    } catch (error) {
+      console.error('Error during migration:', error);
     }
   }
 
