@@ -131,8 +131,6 @@ export class StorageService {
       });
 
       if (legacyBalls.length > 0) {
-        console.log(`Found ${legacyBalls.length} legacy arsenal items to migrate`);
-        
         // Create Main Arsenal
         await this.addArsenal('Main Arsenal');
         
@@ -141,10 +139,7 @@ export class StorageService {
           const newKey = `arsenal_Main Arsenal_${ball.ball_id}_${ball.core_weight}`;
           await this.save(newKey, ball);
           await this.delete(key);
-          console.log(`Migrated ball: ${ball.ball_name} (${ball.core_weight}lbs) from ${key} to ${newKey}`);
         }
-        
-        console.log(`Successfully migrated ${legacyBalls.length} balls to Main Arsenal`);
       }
     } catch (error) {
       console.error('Error during legacy migration:', error);

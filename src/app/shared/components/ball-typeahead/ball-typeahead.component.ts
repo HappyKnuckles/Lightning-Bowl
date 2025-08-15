@@ -282,7 +282,6 @@ export class BallTypeaheadComponent implements OnInit, OnDestroy {
               // Show success message
               if (totalSuccessCount > 0) {
                 const arsenalList = addedToArsenals.join(', ');
-                const ballCount = this.selectedBalls.length;
                 const message = selectedArsenals.length === 1 
                   ? `${totalSuccessCount} ball(s) added to ${arsenalList}`
                   : `${totalSuccessCount} ball(s) added to ${addedToArsenals.length} arsenal(s): ${arsenalList}`;
@@ -324,7 +323,6 @@ export class BallTypeaheadComponent implements OnInit, OnDestroy {
     return this.selectedBalls.includes(ball);
   }
   ngOnDestroy(): void {
-    // Balls are now saved manually through the save button
-    // This method intentionally left empty as cleanup is not needed
+    // Cleanup is handled automatically by Angular lifecycle
   }
 }

@@ -1,4 +1,3 @@
-import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { Component, OnInit, computed, Signal, ViewChild, ElementRef, effect, model } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -35,6 +34,8 @@ import {
   IonSegmentContent,
   IonSegmentView,
   IonInput,
+  IonSelect,
+  IonSelectOption,
 } from '@ionic/angular/standalone';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { Ball } from 'src/app/core/models/ball.model';
@@ -97,6 +98,8 @@ import { ChartGenerationService } from 'src/app/core/services/chart/chart-genera
     IonSegmentContent,
     IonSegmentView,
     IonInput,
+    IonSelect,
+    IonSelectOption,
   ],
 })
 export class ArsenalPage implements OnInit {
