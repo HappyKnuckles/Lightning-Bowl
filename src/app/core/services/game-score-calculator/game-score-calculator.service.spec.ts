@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 
 import { GameScoreCalculatorService } from './game-score-calculator.service';
 
-describe('BowlingCalculatorService', () => {
+describe('GameScoreCalculatorService', () => {
   let service: GameScoreCalculatorService;
 
   beforeEach(() => {
@@ -14,205 +14,186 @@ describe('BowlingCalculatorService', () => {
     expect(service).toBeTruthy();
   });
 
-  // it('should calculate max score for a full game with various scenarios', () => {
-  //   // Simulate a full game with various scenarios
-  //   service.maxScore = 300;
+  describe('calculateScore', () => {
+    it('should calculate score for a perfect game (all strikes)', () => {
+      const frames = [
+        [10], [10], [10], [10], [10],
+        [10], [10], [10], [10], [10, 10, 10]
+      ];
+      const result = service.calculateScore(frames);
+      expect(result.totalScore).toBe(300);
+      expect(result.frameScores[9]).toBe(300);
+    });
 
-  //   service.frames = [
-  //     [10], // Frame 1: Strike
-  //     [5, 5], // Frame 2: Spare
-  //     [3, 4], // Frame 3: Open frame
-  //     [10], // Frame 4: Strike
-  //     [7, 2], // Frame 5: Open frame
-  //     [3, 7], // Frame 6: Spare Fehler??
-  //     [10], // Frame 7: Strike
-  //     [10], // Frame 8: Strike
-  //     [9, 1], // Frame 9: Spare
-  //   ];
+    it('should calculate score for all spares', () => {
+      const frames = [
+        [5, 5], [5, 5], [5, 5], [5, 5], [5, 5],
+        [5, 5], [5, 5], [5, 5], [5, 5], [5, 5, 5]
+      ];
+      const result = service.calculateScore(frames);
+      expect(result.totalScore).toBe(150);
+      expect(result.frameScores[9]).toBe(150);
+    });
 
-  //   // Expected max score after each frame
-  //   const expectedMaxScores = [300, 280, 250, 250, 218, 208, 208, 208, 187, 177];
+    it('should calculate score for open frames', () => {
+      const frames = [
+        [3, 4], [3, 4], [3, 4], [3, 4], [3, 4],
+        [3, 4], [3, 4], [3, 4], [3, 4], [3, 4]
+      ];
+      const result = service.calculateScore(frames);
+      expect(result.totalScore).toBe(70);
+      expect(result.frameScores[9]).toBe(70);
+    });
 
-  //   // Calculate and verify the max score after each frame
-  //   for (let i = 0; i < service.frames.length; i++) {
-  //     expect(service.calculateMaxScore()).toBe(expectedMaxScores[i]);
-  //   }
-  // });
+    it('should calculate score for mixed game with strikes, spares, and opens', () => {
+      const frames = [
+        [10], [5, 5], [3, 4], [10], [7, 2],
+        [3, 7], [10], [10], [9, 1], [10, 10, 10]
+      ];
+      const result = service.calculateScore(frames);
+      expect(result.totalScore).toBe(187);
+    });
 
-  // it('should calculate max score for a full game with good scenarios', () => {
-  //   // Simulate a full game with various scenarios
-  //   service.maxScore = 300;
-  //   service.frames = [
-  //     [10], // Frame 1: Strike
-  //     [9, 1], // Frame 2: Spare
-  //     [10], // Frame 3: Open frame
-  //     [10], // Frame 4: Strike
-  //     [9, 1], // Frame 5: Open frame
-  //     [9, 1], // Frame 6: Spare
-  //     [10], // Frame 7: Strike
-  //     [5, 0], // Frame 8: Strike
-  //     [5, 5], // Frame 9: Spare
-  //   ];
+    it('should handle tenth frame with strike followed by two strikes', () => {
+      const frames = [
+        [7, 2], [7, 2], [7, 2], [7, 2], [7, 2],
+        [7, 2], [7, 2], [7, 2], [7, 2], [10, 10, 10]
+      ];
+      const result = service.calculateScore(frames);
+      expect(result.totalScore).toBe(111);
+    });
 
-  //   // Expected max score after each frame
-  //   const expectedMaxScores = [300, 280, 280, 280, 259, 248, 248, 208, 198, 198, 188]; // Website
-  //   // const expectedMaxScores = [300, 280, 280, 280, 259, 248, 248, 208, 198, 198, 188]; // App
+    it('should handle tenth frame with spare', () => {
+      const frames = [
+        [7, 2], [7, 2], [7, 2], [7, 2], [7, 2],
+        [7, 2], [7, 2], [7, 2], [7, 2], [9, 1, 7]
+      ];
+      const result = service.calculateScore(frames);
+      expect(result.totalScore).toBe(98);
+    });
+  });
 
-  //   // Calculate and verify the max score after each frame
-  //   for (let i = 0; i < service.frames.length; i++) {
-  //     expect(service.calculateMaxScore()).toBe(expectedMaxScores[i]);
-  //   }
-  // });
+  describe('calculateMaxScore', () => {
+    it('should calculate max score for a full game with various scenarios', () => {
+      const frames = [
+        [10], [5, 5], [3, 4], [10], [7, 2],
+        [3, 7], [10], [10], [9, 1]
+      ];
+      const maxScore = service.calculateMaxScore(frames, 177);
+      expect(maxScore).toBeGreaterThan(0);
+      expect(maxScore).toBeLessThanOrEqual(300);
+    });
 
-  // it('should calculate max score for a full game with random1 scenarios', () => {
-  //   // Simulate a full game with various scenarios
-  //   service.maxScore = 300;
-  //   service.frames = [
-  //     [9, 1], // Frame 1: Spare
-  //     [9, 1], // Frame 2: Spare
-  //     [9, 1], // Frame 3: Spare
-  //     [9, 1], // Frame 4: Spare
-  //     [9, 1], // Frame 5: Spare
-  //     [9, 1], // Frame 6: Spare
-  //     [9, 1], // Frame 7: Spare
-  //     [9, 1], // Frame 8: Spare
-  //     [9, 1], // Frame 9: Spare
-  //     // [9, 1, 1]         // Frame 9: Spare
-  //   ];
+    it('should calculate max score for early game', () => {
+      const frames = [
+        [10], [5, 5]
+      ];
+      const maxScore = service.calculateMaxScore(frames, 20);
+      expect(maxScore).toBeGreaterThan(20);
+      expect(maxScore).toBeLessThanOrEqual(300);
+    });
 
-  //   // Expected max score after each frame
-  //   const expectedMaxScores = [290, 279, 268, 257, 246, 235, 224, 213, 202, 182]; // Website
-  //   // const expectedMaxScores = [300, 280, 280, 280, 259, 248, 248, 208, 198, 198, 188]; // App
+    it('should return 300 for no frames played', () => {
+      const frames: number[][] = [];
+      const maxScore = service.calculateMaxScore(frames, 0);
+      expect(maxScore).toBe(300);
+    });
 
-  //   // Calculate and verify the max score after each frame
-  //   for (let i = 0; i < service.frames.length; i++) {
-  //     expect(service.calculateMaxScore()).toBe(expectedMaxScores[i]);
-  //   }
-  // });
+    it('should handle perfect game in progress', () => {
+      const frames = [
+        [10], [10], [10], [10], [10],
+        [10], [10], [10], [10]
+      ];
+      const maxScore = service.calculateMaxScore(frames, 240);
+      expect(maxScore).toBe(300);
+    });
+  });
 
-  // it('should calculate max score for a full game with random2 scenarios', () => {
-  //   // Simulate a full game with various scenarios
-  //   service.maxScore = 300;
-  //   service.frames = [
-  //     [10], // Frame 1: Strike
-  //     [9, 1], // Frame 2: Spare
-  //     [5, 4], // Frame 3: Open frame
-  //     [10], // Frame 4: Strike
-  //     [10], // Frame 5: Strike
-  //     [8, 1], // Frame 6: Open frame
-  //     [10], // Frame 7: Strike
-  //     [5, 0], // Frame 8: Open frame
-  //     [9, 1], // Frame 9: Spare
-  //     // [10, 10, 10]
-  //   ];
+  describe('getSeriesScore', () => {
+    it('should calculate series score for 3 games', () => {
+      const scores = [0, 150, 180, 200];
+      const seriesScore = service.getSeriesScore(1, scores);
+      expect(seriesScore).toBe(530); // 150 + 180 + 200
+    });
 
-  //   // Expected max score after each frame
-  //   const expectedMaxScores = [300, 280, 254, 254, 254, 220, 220, 180, 170, 170]; // Website
-  //   // const expectedMaxScores = [300, 280, 280, 280, 259, 248, 248, 208, 198, 198, 188]; // App
+    it('should calculate series score for 4 games', () => {
+      const scores = [0, 0, 0, 0, 150, 180, 200, 170];
+      const seriesScore = service.getSeriesScore(2, scores);
+      expect(seriesScore).toBe(700); // 150 + 180 + 200 + 170
+    });
 
-  //   // Calculate and verify the max score after each frame
-  //   for (let i = 0; i < service.frames.length; i++) {
-  //     expect(service.calculateMaxScore()).toBe(expectedMaxScores[i]);
-  //   }
-  // });
+    it('should return default value for invalid series index', () => {
+      const scores = [150, 180, 200];
+      const seriesScore = service.getSeriesScore(99, scores, 100);
+      expect(seriesScore).toBe(100);
+    });
 
-  // it('should calculate max score for a full game with random3 scenarios', () => {
-  //   // Simulate a full game with various scenarios
-  //   service.maxScore = 300;
-  //   service.frames = [
-  //     [8, 1], // Frame 1: Open frame
-  //     [6, 4], // Frame 2: Spare
-  //     [10], // Frame 3: Strike
-  //     [7, 2], // Frame 4: Open frame
-  //     [10], // Frame 5: Strike
-  //     [5, 4], // Frame 6: Open frame
-  //     [9, 0], // Frame 7: Open frame
-  //     [9, 1], // Frame 8: Spare
-  //     [10], // Frame 9: Strike
-  //     // [10, 10, 10]
-  //   ];
+    it('should handle missing scores in array', () => {
+      const scores = [0, 150, undefined, 200] as number[];
+      const seriesScore = service.getSeriesScore(1, scores);
+      expect(seriesScore).toBe(350); // 150 + 0 + 200
+    });
+  });
 
-  //   // Expected max score after each frame
-  //   const expectedMaxScores = [279, 269, 269, 237, 237, 205, 184, 174, 174, 174, 174]; // Website
-  //   // const expectedMaxScores = [300, 280, 280, 280, 259, 248, 248, 208, 198, 198, 188]; // App
+  describe('getSeriesMaxScore', () => {
+    it('should return max score for series with default 900', () => {
+      const maxScores = [280, 290, 300];
+      const seriesMaxScore = service.getSeriesMaxScore(1, maxScores);
+      expect(seriesMaxScore).toBe(870); // 280 + 290 + 300
+    });
 
-  //   // Calculate and verify the max score after each frame
-  //   for (let i = 0; i < service.frames.length; i++) {
-  //     expect(service.calculateMaxScore()).toBe(expectedMaxScores[i]);
-  //   }
-  // });
+    it('should return default 900 for invalid series', () => {
+      const maxScores = [280, 290, 300];
+      const seriesMaxScore = service.getSeriesMaxScore(99, maxScores);
+      expect(seriesMaxScore).toBe(900);
+    });
+  });
 
-  // it('should calculate max score for a full game with random4 scenarios', () => {
-  //   // Simulate a full game with various scenarios
-  //   service.maxScore = 300;
-  //   service.frames = [
-  //     [4, 3], // Frame 1: Open frame
-  //     [5, 2], // Frame 2: Open frame
-  //     [3, 6], // Frame 3: Open frame
-  //     [2, 1], // Frame 4: Open frame
-  //     [7, 1], // Frame 5: Open frame
-  //     [8, 0], // Frame 6: Open frame
-  //     [6, 2], // Frame 7: Open frame
-  //     [3, 4], // Frame 8: Open frame
-  //     [4, 1], // Frame 9: Open frame
-  //     // [2, 3] // Frame 10: Open frame
-  //   ];
+  describe('getSeriesCurrentScore', () => {
+    it('should return current score for series', () => {
+      const totalScores = [150, 180, 200];
+      const seriesCurrentScore = service.getSeriesCurrentScore(1, totalScores);
+      expect(seriesCurrentScore).toBe(530);
+    });
 
-  //   // Expected max score after each frame
-  //   const expectedMaxScores = [277, 254, 233, 206, 184, 162, 140, 117, 92, 67];
+    it('should return 0 for invalid series', () => {
+      const totalScores = [150, 180, 200];
+      const seriesCurrentScore = service.getSeriesCurrentScore(99, totalScores);
+      expect(seriesCurrentScore).toBe(0);
+    });
+  });
 
-  //   // Calculate and verify the max score after each frame
-  //   for (let i = 0; i < service.frames.length; i++) {
-  //     expect(service.calculateMaxScore()).toBe(expectedMaxScores[i]);
-  //   }
-  // });
+  describe('private methods via public interface', () => {
+    it('should correctly identify strikes in score calculation', () => {
+      const frames = [[10], [3, 4]];
+      const result = service.calculateScore(frames);
+      // First frame strike gets bonus from next two rolls (3+4=7)
+      expect(result.frameScores[0]).toBe(17); // 10 + 3 + 4
+      expect(result.frameScores[1]).toBe(24); // 17 + 7
+    });
 
-  // it('should calculate 300', () => {
-  //   // Simulate a full game with various scenarios
-  //   service.maxScore = 300;
-  //   service.frames = [
-  //     [10], // Frame 1: Open frame
-  //     [10], // Frame 1: Open frame
-  //     [10], // Frame 1: Open frame
-  //     [10], // Frame 1: Open frame
-  //     [10], // Frame 1: Open frame
-  //     [10], // Frame 1: Open frame
-  //     [10], // Frame 1: Open frame
-  //     [10], // Frame 1: Open frame
-  //     [10], // Frame 1: Open frame
-  //     [10, 10, 10], // Frame 1: Open frame
-  //   ];
+    it('should correctly identify spares in score calculation', () => {
+      const frames = [[7, 3], [4, 2]];
+      const result = service.calculateScore(frames);
+      // First frame spare gets bonus from next roll (4)
+      expect(result.frameScores[0]).toBe(14); // 10 + 4
+      expect(result.frameScores[1]).toBe(20); // 14 + 6
+    });
 
-  //   // Expected max score after each frame
-  //   const expectedMaxScores = [300, 300, 300, 300, 300, 300, 300, 300, 300, 300];
+    it('should handle consecutive strikes correctly', () => {
+      const frames = [[10], [10], [5, 3]];
+      const result = service.calculateScore(frames);
+      expect(result.frameScores[0]).toBe(25); // 10 + 10 + 5
+      expect(result.frameScores[1]).toBe(43); // 25 + 10 + 5 + 3
+      expect(result.frameScores[2]).toBe(51); // 43 + 8
+    });
 
-  //   // Calculate and verify the max score after each frame
-  //   for (let i = 0; i < service.frames.length; i++) {
-  //     expect(service.calculateMaxScore()).toBe(expectedMaxScores[i]);
-  //   }
-  // });
-  // it('should calculate 300', () => {
-  //   // Simulate a full game with various scenarios
-  //   service.maxScore = 300;
-  //   service.frames = [
-  //     [10], // Frame 1: Open frame
-  //     [10], // Frame 1: Open frame
-  //     [10], // Frame 1: Open frame
-  //     [10], // Frame 1: Open frame
-  //     [10], // Frame 1: Open frame
-  //     [10], // Frame 1: Open frame
-  //     [10], // Frame 1: Open frame
-  //     [10], // Frame 1: Open frame
-  //     [10], // Frame 1: Open frame
-  //     [9, 1, 10], // Frame 1: Open frame
-  //   ];
-
-  //   // Expected max score after each frame
-  //   const expectedMaxScores = [300, 300, 300, 300, 300, 300, 300, 300, 300, 279];
-
-  //   // Calculate and verify the max score after each frame
-  //   for (let i = 0; i < service.frames.length; i++) {
-  //     expect(service.calculateMaxScore()).toBe(expectedMaxScores[i]);
-  //   }
-  // });
+    it('should handle spare followed by strike', () => {
+      const frames = [[7, 3], [10], [4, 2]];
+      const result = service.calculateScore(frames);
+      expect(result.frameScores[0]).toBe(20); // 10 + 10
+      expect(result.frameScores[1]).toBe(36); // 20 + 10 + 4 + 2
+      expect(result.frameScores[2]).toBe(42); // 36 + 6
+    });
+  });
 });
