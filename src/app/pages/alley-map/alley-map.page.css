@@ -3,8 +3,6 @@
   width: 100%;
 }
 
-@import "~leaflet/dist/leaflet.css";
-
 .map-wrapper {
   height: 100%;
   width: 100%;
