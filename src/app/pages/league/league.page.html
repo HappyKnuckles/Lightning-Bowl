@@ -14,7 +14,7 @@
         <ion-button type="button" class="action-sheet" fill="clear" (click)="cancelEdit()"> Cancel </ion-button>
       </ion-buttons>
     }
-    <ion-title> Leagues </ion-title>
+    <ion-title> Leagues & Tournaments </ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -44,7 +44,13 @@
               <ion-item button #leagues (longPressed)="editVisibility()" [delay]="1000" appLongPress detail="false">
                 <ion-checkbox [checked]="selectionState[league]" (ionChange)="updateLeagueSelection(league, $event.detail.checked)">
                   <ion-label class="game-info">
-                    <h2 class="title">{{ league }}</h2>
+                    <h2 class="title">
+                      <ion-icon 
+                        [name]="leagueTypes()[league] === 'Tournament' ? 'trophy-outline' : 'medal-outline'" 
+                        style="margin-right: 8px; vertical-align: middle;">
+                      </ion-icon>
+                      {{ league }}
+                    </h2>
                     <p class="score">Games: {{ gamesByLeague()[league].length || 0 }}</p>
                     <p class="score">Avg: {{ statsByLeague()[league].averageScore | number: "1.1-2" }}</p>
                     <p class="score">High: {{ statsByLeague()[league].highGame }}</p>
@@ -59,7 +65,10 @@
               <div class="sliding">
                 <ion-item (click)="loadingService.setLoading(true)" button [id]="league" (longPressed)="editVisibility()" [delay]="1000" appLongPress>
                   <ion-label class="game-info">
-                    <div class="title">{{ league }}</div>
+                    <div class="title">
+                      <ion-icon name="fitness-outline" style="margin-right: 8px; vertical-align: middle;"></ion-icon>
+                      {{ league }}
+                    </div>
                     <div class="score">Games: {{ gamesByLeague()[league].length || 0 }}</div>
                     <div class="score">Avg: {{ statsByLeague()[league].averageScore | number: "1.1-2" }}</div>
                     <div class="score">High: {{ statsByLeague()[league].highGame }}</div>
@@ -82,7 +91,13 @@
 
                 <ion-item (click)="loadingService.setLoading(true)" button [id]="league" (longPressed)="editVisibility()" [delay]="1000" appLongPress>
                   <ion-label class="game-info">
-                    <div class="title">{{ league }}</div>
+                    <div class="title">
+                      <ion-icon 
+                        [name]="leagueTypes()[league] === 'Tournament' ? 'trophy-outline' : 'medal-outline'" 
+                        style="margin-right: 8px; vertical-align: middle;">
+                      </ion-icon>
+                      {{ league }}
+                    </div>
                     <div class="score">Games: {{ gamesByLeague()[league].length || 0 }}</div>
                     <div class="score">Avg: {{ statsByLeague()[league].averageScore | number: "1.1-2" }}</div>
                     <div class="score">High: {{ statsByLeague()[league].highGame }}</div>

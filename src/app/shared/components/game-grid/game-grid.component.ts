@@ -77,7 +77,7 @@ import { Keyboard } from '@capacitor/keyboard';
 export class GameGridComponent implements OnInit, OnDestroy {
   @Output() maxScoreChanged = new EventEmitter<number>();
   @Output() totalScoreChanged = new EventEmitter<number>();
-  @Output() leagueChanged = new EventEmitter<string>();
+  @Output() leagueChanged = new EventEmitter<{league: string, type: 'League' | 'Tournament'}>();
   @Output() isPracticeChanged = new EventEmitter<boolean>();
   patternChanged = output<string[]>();
   @ViewChildren(IonInput) inputs!: QueryList<IonInput>;
@@ -199,8 +199,10 @@ export class GameGridComponent implements OnInit, OnDestroy {
     this.showButtonToolbar = false;
   }
 
-  onLeagueChanged(league: string): void {
-    this.leagueChanged.emit(league);
+  onLeagueChanged(leagueData: {league: string, type: 'League' | 'Tournament'}): void {
+    this.game().league = leagueData.league;
+    this.game().leagueType = leagueData.type;
+    this.leagueChanged.emit(leagueData);
   }
 
   onPatternChanged(patterns: string[]): void {

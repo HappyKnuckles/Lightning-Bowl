@@ -178,18 +178,22 @@ export class AddGamePage implements OnInit {
     this.modal.dismiss(null, 'cancel');
   }
 
-  onLeagueChange(league: string, isModal = false): void {
+  onLeagueChange(leagueData: {league: string, type: 'League' | 'Tournament'}, isModal = false): void {
+    const league = leagueData.league;
     const isPractice = league === '' || league === 'New';
 
     if (isModal) {
       this.gameData.league = league;
+      this.gameData.leagueType = leagueData.type;
       this.gameData.isPractice = isPractice;
       this.modalCheckbox.checked = isPractice;
       this.modalCheckbox.disabled = !isPractice;
     } else {
       this.gameGrids.forEach((trackGrid: GameGridComponent) => {
         trackGrid.leagueSelector.selectedLeague = league;
+        trackGrid.leagueSelector.selectedLeagueType = leagueData.type;
         trackGrid.game().league = league;
+        trackGrid.game().leagueType = leagueData.type;
         trackGrid.game().isPractice = isPractice;
         trackGrid.checkbox.checked = isPractice;
         trackGrid.checkbox.disabled = !isPractice;
@@ -357,7 +361,10 @@ export class AddGamePage implements OnInit {
         gameGrid.game().isPractice = data.isPractice!;
         gameGrid.game().patterns = data.patterns!;
         gameGrid.onPatternChanged(data.patterns!);
-        gameGrid.onLeagueChanged(data.league!);
+        gameGrid.onLeagueChanged({
+          league: data.league!,
+          type: data.leagueType || 'League'  // Default to 'League' for backward compatibility
+        });
         gameGrid.updateScores();
       });
     });

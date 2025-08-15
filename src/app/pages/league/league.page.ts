@@ -31,6 +31,8 @@ import {
   documentTextOutline,
   shareOutline,
   medalOutline,
+  trophyOutline,
+  fitnessOutline,
   cameraOutline,
   addOutline,
   chevronBack,
@@ -107,6 +109,19 @@ export class LeaguePage {
   });
   leagueKeys: Signal<string[]> = computed(() => {
     return Object.keys(this.gamesByLeague());
+  });
+  leagueTypes: Signal<Record<string, 'League' | 'Tournament'>> = computed(() => {
+    const gamesByLeague = this.gamesByLeague();
+    const leagueTypes: Record<string, 'League' | 'Tournament'> = {};
+    
+    Object.keys(gamesByLeague).forEach((league) => {
+      const games = gamesByLeague[league];
+      // Get the type from the first game, or default to 'League'
+      const firstGame = games.find(game => game.leagueType);
+      leagueTypes[league] = firstGame?.leagueType || 'League';
+    });
+    
+    return leagueTypes;
   });
   overallStats: Signal<Stats> = computed(() => {
     const games = this.storageService.games();
@@ -189,6 +204,8 @@ export class LeaguePage {
       shareOutline,
       documentTextOutline,
       medalOutline,
+      trophyOutline,
+      fitnessOutline,
     });
     effect(
       () => {

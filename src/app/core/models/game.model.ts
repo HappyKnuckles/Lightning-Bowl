@@ -11,6 +11,7 @@ export interface Game {
   seriesId?: string;
   note?: string;
   league?: string;
+  leagueType?: 'League' | 'Tournament';
   patterns: string[];
   balls?: string[];
 }

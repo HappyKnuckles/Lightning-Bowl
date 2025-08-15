@@ -15,6 +15,9 @@ import {
   IonHeader,
   IonTitle,
   IonContent,
+  IonRadio,
+  IonRadioGroup,
+  IonLabel,
 } from '@ionic/angular/standalone';
 import { IonSelectCustomEvent } from '@ionic/core';
 import { addIcons } from 'ionicons';
@@ -45,13 +48,17 @@ import { ToastService } from 'src/app/core/services/toast/toast.service';
     FormsModule,
     ReactiveFormsModule,
     IonSelectOption,
+    IonRadio,
+    IonRadioGroup,
+    IonLabel,
   ],
   standalone: true,
 })
 export class LeagueSelectorComponent {
   @Input() isAddPage = false;
-  @Output() leagueChanged = new EventEmitter<string>();
+  @Output() leagueChanged = new EventEmitter<{league: string, type: 'League' | 'Tournament'}>();
   selectedLeague = '';
+  selectedLeagueType: 'League' | 'Tournament' = 'League';
   newLeague = '';
   leaguesToDelete: string[] = [];
   leagueToChange = '';
@@ -82,6 +89,21 @@ export class LeagueSelectorComponent {
     addIcons({ medalOutline, addOutline, createOutline });
   }
 
+  onLeagueTypeChange(): void {
+    this.emitLeagueChange();
+  }
+
+  onLeagueSelected(): void {
+    this.emitLeagueChange();
+  }
+
+  private emitLeagueChange(): void {
+    this.leagueChanged.emit({
+      league: this.selectedLeague,
+      type: this.selectedLeagueType
+    });
+  }
+
   async onLeagueChange(event: IonSelectCustomEvent<SelectChangeEventDetail>): Promise<void> {
     if (event.detail.value === 'new') {
       await this.openAddAlert();
@@ -96,7 +118,7 @@ export class LeagueSelectorComponent {
     try {
       await this.storageService.addLeague(this.newLeague);
       this.selectedLeague = this.newLeague;
-      this.leagueChanged.emit(this.selectedLeague);
+      this.emitLeagueChange();
       this.newLeague = '';
       this.toastService.showToast(ToastMessages.leagueSaveSuccess, 'add');
       this.isModalOpen = false;
@@ -188,7 +210,7 @@ export class LeagueSelectorComponent {
             role: 'cancel',
             handler: () => {
               this.selectedLeague = '';
-              this.leagueChanged.emit(this.selectedLeague);
+              this.emitLeagueChange();
             },
           },
           {
