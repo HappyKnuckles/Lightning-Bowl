@@ -14,42 +14,7 @@
       placeholder="Select Arsenal"
       [(ngModel)]="selectedArsenal">
       <ion-select-option *ngFor="let arsenal of arsenals()" [value]="arsenal">{{ arsenal }}</ion-select-option>
-      <ion-select-option value="new">Add arsenal</ion-select-option>
-      <ion-select-option value="edit" *ngIf="arsenals().length !== 0">Edit arsenal</ion-select-option>
-      <ion-select-option value="delete" *ngIf="arsenals().length !== 0">Delete arsenal</ion-select-option>
     </ion-select>
   </ion-item>
 }
 
-<ion-modal [isOpen]="isModalOpen" #modal>
-  <ng-template>
-    <ion-header>
-      <ion-toolbar>
-        <ion-buttons slot="start">
-          <ion-button (click)="cancel()">Cancel</ion-button>
-        </ion-buttons>
-        <ion-title>Edit arsenal</ion-title>
-        <ion-buttons slot="end">
-          <ion-button type="submit" (click)="editArsenal()" [disabled]="newArsenal === ''">Save</ion-button>
-        </ion-buttons>
-      </ion-toolbar>
-    </ion-header>
-    <ion-content>
-      <ion-item>
-        <ion-icon name="list" slot="start"></ion-icon>
-        <ion-select label="Choose Arsenal" [(ngModel)]="arsenalToChange">
-          <ion-select-option *ngFor="let arsenal of arsenals()" [value]="arsenal">{{ arsenal }}</ion-select-option>
-        </ion-select>
-      </ion-item>
-      <ion-item>
-        <ion-icon name="create-outline" slot="start"></ion-icon>
-        <ion-input
-          label="Change arsenal name"
-          [value]="arsenalToChange"
-          [readonly]="arsenalToChange === ''"
-          placeholder="Arsenal name"
-          (ionChange)="newArsenal = $event.target.value!.toString()"></ion-input>
-      </ion-item>
-    </ion-content>
-  </ng-template>
-</ion-modal>

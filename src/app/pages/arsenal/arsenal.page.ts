@@ -1,3 +1,4 @@
+import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { Component, OnInit, computed, Signal, ViewChild, ElementRef, effect, model } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -33,12 +34,13 @@ import {
   IonSegmentButton,
   IonSegmentContent,
   IonSegmentView,
+  IonInput,
 } from '@ionic/angular/standalone';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { Ball } from 'src/app/core/models/ball.model';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { addIcons } from 'ionicons';
-import { chevronBack, add, openOutline, trashOutline, ellipsisVerticalOutline, copyOutline, swapHorizontalOutline, documentTextOutline, pricetagOutline } from 'ionicons/icons';
+import { chevronBack, add, openOutline, trashOutline, ellipsisVerticalOutline, copyOutline, swapHorizontalOutline, documentTextOutline, pricetagOutline, settingsOutline, addOutline, createOutline } from 'ionicons/icons';
 import { AlertController, ItemReorderCustomEvent, ModalController, ActionSheetController } from '@ionic/angular';
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import { ImpactStyle } from '@capacitor/haptics';
@@ -94,6 +96,7 @@ import { ChartGenerationService } from 'src/app/core/services/chart/chart-genera
     ArsenalSelectorComponent,
     IonSegmentContent,
     IonSegmentView,
+    IonInput,
   ],
 })
 export class ArsenalPage implements OnInit {
@@ -110,6 +113,12 @@ export class ArsenalPage implements OnInit {
   selectedSegment = model('arsenal');
   @ViewChild('balls', { static: false }) ballChart?: ElementRef;
   private ballsChartInstance: Chart | null = null;
+  
+  // Arsenal management properties
+  isEditArsenalModalOpen = false;
+  arsenalToEdit = '';
+  newArsenalName = '';
+  
   constructor(
     public storageService: StorageService,
     private hapticService: HapticService,
@@ -121,7 +130,7 @@ export class ArsenalPage implements OnInit {
     private chartGenerationService: ChartGenerationService,
     private actionSheetController: ActionSheetController,
   ) {
-    addIcons({ add, ellipsisVerticalOutline, trashOutline, chevronBack, openOutline, copyOutline, swapHorizontalOutline, documentTextOutline, pricetagOutline });
+    addIcons({ add, ellipsisVerticalOutline, trashOutline, chevronBack, openOutline, copyOutline, swapHorizontalOutline, documentTextOutline, pricetagOutline, settingsOutline, addOutline, createOutline });
     effect(() => {
       if (this.selectedSegment() === 'compare') {
         this.generateBallDistributionChart();
@@ -497,5 +506,115 @@ export class ArsenalPage implements OnInit {
     } finally {
       this.loadingService.setLoading(false);
     }
+  }
+
+  // Arsenal Management Methods
+  closeArsenalManagement(): void {
+    this.modalCtrl.dismiss();
+  }
+
+  async openAddArsenalAlert(): Promise<void> {
+    const alert = await this.alertController.create({
+      header: 'Add Arsenal',
+      inputs: [
+        {
+          name: 'arsenalName',
+          type: 'text',
+          placeholder: 'Arsenal name',
+        },
+      ],
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel',
+        },
+        {
+          text: 'Save',
+          handler: async (data) => {
+            if (data.arsenalName && data.arsenalName.trim()) {
+              try {
+                await this.storageService.addArsenal(data.arsenalName.trim());
+                this.toastService.showToast(`Arsenal "${data.arsenalName.trim()}" created successfully`, 'add');
+                this.modalCtrl.dismiss();
+              } catch (error) {
+                console.error('Error creating arsenal:', error);
+                this.toastService.showToast('Error creating arsenal', 'bug', true);
+              }
+            }
+          },
+        },
+      ],
+    });
+
+    await alert.present();
+  }
+
+  openEditArsenalModal(): void {
+    this.isEditArsenalModalOpen = true;
+    this.modalCtrl.dismiss();
+  }
+
+  cancelEditArsenal(): void {
+    this.arsenalToEdit = '';
+    this.newArsenalName = '';
+    this.isEditArsenalModalOpen = false;
+  }
+
+  async saveEditArsenal(): Promise<void> {
+    try {
+      await this.storageService.editArsenal(this.newArsenalName, this.arsenalToEdit);
+      this.arsenalToEdit = '';
+      this.newArsenalName = '';
+      this.toastService.showToast('Arsenal name updated successfully', 'checkmark-outline');
+      this.isEditArsenalModalOpen = false;
+    } catch (error) {
+      console.error(error);
+      this.toastService.showToast('Error updating arsenal name', 'bug', true);
+    }
+  }
+
+  async openDeleteArsenalAlert(): Promise<void> {
+    const alert = await this.alertController.create({
+      header: 'Delete Arsenal',
+      message: 'Select which arsenal(s) to delete. Note: You cannot delete all arsenals.',
+      inputs: this.storageService.arsenals().map((arsenal) => ({
+        name: arsenal,
+        type: 'checkbox' as const,
+        label: arsenal,
+        value: arsenal,
+      })),
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel',
+        },
+        {
+          text: 'Delete',
+          handler: async (data) => {
+            if (data && data.length > 0) {
+              // Check if trying to delete all arsenals
+              if (data.length >= this.storageService.arsenals().length) {
+                this.toastService.showToast('Cannot delete all arsenals. At least one must remain.', 'warning', true);
+                return false;
+              }
+              
+              for (const arsenal of data) {
+                try {
+                  await this.storageService.deleteArsenal(arsenal);
+                  this.toastService.showToast(`Arsenal "${arsenal}" deleted`, 'checkmark-outline');
+                } catch (error) {
+                  console.error(`Error deleting arsenal ${arsenal}:`, error);
+                  this.toastService.showToast(`Error deleting arsenal ${arsenal}`, 'bug', true);
+                }
+              }
+              this.modalCtrl.dismiss();
+            }
+            return true;
+          },
+        },
+      ],
+    });
+
+    await alert.present();
   }
 }
