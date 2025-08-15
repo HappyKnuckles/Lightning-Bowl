@@ -471,6 +471,44 @@ export class StorageService {
     }
   }
 
+  async updateBallNotesAndTags(ball: Ball, notes?: string, tags?: string[], arsenalName?: string) {
+    try {
+      const targetArsenal = arsenalName || this.#currentArsenal();
+      const key = `arsenal_${targetArsenal}_${ball.ball_id}_${ball.core_weight}`;
+      
+      // Get the current ball data
+      const existingBall = await this.storage.get(key);
+      if (!existingBall) {
+        throw new Error('Ball not found in arsenal');
+      }
+      
+      // Update the ball with new notes and tags
+      const updatedBall = {
+        ...existingBall,
+        notes: notes || '',
+        tags: tags || []
+      };
+      
+      await this.save(key, updatedBall);
+      
+      // Update the current arsenal view if we're updating a ball in the current arsenal
+      if (!arsenalName || arsenalName === this.#currentArsenal()) {
+        this.arsenal.update((balls) => 
+          balls.map((b) => 
+            b.ball_id === ball.ball_id && b.core_weight === ball.core_weight
+              ? updatedBall
+              : b
+          )
+        );
+      }
+      
+      return updatedBall;
+    } catch (error) {
+      console.error('Error updating ball notes and tags:', error);
+      throw error;
+    }
+  }
+
   async editArsenal(newArsenal: string, oldArsenal: string) {
     try {
       // Get all balls from old arsenal

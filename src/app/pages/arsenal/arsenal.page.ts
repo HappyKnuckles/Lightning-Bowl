@@ -38,7 +38,7 @@ import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { Ball } from 'src/app/core/models/ball.model';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { addIcons } from 'ionicons';
-import { chevronBack, add, openOutline, trashOutline, ellipsisVerticalOutline, copyOutline, swapHorizontalOutline } from 'ionicons/icons';
+import { chevronBack, add, openOutline, trashOutline, ellipsisVerticalOutline, copyOutline, swapHorizontalOutline, documentTextOutline, pricetagOutline } from 'ionicons/icons';
 import { AlertController, ItemReorderCustomEvent, ModalController, ActionSheetController } from '@ionic/angular';
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import { ImpactStyle } from '@capacitor/haptics';
@@ -121,7 +121,7 @@ export class ArsenalPage implements OnInit {
     private chartGenerationService: ChartGenerationService,
     private actionSheetController: ActionSheetController,
   ) {
-    addIcons({ add, ellipsisVerticalOutline, trashOutline, chevronBack, openOutline, copyOutline, swapHorizontalOutline });
+    addIcons({ add, ellipsisVerticalOutline, trashOutline, chevronBack, openOutline, copyOutline, swapHorizontalOutline, documentTextOutline, pricetagOutline });
     effect(() => {
       if (this.selectedSegment() === 'compare') {
         this.generateBallDistributionChart();
@@ -225,6 +225,61 @@ export class ArsenalPage implements OnInit {
     }
   }
 
+  async editNotesAndTags(ball: Ball): Promise<void> {
+    try {
+      const currentNotes = ball.notes || '';
+      const currentTags = ball.tags ? ball.tags.join(', ') : '';
+
+      const alert = await this.alertController.create({
+        header: `Edit Notes & Tags`,
+        message: `Add custom notes and tags for ${ball.ball_name}`,
+        inputs: [
+          {
+            name: 'notes',
+            type: 'textarea',
+            placeholder: 'Add your notes here...',
+            value: currentNotes
+          },
+          {
+            name: 'tags',
+            type: 'text',
+            placeholder: 'Enter tags separated by commas...',
+            value: currentTags
+          }
+        ],
+        buttons: [
+          {
+            text: 'Cancel',
+            role: 'cancel'
+          },
+          {
+            text: 'Save',
+            handler: async (data) => {
+              try {
+                const notes = data.notes?.trim() || '';
+                const tagsString = data.tags?.trim() || '';
+                const tags = tagsString 
+                  ? tagsString.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag.length > 0)
+                  : [];
+
+                await this.storageService.updateBallNotesAndTags(ball, notes, tags);
+                this.toastService.showToast(`Notes and tags updated for ${ball.ball_name}`, 'checkmark-outline');
+              } catch (error) {
+                console.error('Error updating notes and tags:', error);
+                this.toastService.showToast('Error updating notes and tags', 'bug', true);
+              }
+            }
+          }
+        ]
+      });
+
+      await alert.present();
+    } catch (error) {
+      console.error('Error showing notes and tags editor:', error);
+      this.toastService.showToast('Error opening notes and tags editor', 'bug', true);
+    }
+  }
+
   async showBallOptionsActionSheet(ball: Ball): Promise<void> {
     try {
       const availableArsenals = this.storageService.arsenals().filter(a => a !== this.storageService.currentArsenal());
@@ -237,6 +292,13 @@ export class ArsenalPage implements OnInit {
       const actionSheet = await this.actionSheetController.create({
         header: `${ball.ball_name} Options`,
         buttons: [
+          {
+            text: 'Edit Notes & Tags',
+            icon: 'document-text-outline',
+            handler: () => {
+              this.editNotesAndTags(ball);
+            }
+          },
           {
             text: 'Copy to Another Arsenal',
             icon: 'copy-outline',
