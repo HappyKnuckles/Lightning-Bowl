@@ -1,6 +1,11 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-title>Arsenal</ion-title>
+    <ion-title (click)="openArsenalSelector()" button="true" class="clickable-title">
+      {{ storageService.currentArsenal() }}
+      @if (storageService.arsenals().length > 1) {
+        <ion-icon name="chevron-down" size="small" style="margin-left: 8px; vertical-align: middle;"></ion-icon>
+      }
+    </ion-title>
     <ion-buttons slot="end">
       <ion-button class="action-sheet" id="addBall">
         <ion-icon slot="icon-only" name="add"></ion-icon>
@@ -18,11 +23,6 @@
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
-  @if (storageService.arsenals().length > 0) {
-    <ion-toolbar>
-      <app-arsenal-selector (arsenalChanged)="onArsenalChange($event)"></app-arsenal-selector>
-    </ion-toolbar>
-  }
   @if (storageService.arsenal().length > 0) {
     <ion-toolbar>
       <ion-segment [(ngModel)]="selectedSegment">

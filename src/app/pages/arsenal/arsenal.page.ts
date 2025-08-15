@@ -41,7 +41,7 @@ import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { Ball } from 'src/app/core/models/ball.model';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { addIcons } from 'ionicons';
-import { chevronBack, add, openOutline, trashOutline, ellipsisVerticalOutline, copyOutline, swapHorizontalOutline, documentTextOutline, pricetagOutline, settingsOutline, addOutline, createOutline } from 'ionicons/icons';
+import { chevronBack, add, openOutline, trashOutline, ellipsisVerticalOutline, copyOutline, swapHorizontalOutline, documentTextOutline, pricetagOutline, settingsOutline, addOutline, createOutline, chevronDown, checkmark, close } from 'ionicons/icons';
 import { AlertController, ItemReorderCustomEvent, ModalController, ActionSheetController } from '@ionic/angular';
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import { ImpactStyle } from '@capacitor/haptics';
@@ -50,7 +50,6 @@ import { BallService } from 'src/app/core/services/ball/ball.service';
 import { BallListComponent } from 'src/app/shared/components/ball-list/ball-list.component';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { BallTypeaheadComponent } from 'src/app/shared/components/ball-typeahead/ball-typeahead.component';
-import { ArsenalSelectorComponent } from 'src/app/shared/components/arsenal-selector/arsenal-selector.component';
 import { Chart } from 'chart.js';
 import { ChartGenerationService } from 'src/app/core/services/chart/chart-generation.service';
 
@@ -94,7 +93,6 @@ import { ChartGenerationService } from 'src/app/core/services/chart/chart-genera
     FormsModule,
     BallListComponent,
     BallTypeaheadComponent,
-    ArsenalSelectorComponent,
     IonSegmentContent,
     IonSegmentView,
     IonInput,
@@ -133,7 +131,7 @@ export class ArsenalPage implements OnInit {
     private chartGenerationService: ChartGenerationService,
     private actionSheetController: ActionSheetController,
   ) {
-    addIcons({ add, ellipsisVerticalOutline, trashOutline, chevronBack, openOutline, copyOutline, swapHorizontalOutline, documentTextOutline, pricetagOutline, settingsOutline, addOutline, createOutline });
+    addIcons({ add, ellipsisVerticalOutline, trashOutline, chevronBack, openOutline, copyOutline, swapHorizontalOutline, documentTextOutline, pricetagOutline, settingsOutline, addOutline, createOutline, chevronDown, checkmark, close });
     effect(() => {
       if (this.selectedSegment() === 'compare') {
         this.generateBallDistributionChart();
@@ -508,6 +506,52 @@ export class ArsenalPage implements OnInit {
       this.toastService.showToast(`Error fetching balls for coverstock ${ball.coverstock_name}`, 'bug', true);
     } finally {
       this.loadingService.setLoading(false);
+    }
+  }
+
+  async openArsenalSelector(): Promise<void> {
+    try {
+      const availableArsenals = this.storageService.arsenals();
+      
+      // Only show selector if there are multiple arsenals
+      if (availableArsenals.length <= 1) {
+        return;
+      }
+
+      const currentArsenal = this.storageService.currentArsenal();
+      
+      const buttons: any[] = [];
+      
+      // Add arsenal buttons
+      availableArsenals.forEach(arsenal => {
+        buttons.push({
+          text: arsenal,
+          icon: arsenal === currentArsenal ? 'checkmark' : undefined,
+          cssClass: arsenal === currentArsenal ? 'action-sheet-selected' : undefined,
+          handler: async () => {
+            if (arsenal !== currentArsenal) {
+              await this.onArsenalChange(arsenal);
+            }
+          }
+        });
+      });
+
+      // Add cancel button
+      buttons.push({
+        text: 'Cancel',
+        icon: 'close',
+        role: 'cancel'
+      });
+
+      const actionSheet = await this.actionSheetController.create({
+        header: 'Select Arsenal',
+        buttons
+      });
+
+      await actionSheet.present();
+    } catch (error) {
+      console.error('Error showing arsenal selector:', error);
+      this.toastService.showToast('Error showing arsenal selector', 'bug', true);
     }
   }
 
