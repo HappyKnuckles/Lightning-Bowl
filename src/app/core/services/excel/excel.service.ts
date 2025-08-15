@@ -6,12 +6,13 @@ import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { ImpactStyle } from '@capacitor/haptics';
 import { Game } from 'src/app/core/models/game.model';
-import { LeagueData } from 'src/app/core/models/league.model';
+import { LeagueData, League, isLeagueObject, EventType } from 'src/app/core/models/league.model';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { SortUtilsService } from '../sort-utils/sort-utils.service';
 import { GameFilterService } from '../game-filter/game-filter.service';
 import { GameStatsService } from '../game-stats/game-stats.service';
 import { Stats } from 'src/app/core/models/stats.model';
+import { AlertController } from '@ionic/angular';
 
 type ExcelCellValue = string | number | boolean | Date | null;
 type ExcelRow = Record<string, ExcelCellValue>;
@@ -27,12 +28,153 @@ export class ExcelService {
     private sortUtils: SortUtilsService,
     private gameFilterService: GameFilterService,
     private statsService: GameStatsService,
+    private alertController: AlertController,
   ) {}
 
   // Helper method to get league name from LeagueData
   private getLeagueName(league: LeagueData | undefined): string {
     if (!league) return '';
     return typeof league === 'string' ? league : league.Name;
+  }
+
+  /**
+   * Associates imported league names with existing League objects or creates new ones
+   * @param importedLeagueNames Set of league names from imported Excel data
+   * @returns Map from league name to League object
+   */
+  private async associateImportedLeagues(importedLeagueNames: Set<string>): Promise<Map<string, League>> {
+    const leagueMap = new Map<string, League>();
+    const existingLeagues = this.storageService.leagues();
+    const newLeagueNames: string[] = [];
+
+    // Check each imported league name
+    for (const leagueName of importedLeagueNames) {
+      // First, check if it already exists as a League object
+      const existingLeague = existingLeagues.find(league => {
+        if (isLeagueObject(league)) {
+          return league.Name === leagueName;
+        }
+        return false;
+      });
+
+      if (existingLeague && isLeagueObject(existingLeague)) {
+        // League object already exists, use it
+        leagueMap.set(leagueName, existingLeague);
+      } else {
+        // League doesn't exist as League object, need user input
+        newLeagueNames.push(leagueName);
+      }
+    }
+
+    // Ask user for event types for new/string leagues
+    if (newLeagueNames.length > 0) {
+      const eventTypeMap = await this.collectEventTypesForImport(newLeagueNames);
+      if (!eventTypeMap) {
+        // User cancelled, throw error to stop import
+        throw new Error('League import cancelled by user');
+      }
+
+      // Create League objects and add them to storage
+      for (const [leagueName, eventType] of eventTypeMap) {
+        const newLeague: League = {
+          Name: leagueName,
+          Show: true,
+          Event: eventType
+        };
+        
+        // Add to storage
+        await this.storageService.addLeague(newLeague);
+        
+        // Add to map
+        leagueMap.set(leagueName, newLeague);
+      }
+    }
+
+    return leagueMap;
+  }
+
+  /**
+   * Collects event types from user for imported leagues
+   * @param leagueNames Array of league names that need event types
+   * @returns Map from league name to event type, or null if cancelled
+   */
+  private async collectEventTypesForImport(leagueNames: string[]): Promise<Map<string, EventType> | null> {
+    const eventTypeMap = new Map<string, EventType>();
+    
+    // Show introduction first
+    const shouldProceed = await this.showImportLeagueIntroduction(leagueNames.length);
+    if (!shouldProceed) {
+      return null;
+    }
+    
+    for (const leagueName of leagueNames) {
+      const eventType = await this.askForLeagueEventType(leagueName);
+      if (eventType === null) {
+        // User cancelled
+        return null;
+      }
+      eventTypeMap.set(leagueName, eventType);
+    }
+    
+    return eventTypeMap;
+  }
+
+  /**
+   * Shows introduction alert for league import
+   */
+  private async showImportLeagueIntroduction(leagueCount: number): Promise<boolean> {
+    return new Promise((resolve) => {
+      this.alertController.create({
+        header: 'League Import',
+        subHeader: 'New Leagues Detected',
+        message: `Your Excel file contains ${leagueCount} league(s) that need to be set up. Please specify whether each one is a "League" or "Tournament" to properly organize your data.`,
+        cssClass: 'league-import-intro-alert',
+        buttons: [
+          {
+            text: 'Cancel Import',
+            role: 'cancel',
+            handler: () => resolve(false)
+          },
+          {
+            text: 'Continue',
+            handler: () => resolve(true)
+          }
+        ]
+      }).then(alert => {
+        alert.present();
+      });
+    });
+  }
+
+  /**
+   * Shows alert to ask user for event type of a specific imported league
+   */
+  private async askForLeagueEventType(leagueName: string): Promise<EventType | null> {
+    return new Promise((resolve) => {
+      this.alertController.create({
+        header: 'League Setup',
+        subHeader: `"${leagueName}"`,
+        message: 'Is this a League or Tournament?',
+        cssClass: 'league-import-alert',
+        buttons: [
+          {
+            text: 'Cancel Import',
+            role: 'cancel',
+            handler: () => resolve(null)
+          },
+          {
+            text: 'League',
+            handler: () => resolve('League')
+          },
+          {
+            text: 'Tournament',
+            handler: () => resolve('Tournament')
+          }
+        ]
+      }).then(alert => {
+        alert.present();
+      });
+    });
   }
 
   // TODO make one folder for all and one for each league and in there have stats and game history for the league
@@ -174,7 +316,7 @@ export class ExcelService {
           frames: frames,
           totalScore: parseInt(row['Total Score'] as string),
           frameScores: (row['Frame Scores'] as string).split(', ').map((score: string) => parseInt(score)),
-          league: row['League'] as string,
+          league: row['League'] as string, // Keep as string initially
           isPractice: (row['Practice'] as string)?.trim().toLowerCase() === 'true',
           isClean: (row['Clean'] as string)?.trim().toLowerCase() === 'true',
           isPerfect: (row['Perfect'] as string)?.trim().toLowerCase() === 'true',
@@ -203,20 +345,49 @@ export class ExcelService {
         gameData.push(game);
       }
 
-      // Save leagues and balls into storage if needed
-      for (const league of leagueMap.values()) {
-        await this.storageService.addLeague(league);
+      // Handle league association for imported leagues
+      let leagueAssociationMap = new Map<string, League>();
+      if (leagueMap.size > 0) {
+        try {
+          leagueAssociationMap = await this.associateImportedLeagues(leagueMap);
+        } catch (error) {
+          // If user cancelled or error occurred, don't continue with import
+          if (error instanceof Error && error.message.includes('cancelled')) {
+            this.toastService.showToast('Import cancelled by user', 'information', false);
+            return;
+          }
+          throw error;
+        }
       }
 
+      // Update games to use League objects instead of strings
+      const updatedGameData = gameData.map(game => {
+        const leagueName = this.getLeagueName(game.league);
+        if (leagueName && leagueAssociationMap.has(leagueName)) {
+          return { ...game, league: leagueAssociationMap.get(leagueName)! };
+        }
+        return game;
+      });
+
+      // Handle balls
       for (const ball of ballMap.values()) {
         const ballToAdd = this.storageService.allBalls().find((b) => b.ball_name === ball);
         if (ballToAdd !== undefined && !this.storageService.arsenal().some((b) => b.ball_name === ball)) {
           await this.storageService.saveBallToArsenal(ballToAdd);
         }
       }
-      const sortedGames = this.sortUtils.sortGameHistoryByDate(gameData);
+
+      const sortedGames = this.sortUtils.sortGameHistoryByDate(updatedGameData);
       await this.storageService.saveGamesToLocalStorage(sortedGames);
       this.gameFilterService.setDefaultFilters();
+      
+      // Show success message
+      if (leagueAssociationMap.size > 0) {
+        this.toastService.showToast(
+          `Successfully imported ${updatedGameData.length} games with ${leagueAssociationMap.size} leagues!`,
+          'checkmark-circle'
+        );
+      }
     } catch (error) {
       console.error('Error transforming data:', error);
       throw new Error(`Data transformation failed: ${error}`);

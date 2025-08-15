@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { AlertController } from '@ionic/angular';
 import { StorageService } from '../storage/storage.service';
-import { League, LeagueData, isLeagueObject, EventType } from '../../models/league.model';
+import { League, LeagueData, EventType } from '../../models/league.model';
 import { Game } from '../../models/game.model';
 import { ToastService } from '../toast/toast.service';
 
