@@ -1,5 +1,5 @@
 import { computed, Injectable, Signal } from '@angular/core';
-import { Game } from 'src/app/core/models/game.model';
+import { Game, Frame, Throw } from 'src/app/core/models/game.model';
 import { BestBallStats, SessionStats, Stats } from 'src/app/core/models/stats.model';
 import { PrevStats } from 'src/app/core/models/stats.model';
 import { GameFilterService } from '../game-filter/game-filter.service';
@@ -174,7 +174,7 @@ export class GameStatsService {
       let seriesOpens = 0;
 
       seriesGames.forEach((game) => {
-        game.frames.forEach((frame: { throws: any }) => {
+        game.frames.forEach((frame: Frame) => {
           const throws = frame.throws;
 
           // Count strikes
@@ -318,8 +318,8 @@ export class GameStatsService {
       let strikesInThisGame = 0;
       let isAllSpares = true;
 
-      game.frames.forEach((frame: { throws: any[] }, idx: number) => {
-        const throws = frame.throws.map((t: any) => parseInt(t.value, 10));
+      game.frames.forEach((frame: Frame, idx: number) => {
+        const throws = frame.throws.map((t: Throw) => t.value);
         firstThrowCount += throws[0] || 0;
         const throw1 = throws[0];
         const throw2 = throws.length > 1 ? throws[1] : undefined;
@@ -415,8 +415,8 @@ export class GameStatsService {
       // Dutch 200 detection
       if (game.totalScore === 200) {
         let ok = true;
-        game.frames.forEach((frame: { throws: any[] }, idx: number) => {
-          const arr = frame.throws.map((t: any) => parseInt(t.value, 10));
+        game.frames.forEach((frame: Frame, idx: number) => {
+          const arr = frame.throws.map((t: Throw) => t.value);
           if (idx < 9) {
             const want = idx % 2 === 0 ? arr[0] === 10 : arr.length >= 2 && arr[0] !== 10 && arr[0] + arr[1] === 10;
             if (!want) ok = false;
@@ -636,13 +636,13 @@ export class GameStatsService {
     gamesWithBalls.forEach((game) => {
       const uniqueBallsInGame = new Set(game.balls);
 
-      const isCleanGame = game.frames.every((frame: { throws: any[] }) => {
-        const totalPinsInFrame = frame.throws.reduce((sum: number, throwData: { value: number }) => sum + throwData.value, 0);
+      const isCleanGame = game.frames.every((frame: Frame) => {
+        const totalPinsInFrame = frame.throws.reduce((sum: number, throwData: Throw) => sum + throwData.value, 0);
         return totalPinsInFrame >= 10;
       });
 
       let totalStrikesInGame = 0;
-      game.frames.forEach((frame: { throws: any[] }, index: number) => {
+      game.frames.forEach((frame: Frame, index: number) => {
         if (index < 9) {
           if (frame.throws[0]?.value === 10) {
             totalStrikesInGame++;

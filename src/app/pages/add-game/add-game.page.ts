@@ -334,7 +334,7 @@ export class AddGamePage implements OnInit {
 
     const captureGameData = () =>
       this.gameGrids.map((gameGrid: GameGridComponent) => ({
-        frames: gameGrid.game().frames,
+        frames: (gameGrid.game() as any).frames,
         league: gameGrid.game().league,
         note: gameGrid.game().note,
         balls: gameGrid.game().balls,
@@ -351,7 +351,9 @@ export class AddGamePage implements OnInit {
       this.gameGrids.forEach((gameGrid: GameGridComponent, index: number) => {
         const data = gameData[index];
         if (!data) return;
-        gameGrid.game().frames = data.frames;
+        if (data.frames) {
+          (gameGrid.game() as any).frames = data.frames;
+        }
         gameGrid.game().note = data.note!;
         gameGrid.game().balls = data.balls!;
         gameGrid.game().isPractice = data.isPractice!;

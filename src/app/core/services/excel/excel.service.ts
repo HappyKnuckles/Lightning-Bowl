@@ -5,7 +5,7 @@ import { isPlatform } from '@ionic/angular';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { ImpactStyle } from '@capacitor/haptics';
-import { Game } from 'src/app/core/models/game.model';
+import { Game, Throw } from 'src/app/core/models/game.model';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { SortUtilsService } from '../sort-utils/sort-utils.service';
 import { GameFilterService } from '../game-filter/game-filter.service';
@@ -271,7 +271,7 @@ export class ExcelService {
     return gameHistory.map((game) => {
       const frameValues = Array.from({ length: 10 }, (_, i) => {
         if (game.frames[i]) {
-          const throws = game.frames[i].throws.map((t: any) => t.value);
+          const throws = game.frames[i].throws.map((t: Throw) => t.value);
           if (throws.length === 1) {
             return `${throws[0]}`;
           } else if (throws.length === 2) {

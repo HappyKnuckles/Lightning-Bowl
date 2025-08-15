@@ -45,7 +45,7 @@ import {
   gridOutline,
 } from 'ionicons/icons';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
-import { Game } from 'src/app/core/models/game.model';
+import { Game, Frame } from 'src/app/core/models/game.model';
 import { GameUtilsService } from 'src/app/core/services/game-utils/game-utils.service';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
@@ -307,7 +307,7 @@ export class GameComponent implements OnChanges, OnInit {
       }
 
       // 2) Clean up per‐frame flags on the current grid data
-      editedGameFromGrid.frames.forEach((f: any) => delete f.isInvalid);
+      editedGameFromGrid.frames.forEach((f: Frame) => delete f.isInvalid);
 
       // 3) Compute isPractice on the current grid data
       editedGameFromGrid.isPractice = !editedGameFromGrid.league;

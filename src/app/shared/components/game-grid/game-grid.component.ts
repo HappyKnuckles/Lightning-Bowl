@@ -39,7 +39,7 @@ import { GameDataTransformerService } from 'src/app/core/services/game-transform
 import { InputCustomEvent } from '@ionic/angular';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { UtilsService } from 'src/app/core/services/utils/utils.service';
-import { Game, WorkingGame } from 'src/app/core/models/game.model';
+import { Game, WorkingGame, Throw } from 'src/app/core/models/game.model';
 import { PatternTypeaheadComponent } from '../pattern-typeahead/pattern-typeahead.component';
 import { Keyboard } from '@capacitor/keyboard';
 
@@ -136,7 +136,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
         const frameData = currentGame.frames[i];
 
         if (frameData && Array.isArray(frameData.throws)) {
-          newFrames.push(frameData.throws.map((t: any) => t.value));
+          newFrames.push(frameData.throws.map((t: Throw) => t.value));
         } else {
           newFrames.push([]);
         }
