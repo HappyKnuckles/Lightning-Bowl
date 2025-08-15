@@ -39,7 +39,6 @@ import {
   IonActionSheet,
 } from '@ionic/angular/standalone';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
-import { ArsenalService } from 'src/app/core/services/arsenal/arsenal.service';
 import { Ball } from 'src/app/core/models/ball.model';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { addIcons } from 'ionicons';
@@ -132,9 +131,10 @@ export class ArsenalPage implements OnInit {
   ballsWithoutArsenal: Signal<Ball[]> = computed(() =>
     this.storageService
       .allBalls()
-      .filter((ball) => !this.arsenalService.arsenal().some((b) => b.ball_id === ball.ball_id && b.core_weight === ball.core_weight)),
+      .filter((ball) => !this.storageService.arsenal().some((b) => b.ball_id === ball.ball_id && b.core_weight === ball.core_weight)),
   );
   selectedSegment = model('arsenal');
+
   private ballsChartInstance: Chart | null = null;
   actionSheetButtons = [
     {
@@ -172,7 +172,6 @@ export class ArsenalPage implements OnInit {
 
   constructor(
     public storageService: StorageService,
-    public arsenalService: ArsenalService,
     private hapticService: HapticService,
     private alertController: AlertController,
     private loadingService: LoadingService,
