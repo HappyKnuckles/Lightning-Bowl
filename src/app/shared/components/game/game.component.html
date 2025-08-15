@@ -86,7 +86,7 @@
                           type="text"
                           inputmode="numeric"
                           [value]="
-                            frame.throws[0]?.value !== 10 && frame.throws[0]?.value + (frame.throws[1]?.value || 0) === 10
+                            frame.throws[0]?.value !== 10 && (frame.throws[0]?.value || 0) + (frame.throws[1]?.value || 0) === 10
                               ? '/'
                               : frame.throws[1]?.value === 0
                                 ? '–'
@@ -112,7 +112,7 @@
                           [value]="
                             frame.throws[1]?.value === 10
                               ? 'X'
-                              : frame.throws[0]?.value !== 10 && frame.throws[0]?.value + frame.throws[1]?.value === 10
+                              : frame.throws[0]?.value !== 10 && (frame.throws[0]?.value || 0) + (frame.throws[1]?.value || 0) === 10
                                 ? '/'
                                 : frame.throws[1]?.value === 0
                                   ? '–'
@@ -126,7 +126,7 @@
                           type="text"
                           inputmode="numeric"
                           [value]="
-                            frame.throws[0]?.value === 10 && frame.throws[1]?.value !== 10 && frame.throws[1]?.value + frame.throws[2]?.value === 10
+                            frame.throws[0]?.value === 10 && frame.throws[1]?.value !== 10 && (frame.throws[1]?.value || 0) + (frame.throws[2]?.value || 0) === 10
                               ? '/'
                               : frame.throws[2]?.value === 10
                                 ? 'X'
