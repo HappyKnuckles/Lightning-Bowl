@@ -8,7 +8,7 @@ import { LoadingService } from '../loader/loading.service';
 import { BallService } from '../ball/ball.service';
 import { Pattern } from '../../models/pattern.model';
 import { PatternService } from '../pattern/pattern.service';
-import { League, LeagueData, isLeagueObject, convertLegacyLeague } from '../../models/league.model';
+import { League, LeagueData, isLeagueObject } from '../../models/league.model';
 
 @Injectable({
   providedIn: 'root',
@@ -341,7 +341,6 @@ export class StorageService {
   async editLeague(newLeague: string | League, oldLeague: string | League): Promise<void> {
     try {
       const oldLeagueName = typeof oldLeague === 'string' ? oldLeague : oldLeague.Name;
-      const newLeagueName = typeof newLeague === 'string' ? newLeague : newLeague.Name;
       
       await this.deleteLeague(oldLeague);
       
