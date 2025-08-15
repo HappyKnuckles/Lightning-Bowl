@@ -1,0 +1,31 @@
+/* League selector specific styles */
+.league-alert-input {
+  margin-bottom: 16px;
+}
+
+/* Radio button styling fix for alerts */
+:global(.alert-radio-group .alert-radio-label) {
+  color: var(--ion-text-color, #000);
+  display: flex;
+  align-items: center;
+  padding-left: 8px;
+}
+
+:global(.alert-radio-group .alert-radio-icon) {
+  margin-right: 8px;
+}
+
+/* Ensure radio buttons are visible in alert */
+:global(.alert-input-wrapper) {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+:global(.alert-radio-label) {
+  display: flex !important;
+  align-items: center !important;
+  font-size: 16px;
+  line-height: 1.4;
+  padding: 8px 0;
+}

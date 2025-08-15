@@ -46,6 +46,7 @@ import {
 } from 'ionicons/icons';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { Game } from 'src/app/core/models/game.model';
+import { League, LeagueData, isLeagueObject } from 'src/app/core/models/league.model';
 import { GameUtilsService } from 'src/app/core/services/game-utils/game-utils.service';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
@@ -113,13 +114,19 @@ export class GameComponent implements OnChanges, OnInit {
 
   leagues = computed(() => {
     const savedLeagues = this.storageService.leagues();
-    const leagueKeys = this.games.reduce((acc: string[], game: Game) => {
-      if (game.league && !acc.includes(game.league)) {
-        acc.push(game.league);
+    const leagueKeys: string[] = this.games.reduce((acc: string[], game: Game) => {
+      if (game.league) {
+        const leagueValue = this.getLeagueValue(game.league);
+        if (!acc.includes(leagueValue)) {
+          acc.push(leagueValue);
+        }
       }
       return acc;
     }, []);
-    return [...new Set([...leagueKeys, ...savedLeagues])];
+    
+    // Get display names from saved leagues and combine with game league keys
+    const savedLeagueNames = savedLeagues.map(league => this.getLeagueValue(league));
+    return [...new Set([...leagueKeys, ...savedLeagueNames])];
   });
 
   // leagues = computed(() => {
@@ -278,7 +285,7 @@ export class GameComponent implements OnChanges, OnInit {
     delete this.delayedCloseMap[game.gameId];
   }
 
-  updateSeries(game: Game, league?: string, patterns?: string[]): void {
+  updateSeries(game: Game, league?: LeagueData, patterns?: string[]): void {
     if (!game.isSeries) return;
 
     this.storageService.games.update((gamesArr) =>
@@ -525,5 +532,39 @@ export class GameComponent implements OnChanges, OnInit {
       this.delayedCloseMap[game.gameId] = false;
       this.loadingService.setLoading(false);
     }
+  }
+
+  // Helper methods for League display
+  getLeagueDisplayText(league: LeagueData): string {
+    if (typeof league === 'string') {
+      return league;
+    } else if (isLeagueObject(league)) {
+      return league.Event; // Show only "League" or "Tournament"
+    }
+    return '';
+  }
+
+  isLegacyLeague(league: LeagueData): boolean {
+    return typeof league === 'string';
+  }
+
+  asLeagueObject(league: LeagueData): League {
+    return league as League;
+  }
+
+  getLeagueValue(league: LeagueData): string {
+    return typeof league === 'string' ? league : league.Name;
+  }
+
+  // Handle league selection change in edit mode
+  onLeagueSelectionChange(game: Game, selectedValue: string): void {
+    if (selectedValue === '') {
+      game.league = undefined;
+    } else {
+      // For now, keep it as string - when user adds new leagues with the selector component
+      // they will be League objects, but existing games can continue using strings
+      game.league = selectedValue;
+    }
+    this.updateSeries(game, game.league);
   }
 }

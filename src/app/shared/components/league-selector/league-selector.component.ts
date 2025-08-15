@@ -257,6 +257,7 @@ export class LeagueSelectorComponent {
             label: 'League',
             value: 'League',
             checked: true,
+            cssClass: 'alert-radio-option',
           },
           {
             name: 'eventType',
@@ -264,6 +265,7 @@ export class LeagueSelectorComponent {
             label: 'Tournament',
             value: 'Tournament',
             checked: false,
+            cssClass: 'alert-radio-option',
           },
         ],
         buttons: [
