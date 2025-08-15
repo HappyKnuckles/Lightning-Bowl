@@ -53,7 +53,11 @@ import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { UtilsService } from 'src/app/core/services/utils/utils.service';
-import { PatternTypeaheadComponent } from '../pattern-typeahead/pattern-typeahead.component';
+import { GenericTypeaheadComponent } from '../generic-typeahead/generic-typeahead.component';
+import { createPartialPatternTypeaheadConfig } from '../generic-typeahead/typeahead-configs';
+import { TypeaheadConfig } from '../generic-typeahead/typeahead-config.interface';
+import { PatternService } from 'src/app/core/services/pattern/pattern.service';
+import { Pattern } from 'src/app/core/models/pattern.model';
 import { LongPressDirective } from 'src/app/core/directives/long-press/long-press.directive';
 import { Router } from '@angular/router';
 import { GameGridComponent } from '../game-grid/game-grid.component';
@@ -101,7 +105,7 @@ import { GameGridComponent } from '../game-grid/game-grid.component';
     LongPressDirective,
     DatePipe,
     GameGridComponent,
-    PatternTypeaheadComponent,
+    GenericTypeaheadComponent,
   ],
   standalone: true,
 })
@@ -118,24 +122,24 @@ export class GameComponent implements OnChanges, OnInit {
       if (game.league) {
         const leagueName = this.getLeagueValue(game.league);
         // Check if we already have this league by name
-        const exists = acc.some(existingLeague => this.getLeagueValue(existingLeague) === leagueName);
+        const exists = acc.some((existingLeague) => this.getLeagueValue(existingLeague) === leagueName);
         if (!exists) {
           acc.push(game.league);
         }
       }
       return acc;
     }, []);
-    
+
     // Combine saved leagues with game leagues, avoiding duplicates by name
     const allLeagues = [...savedLeagues];
-    gameLeagues.forEach(gameLeague => {
+    gameLeagues.forEach((gameLeague) => {
       const gameLeagueName = this.getLeagueValue(gameLeague);
-      const existsInSaved = allLeagues.some(savedLeague => this.getLeagueValue(savedLeague) === gameLeagueName);
+      const existsInSaved = allLeagues.some((savedLeague) => this.getLeagueValue(savedLeague) === gameLeagueName);
       if (!existsInSaved) {
         allLeagues.push(gameLeague);
       }
     });
-    
+
     return allLeagues;
   });
 
@@ -169,6 +173,7 @@ export class GameComponent implements OnChanges, OnInit {
   private closeTimers: Record<string, NodeJS.Timeout> = {};
   public delayedCloseMap: Record<string, boolean> = {};
   private originalGameState: Record<string, Game> = {};
+  patternTypeaheadConfig!: TypeaheadConfig<Partial<Pattern>>;
 
   constructor(
     private alertController: AlertController,
@@ -182,6 +187,7 @@ export class GameComponent implements OnChanges, OnInit {
     private utilsService: UtilsService,
     private router: Router,
     private modalCtrl: ModalController,
+    private patternService: PatternService,
   ) {
     addIcons({
       trashOutline,
@@ -199,6 +205,7 @@ export class GameComponent implements OnChanges, OnInit {
 
   ngOnInit(): void {
     this.presentingElement = document.querySelector('.ion-page')!;
+    this.patternTypeaheadConfig = createPartialPatternTypeaheadConfig((searchTerm: string) => this.patternService.searchPattern(searchTerm));
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -572,10 +579,8 @@ export class GameComponent implements OnChanges, OnInit {
       game.league = undefined;
     } else {
       // Find the actual League object based on selected value
-      const selectedLeague = this.leagues().find(league => 
-        this.getLeagueValue(league) === selectedValue
-      );
-      
+      const selectedLeague = this.leagues().find((league) => this.getLeagueValue(league) === selectedValue);
+
       if (selectedLeague) {
         game.league = selectedLeague; // Set the full League object
       } else {

@@ -151,7 +151,9 @@
                     label="League/Tournament"
                     [value]="getLeagueValue(game.league || '')">
                     <ion-select-option [value]="''">None</ion-select-option>
-                    <ion-select-option *ngFor="let league of leagues()" [value]="getLeagueValue(league)">{{ getLeagueDisplayText(league) }}</ion-select-option>
+                    <ion-select-option *ngFor="let league of leagues()" [value]="getLeagueValue(league)">{{
+                      getLeagueDisplayText(league)
+                    }}</ion-select-option>
                   </ion-select>
                 </ion-item>
                 <ion-item class="pattern" button [id]="'selectPatternHistory' + $index">
@@ -161,10 +163,12 @@
                 </ion-item>
                 <ion-modal [presentingElement]="presentingElement" [trigger]="'selectPatternHistory' + $index">
                   <ng-template>
-                    <app-pattern-typeahead
-                      [patterns]="storageService.allPatterns()"
-                      [prevSelectedPatterns]="game.patterns"
-                      (selectedPatternsChange)="game.patterns = $event; updateSeries(game, undefined, game.patterns)"></app-pattern-typeahead>
+                    <app-generic-typeahead
+                      [items]="storageService.allPatterns()"
+                      [config]="patternTypeaheadConfig"
+                      [prevSelectedItems]="game.patterns"
+                      (selectedItemsChange)="game.patterns = $event; updateSeries(game, undefined, game.patterns)">
+                    </app-generic-typeahead>
                   </ng-template>
                 </ion-modal>
                 <ion-item class="arsenal">
