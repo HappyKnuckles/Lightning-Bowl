@@ -175,7 +175,7 @@ export class LeagueMigrationService {
       this.setMigrationCompleted();
 
       // Show success message
-      this.toastService.showToast(`Successfully migrated ${legacyLeagues.length} league(s) to the new system!`, 'checkmark-circle');
+      this.toastService.showToast(`Successfully migrated ${legacyLeagues.length} league(s) to the new system!`, 'checkmark-outline');
 
       return true;
     } catch (error) {
