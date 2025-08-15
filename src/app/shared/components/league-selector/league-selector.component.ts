@@ -257,17 +257,16 @@ export class LeagueSelectorComponent {
             label: 'League',
             value: 'League',
             checked: true,
-            cssClass: 'alert-radio-option',
           },
           {
-            name: 'eventType',
+            name: 'eventType', 
             type: 'radio',
             label: 'Tournament',
             value: 'Tournament',
             checked: false,
-            cssClass: 'alert-radio-option',
           },
         ],
+        cssClass: 'league-alert-class',
         buttons: [
           {
             text: 'Cancel',

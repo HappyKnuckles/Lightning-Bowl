@@ -1,31 +1,91 @@
 /* League selector specific styles */
 .league-alert-input {
-  margin-bottom: 16px;
+  margin-bottom: 16px !important;
 }
 
-/* Radio button styling fix for alerts */
-:global(.alert-radio-group .alert-radio-label) {
-  color: var(--ion-text-color, #000);
-  display: flex;
-  align-items: center;
-  padding-left: 8px;
+/* Specific styling for league alert */
+:global(.league-alert-class) {
+  --width: 300px;
+  --max-width: 90vw;
 }
 
-:global(.alert-radio-group .alert-radio-icon) {
-  margin-right: 8px;
+:global(.league-alert-class .alert-input-group) {
+  max-height: none !important;
 }
 
-/* Ensure radio buttons are visible in alert */
-:global(.alert-input-wrapper) {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+:global(.league-alert-class .alert-radio-label) {
+  padding: 13px 16px !important;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  min-height: 44px !important;
+  font-size: 16px !important;
+  line-height: 1.2 !important;
+  color: var(--ion-text-color) !important;
 }
 
+:global(.league-alert-class .alert-radio-icon) {
+  margin-right: 16px !important;
+  margin-left: 0 !important;
+  width: 20px !important;
+  height: 20px !important;
+}
+
+:global(.league-alert-class .alert-radio-inner) {
+  display: flex !important;
+  align-items: center !important;
+  width: 100% !important;
+}
+
+/* Enhanced radio button styling fix for Ionic alerts */
 :global(.alert-radio-label) {
   display: flex !important;
   align-items: center !important;
-  font-size: 16px;
-  line-height: 1.4;
-  padding: 8px 0;
+  font-size: 16px !important;
+  line-height: 1.4 !important;
+  padding: 12px 16px !important;
+  color: var(--ion-text-color, #000) !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+:global(.alert-input-group .alert-radio-label) {
+  display: block !important;
+  margin: 8px 0 !important;
+  padding: 12px !important;
+  font-size: 16px !important;
+  color: var(--ion-text-color, #000) !important;
+}
+
+:global(.alert-radio-icon) {
+  margin-right: 12px !important;
+  display: inline-block !important;
+}
+
+/* Ensure the entire radio input wrapper is visible */
+:global(.alert-radio-group) {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  margin: 16px 0 !important;
+}
+
+:global(.alert-input-wrapper) {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  margin-bottom: 16px !important;
+}
+
+/* Force visibility of radio button text */
+:global(.alert-button-inner) {
+  display: flex !important;
+  align-items: center !important;
+  color: var(--ion-text-color, #000) !important;
+}
+
+:global(ion-alert .alert-radio-label) {
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: flex !important;
 }
