@@ -284,21 +284,20 @@ export class ArsenalPage implements OnInit {
     try {
       const availableArsenals = this.storageService.arsenals().filter(a => a !== this.storageService.currentArsenal());
       
-      if (availableArsenals.length === 0) {
-        this.toastService.showToast('No other arsenals available', 'information-circle-outline');
-        return;
-      }
+      // Build the buttons array dynamically based on available arsenals
+      const buttons: any[] = [
+        {
+          text: 'Edit Notes & Tags',
+          icon: 'document-text-outline',
+          handler: () => {
+            this.editNotesAndTags(ball);
+          }
+        }
+      ];
 
-      const actionSheet = await this.actionSheetController.create({
-        header: `${ball.ball_name} Options`,
-        buttons: [
-          {
-            text: 'Edit Notes & Tags',
-            icon: 'document-text-outline',
-            handler: () => {
-              this.editNotesAndTags(ball);
-            }
-          },
+      // Only add copy and move options if there are other arsenals available
+      if (availableArsenals.length > 0) {
+        buttons.push(
           {
             text: 'Copy to Another Arsenal',
             icon: 'copy-outline',
@@ -312,21 +311,30 @@ export class ArsenalPage implements OnInit {
             handler: () => {
               this.showArsenalSelection(ball, 'move');
             }
-          },
-          {
-            text: 'Remove from Arsenal',
-            icon: 'trash-outline',
-            role: 'destructive',
-            handler: () => {
-              this.removeFromArsenal(ball);
-            }
-          },
-          {
-            text: 'Cancel',
-            icon: 'close',
-            role: 'cancel'
           }
-        ]
+        );
+      }
+
+      // Always add remove option
+      buttons.push(
+        {
+          text: 'Remove from Arsenal',
+          icon: 'trash-outline',
+          role: 'destructive',
+          handler: () => {
+            this.removeFromArsenal(ball);
+          }
+        },
+        {
+          text: 'Cancel',
+          icon: 'close',
+          role: 'cancel'
+        }
+      );
+
+      const actionSheet = await this.actionSheetController.create({
+        header: `${ball.ball_name} Options`,
+        buttons
       });
 
       await actionSheet.present();
@@ -356,7 +364,6 @@ export class ArsenalPage implements OnInit {
       }
 
       if (availableArsenals.length === 0) {
-        const operationText = operation === 'copy' ? 'copy' : 'move';
         this.toastService.showToast(
           `${ball.ball_name} (${ball.core_weight}lbs) already exists in all other arsenals`, 
           'information-circle-outline'

@@ -199,7 +199,7 @@ export class BallTypeaheadComponent implements OnInit, OnDestroy {
     }
 
     // Multiple arsenals, ask user to select (but filter out arsenals that already contain balls)
-    const availableArsenalsByBall: { [key: string]: string[] } = {};
+    const availableArsenalsByBall: Record<string, string[]> = {};
     
     // For each ball, determine which arsenals it can be added to
     for (const ball of this.selectedBalls) {
