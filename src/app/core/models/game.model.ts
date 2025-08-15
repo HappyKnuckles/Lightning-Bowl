@@ -1,7 +1,17 @@
+export interface Throw {
+  throwIndex: number;
+  value: number;
+}
+
+export interface Frame {
+  frameIndex: number;
+  throws: Throw[];
+}
+
 export interface Game {
   gameId: string;
   date: number;
-  frames: any;
+  frames: Frame[];
   totalScore: number;
   frameScores: number[];
   isClean: boolean;
@@ -14,22 +24,3 @@ export interface Game {
   patterns: string[];
   balls?: string[];
 }
-
-// interface Session {
-//   isSeries?: boolean;
-//   seriesId?: string;
-//   note?: string;
-// }
-
-// TODO adjust code to use frame interface instead
-
-// interface Frame {
-//     frameIndex: number;
-//     frameScore: number;
-//     throws: Throw[];
-// }
-
-// export interface Throw {
-//     throwIndex: number;
-//     value: number;
-// }

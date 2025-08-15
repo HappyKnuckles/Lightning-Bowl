@@ -1,12 +1,12 @@
 import { Injectable } from '@angular/core';
-import { Game } from 'src/app/core/models/game.model';
+import { Game, Frame, Throw } from 'src/app/core/models/game.model';
 
 @Injectable({
   providedIn: 'root',
 })
 export class GameDataTransformerService {
   transformGameData(
-    frames: any,
+    frames: number[][],
     frameScores: number[],
     totalScore: number,
     isPractice: boolean,
@@ -30,9 +30,9 @@ export class GameDataTransformerService {
       return {
         gameId: gameId,
         date: date,
-        frames: frames.map((frame: any[], frameIndex: number) => ({
-          throws: frame.map((throwValue: number | string, throwIndex: number) => ({
-            value: parseInt(throwValue as string),
+        frames: frames.map((frame: number[], frameIndex: number): Frame => ({
+          throws: frame.map((throwValue: number, throwIndex: number): Throw => ({
+            value: throwValue,
             throwIndex: throwIndex + 1, // Add 1 to make it 1-based index
           })),
           frameIndex: frameIndex + 1,

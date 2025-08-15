@@ -1,15 +1,15 @@
 import { Injectable } from '@angular/core';
-import { Game } from 'src/app/core/models/game.model';
+import { Game, Frame } from 'src/app/core/models/game.model';
 
 @Injectable({
   providedIn: 'root',
 })
 export class GameUtilsService {
   isGameValid(game?: Game, allFrames?: number[][]): boolean {
-    const frames = game ? game.frames : allFrames || [];
+    const frames: (Frame | number[])[] = game ? game.frames : allFrames || [];
     let isValid = true;
-    frames.forEach((frame: any, index: number) => {
-      const throws = Array.isArray(frame) ? frame : frame.throws.map((t: { value: number | string }) => t.value);
+    frames.forEach((frame: Frame | number[], index: number) => {
+      const throws = Array.isArray(frame) ? frame : frame.throws.map((t: { value: number }) => t.value);
       if (index < 9) {
         // For frames 1 to 9
         const frameValid =
@@ -96,7 +96,7 @@ export class GameUtilsService {
     return parseInt(inputValue, 10);
   }
 
-  parseBowlingScores(input: string, username: string): { frames: any[]; frameScores: number[]; totalScore: number } {
+  parseBowlingScores(input: string, username: string): { frames: number[][]; frameScores: number[]; totalScore: number } {
     const lines = input.split('\n').filter((line) => line.trim() !== '');
     const userIndex = lines.findIndex((line) => line.toLowerCase().includes(username.toLowerCase()));
     const linesAfterUsername = userIndex >= 0 ? lines.slice(userIndex + 1) : [];
@@ -142,8 +142,8 @@ export class GameUtilsService {
       }
     });
 
-    const frames: any[] = [];
-    let currentFrame: any[] = [];
+    const frames: number[][] = [];
+    let currentFrame: number[] = [];
 
     throwValues.forEach((value) => {
       const intValue = parseInt(value, 10);
