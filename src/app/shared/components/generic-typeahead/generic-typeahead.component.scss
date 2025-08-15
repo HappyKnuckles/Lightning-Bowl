@@ -1,11 +1,20 @@
+%card {
+  margin-bottom: 6px;
+  border-radius: 7px;
+  border-left: 5px solid;
+}
+
 .red-card {
-  --background: rgba(255, 0, 0, 0.1);
+  @extend %card;
+  border-left-color: red;
 }
 
 .yellow-card {
-  --background: rgba(255, 255, 0, 0.1);
+  @extend %card;
+  border-left-color: yellow;
 }
 
 .green-card {
-  --background: rgba(0, 255, 0, 0.1);
+  @extend %card;
+  border-left-color: green;
 }

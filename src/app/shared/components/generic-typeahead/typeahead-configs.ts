@@ -82,7 +82,7 @@ export function createPatternTypeaheadConfig(searchFn: (term: string) => Promise
       { key: 'title', isPrimary: true },
     ],
     searchKeys: [], // Not used for API search
-    identifierKey: 'title',
+    identifierKey: 'url',
     maxSelections: 2,
     searchMode: 'api',
     apiSearchFn: async (searchTerm: string) => {
@@ -118,7 +118,7 @@ export function createPartialPatternTypeaheadConfig(searchFn: (term: string) => 
       { key: 'title', isPrimary: true },
     ],
     searchKeys: [], // Not used for API search
-    identifierKey: 'title',
+    identifierKey: 'url',
     maxSelections: 2,
     searchMode: 'api',
     apiSearchFn: async (searchTerm: string) => {
