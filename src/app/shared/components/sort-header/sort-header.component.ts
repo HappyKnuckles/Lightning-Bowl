@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, model } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, model, ViewChild, ElementRef } from '@angular/core';
 import { IonButton, IonIcon, IonPopover, IonList, IonItem, IonLabel, IonRadioGroup, IonRadio } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -19,6 +19,7 @@ export class SortHeaderComponent implements OnInit {
   id = model.required<string>();
   @Input() storageKey = '';
   @Output() sortChanged = new EventEmitter<SortOption<BallSortField | PatternSortField | GameSortField>>();
+  @ViewChild('sortList', { read: ElementRef }) sortList!: ElementRef;
 
   selectedSortKey = '';
 
@@ -86,5 +87,37 @@ export class SortHeaderComponent implements OnInit {
 
   getSortKey(option: SortOption<BallSortField | PatternSortField | GameSortField>): string {
     return `${option.field}_${option.direction}`;
+  }
+
+  async onPopoverPresent() {
+    setTimeout(() => {
+      this.scrollToSelectedItem();
+    }, 50);
+  }
+
+  private scrollToSelectedItem() {
+    if (!this.sortList || !this.selectedSortKey) return;
+
+    try {
+      const selectedItemId = `sort-item-${this.selectedSortKey}`;
+      const selectedElement = this.sortList.nativeElement.querySelector(`#${selectedItemId}`);
+
+      if (selectedElement) {
+        const listContainer = this.sortList.nativeElement;
+        const itemTop = selectedElement.offsetTop;
+        const itemHeight = selectedElement.offsetHeight;
+        const containerHeight = listContainer.clientHeight;
+
+        // Calculate scroll position to center the selected item
+        const scrollTop = itemTop - containerHeight / 2 + itemHeight / 2;
+
+        listContainer.scrollTo({
+          top: Math.max(0, scrollTop),
+          behavior: 'smooth',
+        });
+      }
+    } catch (error) {
+      console.warn('Could not scroll to selected item:', error);
+    }
   }
 }

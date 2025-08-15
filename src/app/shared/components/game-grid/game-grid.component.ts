@@ -40,7 +40,11 @@ import { InputCustomEvent } from '@ionic/angular';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { UtilsService } from 'src/app/core/services/utils/utils.service';
 import { Game } from 'src/app/core/models/game.model';
-import { PatternTypeaheadComponent } from '../pattern-typeahead/pattern-typeahead.component';
+import { GenericTypeaheadComponent } from '../generic-typeahead/generic-typeahead.component';
+import { createPartialPatternTypeaheadConfig } from '../generic-typeahead/typeahead-configs';
+import { TypeaheadConfig } from '../generic-typeahead/typeahead-config.interface';
+import { PatternService } from 'src/app/core/services/pattern/pattern.service';
+import { Pattern } from 'src/app/core/models/pattern.model';
 import { Keyboard } from '@capacitor/keyboard';
 
 @Component({
@@ -65,7 +69,7 @@ import { Keyboard } from '@capacitor/keyboard';
     NgIf,
     LeagueSelectorComponent,
     IonModal,
-    PatternTypeaheadComponent,
+    GenericTypeaheadComponent,
     NgStyle,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
@@ -97,6 +101,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
   });
   maxScore = 300;
   presentingElement?: HTMLElement;
+  patternTypeaheadConfig!: TypeaheadConfig<Partial<Pattern>>;
 
   // Keyboard toolbar
   showButtonToolbar = false;
@@ -119,6 +124,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
     private gameUtilsService: GameUtilsService,
     private utilsService: UtilsService,
     private platform: Platform,
+    private patternService: PatternService,
   ) {
     this.initializeKeyboardListeners();
   }
@@ -141,6 +147,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
       this.game().frames = Array.from({ length: 10 }, () => []);
     }
     this.presentingElement = document.querySelector('.ion-page')!;
+    this.patternTypeaheadConfig = createPartialPatternTypeaheadConfig((searchTerm: string) => this.patternService.searchPattern(searchTerm));
   }
 
   ngOnDestroy() {

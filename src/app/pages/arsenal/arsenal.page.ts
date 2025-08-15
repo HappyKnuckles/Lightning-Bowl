@@ -39,6 +39,7 @@ import {
   IonActionSheet,
 } from '@ionic/angular/standalone';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
+import { ArsenalService } from 'src/app/core/services/arsenal/arsenal.service';
 import { Ball } from 'src/app/core/models/ball.model';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { addIcons } from 'ionicons';
@@ -66,7 +67,9 @@ import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { BallService } from 'src/app/core/services/ball/ball.service';
 import { BallListComponent } from 'src/app/shared/components/ball-list/ball-list.component';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
-import { BallTypeaheadComponent } from 'src/app/shared/components/ball-typeahead/ball-typeahead.component';
+import { GenericTypeaheadComponent } from 'src/app/shared/components/generic-typeahead/generic-typeahead.component';
+import { createBallTypeaheadConfig } from 'src/app/shared/components/generic-typeahead/typeahead-configs';
+import { TypeaheadConfig } from 'src/app/shared/components/generic-typeahead/typeahead-config.interface';
 import { Chart } from 'chart.js';
 import { ChartGenerationService } from 'src/app/core/services/chart/chart-generation.service';
 
@@ -109,7 +112,7 @@ import { ChartGenerationService } from 'src/app/core/services/chart/chart-genera
     CommonModule,
     FormsModule,
     BallListComponent,
-    BallTypeaheadComponent,
+    GenericTypeaheadComponent,
     IonSegmentContent,
     IonSegmentView,
     IonInput,
@@ -125,10 +128,11 @@ export class ArsenalPage implements OnInit {
   coverstockBalls: Ball[] = [];
   coreBalls: Ball[] = [];
   presentingElement?: HTMLElement;
+  ballTypeaheadConfig!: TypeaheadConfig<Ball>;
   ballsWithoutArsenal: Signal<Ball[]> = computed(() =>
     this.storageService
       .allBalls()
-      .filter((ball) => !this.storageService.arsenal().some((b) => b.ball_id === ball.ball_id && b.core_weight === ball.core_weight)),
+      .filter((ball) => !this.arsenalService.arsenal().some((b) => b.ball_id === ball.ball_id && b.core_weight === ball.core_weight)),
   );
   selectedSegment = model('arsenal');
   private ballsChartInstance: Chart | null = null;
@@ -168,6 +172,7 @@ export class ArsenalPage implements OnInit {
 
   constructor(
     public storageService: StorageService,
+    public arsenalService: ArsenalService,
     private hapticService: HapticService,
     private alertController: AlertController,
     private loadingService: LoadingService,
@@ -203,15 +208,14 @@ export class ArsenalPage implements OnInit {
 
   ngOnInit() {
     this.presentingElement = document.querySelector('.ion-page')!;
+    this.ballTypeaheadConfig = createBallTypeaheadConfig(this.storageService);
   }
 
   async onArsenalChange(arsenalName: string): Promise<void> {
     try {
       await this.storageService.setCurrentArsenal(arsenalName);
-      this.toastService.showToast(`Switched to ${arsenalName}`, 'checkmark-outline');
     } catch (error) {
       console.error('Error switching arsenal:', error);
-      this.toastService.showToast('Error switching arsenal', 'bug', true);
     }
   }
 
@@ -570,7 +574,10 @@ export class ArsenalPage implements OnInit {
       this.loadingService.setLoading(false);
     }
   }
-
+  onBallSelectionChange(ballIds: string[]): void {
+    const selectedBalls = this.ballsWithoutArsenal().filter((ball) => ballIds.includes(ball.ball_id));
+    this.saveBallToArsenal(selectedBalls);
+  }
   async openArsenalSelector(): Promise<void> {
     try {
       const availableArsenals = this.storageService.arsenals();
