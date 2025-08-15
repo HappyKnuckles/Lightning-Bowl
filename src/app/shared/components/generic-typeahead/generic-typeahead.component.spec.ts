@@ -7,9 +7,8 @@ describe('GenericTypeaheadComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [GenericTypeaheadComponent]
-    })
-    .compileComponents();
+      imports: [GenericTypeaheadComponent],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(GenericTypeaheadComponent);
     component = fixture.componentInstance;
