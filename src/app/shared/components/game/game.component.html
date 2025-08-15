@@ -39,7 +39,7 @@
               <ion-label class="game-info">
                 <p>{{ game.date | date: "MM.dd.yyyy" }}</p>
                 <h2 class="title">Game {{ gameCount! - $index }}</h2>
-                <p class="score" *ngIf="game.league && !isLeaguePage">League/Tournament: {{ game.league }}</p>
+                <p class="score" *ngIf="game.league && !isLeaguePage">{{ getLeagueDisplayText(game.league) }}</p>
                 <p class="score" *ngIf="game.patterns && game.patterns.length > 0">Patterns: {{ game.patterns.join(", ") }}</p>
                 <p class="score">Score: {{ game.totalScore }}</p>
                 <!-- <div class="score">{{game.date | date}}</div> -->
@@ -147,12 +147,13 @@
                   <ion-icon name="medal-outline" slot="start"></ion-icon>
                   <ion-select
                     name="league"
-                    [(ngModel)]="game.league"
-                    (ngModelChange)="updateSeries(game, game.league)"
+                    (ionChange)="onLeagueSelectionChange(game, $event.detail.value)"
                     label="League/Tournament"
-                    [value]="game.league">
+                    [value]="getLeagueValue(game.league || '')">
                     <ion-select-option [value]="''">None</ion-select-option>
-                    <ion-select-option *ngFor="let league of leagues()" [value]="league">{{ league }}</ion-select-option>
+                    <ion-select-option *ngFor="let league of leagues()" [value]="getLeagueValue(league)">{{
+                      getLeagueDisplayText(league)
+                    }}</ion-select-option>
                   </ion-select>
                 </ion-item>
                 <ion-item class="pattern" button [id]="'selectPatternHistory' + $index">

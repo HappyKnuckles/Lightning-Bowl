@@ -194,8 +194,8 @@
 
 <ion-modal [presentingElement]="presentingElement" trigger="addBall">
   <ng-template>
-    <app-generic-typeahead 
-      [items]="ballsWithoutArsenal()" 
+    <app-generic-typeahead
+      [items]="ballsWithoutArsenal()"
       [config]="ballTypeaheadConfig"
       (selectedItemsChange)="onBallSelectionChange($event)"
       [prevSelectedItems]="[]">

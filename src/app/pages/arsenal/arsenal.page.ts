@@ -215,7 +215,7 @@ export class ArsenalPage implements OnInit {
   }
 
   onBallSelectionChange(ballIds: string[]): void {
-    const selectedBalls = this.ballsWithoutArsenal().filter(ball => ballIds.includes(ball.ball_id));
+    const selectedBalls = this.ballsWithoutArsenal().filter((ball) => ballIds.includes(ball.ball_id));
     this.saveBallToArsenal(selectedBalls);
   }
 
