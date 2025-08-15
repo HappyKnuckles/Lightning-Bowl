@@ -197,6 +197,10 @@ export class GenericTypeaheadComponent<T> implements OnInit, OnDestroy {
   }
 
   getItemDisplayValue(item: T, field: string): string {
+    const customFormatter = this.config().customDisplayFormatter;
+    if (customFormatter) {
+      return customFormatter(item, field);
+    }
     return (item as any)[field] || '';
   }
 

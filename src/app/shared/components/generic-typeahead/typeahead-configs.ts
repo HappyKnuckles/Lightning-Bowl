@@ -45,7 +45,7 @@ export function createBallTypeaheadConfig(storageService: StorageService): Typea
     searchPlaceholder: 'Search for balls',
     loadingText: 'Loading more balls...',
     displayFields: [
-      { key: 'brand_name', isSecondary: true },
+      { key: 'brand_name_with_date', isSecondary: true }, // Special combined field
       { key: 'ball_name', isPrimary: true }
     ],
     searchKeys: [
@@ -58,7 +58,13 @@ export function createBallTypeaheadConfig(storageService: StorageService): Typea
     identifierKey: 'ball_id',
     searchMode: 'local',
     showImages: true,
-    imageUrlGenerator: (ball: Ball) => storageService.url + ball.thumbnail_image
+    imageUrlGenerator: (ball: Ball) => storageService.url + ball.thumbnail_image,
+    customDisplayFormatter: (item: Ball, fieldKey: string) => {
+      if (fieldKey === 'brand_name_with_date') {
+        return `${item.brand_name} (${item.release_date})`;
+      }
+      return (item as any)[fieldKey] || '';
+    }
   };
 }
 

@@ -22,6 +22,7 @@ export interface TypeaheadConfig<T> {
   showImages?: boolean;
   imageUrlGenerator?: (item: T) => string;
   customDisplayLogic?: (item: T) => { cssClass?: string; disabled?: boolean };
+  customDisplayFormatter?: (item: T, fieldKey: string) => string;
   searchMode: 'local' | 'api';
   apiSearchFn?: (searchTerm: string) => Promise<{ items: T[] }>;
 }
