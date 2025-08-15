@@ -83,7 +83,7 @@ export class StorageService {
   async loadArsenal(): Promise<void> {
     try {
       const currentArsenal = this.#currentArsenal();
-      const arsenal = await this.loadData<Ball>(`arsenal_${currentArsenal}`);
+      const arsenal = await this.loadData<Ball>(`arsenal_${currentArsenal}_`);
       const sortedArsenal = arsenal.sort((a, b) => (a.position || arsenal.length + 1) - (b.position || arsenal.length + 1));
       this.arsenal.set(sortedArsenal);
     } catch (error) {
@@ -96,21 +96,16 @@ export class StorageService {
     try {
       const arsenals = await this.loadData<string>('arsenalList');
       if (arsenals.length === 0) {
-        // Check if there are existing arsenal items to migrate
-        const existingArsenalItems = await this.loadData<Ball>('arsenal');
-        if (existingArsenalItems.length > 0) {
-          // Migrate existing arsenal to 'Main Arsenal'
-          await this.addArsenal('Main Arsenal');
-          for (const ball of existingArsenalItems) {
-            const oldKey = `arsenal_${ball.ball_id}_${ball.core_weight}`;
-            const newKey = `arsenal_Main Arsenal_${ball.ball_id}_${ball.core_weight}`;
-            await this.save(newKey, ball);
-            await this.delete(oldKey);
-          }
-          this.arsenals.set(['Main Arsenal']);
-          return ['Main Arsenal'];
+        // Check for legacy arsenal items to migrate
+        await this.migrateLegacyArsenalItems();
+        
+        // After migration, check if Main Arsenal was created
+        const arsenalsAfterMigration = await this.loadData<string>('arsenalList');
+        if (arsenalsAfterMigration.length > 0) {
+          this.arsenals.set(arsenalsAfterMigration.reverse());
+          return arsenalsAfterMigration.reverse();
         } else {
-          // Initialize with default arsenal
+          // Initialize with default arsenal if no migration occurred
           await this.addArsenal('Main Arsenal');
           this.arsenals.set(['Main Arsenal']);
           return ['Main Arsenal'];
@@ -122,6 +117,69 @@ export class StorageService {
       console.error('Error loading arsenals:', error);
       throw error;
     }
+  }
+
+  private async migrateLegacyArsenalItems(): Promise<void> {
+    try {
+      // Find all legacy arsenal items (keys that match pattern: arsenal_ballId_weight)
+      const legacyBalls: { key: string; ball: Ball }[] = [];
+      
+      await this.storage.forEach((value: Ball, key: string) => {
+        if (this.isLegacyArsenalKey(key)) {
+          legacyBalls.push({ key, ball: value });
+        }
+      });
+
+      if (legacyBalls.length > 0) {
+        console.log(`Found ${legacyBalls.length} legacy arsenal items to migrate`);
+        
+        // Create Main Arsenal
+        await this.addArsenal('Main Arsenal');
+        
+        // Migrate each legacy ball
+        for (const { key, ball } of legacyBalls) {
+          const newKey = `arsenal_Main Arsenal_${ball.ball_id}_${ball.core_weight}`;
+          await this.save(newKey, ball);
+          await this.delete(key);
+          console.log(`Migrated ball: ${ball.ball_name} (${ball.core_weight}lbs) from ${key} to ${newKey}`);
+        }
+        
+        console.log(`Successfully migrated ${legacyBalls.length} balls to Main Arsenal`);
+      }
+    } catch (error) {
+      console.error('Error during legacy migration:', error);
+      throw error;
+    }
+  }
+
+  private isLegacyArsenalKey(key: string): boolean {
+    // Legacy keys follow pattern: arsenal_ballId_weight
+    // New keys follow pattern: arsenal_arsenalName_ballId_weight
+    // We need to differentiate between them
+    
+    if (!key.startsWith('arsenal_')) {
+      return false;
+    }
+    
+    // Remove the 'arsenal_' prefix
+    const suffix = key.substring(8); // 'arsenal_'.length = 8
+    
+    // Split by underscores
+    const parts = suffix.split('_');
+    
+    // Legacy format: arsenal_ballId_weight (3 parts total: 'arsenal', ballId, weight)
+    // New format: arsenal_arsenalName_ballId_weight (4+ parts total: 'arsenal', arsenalName, ballId, weight)
+    
+    // If there are only 2 parts after 'arsenal_', it's likely legacy format
+    // Also check if the last part looks like a weight (number)
+    if (parts.length === 2) {
+      const lastPart = parts[parts.length - 1];
+      // Check if last part is a valid weight (number, typically between 10-16)
+      const weight = parseInt(lastPart, 10);
+      return !isNaN(weight) && weight >= 6 && weight <= 20;
+    }
+    
+    return false;
   }
 
   async loadLeagues(): Promise<string[]> {
