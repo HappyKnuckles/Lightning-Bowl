@@ -60,6 +60,7 @@ import { GameFilterComponent } from 'src/app/shared/components/game-filter/game-
 import { SpareDisplayComponent } from 'src/app/shared/components/spare-display/spare-display.component';
 import { StatDisplayComponent } from 'src/app/shared/components/stat-display/stat-display.component';
 import { BallStatsComponent } from '../../shared/components/ball-stats/ball-stats.component';
+import { LeagueMigrationService } from 'src/app/core/services/league-migration/league-migration.service';
 
 @Component({
   selector: 'app-stats',
@@ -151,6 +152,7 @@ export class StatsPage implements OnInit, AfterViewInit {
     private toastService: ToastService,
     private excelService: ExcelService,
     private alertController: AlertController,
+    private leagueMigrationService: LeagueMigrationService,
   ) {
     addIcons({ cloudUploadOutline, cloudDownloadOutline, filterOutline, calendarNumberOutline, calendarNumber });
     effect(() => {
@@ -221,7 +223,7 @@ export class StatsPage implements OnInit, AfterViewInit {
       const gameData = await this.excelService.readExcelData(file);
 
       // Extract league names to check if we need user input
-      const leagueNames = this.excelService.extractLeagueNamesFromData(gameData);
+      const leagueNames = this.leagueMigrationService.extractLeagueNamesFromData(gameData);
 
       // Disable loading screen for league association alerts
       this.loadingService.setLoading(false);
@@ -230,7 +232,7 @@ export class StatsPage implements OnInit, AfterViewInit {
       let leagueAssociationMap = new Map();
       if (leagueNames.size > 0) {
         try {
-          leagueAssociationMap = await this.excelService.associateImportedLeagues(leagueNames);
+          leagueAssociationMap = await this.leagueMigrationService.associateImportedLeagues(leagueNames, this.storageService);
         } catch (error) {
           // If user cancelled or error occurred, don't continue with import
           if (error instanceof Error && error.message.includes('cancelled')) {

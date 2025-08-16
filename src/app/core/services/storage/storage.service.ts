@@ -90,7 +90,7 @@ export class StorageService {
     try {
       const leagues = await this.loadData<LeagueData>('league');
       // Sort and handle both legacy strings and new League objects
-      const processedLeagues = leagues.map(league => {
+      const processedLeagues = leagues.map((league) => {
         if (typeof league === 'string') {
           // Keep legacy strings as-is for backward compatibility
           return league;
@@ -217,16 +217,11 @@ export class StorageService {
     }
   }
 
-  // Legacy method - maintains backward compatibility
-  async addLeague(league: string): Promise<void>;
-  // New method - supports full League interface
-  async addLeague(league: League): Promise<void>;
-  // Implementation
   async addLeague(league: string | League): Promise<void> {
     try {
       let leagueData: LeagueData;
       let key: string;
-      
+
       if (typeof league === 'string') {
         // Legacy string format
         leagueData = league;
@@ -236,7 +231,7 @@ export class StorageService {
         leagueData = league;
         key = 'league' + '_' + league.Name;
       }
-      
+
       await this.save(key, leagueData);
       this.leagues.update((leagues) => [...leagues, leagueData]);
     } catch (error) {
@@ -298,13 +293,11 @@ export class StorageService {
     }
   }
 
-  // Helper method to get league name from LeagueData
   private getLeagueName(league: LeagueData | undefined): string {
     if (!league) return '';
     return typeof league === 'string' ? league : league.Name;
   }
-  
-  // Public helper method to get league name from LeagueData
+
   public getLeagueDisplayName(league: LeagueData): string {
     return this.getLeagueName(league);
   }
@@ -335,24 +328,19 @@ export class StorageService {
     }
   }
 
-  // Legacy method - maintains backward compatibility  
-  async editLeague(newLeague: string, oldLeague: string): Promise<void>;
-  // New method - supports full League interface
-  async editLeague(newLeague: League, oldLeague: string | League): Promise<void>;
-  // Implementation
   async editLeague(newLeague: string | League, oldLeague: string | League): Promise<void> {
     try {
       const oldLeagueName = typeof oldLeague === 'string' ? oldLeague : oldLeague.Name;
-      
+
       await this.deleteLeague(oldLeague);
-      
+
       // Use type assertion since we know the implementation matches our usage
       if (typeof newLeague === 'string') {
         await (this.addLeague as (league: string) => Promise<void>)(newLeague);
       } else {
         await (this.addLeague as (league: League) => Promise<void>)(newLeague);
       }
-      
+
       const games = await this.loadData<Game>('game');
       const updatedGames = games.map((game) => {
         const currentLeagueName = this.getLeagueName(game.league);
@@ -396,11 +384,11 @@ export class StorageService {
         this.ballService.getCores(),
         this.ballService.getCoverstocks(),
       ]);
-      
+
       // After loading initial data, run migration if needed
       // We don't await this to avoid blocking the app initialization
       this.runMigrationIfNeeded();
-      
+
       if (this.games().length > 0) {
         if (localStorage.getItem('first-game') === null) {
           localStorage.setItem('first-game', this.games()[this.games().length - 1].date.toString());

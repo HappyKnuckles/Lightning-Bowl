@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
 import { AlertController } from '@ionic/angular';
 import { StorageService } from '../storage/storage.service';
-import { League, LeagueData, EventType } from '../../models/league.model';
+import { League, LeagueData, EventType, isLeagueObject } from '../../models/league.model';
 import { Game } from '../../models/game.model';
 import { ToastService } from '../toast/toast.service';
-
+type ExcelCellValue = string | number | boolean | Date | null;
+type ExcelRow = Record<string, ExcelCellValue>;
 @Injectable({
   providedIn: 'root',
 })
@@ -16,6 +17,168 @@ export class LeagueMigrationService {
     private toastService: ToastService,
   ) {}
 
+  /**
+   * Associates imported league names with existing League objects or creates new ones
+   * @param importedLeagueNames Set of league names from imported Excel data
+   * @returns Map from league name to League object
+   */
+  public async associateImportedLeagues(importedLeagueNames: Set<string>, storageService: StorageService): Promise<Map<string, League>> {
+    const leagueMap = new Map<string, League>();
+    const existingLeagues = storageService.leagues();
+    const newLeagueNames: string[] = [];
+
+    // Check each imported league name
+    for (const leagueName of importedLeagueNames) {
+      // First, check if it already exists as a League object
+      const existingLeague = existingLeagues.find((league) => {
+        if (isLeagueObject(league)) {
+          return league.Name === leagueName;
+        }
+        return false;
+      });
+
+      if (existingLeague && isLeagueObject(existingLeague)) {
+        // League object already exists, use it
+        leagueMap.set(leagueName, existingLeague);
+      } else {
+        // League doesn't exist as League object, need user input
+        newLeagueNames.push(leagueName);
+      }
+    }
+
+    // Ask user for event types for new/string leagues
+    if (newLeagueNames.length > 0) {
+      const eventTypeMap = await this.collectEventTypesForImport(newLeagueNames);
+      if (!eventTypeMap) {
+        // User cancelled, throw error to stop import
+        throw new Error('League import cancelled by user');
+      }
+
+      // Create League objects and add them to storage
+      for (const [leagueName, eventType] of eventTypeMap) {
+        const newLeague: League = {
+          Name: leagueName,
+          Show: true,
+          Event: eventType,
+        };
+
+        // Add to storage
+        await storageService.addLeague(newLeague);
+
+        // Add to map
+        leagueMap.set(leagueName, newLeague);
+      }
+    }
+
+    return leagueMap;
+  }
+
+  /**
+   * Collects event types from user for imported leagues
+   * @param leagueNames Array of league names that need event types
+   * @returns Map from league name to event type, or null if cancelled
+   */
+  public async collectEventTypesForImport(leagueNames: string[]): Promise<Map<string, EventType> | null> {
+    const eventTypeMap = new Map<string, EventType>();
+
+    // Show introduction first
+    const shouldProceed = await this.showImportLeagueIntroduction(leagueNames.length);
+    if (!shouldProceed) {
+      return null;
+    }
+
+    for (const leagueName of leagueNames) {
+      const eventType = await this.askForLeagueEventType(leagueName);
+      if (eventType === null) {
+        // User cancelled
+        return null;
+      }
+      eventTypeMap.set(leagueName, eventType);
+    }
+
+    return eventTypeMap;
+  }
+
+  /**
+   * Shows introduction alert for league import
+   */
+  public async showImportLeagueIntroduction(leagueCount: number): Promise<boolean> {
+    return new Promise((resolve) => {
+      this.alertController
+        .create({
+          header: 'League Import',
+          subHeader: 'New Leagues Detected',
+          message: `Your Excel file contains ${leagueCount} league(s) that need to be set up. Please specify whether each one is a "League" or "Tournament" to properly organize your data.`,
+          cssClass: 'league-import-intro-alert',
+          buttons: [
+            {
+              text: 'Cancel Import',
+              role: 'cancel',
+              handler: () => resolve(false),
+            },
+            {
+              text: 'Continue',
+              handler: () => resolve(true),
+            },
+          ],
+        })
+        .then((alert) => {
+          alert.present();
+        });
+    });
+  }
+
+  /**
+   * Shows alert to ask user for event type of a specific imported league
+   */
+  public async askForLeagueEventType(leagueName: string): Promise<EventType | null> {
+    return new Promise((resolve) => {
+      this.alertController
+        .create({
+          header: 'League Setup',
+          subHeader: `"${leagueName}"`,
+          message: 'Is this a League or Tournament?',
+          cssClass: 'league-import-alert',
+          buttons: [
+            {
+              text: 'League',
+              handler: () => resolve('League'),
+            },
+            {
+              text: 'Tournament',
+              handler: () => resolve('Tournament'),
+            },
+            {
+              text: 'Cancel Import',
+              role: 'cancel',
+              handler: () => resolve(null),
+            },
+          ],
+        })
+        .then((alert) => {
+          alert.present();
+        });
+    });
+  }
+
+  /**
+   * Extracts league names from Excel data without transforming it
+   * @param data Raw Excel data
+   * @returns Set of league names found in the data
+   */
+  public extractLeagueNamesFromData(data: ExcelRow[]): Set<string> {
+    const leagueMap = new Set<string>();
+
+    for (let i = 1; i < data.length; i++) {
+      const row = data[i];
+      const leagueName = row['League'] as string;
+      if (leagueName && leagueName.trim() !== '') {
+        leagueMap.add(leagueName);
+      }
+    }
+
+    return leagueMap;
+  }
   /**
    * Checks if migration has already been completed
    */

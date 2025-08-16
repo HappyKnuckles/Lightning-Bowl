@@ -1,6 +1,6 @@
 @if (isAddPage) {
   <ion-item>
-    <ion-select label="League/Tournament" [(ngModel)]="selectedLeague" (ionChange)="onLeagueSelectionChange($event); onLeagueChange($event)">
+    <ion-select [label]="'League/Tournament'" [(ngModel)]="selectedLeague" (ionChange)="onLeagueSelectionChange($event); onLeagueChange($event)">
       <ion-select-option value="new">Add new</ion-select-option>
       <ion-select-option value="">None</ion-select-option>
       <ion-select-option *ngFor="let league of leagues()" [value]="getLeagueValue(league)">
@@ -45,10 +45,7 @@
     <ion-content>
       <ion-item>
         <ion-icon name="create-outline" slot="start"></ion-icon>
-        <ion-input
-          label="Name"
-          placeholder="Enter league/tournament name"
-          [(ngModel)]="newLeague"></ion-input>
+        <ion-input label="Name" placeholder="Enter league/tournament name" [(ngModel)]="newLeague"></ion-input>
       </ion-item>
       <ion-item>
         <ion-icon name="flag-outline" slot="start"></ion-icon>
