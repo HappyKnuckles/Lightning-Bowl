@@ -126,6 +126,26 @@
       </section>
     </ion-segment-content>
 
+    <ion-segment-content id="Pins">
+      <section class="tab" *ngIf="gameFilterService.filteredGames().length > 0">
+        <app-pin-stats-display
+          [title]="'Pin & Split Analysis'"
+          [stats]="statsService.currentStats()">
+        </app-pin-stats-display>
+      </section>
+    </ion-segment-content>
+
+    <ion-segment-content id="Splits">
+      <section class="tab" *ngIf="gameFilterService.filteredGames().length > 0">
+        <app-stat-display
+          [title]="'Split Statistics'"
+          [statDefinitions]="splitStatDefinitions"
+          [currentStats]="statsService.currentStats()"
+          [prevStats]="statsService.prevStats()">
+        </app-stat-display>
+      </section>
+    </ion-segment-content>
+
     <ion-segment-content id="Sessions">
       @if (gameFilterService.filteredGames().length > 0) {
         <ion-item class="date-picker" lines="none">
