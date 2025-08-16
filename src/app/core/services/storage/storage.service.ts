@@ -98,7 +98,7 @@ export class StorageService {
       if (arsenals.length === 0) {
         // Check for legacy arsenal items to migrate
         await this.migrateLegacyArsenalItems();
-        
+
         // After migration, check if Main Arsenal was created
         const arsenalsAfterMigration = await this.loadData<string>('arsenalList');
         if (arsenalsAfterMigration.length > 0) {
@@ -123,7 +123,7 @@ export class StorageService {
     try {
       // Find all legacy arsenal items (keys that match pattern: arsenal_ballId_weight)
       const legacyBalls: { key: string; ball: Ball }[] = [];
-      
+
       await this.storage.forEach((value: Ball, key: string) => {
         if (this.isLegacyArsenalKey(key)) {
           legacyBalls.push({ key, ball: value });
@@ -133,7 +133,7 @@ export class StorageService {
       if (legacyBalls.length > 0) {
         // Create Main Arsenal
         await this.addArsenal('Main Arsenal');
-        
+
         // Migrate each legacy ball
         for (const { key, ball } of legacyBalls) {
           const newKey = `arsenal_Main Arsenal_${ball.ball_id}_${ball.core_weight}`;
@@ -151,20 +151,20 @@ export class StorageService {
     // Legacy keys follow pattern: arsenal_ballId_weight
     // New keys follow pattern: arsenal_arsenalName_ballId_weight
     // We need to differentiate between them
-    
+
     if (!key.startsWith('arsenal_')) {
       return false;
     }
-    
+
     // Remove the 'arsenal_' prefix
     const suffix = key.substring(8); // 'arsenal_'.length = 8
-    
+
     // Split by underscores
     const parts = suffix.split('_');
-    
+
     // Legacy format: arsenal_ballId_weight (3 parts total: 'arsenal', ballId, weight)
     // New format: arsenal_arsenalName_ballId_weight (4+ parts total: 'arsenal', arsenalName, ballId, weight)
-    
+
     // If there are only 2 parts after 'arsenal_', it's likely legacy format
     // Also check if the last part looks like a weight (number)
     if (parts.length === 2) {
@@ -173,7 +173,7 @@ export class StorageService {
       const weight = parseInt(lastPart, 10);
       return !isNaN(weight) && weight >= 6 && weight <= 20;
     }
-    
+
     return false;
   }
 
@@ -279,16 +279,16 @@ export class StorageService {
   async saveBallToArsenal(ball: Ball, arsenalName?: string) {
     try {
       const targetArsenal = arsenalName || this.#currentArsenal();
-      
+
       // Check if ball already exists in target arsenal
       const ballExists = await this.ballExistsInArsenal(ball, targetArsenal);
       if (ballExists) {
         throw new Error(`Ball ${ball.ball_name} (${ball.core_weight}lbs) already exists in ${targetArsenal}`);
       }
-      
+
       const key = `arsenal_${targetArsenal}_${ball.ball_id}_${ball.core_weight}`;
       await this.save(key, ball);
-      
+
       // Only update the current arsenal view if we're saving to the current arsenal
       if (!arsenalName || arsenalName === this.#currentArsenal()) {
         this.arsenal.update((balls) => {
@@ -312,7 +312,7 @@ export class StorageService {
         const key = `arsenal_${targetArsenal}_${ball.ball_id}_${ball.core_weight}`;
         await this.save(key, ball);
       }
-      
+
       // Only update the current arsenal view if we're saving to the current arsenal
       if (!arsenalName || arsenalName === this.#currentArsenal()) {
         this.arsenal.update(() => [...balls]);
@@ -401,7 +401,7 @@ export class StorageService {
       const targetArsenal = arsenalName || this.#currentArsenal();
       const key = `arsenal_${targetArsenal}_${ball.ball_id}_${ball.core_weight}`;
       await this.delete(key);
-      
+
       // Only update the current arsenal view if we're removing from the current arsenal
       if (!arsenalName || arsenalName === this.#currentArsenal()) {
         this.arsenal.update((balls) => balls.filter((b) => !(b.ball_id === ball.ball_id && b.core_weight === ball.core_weight)));
@@ -420,12 +420,12 @@ export class StorageService {
         const key = `arsenal_${arsenal}_${ball.ball_id}_${ball.core_weight}`;
         await this.delete(key);
       }
-      
+
       // Remove arsenal from list
       const key = 'arsenalList' + '_' + arsenal;
       await this.storage.remove(key);
       this.arsenals.update((arsenals) => arsenals.filter((a) => a !== arsenal));
-      
+
       // If deleting current arsenal, switch to first available or create default
       if (this.#currentArsenal() === arsenal) {
         const remaining = this.arsenals();
@@ -449,7 +449,7 @@ export class StorageService {
       if (ballExists) {
         throw new Error(`Ball ${ball.ball_name} (${ball.core_weight}lbs) already exists in ${toArsenal}`);
       }
-      
+
       // Copy the ball to the target arsenal (bypass duplicate check since we already checked)
       await this.saveBallToArsenalInternal(ball, toArsenal);
     } catch (error) {
@@ -467,10 +467,10 @@ export class StorageService {
           throw new Error(`Ball ${ball.ball_name} (${ball.core_weight}lbs) already exists in ${toArsenal}`);
         }
       }
-      
+
       // Add to target arsenal first (bypass duplicate check since we already checked)
       await this.saveBallToArsenalInternal(ball, toArsenal);
-      
+
       // Then remove from source arsenal (only if it's not the same arsenal)
       if (fromArsenal !== toArsenal) {
         await this.removeFromArsenal(ball, fromArsenal);
@@ -485,7 +485,7 @@ export class StorageService {
     try {
       const key = `arsenal_${arsenalName}_${ball.ball_id}_${ball.core_weight}`;
       await this.save(key, ball);
-      
+
       // Only update the current arsenal view if we're saving to the current arsenal
       if (arsenalName === this.#currentArsenal()) {
         this.arsenal.update((balls) => {
@@ -528,33 +528,27 @@ export class StorageService {
     try {
       const targetArsenal = arsenalName || this.#currentArsenal();
       const key = `arsenal_${targetArsenal}_${ball.ball_id}_${ball.core_weight}`;
-      
+
       // Get the current ball data
       const existingBall = await this.storage.get(key);
       if (!existingBall) {
         throw new Error('Ball not found in arsenal');
       }
-      
+
       // Update the ball with new notes and tags
       const updatedBall = {
         ...existingBall,
         notes: notes || '',
-        tags: tags || []
+        tags: tags || [],
       };
-      
+
       await this.save(key, updatedBall);
-      
+
       // Update the current arsenal view if we're updating a ball in the current arsenal
       if (!arsenalName || arsenalName === this.#currentArsenal()) {
-        this.arsenal.update((balls) => 
-          balls.map((b) => 
-            b.ball_id === ball.ball_id && b.core_weight === ball.core_weight
-              ? updatedBall
-              : b
-          )
-        );
+        this.arsenal.update((balls) => balls.map((b) => (b.ball_id === ball.ball_id && b.core_weight === ball.core_weight ? updatedBall : b)));
       }
-      
+
       return updatedBall;
     } catch (error) {
       console.error('Error updating ball notes and tags:', error);
@@ -566,7 +560,7 @@ export class StorageService {
     try {
       // Get all balls from old arsenal
       const arsenalBalls = await this.loadData<Ball>(`arsenal_${oldArsenal}`);
-      
+
       // Save balls to new arsenal name
       for (const ball of arsenalBalls) {
         const oldKey = `arsenal_${oldArsenal}_${ball.ball_id}_${ball.core_weight}`;
@@ -574,18 +568,16 @@ export class StorageService {
         await this.save(newKey, ball);
         await this.delete(oldKey);
       }
-      
+
       // Remove old arsenal from list and add new one
       const oldKey = 'arsenalList' + '_' + oldArsenal;
       await this.storage.remove(oldKey);
       const newKey = 'arsenalList' + '_' + newArsenal;
       await this.save(newKey, newArsenal);
-      
+
       // Update arsenals list
-      this.arsenals.update((arsenals) => 
-        arsenals.map(a => a === oldArsenal ? newArsenal : a)
-      );
-      
+      this.arsenals.update((arsenals) => arsenals.map((a) => (a === oldArsenal ? newArsenal : a)));
+
       // Update current arsenal if needed
       if (this.#currentArsenal() === oldArsenal) {
         await this.setCurrentArsenal(newArsenal);
@@ -655,17 +647,18 @@ export class StorageService {
 
   private async loadInitialData(weight: number): Promise<void> {
     try {
+      await this.loadArsenals();
+
       await Promise.all([
         this.loadAllPatterns(),
         this.loadAllBalls(undefined, weight),
         this.loadLeagues(),
         this.loadGameHistory(),
-        this.loadArsenals(),
         this.ballService.getBrands(),
         this.ballService.getCores(),
         this.ballService.getCoverstocks(),
+        await this.loadArsenal(),
       ]);
-      await this.loadArsenal(); // Load arsenal after arsenals are loaded
       if (this.games().length > 0) {
         if (localStorage.getItem('first-game') === null) {
           localStorage.setItem('first-game', this.games()[this.games().length - 1].date.toString());

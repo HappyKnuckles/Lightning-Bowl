@@ -139,21 +139,18 @@ export class ArsenalPage implements OnInit {
   actionSheetButtons = [
     {
       text: 'Add Arsenal',
-      icon: addOutline,
       handler: () => {
         this.openAddArsenalAlert();
       },
     },
     {
       text: 'Edit Arsenal',
-      icon: createOutline,
       handler: () => {
         this.openEditArsenalModal();
       },
     },
     {
       text: 'Delete Arsenal',
-      icon: trashOutline,
       role: 'destructive',
       handler: () => {
         this.openDeleteArsenalAlert();
