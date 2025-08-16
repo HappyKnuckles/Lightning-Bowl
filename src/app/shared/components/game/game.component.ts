@@ -46,7 +46,7 @@ import {
 } from 'ionicons/icons';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { Game } from 'src/app/core/models/game.model';
-import { League, LeagueData, isLeagueObject } from 'src/app/core/models/league.model';
+import { LeagueData, isLeagueObject } from 'src/app/core/models/league.model';
 import { GameUtilsService } from 'src/app/core/services/game-utils/game-utils.service';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
@@ -551,29 +551,19 @@ export class GameComponent implements OnChanges, OnInit {
     }
   }
 
-  // Helper methods for League display
   getLeagueDisplayText(league: LeagueData): string {
     if (typeof league === 'string') {
       return league;
     } else if (isLeagueObject(league)) {
-      return `${league.event}: ${league.name}`; // Show "League: Name" or "Tournament: Name"
+      return `${league.event}: ${league.name}`;
     }
     return '';
-  }
-
-  isLegacyLeague(league: LeagueData): boolean {
-    return typeof league === 'string';
-  }
-
-  asLeagueObject(league: LeagueData): League {
-    return league as League;
   }
 
   getLeagueValue(league: LeagueData): string {
     return typeof league === 'string' ? league : league.name;
   }
 
-  // Handle league selection change in edit mode
   onLeagueSelectionChange(game: Game, selectedValue: string): void {
     if (selectedValue === '') {
       game.league = undefined;

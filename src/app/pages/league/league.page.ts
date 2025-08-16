@@ -55,7 +55,7 @@ import { StatDisplayComponent } from 'src/app/shared/components/stat-display/sta
 import { LongPressDirective } from 'src/app/core/directives/long-press/long-press.directive';
 import { BallStatsComponent } from '../../shared/components/ball-stats/ball-stats.component';
 import { LeagueSelectorComponent } from '../../shared/components/league-selector/league-selector.component';
-import { LeagueData, League, isLeagueObject } from 'src/app/core/models/league.model';
+import { League, isLeagueObject } from 'src/app/core/models/league.model';
 
 @Component({
   selector: 'app-league',
@@ -103,13 +103,34 @@ export class LeaguePage {
   @ViewChild('leagueSelector') leagueSelector!: LeagueSelectorComponent;
   selectedSegment = 'Overall';
   segments: string[] = ['Overall', 'Spares', 'Games'];
-  isEditMode: Record<string, boolean> = {};
   gamesByLeague: Signal<Record<string, Game[]>> = computed(() => {
     const games = this.storageService.games();
     return this.sortUtilsService.sortGamesByLeagues(games, true);
   });
-  leagueKeys: Signal<string[]> = computed(() => {
-    return Object.keys(this.gamesByLeague());
+
+  leagues: Signal<League[]> = computed(() => {
+    const storedLeagues = this.storageService.leagues();
+    const gamesByLeague = this.gamesByLeague();
+    const gameLeagueNames = Object.keys(gamesByLeague);
+
+    return gameLeagueNames.map((key) => {
+      const league = storedLeagues.find((l) => {
+        if (isLeagueObject(l)) {
+          return l.name === key;
+        }
+        return l === key;
+      });
+
+      if (league && isLeagueObject(league)) {
+        return league;
+      }
+
+      return {
+        name: key,
+        show: true,
+        event: 'League' as const,
+      };
+    });
   });
   overallStats: Signal<Stats> = computed(() => {
     const games = this.storageService.games();
@@ -158,49 +179,17 @@ export class LeaguePage {
   private scoreChartInstances: Record<string, Chart> = {};
   private pinChartInstances: Record<string, Chart> = {};
 
-  // Add computed for visible leagues based on show property
-  visibleLeagues: Signal<string[]> = computed(() => {
-    const leagues = this.storageService.leagues();
-    return this.leagueKeys().filter((leagueKey) => {
-      const league = leagues.find((l) => {
-        if (isLeagueObject(l)) {
-          return l.name === leagueKey;
-        }
-        return l === leagueKey;
-      });
-
-      if (league && isLeagueObject(league)) {
-        return league.show;
-      }
-      // For legacy string leagues, show by default
-      return true;
-    });
-  });
-
   isVisibilityEdit = signal(false);
 
   get noLeaguesShown(): boolean {
-    return this.visibleLeagues().length === 0;
+    return !this.leagues().some((league) => league.show);
   }
 
   get leagueSelectionState() {
-    const leagues = this.storageService.leagues();
     const state: Record<string, boolean> = {};
 
-    this.leagueKeys().forEach((leagueKey) => {
-      const league = leagues.find((l) => {
-        if (isLeagueObject(l)) {
-          return l.name === leagueKey;
-        }
-        return l === leagueKey;
-      });
-
-      if (league && isLeagueObject(league)) {
-        state[leagueKey] = league.show;
-      } else {
-        // For legacy string leagues, show by default
-        state[leagueKey] = true;
-      }
+    this.leagues().forEach((league) => {
+      state[league.name] = league.show;
     });
 
     return state;
@@ -230,29 +219,11 @@ export class LeaguePage {
       medalOutline,
     });
   }
-  async updateLeagueSelection(leagueName: string, show: boolean): Promise<void> {
+  async updateLeagueSelection(league: League, show: boolean): Promise<void> {
     try {
-      const leagues = this.storageService.leagues();
-      const foundLeague = leagues.find((league) => {
-        if (isLeagueObject(league)) {
-          return league.name === leagueName;
-        }
-        return league === leagueName;
-      });
-
-      if (foundLeague && isLeagueObject(foundLeague)) {
-        // Update existing League object
-        const updatedLeague: League = { ...foundLeague, show: show };
-        await this.storageService.editLeague(updatedLeague, foundLeague);
-      } else if (typeof foundLeague === 'string') {
-        // Convert legacy league to League object
-        const newLeagueObj: League = {
-          name: foundLeague,
-          show: show,
-          event: 'League',
-        };
-        await this.storageService.editLeague(newLeagueObj, foundLeague);
-      }
+      // Update existing League object
+      const updatedLeague: League = { ...league, show: show };
+      await this.storageService.editLeague(updatedLeague, league);
     } catch (error) {
       console.error('Error updating league visibility:', error);
       this.toastService.showToast('Error updating league visibility', 'bug', true);
@@ -260,7 +231,6 @@ export class LeaguePage {
   }
 
   cancelEdit() {
-    // Reload leagues from storage to revert any unsaved changes
     this.storageService.loadLeagues();
     this.editVisibility();
   }
@@ -348,52 +318,24 @@ export class LeaguePage {
     }
   }
 
-  async saveLeague(league: string): Promise<void> {
-    try {
-      await this.storageService.addLeague(league);
-      this.toastService.showToast(ToastMessages.leagueSaveSuccess, 'add');
-    } catch (error) {
-      this.toastService.showToast(ToastMessages.leagueSaveError, 'bug', true);
-      console.error('Error saving league:', error);
-    }
-  }
-
   openLeagueSelector(): void {
-    // Trigger the league selector's management interface
     if (this.leagueSelector) {
       this.leagueSelector.showLeagueManagementOptions();
     }
   }
 
-  async editLeague(league: LeagueData | string): Promise<void> {
-    // Find the actual league object from the leagues array
-    const leagues = this.storageService.leagues();
-    let leagueToEdit: LeagueData;
-
-    if (typeof league === 'string') {
-      // Find the league object that matches the string name
-      const foundLeague = leagues.find((l) => {
-        if (isLeagueObject(l)) {
-          return l.name === league;
-        }
-        return l === league;
-      });
-      leagueToEdit = foundLeague || league;
-    } else {
-      leagueToEdit = league;
-    }
-
-    // Use the league selector component to edit the league
+  async editLeague(league: League): Promise<void> {
     if (this.leagueSelector) {
-      this.leagueSelector.openEditModalWithLeague(leagueToEdit);
+      this.leagueSelector.openEditModalWithLeague(league);
     }
   }
 
-  async deleteLeague(league: string): Promise<void> {
+  async deleteLeague(league: League | string): Promise<void> {
+    const leagueName = typeof league === 'string' ? league : league.name;
     this.hapticService.vibrate(ImpactStyle.Heavy);
     const alert = await this.alertController.create({
       header: 'Confirm Deletion',
-      message: `Are you sure you want to delete ${league}?`,
+      message: `Are you sure you want to delete ${leagueName}?`,
       buttons: [
         {
           text: 'Cancel',

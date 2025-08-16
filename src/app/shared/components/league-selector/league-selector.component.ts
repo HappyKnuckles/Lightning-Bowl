@@ -82,10 +82,6 @@ export class LeagueSelectorComponent {
   isEditModalOpen = false;
   selectedLeagueForEdit: LeagueData | null = null;
 
-  isLegacyLeague(league: LeagueData): boolean {
-    return typeof league === 'string';
-  }
-
   isLeagueObjectType(league: LeagueData): league is League {
     return isLeagueObject(league);
   }
@@ -185,21 +181,18 @@ export class LeagueSelectorComponent {
   onLeagueSelectionChange(event: IonSelectCustomEvent<SelectChangeEventDetail>): void {
     const selectedValue = event.detail.value;
 
-    // Handle special cases
     if (!selectedValue || selectedValue === 'new' || selectedValue === 'edit' || selectedValue === 'delete') {
       this.selectedLeague = selectedValue;
       this.leagueChanged.emit(selectedValue);
       return;
     }
 
-    // Find the actual League object based on selected value
     const selectedLeague = this.leagues().find((league) => this.getLeagueValue(league) === selectedValue);
 
     if (selectedLeague) {
       this.selectedLeague = selectedLeague;
       this.leagueChanged.emit(selectedLeague);
     } else {
-      // Fallback to string if league not found
       this.selectedLeague = selectedValue;
       this.leagueChanged.emit(selectedValue);
     }
@@ -216,11 +209,8 @@ export class LeagueSelectorComponent {
       await this.openDeleteAlert();
     }
 
-    // Reset the select to empty after handling management actions
     if (selectedValue === 'new' || selectedValue === 'edit' || selectedValue === 'delete') {
-      // Don't update selectedLeague for management actions
       setTimeout(() => {
-        // Reset the select value after the action
         this.selectedLeague = '';
       }, 100);
     }
@@ -228,16 +218,15 @@ export class LeagueSelectorComponent {
 
   async saveLeague(): Promise<void> {
     try {
-      // Create new League object with all required properties
       const newLeagueObj: League = {
         name: this.newLeague,
-        show: true, // Default to visible
+        show: true,
         event: this.newLeagueEventType,
       };
 
       await this.storageService.addLeague(newLeagueObj);
       this.selectedLeague = newLeagueObj;
-      this.leagueChanged.emit(newLeagueObj); // Emit the new League object
+      this.leagueChanged.emit(newLeagueObj);
       this.newLeague = '';
       this.newLeagueEventType = 'League';
       this.toastService.showToast(ToastMessages.leagueSaveSuccess, 'add');
@@ -252,7 +241,7 @@ export class LeagueSelectorComponent {
     this.newLeague = '';
     this.newLeagueEventType = 'League';
     this.selectedLeague = '';
-    this.leagueChanged.emit(''); // Emit empty string for no selection
+    this.leagueChanged.emit('');
     this.isAddModalOpen = false;
   }
 
@@ -265,13 +254,10 @@ export class LeagueSelectorComponent {
   }
 
   onLeagueToChangeSelect(): void {
-    // Find the selected league object
     this.selectedLeagueForEdit = this.leagues().find((league) => this.getLeagueValue(league) === this.leagueToChange) || null;
 
-    // Set the new league name to the current name
     this.newLeague = this.leagueToChange;
 
-    // If it's a League object, set the event type
     if (this.selectedLeagueForEdit && isLeagueObject(this.selectedLeagueForEdit)) {
       this.newLeagueEventType = this.selectedLeagueForEdit.event;
     }
@@ -280,15 +266,13 @@ export class LeagueSelectorComponent {
   async editLeague(): Promise<void> {
     try {
       if (this.selectedLeagueForEdit && isLeagueObject(this.selectedLeagueForEdit)) {
-        // Create updated League object with new name and event type
         const updatedLeague: League = {
           name: this.newLeague,
-          show: this.selectedLeagueForEdit.show, // Preserve show setting
+          show: this.selectedLeagueForEdit.show,
           event: this.newLeagueEventType,
         };
         await this.storageService.editLeague(updatedLeague, this.selectedLeagueForEdit);
       } else {
-        // For legacy string leagues, convert to string editing
         await this.storageService.editLeague(this.newLeague, this.leagueToChange);
       }
 
@@ -303,11 +287,9 @@ export class LeagueSelectorComponent {
     }
   }
 
-  // Method to toggle the Show property of a league
   async toggleLeagueVisibility(league: LeagueData): Promise<void> {
     try {
       if (isLeagueObject(league)) {
-        // Create updated league with toggled show property
         const updatedLeague: League = {
           ...league,
           show: !league.show,
@@ -316,8 +298,6 @@ export class LeagueSelectorComponent {
         const statusText = updatedLeague.show ? 'shown' : 'hidden';
         this.toastService.showToast(`${league.name} is now ${statusText}`, updatedLeague.show ? 'eye' : 'eye-off');
       } else {
-        // For legacy string leagues, we can't toggle Show property directly
-        // This would need to be converted to League object first
         this.toastService.showToast('Legacy leagues cannot be toggled. Please edit to update.', 'information-circle');
       }
     } catch (error) {
@@ -372,9 +352,7 @@ export class LeagueSelectorComponent {
       });
   }
 
-  // Method to programmatically trigger league management action sheet
   async showLeagueManagementOptions(): Promise<void> {
-    // Create an action sheet with the same options as the select
     const actionSheet = await this.actionSheetController.create({
       header: 'Manage Leagues',
       buttons: [
@@ -410,23 +388,18 @@ export class LeagueSelectorComponent {
     await actionSheet.present();
   }
 
-  // Method to programmatically open edit modal with specific league
   openEditModalWithLeague(league: LeagueData): void {
-    // Set the league to change to the display name of the provided league
     this.leagueToChange = this.getLeagueDisplayName(league);
     this.selectedLeagueForEdit = league;
 
-    // Set the new league name to the current name
     this.newLeague = this.leagueToChange;
 
-    // If it's a League object, set the event type
     if (isLeagueObject(league)) {
       this.newLeagueEventType = league.event;
     } else {
-      this.newLeagueEventType = 'League'; // Default for legacy leagues
+      this.newLeagueEventType = 'League';
     }
 
-    // Open the edit modal
     this.isEditModalOpen = true;
   }
 }

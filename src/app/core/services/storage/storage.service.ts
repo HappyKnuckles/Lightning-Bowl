@@ -93,7 +93,7 @@ export class StorageService {
       const processedLeagues = leagues.map((league) => {
         if (typeof league === 'string') {
           // Keep legacy strings as-is for backward compatibility
-          return league;
+          return { name: league, show: true, event: 'League' } as LeagueData;
         } else if (isLeagueObject(league)) {
           // Return League objects as-is
           return league;
