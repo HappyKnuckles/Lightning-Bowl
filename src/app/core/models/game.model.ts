@@ -15,6 +15,23 @@ export interface Game {
   balls?: string[];
 }
 
+// Pin-level data for detailed analysis
+export interface PinData {
+  pinsKnocked: number[]; // Array of pin numbers (1-10) that were knocked down
+  pinsStanding: number[]; // Array of pin numbers (1-10) that remained standing
+}
+
+export interface ThrowWithPins {
+  value: number;
+  throwIndex: number;
+  pins?: PinData; // Optional pin-level data
+}
+
+export interface FrameWithPins {
+  throws: ThrowWithPins[];
+  frameIndex: number;
+}
+
 // interface Session {
 //   isSeries?: boolean;
 //   seriesId?: string;

@@ -1,0 +1,107 @@
+.pin-setup-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  gap: 20px;
+}
+
+h3 {
+  margin: 0;
+  text-align: center;
+  color: var(--ion-color-primary);
+}
+
+.pin-layout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.pin-row {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.pin {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 60px;
+  height: 60px;
+  min-height: 60px;
+  font-size: 24px;
+  font-weight: bold;
+  --border-radius: 50%;
+  --background: #e0e0e0;
+  --color: #333;
+  --padding-top: 0;
+  --padding-bottom: 0;
+  --padding-start: 0;
+  --padding-end: 0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.pin.standing {
+  --background: #f0f0f0;
+  --color: #666;
+  --border-color: var(--ion-color-medium);
+  --border-style: solid;
+  --border-width: 2px;
+}
+
+.pin.active {
+  --background: var(--ion-color-primary);
+  --color: white;
+  transform: scale(1.1);
+}
+
+.pin:disabled {
+  --background: #d0d0d0;
+  --color: #999;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.info-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  width: 100%;
+  max-width: 300px;
+}
+
+.score-info {
+  text-align: center;
+}
+
+.score-info p {
+  margin: 5px 0;
+  font-size: 16px;
+}
+
+.split-indicator {
+  color: var(--ion-color-warning) !important;
+  font-size: 18px !important;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+
+.controls {
+  display: flex;
+  gap: 15px;
+  width: 100%;
+}
+
+.controls ion-button {
+  flex: 1;
+}

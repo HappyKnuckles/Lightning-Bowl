@@ -288,3 +288,37 @@ export const sessionStatDefinitions: StatDefinition[] = [
     prevKey: 'overallMissedRate',
   },
 ];
+
+export const pinStatDefinitions: StatDefinition[] = [
+  { label: 'Pin 1 Hit %', key: 'pinHitPercentages', id: 'pin1HitPercentage', isPercentage: true, 
+    toolTip: 'Percentage of time pin 1 (head pin) is hit when available' },
+  { label: 'Pin 2 Hit %', key: 'pinHitPercentages', id: 'pin2HitPercentage', isPercentage: true,
+    toolTip: 'Percentage of time pin 2 is hit when available' },
+  { label: 'Pin 3 Hit %', key: 'pinHitPercentages', id: 'pin3HitPercentage', isPercentage: true,
+    toolTip: 'Percentage of time pin 3 is hit when available' },
+  { label: 'Pin 4 Hit %', key: 'pinHitPercentages', id: 'pin4HitPercentage', isPercentage: true,
+    toolTip: 'Percentage of time pin 4 is hit when available' },
+  { label: 'Pin 5 Hit %', key: 'pinHitPercentages', id: 'pin5HitPercentage', isPercentage: true,
+    toolTip: 'Percentage of time pin 5 is hit when available' },
+  { label: 'Pin 6 Hit %', key: 'pinHitPercentages', id: 'pin6HitPercentage', isPercentage: true,
+    toolTip: 'Percentage of time pin 6 is hit when available' },
+  { label: 'Pin 7 Hit %', key: 'pinHitPercentages', id: 'pin7HitPercentage', isPercentage: true,
+    toolTip: 'Percentage of time pin 7 is hit when available' },
+  { label: 'Pin 8 Hit %', key: 'pinHitPercentages', id: 'pin8HitPercentage', isPercentage: true,
+    toolTip: 'Percentage of time pin 8 is hit when available' },
+  { label: 'Pin 9 Hit %', key: 'pinHitPercentages', id: 'pin9HitPercentage', isPercentage: true,
+    toolTip: 'Percentage of time pin 9 is hit when available' },
+  { label: 'Pin 10 Hit %', key: 'pinHitPercentages', id: 'pin10HitPercentage', isPercentage: true,
+    toolTip: 'Percentage of time pin 10 is hit when available' },
+];
+
+export const splitStatDefinitions: StatDefinition[] = [
+  { label: 'Total Splits', key: 'totalSplits', id: 'totalSplits',
+    toolTip: 'Total number of split situations encountered' },
+  { label: 'Splits Converted', key: 'splitsConverted', id: 'splitsConverted',
+    toolTip: 'Number of splits successfully converted to spares' },
+  { label: 'Splits Missed', key: 'splitsMissed', id: 'splitsMissed',
+    toolTip: 'Number of splits that were not converted' },
+  { label: 'Split Conversion %', key: 'splitConversionPercentage', id: 'splitConversionPercentage', 
+    isPercentage: true, toolTip: 'Percentage of splits successfully converted to spares' },
+];

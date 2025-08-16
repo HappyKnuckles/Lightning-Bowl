@@ -1,4 +1,4 @@
-type StatValue = number | number[] | string;
+type StatValue = number | number[] | string | { [key: string]: number };
 
 export interface Stats {
   totalGames: number;
@@ -55,6 +55,16 @@ export interface Stats {
   high5Series?: number;
   average6SeriesScore?: number;
   high6Series?: number;
+  // Per-pin statistics
+  pinHitCounts?: number[]; // Array of 11 elements (0-10, pin 0 is unused)
+  pinMissCounts?: number[]; // Array of 11 elements (0-10, pin 0 is unused)
+  pinHitPercentages?: number[]; // Array of 11 elements (0-10, pin 0 is unused)
+  // Split statistics
+  totalSplits?: number;
+  splitsConverted?: number;
+  splitsMissed?: number;
+  splitConversionPercentage?: number;
+  splitTypes?: { [key: string]: number }; // e.g., "7-10": 5, "4-6-7-10": 2
   [key: string]: StatValue | undefined;
 }
 export interface SessionStats extends Stats {

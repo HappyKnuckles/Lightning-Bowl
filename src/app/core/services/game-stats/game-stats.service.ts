@@ -5,6 +5,7 @@ import { PrevStats } from 'src/app/core/models/stats.model';
 import { GameFilterService } from '../game-filter/game-filter.service';
 import { UtilsService } from '../utils/utils.service';
 import { StorageService } from '../storage/storage.service';
+import { PinStatsService } from '../pin-stats/pin-stats.service';
 
 const MAX_FRAMES = 10;
 @Injectable({
@@ -91,6 +92,7 @@ export class GameStatsService {
     private gameFilterService: GameFilterService,
     private utilsService: UtilsService,
     private storageService: StorageService,
+    private pinStatsService: PinStatsService,
   ) {}
 
   calculateBestBallStats(gameHistory: Game[]): BestBallStats {
@@ -478,6 +480,9 @@ export class GameStatsService {
     // Strike-to-strike percentage
     const strikeToStrikePercentage = strikeOpportunities ? (strikeFollowUps / strikeOpportunities) * 100 : 0;
 
+    // Calculate pin-level statistics from games with detailed pin data
+    const pinStats = this.pinStatsService.calculatePinStatistics(gameHistory);
+
     return {
       totalStrikes,
       totalSpares: totalSparesConverted,
@@ -535,6 +540,16 @@ export class GameStatsService {
       averageSessionsPerMonth,
       averageGamesPerSession,
       strikeToStrikePercentage,
+      // Pin-level statistics
+      pinHitCounts: pinStats.pinHitCounts,
+      pinMissCounts: pinStats.pinMissCounts,
+      pinHitPercentages: pinStats.pinHitPercentages,
+      // Split statistics
+      totalSplits: pinStats.totalSplits,
+      splitsConverted: pinStats.splitsConverted,
+      splitsMissed: pinStats.splitsMissed,
+      splitConversionPercentage: pinStats.splitConversionPercentage,
+      splitTypes: pinStats.splitTypes,
     };
   }
 

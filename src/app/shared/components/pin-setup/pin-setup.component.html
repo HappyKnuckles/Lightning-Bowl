@@ -1,0 +1,37 @@
+<div class="pin-setup-container">
+  <h3>Frame {{ frameNumber }} - {{ throwLabel }}</h3>
+  
+  <div class="pin-layout">
+    <div class="pin-row">
+      <ion-button class="pin" [class.active]="isKnockedDown(7)" [class.standing]="isStanding(7)" (click)="togglePin(7)" [disabled]="isPinDisabled(7)"> 7 </ion-button>
+      <ion-button class="pin" [class.active]="isKnockedDown(8)" [class.standing]="isStanding(8)" (click)="togglePin(8)" [disabled]="isPinDisabled(8)"> 8 </ion-button>
+      <ion-button class="pin" [class.active]="isKnockedDown(9)" [class.standing]="isStanding(9)" (click)="togglePin(9)" [disabled]="isPinDisabled(9)"> 9 </ion-button>
+      <ion-button class="pin" [class.active]="isKnockedDown(10)" [class.standing]="isStanding(10)" (click)="togglePin(10)" [disabled]="isPinDisabled(10)"> 10 </ion-button>
+    </div>
+    <div class="pin-row">
+      <ion-button class="pin" [class.active]="isKnockedDown(4)" [class.standing]="isStanding(4)" (click)="togglePin(4)" [disabled]="isPinDisabled(4)"> 4 </ion-button>
+      <ion-button class="pin" [class.active]="isKnockedDown(5)" [class.standing]="isStanding(5)" (click)="togglePin(5)" [disabled]="isPinDisabled(5)"> 5 </ion-button>
+      <ion-button class="pin" [class.active]="isKnockedDown(6)" [class.standing]="isStanding(6)" (click)="togglePin(6)" [disabled]="isPinDisabled(6)"> 6 </ion-button>
+    </div>
+    <div class="pin-row">
+      <ion-button class="pin" [class.active]="isKnockedDown(2)" [class.standing]="isStanding(2)" (click)="togglePin(2)" [disabled]="isPinDisabled(2)"> 2 </ion-button>
+      <ion-button class="pin" [class.active]="isKnockedDown(3)" [class.standing]="isStanding(3)" (click)="togglePin(3)" [disabled]="isPinDisabled(3)"> 3 </ion-button>
+    </div>
+    <div class="pin-row">
+      <ion-button class="pin" [class.active]="isKnockedDown(1)" [class.standing]="isStanding(1)" (click)="togglePin(1)" [disabled]="isPinDisabled(1)"> 1 </ion-button>
+    </div>
+  </div>
+
+  <div class="info-section">
+    <div class="score-info">
+      <p><strong>Pins knocked down:</strong> {{ knockedPins.length }}</p>
+      <p><strong>Score:</strong> {{ knockedPins.length }}</p>
+      <p *ngIf="isSplit && throwIndex === 1" class="split-indicator"><strong>SPLIT!</strong></p>
+    </div>
+    
+    <div class="controls">
+      <ion-button (click)="clearAll()" fill="outline" color="medium">Clear All</ion-button>
+      <ion-button (click)="confirmThrow()" color="primary" [disabled]="!isValidThrow()">Confirm</ion-button>
+    </div>
+  </div>
+</div>
