@@ -110,6 +110,30 @@ export class PinSetupComponent implements OnChanges {
     this.knockedPins = [];
   }
 
+  selectStrike(): void {
+    if (this.canStrike()) {
+      this.knockedPins = [...this.availablePins];
+      this.knockedPins.sort((a, b) => a - b);
+    }
+  }
+
+  selectSpare(): void {
+    if (this.canSpare()) {
+      this.knockedPins = [...this.availablePins];
+      this.knockedPins.sort((a, b) => a - b);
+    }
+  }
+
+  canStrike(): boolean {
+    // Strike is only available on first throw and all 10 pins must be available
+    return this.throwIndex === 0 && this.availablePins.length === 10;
+  }
+
+  canSpare(): boolean {
+    // Spare is only available on second throw (or later in 10th frame) when pins are available
+    return this.throwIndex > 0 && this.availablePins.length > 0 && this.availablePins.length < 10;
+  }
+
   isValidThrow(): boolean {
     // For 10th frame, any number of pins is valid
     if (this.frameNumber === 10) {

@@ -29,6 +29,24 @@
       <p *ngIf="isSplit && throwIndex === 1" class="split-indicator"><strong>SPLIT!</strong></p>
     </div>
     
+    <!-- Quick Action Buttons -->
+    <div class="quick-actions">
+      <ion-button 
+        (click)="selectStrike()" 
+        color="success" 
+        fill="outline" 
+        *ngIf="canStrike()">
+        Strike (X)
+      </ion-button>
+      <ion-button 
+        (click)="selectSpare()" 
+        color="warning" 
+        fill="outline" 
+        *ngIf="canSpare()">
+        Spare (/)
+      </ion-button>
+    </div>
+    
     <div class="controls">
       <ion-button (click)="clearAll()" fill="outline" color="medium">Clear All</ion-button>
       <ion-button (click)="confirmThrow()" color="primary" [disabled]="!isValidThrow()">Confirm</ion-button>
