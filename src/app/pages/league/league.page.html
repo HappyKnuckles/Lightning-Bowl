@@ -127,13 +127,13 @@
                 <ion-icon name="chevron-back" slot="icon-only"></ion-icon>
               </ion-button>
             </ion-buttons>
-            <ion-title>{{ league }}</ion-title>
+            <ion-title>{{ league.name }}</ion-title>
           </ion-toolbar>
 
           <ion-toolbar>
             <ion-segment [value]="selectedSegment" (ionChange)="onSegmentChanged(league.name, $event)">
               @for (segment of segments; track segment) {
-                <ion-segment-button [value]="segment" [contentId]="segment + '-' + league">
+                <ion-segment-button [value]="segment" [contentId]="segment + '-' + league.name">
                   <ion-label class="segment-label">{{ segment }}</ion-label>
                 </ion-segment-button>
               }
@@ -143,7 +143,7 @@
 
         <ion-content #modalContent>
           <ion-segment-view>
-            <ion-segment-content id="Overall-{{ league }}">
+            <ion-segment-content id="Overall-{{ league.name }}">
               <section class="tab">
                 <app-stat-display
                   [statDefinitions]="statDefinitions"
@@ -165,7 +165,7 @@
               </section>
             </ion-segment-content>
 
-            <ion-segment-content id="Spares-{{ league }}">
+            <ion-segment-content id="Spares-{{ league.name }}">
               <section class="tab">
                 <ion-list-header>Spares Overview</ion-list-header>
                 <app-spare-display [prevStats]="overallStats()" [stats]="statsByLeague()[league.name]" id="league-spareStats"> </app-spare-display>
@@ -175,7 +175,7 @@
               </section>
             </ion-segment-content>
 
-            <ion-segment-content id="Games-{{ league }}">
+            <ion-segment-content id="Games-{{ league.name }}">
               <app-game [games]="gamesByLeague()[league.name]" [gameCount]="gamesByLeague()[league.name].length" [isLeaguePage]="true"> </app-game>
             </ion-segment-content>
           </ion-segment-view>
