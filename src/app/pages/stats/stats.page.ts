@@ -48,6 +48,8 @@ import {
   playFrequencyStatDefinitions,
   specialStatDefinitions,
   strikeStatDefinitions,
+  pinStatDefinitions,
+  splitStatDefinitions,
 } from '../../core/constants/stats.definitions.constants';
 import { GameFilterService } from 'src/app/core/services/game-filter/game-filter.service';
 import { UtilsService } from 'src/app/core/services/utils/utils.service';
@@ -60,6 +62,7 @@ import { GameFilterComponent } from 'src/app/shared/components/game-filter/game-
 import { SpareDisplayComponent } from 'src/app/shared/components/spare-display/spare-display.component';
 import { StatDisplayComponent } from 'src/app/shared/components/stat-display/stat-display.component';
 import { BallStatsComponent } from '../../shared/components/ball-stats/ball-stats.component';
+import { PinStatsDisplayComponent } from '../../shared/components/pin-stats-display/pin-stats-display.component';
 
 @Component({
   selector: 'app-stats',
@@ -90,6 +93,7 @@ import { BallStatsComponent } from '../../shared/components/ball-stats/ball-stat
     SpareDisplayComponent,
     GameFilterActiveComponent,
     BallStatsComponent,
+    PinStatsDisplayComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -102,6 +106,8 @@ export class StatsPage implements OnInit, AfterViewInit {
   playFrequencyStatDefinitions = playFrequencyStatDefinitions;
   specialStatDefinitions = specialStatDefinitions;
   strikeStatDefinitions = strikeStatDefinitions;
+  pinStatDefinitions = pinStatDefinitions;
+  splitStatDefinitions = splitStatDefinitions;
   uniqueSortedDates: Signal<number[]> = computed(() => {
     const dateSet = new Set<number>();
 
@@ -125,7 +131,7 @@ export class StatsPage implements OnInit, AfterViewInit {
   });
   chartViewMode: 'week' | 'game' | 'monthly' = 'game';
   selectedSegment = 'Overall';
-  segments: string[] = ['Overall', 'Spares', 'Throws', 'Sessions'];
+  segments: string[] = ['Overall', 'Spares', 'Throws', 'Pins', 'Splits', 'Sessions'];
   // Viewchilds and Instances
   @ViewChild('scoreChart', { static: false }) scoreChart?: ElementRef;
   @ViewChild('pinChart', { static: false }) pinChart?: ElementRef;

@@ -13,6 +13,9 @@
         <ion-icon *ngIf="!sheetOpen" name="chevron-down" class="chevron"></ion-icon>
         <ion-icon *ngIf="sheetOpen" name="chevron-up" class="chevron"></ion-icon>
       </ion-button>
+      <ion-button fill="clear" (click)="toggleInputMode()">
+        <ion-icon [name]="usePinInput ? 'calculator-outline' : 'grid-outline'" slot="icon-only"></ion-icon>
+      </ion-button>
     </ion-buttons>
   </ion-toolbar>
 
@@ -52,12 +55,26 @@
     <ion-segment-view>
       <ion-segment-content *ngFor="let trackIndex of trackIndexes[i]; let j = index" [id]="segments[j]">
         <app-game-grid
+          *ngIf="!usePinInput"
           (maxScoreChanged)="onMaxScoreChanged($event, trackIndex)"
           (totalScoreChanged)="onTotalScoreChange($event, trackIndex)"
           (leagueChanged)="onLeagueChange($event)"
           (patternChanged)="onPatternChange($event)"
           (isPracticeChanged)="onIsPracticeChange($event)"
           [patternId]="j.toString()"></app-game-grid>
+        <div *ngIf="usePinInput" class="pin-input-container">
+          <ion-card>
+            <ion-card-header>
+              <ion-card-title>Pin Setup Input</ion-card-title>
+              <ion-card-subtitle>Click pins to knock them down, then confirm each throw</ion-card-subtitle>
+            </ion-card-header>
+            <ion-card-content>
+              <ion-button (click)="startPinInput(trackIndex)" expand="block" fill="outline">
+                Start Pin Input for Game {{ j + 1 }}
+              </ion-button>
+            </ion-card-content>
+          </ion-card>
+        </div>
         <ion-grid *ngIf="i !== 0">
           <ion-row>
             <ion-col class="middle count">Total: {{ totalScores[trackIndex] }}</ion-col>
@@ -125,6 +142,31 @@
         (isPracticeChanged)="onIsPracticeChange($event)"
         [game]="gameData"
         [patternId]="gameData.gameId"></app-game-grid>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+<ion-modal [isOpen]="isPinSetupModalOpen" (didDismiss)="closePinSetupModal()">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar>
+        <ion-buttons slot="start">
+          <ion-button (click)="closePinSetupModal()" fill="clear">Cancel</ion-button>
+        </ion-buttons>
+        <ion-title>Pin Setup - Frame {{ currentFrame }} {{ currentThrowLabel }}</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="skipPinSetup()" fill="clear" color="medium">Skip</ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content>
+      <app-pin-setup
+        [frameNumber]="currentFrame"
+        [throwIndex]="currentThrowIndex"
+        [previousPins]="availablePins"
+        (throwConfirmed)="onPinThrowConfirmed($event)"
+        (cancelled)="closePinSetupModal()">
+      </app-pin-setup>
     </ion-content>
   </ng-template>
 </ion-modal>

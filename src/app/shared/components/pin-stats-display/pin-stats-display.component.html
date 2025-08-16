@@ -1,0 +1,80 @@
+<div class="pin-stats-container" *ngIf="title">
+  <h3>{{ title }}</h3>
+  
+  <div class="pin-grid" *ngIf="pinStats.length > 0">
+    <h4>Pin Hit Statistics</h4>
+    <div class="pin-layout-display">
+      <!-- Row 1 -->
+      <div class="pin-row">
+        <div class="pin-stat-card" *ngFor="let pin of pinStats.slice(6, 10)">
+          <div class="pin-number">{{ pin.pin }}</div>
+          <div class="pin-percentage">{{ pin.hitPercentage | number:'1.1-1' }}%</div>
+          <div class="pin-details">{{ pin.hits }}/{{ pin.total }}</div>
+        </div>
+      </div>
+      
+      <!-- Row 2 -->
+      <div class="pin-row">
+        <div class="pin-stat-card" *ngFor="let pin of pinStats.slice(3, 6)">
+          <div class="pin-number">{{ pin.pin }}</div>
+          <div class="pin-percentage">{{ pin.hitPercentage | number:'1.1-1' }}%</div>
+          <div class="pin-details">{{ pin.hits }}/{{ pin.total }}</div>
+        </div>
+      </div>
+      
+      <!-- Row 3 -->
+      <div class="pin-row">
+        <div class="pin-stat-card" *ngFor="let pin of pinStats.slice(1, 3)">
+          <div class="pin-number">{{ pin.pin }}</div>
+          <div class="pin-percentage">{{ pin.hitPercentage | number:'1.1-1' }}%</div>
+          <div class="pin-details">{{ pin.hits }}/{{ pin.total }}</div>
+        </div>
+      </div>
+      
+      <!-- Row 4 -->
+      <div class="pin-row">
+        <div class="pin-stat-card">
+          <div class="pin-number">{{ pinStats[0].pin }}</div>
+          <div class="pin-percentage">{{ pinStats[0].hitPercentage | number:'1.1-1' }}%</div>
+          <div class="pin-details">{{ pinStats[0].hits }}/{{ pinStats[0].total }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="split-stats" *ngIf="splitStats.totalSplits > 0">
+    <h4>Split Statistics</h4>
+    <div class="split-overview">
+      <div class="stat-item">
+        <span class="label">Total Splits:</span>
+        <span class="value">{{ splitStats.totalSplits }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="label">Converted:</span>
+        <span class="value">{{ splitStats.splitsConverted }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="label">Missed:</span>
+        <span class="value">{{ splitStats.splitsMissed }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="label">Conversion Rate:</span>
+        <span class="value">{{ splitStats.splitConversionPercentage | number:'1.1-1' }}%</span>
+      </div>
+    </div>
+    
+    <div class="split-types" *ngIf="getSplitTypeEntries().length > 0">
+      <h5>Split Types</h5>
+      <div class="split-type-list">
+        <div class="split-type-item" *ngFor="let splitType of getSplitTypeEntries()">
+          <span class="split-name">{{ splitType[0] }}:</span>
+          <span class="split-count">{{ splitType[1] }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="no-data" *ngIf="pinStats.length === 0 && splitStats.totalSplits === 0">
+    <p>No pin-level data available. Use pin setup input when adding games to see detailed statistics.</p>
+  </div>
+</div>

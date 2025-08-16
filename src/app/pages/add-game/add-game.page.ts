@@ -20,11 +20,16 @@ import {
   IonSegmentView,
   IonSegmentContent,
   IonCheckbox,
+  IonCard,
+  IonCardHeader,
+  IonCardTitle,
+  IonCardSubtitle,
+  IonCardContent,
 } from '@ionic/angular/standalone';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Game } from 'src/app/core/models/game.model';
 import { addIcons } from 'ionicons';
-import { add, chevronDown, chevronUp, cameraOutline, documentTextOutline, medalOutline } from 'ionicons/icons';
+import { add, chevronDown, chevronUp, cameraOutline, documentTextOutline, medalOutline, calculatorOutline, gridOutline } from 'ionicons/icons';
 import { NgIf, NgFor } from '@angular/common';
 import { ImpactStyle } from '@capacitor/haptics';
 import { AdService } from 'src/app/core/services/ad/ad.service';
@@ -42,6 +47,8 @@ import { GameDataTransformerService } from 'src/app/core/services/game-transform
 import { InputCustomEvent, ModalController } from '@ionic/angular';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { GameGridComponent } from 'src/app/shared/components/game-grid/game-grid.component';
+import { PinSetupComponent } from 'src/app/shared/components/pin-setup/pin-setup.component';
+import { PinData } from 'src/app/core/models/game.model';
 
 const enum SeriesMode {
   Single = 'Single',
@@ -76,9 +83,15 @@ defineCustomElements(window);
     IonSegment,
     IonSegmentContent,
     IonSegmentView,
+    IonCard,
+    IonCardHeader,
+    IonCardTitle,
+    IonCardSubtitle,
+    IonCardContent,
     NgIf,
     NgFor,
     GameGridComponent,
+    PinSetupComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
@@ -103,6 +116,14 @@ export class AddGamePage implements OnInit {
   selectedSegment = 'Game 1';
   segments: string[] = ['Game 1'];
   presentingElement!: HTMLElement;
+  // Pin setup properties
+  usePinInput = false;
+  isPinSetupModalOpen = false;
+  currentFrame = 1;
+  currentThrowIndex = 0;
+  currentGameIndex = 0;
+  availablePins = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+  pinInputFrames: any[][] = []; // Store frames with pin data
   private allowedDeviceIds = [
     '820fabe8-d29b-45c2-89b3-6bcc0e149f2b',
     '21330a3a-9cff-41ce-981a-00208c21d883',
@@ -124,7 +145,7 @@ export class AddGamePage implements OnInit {
     private hapticService: HapticService,
     private gameUtilsService: GameUtilsService,
   ) {
-    addIcons({ cameraOutline, chevronDown, chevronUp, medalOutline, documentTextOutline, add });
+    addIcons({ cameraOutline, chevronDown, chevronUp, medalOutline, documentTextOutline, add, calculatorOutline, gridOutline });
   }
 
   async ngOnInit(): Promise<void> {
@@ -532,5 +553,135 @@ export class AddGamePage implements OnInit {
 
   private generateUniqueSeriesId(): string {
     return 'series-' + Math.random().toString(36).substring(2, 15);
+  }
+
+  // Pin setup methods
+  toggleInputMode(): void {
+    this.usePinInput = !this.usePinInput;
+  }
+
+  get currentThrowLabel(): string {
+    const labels = ['First Throw', 'Second Throw', 'Third Throw'];
+    return labels[this.currentThrowIndex] || 'Throw';
+  }
+
+  startPinInput(gameIndex: number): void {
+    this.currentGameIndex = gameIndex;
+    this.currentFrame = 1;
+    this.currentThrowIndex = 0;
+    this.availablePins = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    this.pinInputFrames[gameIndex] = [];
+    this.isPinSetupModalOpen = true;
+  }
+
+  closePinSetupModal(): void {
+    this.isPinSetupModalOpen = false;
+  }
+
+  skipPinSetup(): void {
+    this.closePinSetupModal();
+    // Fall back to numeric input for this game
+    this.usePinInput = false;
+  }
+
+  onPinThrowConfirmed(event: { score: number; pinData: PinData }): void {
+    const { score, pinData } = event;
+    
+    // Store the throw data
+    if (!this.pinInputFrames[this.currentGameIndex]) {
+      this.pinInputFrames[this.currentGameIndex] = [];
+    }
+    
+    if (!this.pinInputFrames[this.currentGameIndex][this.currentFrame - 1]) {
+      this.pinInputFrames[this.currentGameIndex][this.currentFrame - 1] = [];
+    }
+    
+    this.pinInputFrames[this.currentGameIndex][this.currentFrame - 1].push({
+      value: score,
+      throwIndex: this.currentThrowIndex,
+      pins: pinData
+    });
+
+    // Update available pins for next throw
+    this.availablePins = this.availablePins.filter(pin => !pinData.pinsKnocked.includes(pin));
+
+    // Move to next throw
+    this.advanceToNextThrow();
+  }
+
+  private advanceToNextThrow(): void {
+    // Check if frame is complete
+    const currentFrameData = this.pinInputFrames[this.currentGameIndex][this.currentFrame - 1];
+    const isStrike = currentFrameData.length === 1 && currentFrameData[0].value === 10;
+    const isSpare = currentFrameData.length === 2 && 
+      currentFrameData.reduce((sum: number, throw_: any) => sum + throw_.value, 0) === 10;
+    
+    // Handle 10th frame logic
+    if (this.currentFrame === 10) {
+      if (currentFrameData.length === 1 && (isStrike || currentFrameData[0].value < 10)) {
+        this.currentThrowIndex = 1;
+        if (!isStrike) {
+          this.availablePins = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].filter(pin => 
+            !currentFrameData[0].pins?.pinsKnocked.includes(pin) || false
+          );
+        } else {
+          this.availablePins = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        }
+        return;
+      } else if (currentFrameData.length === 2 && (isStrike || isSpare)) {
+        this.currentThrowIndex = 2;
+        this.availablePins = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        return;
+      } else {
+        // Game complete
+        this.completeFrameInput();
+        return;
+      }
+    }
+
+    // For frames 1-9, check if frame is complete
+    if (isStrike || currentFrameData.length === 2) {
+      this.moveToNextFrame();
+    } else {
+      this.currentThrowIndex = 1;
+    }
+  }
+
+  private moveToNextFrame(): void {
+    this.currentFrame++;
+    this.currentThrowIndex = 0;
+    this.availablePins = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    
+    if (this.currentFrame > 10) {
+      this.completeFrameInput();
+    }
+  }
+
+  private completeFrameInput(): void {
+    // Convert pin input frames to regular game format and process
+    try {
+      const frames = this.convertPinInputToFrames(this.pinInputFrames[this.currentGameIndex]);
+      
+      // Update the corresponding game grid with the data
+      const gameGrid = this.gameGrids.toArray()[this.currentGameIndex];
+      if (gameGrid) {
+        frames.forEach((frame, index) => {
+          gameGrid.game().frames[index] = frame.map((throw_: any) => throw_.value || throw_);
+        });
+        gameGrid.updateScores();
+      }
+
+      this.toastService.showToast('Pin input complete! Game saved successfully.', 'checkmark', false);
+      this.closePinSetupModal();
+    } catch (error) {
+      console.error('Error processing pin input:', error);
+      this.toastService.showToast('Error processing pin input. Please try again.', 'bug', true);
+    }
+  }
+
+  private convertPinInputToFrames(pinFrames: any[][]): number[][] {
+    return pinFrames.map(frame => 
+      frame.map((throw_: any) => throw_.value)
+    );
   }
 }

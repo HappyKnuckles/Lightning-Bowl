@@ -1,0 +1,133 @@
+.pin-stats-container {
+  padding: 16px;
+}
+
+h3 {
+  margin: 0 0 20px 0;
+  color: var(--ion-color-primary);
+}
+
+h4 {
+  margin: 16px 0 12px 0;
+  color: var(--ion-color-primary-shade);
+}
+
+h5 {
+  margin: 12px 0 8px 0;
+  color: var(--ion-color-primary-shade);
+}
+
+.pin-layout-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.pin-row {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.pin-stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px;
+  min-width: 70px;
+  background: var(--ion-color-light);
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.pin-number {
+  font-size: 20px;
+  font-weight: bold;
+  color: var(--ion-color-dark);
+  margin-bottom: 4px;
+}
+
+.pin-percentage {
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--ion-color-primary);
+  margin-bottom: 2px;
+}
+
+.pin-details {
+  font-size: 12px;
+  color: var(--ion-color-medium);
+}
+
+.split-stats {
+  margin-top: 24px;
+}
+
+.split-overview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: var(--ion-color-light);
+  border-radius: 6px;
+}
+
+.label {
+  font-weight: 500;
+  color: var(--ion-color-dark);
+}
+
+.value {
+  font-weight: bold;
+  color: var(--ion-color-primary);
+}
+
+.split-type-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 8px;
+}
+
+.split-type-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--ion-color-light-tint);
+  border-radius: 4px;
+}
+
+.split-name {
+  font-weight: 500;
+  color: var(--ion-color-dark);
+}
+
+.split-count {
+  font-weight: bold;
+  color: var(--ion-color-tertiary);
+  background: var(--ion-color-tertiary-tint);
+  padding: 2px 6px;
+  border-radius: 12px;
+  min-width: 24px;
+  text-align: center;
+}
+
+.no-data {
+  text-align: center;
+  color: var(--ion-color-medium);
+  font-style: italic;
+  padding: 24px;
+}
+
+.no-data p {
+  margin: 0;
+}
