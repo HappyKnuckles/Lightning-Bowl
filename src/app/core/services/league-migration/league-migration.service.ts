@@ -88,7 +88,7 @@ export class LeagueMigrationService {
     }
 
     for (const leagueName of leagueNames) {
-      const eventType = await this.askForLeagueEventType(leagueName);
+      const eventType = await this.askForEventType(leagueName);
       if (eventType === null) {
         // User cancelled
         return null;
@@ -110,40 +110,11 @@ export class LeagueMigrationService {
           subHeader: 'New Leagues Detected',
           message: `Your Excel file contains ${leagueCount} league(s) that need to be set up. Please specify whether each one is a "League" or "Tournament" to properly organize your data.`,
           cssClass: 'league-import-intro-alert',
+          backdropDismiss: false,
           buttons: [
             {
               text: 'Continue',
               handler: () => resolve(true),
-            },
-          ],
-        })
-        .then((alert) => {
-          alert.present();
-        });
-    });
-  }
-
-  /**
-   * Shows alert to ask user for event type of a specific imported league
-   */
-  public async askForLeagueEventType(leagueName: string): Promise<EventType | null> {
-    return new Promise((resolve) => {
-      this.alertController
-        .create({
-          header: 'League Setup',
-          subHeader: `"${leagueName}"`,
-          message: 'Is this a League or Tournament?',
-          cssClass: 'league-import-alert',
-          buttons: [
-            {
-              text: 'League',
-              role: 'cancel',
-              handler: () => resolve('League'),
-            },
-            {
-              text: 'Tournament',
-              role: 'cancel',
-              handler: () => resolve('Tournament'),
             },
           ],
         })
@@ -232,6 +203,7 @@ export class LeagueMigrationService {
           subHeader: `What type is "${leagueName}"?`,
           message: 'Please select whether this is a League or Tournament to complete the migration to the new system.',
           cssClass: 'league-migration-alert',
+          backdropDismiss: false,
           buttons: [
             {
               text: 'League',
@@ -270,66 +242,51 @@ export class LeagueMigrationService {
    * Main migration method - migrates all legacy leagues to League objects
    */
   async migrateLeagues(storageService: StorageService): Promise<boolean> {
-    // Check if migration already completed
     if (this.isMigrationCompleted()) {
       return true;
     }
 
     try {
-      // Get current leagues and games
       const currentLeagues = storageService.leagues();
       const currentGames = storageService.games();
 
-      // Find legacy string leagues
       const legacyLeagues = this.findLegacyLeagues(currentLeagues);
 
       if (legacyLeagues.length === 0) {
-        // No legacy leagues found, mark migration as complete
         this.setMigrationCompleted();
         return true;
       }
 
-      // Show introduction alert
       const shouldProceed = await this.showMigrationIntroduction(legacyLeagues.length);
       if (!shouldProceed) {
         return false;
       }
 
-      // Collect event types from user
       const eventTypeMap = await this.collectEventTypesFromUser(legacyLeagues);
       if (!eventTypeMap) {
-        // User cancelled migration
         return false;
       }
 
-      // Perform migration for each legacy league
       let updatedGames = [...currentGames];
       const newLeagues: League[] = [];
 
       for (const [leagueName, eventType] of eventTypeMap) {
-        // Create new League object
         const newLeague = this.createLeagueFromLegacy(leagueName, eventType);
         newLeagues.push(newLeague);
 
-        // Update games to use new League object
         updatedGames = this.updateGamesWithNewLeague(updatedGames, leagueName, newLeague);
 
-        // Delete old league from storage
         await storageService.deleteLeague(leagueName);
 
-        // Add new League object
         await storageService.addLeague(newLeague);
       }
 
-      // Save updated games
       if (updatedGames.length > 0) {
         await storageService.saveGamesToLocalStorage(updatedGames);
       }
 
-      // Mark migration as completed
       this.setMigrationCompleted();
 
-      // Show success message
       this.toastService.showToast(`Successfully migrated ${legacyLeagues.length} league(s) to the new system!`, 'checkmark-outline');
 
       return true;

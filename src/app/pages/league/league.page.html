@@ -101,72 +101,74 @@
 </ion-content>
 
 @for (league of visibleLeagues(); track $index) {
-  <ion-modal
-    [trigger]="league"
-    #modal
-    (didDismiss)="destroyCharts(league)"
-    (didPresent)="loadingService.setLoading(false); generateCharts(league, true)">
-    <ng-template>
-      <ion-header [translucent]="true">
-        <ion-toolbar>
-          <ion-buttons slot="start" style="padding: 4px">
-            <ion-button (click)="closeModal(league)">
-              <ion-icon name="chevron-back" slot="icon-only"></ion-icon>
-            </ion-button>
-          </ion-buttons>
-          <ion-title>{{ league }}</ion-title>
-        </ion-toolbar>
+  @if (!isVisibilityEdit()) {
+    <ion-modal
+      [trigger]="league"
+      #modal
+      (didDismiss)="destroyCharts(league)"
+      (didPresent)="loadingService.setLoading(false); generateCharts(league, true)">
+      <ng-template>
+        <ion-header [translucent]="true">
+          <ion-toolbar>
+            <ion-buttons slot="start" style="padding: 4px">
+              <ion-button (click)="closeModal(league)">
+                <ion-icon name="chevron-back" slot="icon-only"></ion-icon>
+              </ion-button>
+            </ion-buttons>
+            <ion-title>{{ league }}</ion-title>
+          </ion-toolbar>
 
-        <ion-toolbar>
-          <ion-segment [value]="selectedSegment" (ionChange)="onSegmentChanged(league, $event)">
-            @for (segment of segments; track segment) {
-              <ion-segment-button [value]="segment" [contentId]="segment + '-' + league">
-                <ion-label class="segment-label">{{ segment }}</ion-label>
-              </ion-segment-button>
-            }
-          </ion-segment>
-        </ion-toolbar>
-      </ion-header>
+          <ion-toolbar>
+            <ion-segment [value]="selectedSegment" (ionChange)="onSegmentChanged(league, $event)">
+              @for (segment of segments; track segment) {
+                <ion-segment-button [value]="segment" [contentId]="segment + '-' + league">
+                  <ion-label class="segment-label">{{ segment }}</ion-label>
+                </ion-segment-button>
+              }
+            </ion-segment>
+          </ion-toolbar>
+        </ion-header>
 
-      <ion-content #modalContent>
-        <ion-segment-view>
-          <ion-segment-content id="Overall-{{ league }}">
-            <section class="tab">
-              <app-stat-display
-                [statDefinitions]="statDefinitions"
-                [title]="'Overall Stats'"
-                [currentStats]="statsByLeague()[league]"
-                [prevStats]="overallStats()">
-              </app-stat-display>
-              <app-ball-stats
-                [title]="'Most used ball'"
-                [bestBall]="mostPlayedBallsByLeague()[league]"
-                [totalGames]="statsByLeague()[league].totalGames"></app-ball-stats>
-              <app-ball-stats
-                [title]="'Best ball'"
-                [bestBall]="bestBallsByLeague()[league]"
-                [totalGames]="statsByLeague()[league].totalGames"></app-ball-stats>
-              <div class="stat-container">
-                <canvas #scoreChart style="width: 300px; height: 400px; max-height: 700px"></canvas>
-              </div>
-            </section>
-          </ion-segment-content>
+        <ion-content #modalContent>
+          <ion-segment-view>
+            <ion-segment-content id="Overall-{{ league }}">
+              <section class="tab">
+                <app-stat-display
+                  [statDefinitions]="statDefinitions"
+                  [title]="'Overall Stats'"
+                  [currentStats]="statsByLeague()[league]"
+                  [prevStats]="overallStats()">
+                </app-stat-display>
+                <app-ball-stats
+                  [title]="'Most used ball'"
+                  [bestBall]="mostPlayedBallsByLeague()[league]"
+                  [totalGames]="statsByLeague()[league].totalGames"></app-ball-stats>
+                <app-ball-stats
+                  [title]="'Best ball'"
+                  [bestBall]="bestBallsByLeague()[league]"
+                  [totalGames]="statsByLeague()[league].totalGames"></app-ball-stats>
+                <div class="stat-container">
+                  <canvas #scoreChart style="width: 300px; height: 400px; max-height: 700px"></canvas>
+                </div>
+              </section>
+            </ion-segment-content>
 
-          <ion-segment-content id="Spares-{{ league }}">
-            <section class="tab">
-              <ion-list-header>Spares Overview</ion-list-header>
-              <app-spare-display [prevStats]="overallStats()" [stats]="statsByLeague()[league]" id="league-spareStats"> </app-spare-display>
-              <div class="stat-container">
-                <canvas #pinChart style="width: 300px; height: 300px; max-height: 700px"></canvas>
-              </div>
-            </section>
-          </ion-segment-content>
+            <ion-segment-content id="Spares-{{ league }}">
+              <section class="tab">
+                <ion-list-header>Spares Overview</ion-list-header>
+                <app-spare-display [prevStats]="overallStats()" [stats]="statsByLeague()[league]" id="league-spareStats"> </app-spare-display>
+                <div class="stat-container">
+                  <canvas #pinChart style="width: 300px; height: 300px; max-height: 700px"></canvas>
+                </div>
+              </section>
+            </ion-segment-content>
 
-          <ion-segment-content id="Games-{{ league }}">
-            <app-game [games]="gamesByLeague()[league]" [gameCount]="gamesByLeague()[league].length" [isLeaguePage]="true"> </app-game>
-          </ion-segment-content>
-        </ion-segment-view>
-      </ion-content>
-    </ng-template>
-  </ion-modal>
+            <ion-segment-content id="Games-{{ league }}">
+              <app-game [games]="gamesByLeague()[league]" [gameCount]="gamesByLeague()[league].length" [isLeaguePage]="true"> </app-game>
+            </ion-segment-content>
+          </ion-segment-view>
+        </ion-content>
+      </ng-template>
+    </ion-modal>
+  }
 }
