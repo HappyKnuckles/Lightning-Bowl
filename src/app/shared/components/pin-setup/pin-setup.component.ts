@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonButton } from '@ionic/angular/standalone';
 import { PinData } from '../../../core/models/game.model';
@@ -10,7 +10,7 @@ import { PinData } from '../../../core/models/game.model';
   templateUrl: './pin-setup.component.html',
   styleUrl: './pin-setup.component.scss'
 })
-export class PinSetupComponent {
+export class PinSetupComponent implements OnChanges {
   @Input() frameNumber: number = 1;
   @Input() throwIndex: number = 0; // 0 = first throw, 1 = second throw, 2 = third throw (10th frame)
   @Input() previousPins: number[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; // Pins available at start of throw
@@ -18,6 +18,13 @@ export class PinSetupComponent {
   @Output() cancelled = new EventEmitter<void>();
 
   knockedPins: number[] = [];
+
+  ngOnChanges(changes: SimpleChanges): void {
+    // Reset knocked pins when frame number or throw index changes
+    if (changes['frameNumber'] || changes['throwIndex'] || changes['previousPins']) {
+      this.knockedPins = [];
+    }
+  }
 
   get throwLabel(): string {
     if (this.frameNumber === 10) {

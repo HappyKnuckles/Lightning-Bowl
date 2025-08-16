@@ -63,17 +63,59 @@
           (isPracticeChanged)="onIsPracticeChange($event)"
           [patternId]="j.toString()"></app-game-grid>
         <div *ngIf="usePinInput" class="pin-input-container">
-          <ion-card>
-            <ion-card-header>
-              <ion-card-title>Pin Setup Input</ion-card-title>
-              <ion-card-subtitle>Click pins to knock them down, then confirm each throw</ion-card-subtitle>
-            </ion-card-header>
-            <ion-card-content>
-              <ion-button (click)="startPinInput(trackIndex)" expand="block" fill="outline">
-                Start Pin Input for Game {{ j + 1 }}
-              </ion-button>
-            </ion-card-content>
-          </ion-card>
+          <!-- Display current game state with pin input -->
+          <div class="pin-game-display">
+            <!-- Frame display grid -->
+            <div class="pin-frames-grid">
+              <ion-grid fixed="true" *ngFor="let frameNum of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; let frameIndex = index">
+                <ion-row>
+                  <ion-col class="middle frame">{{ frameNum }}</ion-col>
+                </ion-row>
+                <ion-row>
+                  <ion-col class="input-col" *ngIf="frameNum !== 10">
+                    <div class="pin-throw-display">{{ getPinInputFrameValue(trackIndex, frameIndex, 0) }}</div>
+                  </ion-col>
+                  <ion-col class="input-col">
+                    <div class="pin-throw-display">{{ getPinInputFrameValue(trackIndex, frameIndex, frameNum === 10 ? 0 : 1) }}</div>
+                  </ion-col>
+                  <ion-col class="input-col" *ngIf="frameNum !== 10">
+                    <div class="pin-throw-display">{{ getPinInputFrameValue(trackIndex, frameIndex, 1) }}</div>
+                  </ion-col>
+                  <ion-col class="input-col" *ngIf="frameNum === 10">
+                    <div class="pin-throw-display">{{ getPinInputFrameValue(trackIndex, frameIndex, 1) }}</div>
+                  </ion-col>
+                  <ion-col class="input-col" *ngIf="frameNum === 10">
+                    <div class="pin-throw-display">{{ getPinInputFrameValue(trackIndex, frameIndex, 2) }}</div>
+                  </ion-col>
+                </ion-row>
+                <ion-row>
+                  <ion-col class="middle count">{{ getPinInputFrameScore(trackIndex, frameIndex) }}</ion-col>
+                </ion-row>
+              </ion-grid>
+            </div>
+            
+            <!-- Control section -->
+            <ion-card>
+              <ion-card-header>
+                <ion-card-title>Pin Setup Input - Game {{ j + 1 }}</ion-card-title>
+                <ion-card-subtitle>Current Progress: Frame {{ getCurrentPinFrame(trackIndex) }}, {{ getCurrentPinThrow(trackIndex) }}</ion-card-subtitle>
+              </ion-card-header>
+              <ion-card-content>
+                <div class="pin-input-progress">
+                  <p><strong>Total Score:</strong> {{ totalScores[trackIndex] || 0 }}</p>
+                  <p><strong>Max Possible:</strong> {{ maxScores[trackIndex] || 300 }}</p>
+                </div>
+                <div class="pin-input-buttons">
+                  <ion-button (click)="startPinInput(trackIndex)" expand="block" fill="outline" *ngIf="!isPinInputActive(trackIndex)">
+                    Start Pin Input
+                  </ion-button>
+                  <ion-button (click)="continuePinInput(trackIndex)" expand="block" color="primary" *ngIf="isPinInputActive(trackIndex)">
+                    Continue Frame {{ getCurrentPinFrame(trackIndex) }}
+                  </ion-button>
+                </div>
+              </ion-card-content>
+            </ion-card>
+          </div>
         </div>
         <ion-grid *ngIf="i !== 0">
           <ion-row>
@@ -160,6 +202,23 @@
       </ion-toolbar>
     </ion-header>
     <ion-content>
+      <!-- Game progress display -->
+      <div class="game-progress" *ngIf="currentGameIndex >= 0">
+        <ion-card>
+          <ion-card-header>
+            <ion-card-subtitle>Current Game Progress</ion-card-subtitle>
+          </ion-card-header>
+          <ion-card-content>
+            <div class="progress-info">
+              <p><strong>Frame:</strong> {{ currentFrame }} of 10</p>
+              <p><strong>Throw:</strong> {{ currentThrowLabel }}</p>
+              <p><strong>Current Total:</strong> {{ totalScores[currentGameIndex] || 0 }}</p>
+              <p><strong>Remaining Pins:</strong> {{ availablePins.length }}</p>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </div>
+      
       <app-pin-setup
         [frameNumber]="currentFrame"
         [throwIndex]="currentThrowIndex"

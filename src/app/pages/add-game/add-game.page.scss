@@ -74,3 +74,83 @@ ion-grid {
     color: white;
   }
 }
+
+// Pin input styles
+.pin-input-container {
+  .pin-game-display {
+    margin: 10px 0;
+    
+    .pin-frames-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2px;
+      margin-bottom: 15px;
+      
+      ion-grid {
+        flex: 1;
+        min-width: 60px;
+        margin: 2px;
+        
+        .input-col {
+          --ion-grid-column-padding: 1px;
+          
+          .pin-throw-display {
+            background-color: var(--ion-color-secondary);
+            border-radius: 3px;
+            min-height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+          }
+        }
+        
+        .frame {
+          font-weight: bold;
+          font-size: 12px;
+          color: var(--ion-color-primary);
+        }
+        
+        .count {
+          font-size: 12px;
+          font-weight: bold;
+          color: var(--ion-color-dark);
+        }
+      }
+    }
+    
+    .pin-input-progress {
+      margin: 10px 0;
+      
+      p {
+        margin: 5px 0;
+        font-size: 14px;
+        
+        strong {
+          color: var(--ion-color-primary);
+        }
+      }
+    }
+    
+    .pin-input-buttons {
+      margin-top: 10px;
+    }
+  }
+}
+
+// Pin setup modal styles
+.game-progress {
+  margin-bottom: 15px;
+  
+  .progress-info {
+    p {
+      margin: 5px 0;
+      font-size: 14px;
+      
+      strong {
+        color: var(--ion-color-primary);
+      }
+    }
+  }
+}

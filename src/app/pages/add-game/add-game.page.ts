@@ -602,11 +602,34 @@ export class AddGamePage implements OnInit {
       pins: pinData
     });
 
+    // Update scores in real-time
+    this.updatePinInputScores();
+
     // Update available pins for next throw
     this.availablePins = this.availablePins.filter(pin => !pinData.pinsKnocked.includes(pin));
 
     // Move to next throw
     this.advanceToNextThrow();
+  }
+
+  private updatePinInputScores(): void {
+    // Update the corresponding game grid with current data
+    const gameGrid = this.gameGrids.toArray()[this.currentGameIndex];
+    if (gameGrid && this.pinInputFrames[this.currentGameIndex]) {
+      const frames = this.convertPinInputToFrames(this.pinInputFrames[this.currentGameIndex]);
+      
+      frames.forEach((frame, index) => {
+        if (frame && frame.length > 0) {
+          gameGrid.game().frames[index] = frame.map((throw_: any) => throw_.value || throw_);
+        }
+      });
+      
+      gameGrid.updateScores();
+      
+      // Update our local score tracking
+      this.totalScores[this.currentGameIndex] = gameGrid.game().totalScore;
+      this.maxScores[this.currentGameIndex] = 300; // Max possible score is always 300
+    }
   }
 
   private advanceToNextThrow(): void {
@@ -669,6 +692,10 @@ export class AddGamePage implements OnInit {
           gameGrid.game().frames[index] = frame.map((throw_: any) => throw_.value || throw_);
         });
         gameGrid.updateScores();
+        
+        // Update our local score tracking
+        this.totalScores[this.currentGameIndex] = gameGrid.game().totalScore;
+        this.maxScores[this.currentGameIndex] = 300; // Max possible score is always 300
       }
 
       this.toastService.showToast('Pin input complete! Game saved successfully.', 'checkmark', false);
@@ -683,5 +710,143 @@ export class AddGamePage implements OnInit {
     return pinFrames.map(frame => 
       frame.map((throw_: any) => throw_.value)
     );
+  }
+
+  // Helper methods for pin input display
+  getPinInputFrameValue(gameIndex: number, frameIndex: number, throwIndex: number): string {
+    if (!this.pinInputFrames[gameIndex] || !this.pinInputFrames[gameIndex][frameIndex]) {
+      return '';
+    }
+    
+    const frameData = this.pinInputFrames[gameIndex][frameIndex];
+    const throwData = frameData.find((throw_: any) => throw_.throwIndex === throwIndex);
+    
+    if (!throwData) {
+      return '';
+    }
+    
+    const value = throwData.value;
+    
+    // Handle special display cases
+    if (throwIndex === 0 && value === 10) {
+      return 'X'; // Strike
+    }
+    
+    if (throwIndex === 1 && frameData.length === 2) {
+      const firstThrow = frameData.find((throw_: any) => throw_.throwIndex === 0);
+      if (firstThrow && firstThrow.value + value === 10) {
+        return '/'; // Spare
+      }
+    }
+    
+    return value.toString();
+  }
+
+  getPinInputFrameScore(gameIndex: number, frameIndex: number): string {
+    if (!this.pinInputFrames[gameIndex] || !this.pinInputFrames[gameIndex][frameIndex]) {
+      return '0';
+    }
+    
+    // Calculate cumulative score up to this frame
+    let totalScore = 0;
+    for (let i = 0; i <= frameIndex; i++) {
+      if (this.pinInputFrames[gameIndex][i]) {
+        const frameData = this.pinInputFrames[gameIndex][i];
+        const frameTotal = frameData.reduce((sum: number, throw_: any) => sum + throw_.value, 0);
+        totalScore += frameTotal;
+        
+        // Add bonus for strikes and spares (simplified calculation)
+        if (i < 9) { // Frames 1-9
+          const isStrike = frameData.length === 1 && frameData[0].value === 10;
+          const isSpare = frameData.length === 2 && frameTotal === 10;
+          
+          if (isStrike && this.pinInputFrames[gameIndex][i + 1]) {
+            const nextFrame = this.pinInputFrames[gameIndex][i + 1];
+            if (nextFrame.length > 0) {
+              totalScore += nextFrame[0].value;
+              if (nextFrame.length > 1 || (i + 2 < 10 && this.pinInputFrames[gameIndex][i + 2] && this.pinInputFrames[gameIndex][i + 2].length > 0)) {
+                totalScore += nextFrame.length > 1 ? nextFrame[1].value : (this.pinInputFrames[gameIndex][i + 2] ? this.pinInputFrames[gameIndex][i + 2][0].value : 0);
+              }
+            }
+          } else if (isSpare && this.pinInputFrames[gameIndex][i + 1]) {
+            const nextFrame = this.pinInputFrames[gameIndex][i + 1];
+            if (nextFrame.length > 0) {
+              totalScore += nextFrame[0].value;
+            }
+          }
+        }
+      }
+    }
+    
+    return totalScore.toString();
+  }
+
+  getCurrentPinFrame(gameIndex: number): number {
+    if (!this.pinInputFrames[gameIndex]) {
+      return 1;
+    }
+    
+    // Find the first incomplete frame
+    for (let i = 0; i < 10; i++) {
+      const frameData = this.pinInputFrames[gameIndex][i];
+      if (!frameData || frameData.length === 0) {
+        return i + 1;
+      }
+      
+      // Check if frame is complete
+      const frameTotal = frameData.reduce((sum: number, throw_: any) => sum + throw_.value, 0);
+      const isStrike = frameData.length === 1 && frameData[0].value === 10;
+      const isComplete = isStrike || frameData.length === 2 || (i === 9 && frameData.length === 3);
+      
+      if (!isComplete) {
+        return i + 1;
+      }
+    }
+    
+    return 10; // All frames complete
+  }
+
+  getCurrentPinThrow(gameIndex: number): string {
+    if (!this.pinInputFrames[gameIndex]) {
+      return 'First Throw';
+    }
+    
+    const currentFrame = this.getCurrentPinFrame(gameIndex) - 1;
+    const frameData = this.pinInputFrames[gameIndex][currentFrame];
+    
+    if (!frameData || frameData.length === 0) {
+      return 'First Throw';
+    }
+    
+    const labels = ['First Throw', 'Second Throw', 'Third Throw'];
+    return labels[frameData.length] || 'Complete';
+  }
+
+  isPinInputActive(gameIndex: number): boolean {
+    return this.pinInputFrames[gameIndex] && this.pinInputFrames[gameIndex].length > 0;
+  }
+
+  continuePinInput(gameIndex: number): void {
+    this.currentGameIndex = gameIndex;
+    this.currentFrame = this.getCurrentPinFrame(gameIndex);
+    
+    // Set up current throw state
+    const frameData = this.pinInputFrames[gameIndex][this.currentFrame - 1];
+    if (frameData && frameData.length > 0) {
+      this.currentThrowIndex = frameData.length;
+      // Update available pins based on previous throws in this frame
+      let knockedPins: number[] = [];
+      frameData.forEach((throw_: any) => {
+        if (throw_.pins && throw_.pins.pinsKnocked) {
+          knockedPins = knockedPins.concat(throw_.pins.pinsKnocked);
+        }
+      });
+      this.availablePins = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].filter(pin => !knockedPins.includes(pin));
+    } else {
+      this.currentThrowIndex = 0;
+      this.availablePins = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    }
+    
+    this.isPinSetupModalOpen = true;
   }
 }
