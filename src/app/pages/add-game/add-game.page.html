@@ -72,14 +72,18 @@
                   <ion-col class="middle frame">{{ frameNum }}</ion-col>
                 </ion-row>
                 <ion-row>
+                  <!-- Frames 1-9: Show 2 throws -->
+                  <ion-col class="input-col" *ngIf="frameNum !== 10"></ion-col>
                   <ion-col class="input-col" *ngIf="frameNum !== 10">
                     <div class="pin-throw-display">{{ getPinInputFrameValue(trackIndex, frameIndex, 0) }}</div>
                   </ion-col>
-                  <ion-col class="input-col">
-                    <div class="pin-throw-display">{{ getPinInputFrameValue(trackIndex, frameIndex, frameNum === 10 ? 0 : 1) }}</div>
-                  </ion-col>
                   <ion-col class="input-col" *ngIf="frameNum !== 10">
                     <div class="pin-throw-display">{{ getPinInputFrameValue(trackIndex, frameIndex, 1) }}</div>
+                  </ion-col>
+                  
+                  <!-- Frame 10: Show 3 throws -->
+                  <ion-col class="input-col" *ngIf="frameNum === 10">
+                    <div class="pin-throw-display">{{ getPinInputFrameValue(trackIndex, frameIndex, 0) }}</div>
                   </ion-col>
                   <ion-col class="input-col" *ngIf="frameNum === 10">
                     <div class="pin-throw-display">{{ getPinInputFrameValue(trackIndex, frameIndex, 1) }}</div>

@@ -264,10 +264,24 @@ export class AddGamePage implements OnInit {
     if (index !== undefined && index >= 0 && index < this.gameGrids.length) {
       // Clear frames for the specified index
       this.gameGrids.toArray()[index].clearFrames(false);
+      
+      // Also clear pin input data for this game if it exists
+      if (this.pinInputFrames[index]) {
+        this.pinInputFrames[index] = [];
+        this.totalScores[index] = 0;
+        this.maxScores[index] = 300;
+      }
     } else {
       // Clear frames for all components
-      this.gameGrids.forEach((trackGrid: GameGridComponent) => {
+      this.gameGrids.forEach((trackGrid: GameGridComponent, idx: number) => {
         trackGrid.clearFrames(false);
+        
+        // Also clear pin input data for each game
+        if (this.pinInputFrames[idx]) {
+          this.pinInputFrames[idx] = [];
+          this.totalScores[idx] = 0;
+          this.maxScores[idx] = 300;
+        }
       });
     }
     this.toastService.showToast(ToastMessages.gameResetSuccess, 'refresh-outline');
@@ -558,6 +572,12 @@ export class AddGamePage implements OnInit {
   // Pin setup methods
   toggleInputMode(): void {
     this.usePinInput = !this.usePinInput;
+    
+    // If switching away from pin input, clear pin input data to avoid conflicts
+    if (!this.usePinInput) {
+      this.pinInputFrames = [];
+      this.closePinSetupModal();
+    }
   }
 
   get currentThrowLabel(): string {
@@ -618,12 +638,8 @@ export class AddGamePage implements OnInit {
     if (gameGrid && this.pinInputFrames[this.currentGameIndex]) {
       const frames = this.convertPinInputToFrames(this.pinInputFrames[this.currentGameIndex]);
       
-      // Update game frames
-      frames.forEach((frame, index) => {
-        if (frame && frame.length > 0) {
-          gameGrid.game().frames[index] = { throws: frame.map(value => ({ value })) };
-        }
-      });
+      // Update game frames using proper format expected by GameGridComponent
+      gameGrid.game().frames = frames;
       
       // Use the GameScoreCalculatorService to calculate scores properly
       const { totalScore, frameScores } = this.gameScoreCalculatorService.calculateScore(frames);
@@ -636,6 +652,9 @@ export class AddGamePage implements OnInit {
       // Update our local score tracking
       this.totalScores[this.currentGameIndex] = totalScore;
       this.maxScores[this.currentGameIndex] = maxScore;
+      
+      // Trigger game grid updates
+      gameGrid.updateScores();
     }
   }
 
@@ -725,10 +744,8 @@ export class AddGamePage implements OnInit {
       // Update the corresponding game grid with the data
       const gameGrid = this.gameGrids.toArray()[this.currentGameIndex];
       if (gameGrid) {
-        // Update game frames with proper format
-        frames.forEach((frame, index) => {
-          gameGrid.game().frames[index] = { throws: frame.map(value => ({ value })) };
-        });
+        // Update game frames using proper format expected by GameGridComponent
+        gameGrid.game().frames = frames;
         
         // Use the GameScoreCalculatorService to calculate final scores
         const { totalScore, frameScores } = this.gameScoreCalculatorService.calculateScore(frames);
@@ -741,9 +758,12 @@ export class AddGamePage implements OnInit {
         // Update our local score tracking
         this.totalScores[this.currentGameIndex] = totalScore;
         this.maxScores[this.currentGameIndex] = maxScore;
+        
+        // Trigger game grid updates
+        gameGrid.updateScores();
       }
 
-      this.toastService.showToast('Pin input complete! Game saved successfully.', 'checkmark', false);
+      this.toastService.showToast('Pin input complete! Game ready for saving.', 'checkmark', false);
       this.closePinSetupModal();
     } catch (error) {
       console.error('Error processing pin input:', error);
@@ -791,7 +811,7 @@ export class AddGamePage implements OnInit {
         }
       }
       
-      return value.toString();
+      return value === 0 ? '-' : value.toString();
     }
     
     // Handle regular frames (1-9)
