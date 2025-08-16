@@ -134,7 +134,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
   // Helper method to get league name from LeagueData
   private getLeagueName(league: LeagueData | undefined): string {
     if (!league) return '';
-    return typeof league === 'string' ? league : league.Name;
+    return typeof league === 'string' ? league : league.name;
   }
 
   async ngOnInit(): Promise<void> {

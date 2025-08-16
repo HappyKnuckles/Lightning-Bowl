@@ -444,7 +444,7 @@ export class ExcelService {
 
   private getLeagueName(league: LeagueData | undefined): string {
     if (!league) return '';
-    return typeof league === 'string' ? league : league.Name;
+    return typeof league === 'string' ? league : league.name;
   }
 
   private async fileExists(path: string): Promise<boolean> {

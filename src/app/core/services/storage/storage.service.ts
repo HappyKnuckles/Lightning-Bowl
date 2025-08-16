@@ -229,7 +229,7 @@ export class StorageService {
       } else {
         // New League object format
         leagueData = league;
-        key = 'league' + '_' + league.Name;
+        key = 'league' + '_' + league.name;
       }
 
       await this.save(key, leagueData);
@@ -295,7 +295,7 @@ export class StorageService {
 
   private getLeagueName(league: LeagueData | undefined): string {
     if (!league) return '';
-    return typeof league === 'string' ? league : league.Name;
+    return typeof league === 'string' ? league : league.name;
   }
 
   public getLeagueDisplayName(league: LeagueData): string {
@@ -330,7 +330,7 @@ export class StorageService {
 
   async editLeague(newLeague: string | League, oldLeague: string | League): Promise<void> {
     try {
-      const oldLeagueName = typeof oldLeague === 'string' ? oldLeague : oldLeague.Name;
+      const oldLeagueName = typeof oldLeague === 'string' ? oldLeague : oldLeague.name;
 
       await this.deleteLeague(oldLeague);
 

@@ -131,7 +131,7 @@ export class AddGamePage implements OnInit {
   // Helper method to get league name from LeagueData
   private getLeagueName(league: LeagueData | undefined): string {
     if (!league) return '';
-    return typeof league === 'string' ? league : league.Name;
+    return typeof league === 'string' ? league : league.name;
   }
 
   async ngOnInit(): Promise<void> {
@@ -194,7 +194,7 @@ export class AddGamePage implements OnInit {
       }
       return false; // League objects are never practice
     };
-    
+
     const isPractice = isPracticeLeague(league);
 
     if (isModal) {

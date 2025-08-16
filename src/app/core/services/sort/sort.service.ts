@@ -65,7 +65,7 @@ export class SortService {
   // Helper method to get league name from LeagueData
   private getLeagueName(league: LeagueData | undefined): string {
     if (!league) return '';
-    return typeof league === 'string' ? league : league.Name;
+    return typeof league === 'string' ? league : league.name;
   }
 
   sortGames(games: Game[], sortOption?: GameSortOption): Game[] {

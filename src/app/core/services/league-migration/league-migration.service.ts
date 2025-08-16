@@ -32,7 +32,7 @@ export class LeagueMigrationService {
       // First, check if it already exists as a League object
       const existingLeague = existingLeagues.find((league) => {
         if (isLeagueObject(league)) {
-          return league.Name === leagueName;
+          return league.name === leagueName;
         }
         return false;
       });
@@ -57,9 +57,9 @@ export class LeagueMigrationService {
       // Create League objects and add them to storage
       for (const [leagueName, eventType] of eventTypeMap) {
         const newLeague: League = {
-          Name: leagueName,
-          Show: true,
-          Event: eventType,
+          name: leagueName,
+          show: true,
+          event: eventType,
         };
 
         // Add to storage
@@ -112,11 +112,6 @@ export class LeagueMigrationService {
           cssClass: 'league-import-intro-alert',
           buttons: [
             {
-              text: 'Cancel Import',
-              role: 'cancel',
-              handler: () => resolve(false),
-            },
-            {
               text: 'Continue',
               handler: () => resolve(true),
             },
@@ -142,16 +137,13 @@ export class LeagueMigrationService {
           buttons: [
             {
               text: 'League',
+              role: 'cancel',
               handler: () => resolve('League'),
             },
             {
               text: 'Tournament',
-              handler: () => resolve('Tournament'),
-            },
-            {
-              text: 'Cancel Import',
               role: 'cancel',
-              handler: () => resolve(null),
+              handler: () => resolve('Tournament'),
             },
           ],
         })
@@ -205,9 +197,9 @@ export class LeagueMigrationService {
    */
   private createLeagueFromLegacy(name: string, eventType: EventType): League {
     return {
-      Name: name,
-      Show: true,
-      Event: eventType,
+      name: name,
+      show: true,
+      event: eventType,
     };
   }
 

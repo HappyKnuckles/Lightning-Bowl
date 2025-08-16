@@ -20,7 +20,6 @@ import { IonSelectCustomEvent } from '@ionic/core';
 import { addIcons } from 'ionicons';
 import { addOutline, medalOutline, createOutline, flagOutline } from 'ionicons/icons';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
-import { HiddenLeagueSelectionService } from 'src/app/core/services/hidden-league/hidden-league.service';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { League, LeagueData, isLeagueObject, EventType } from 'src/app/core/models/league.model';
@@ -52,7 +51,29 @@ import { League, LeagueData, isLeagueObject, EventType } from 'src/app/core/mode
 export class LeagueSelectorComponent {
   @Input() isAddPage = false;
   @Output() leagueChanged = new EventEmitter<LeagueData>();
-  selectedLeague = '';
+
+  private _selectedLeague: LeagueData | '' = '';
+
+  @Input()
+  set selectedLeague(value: LeagueData | '') {
+    if (!value || value === 'new' || value === 'edit' || value === 'delete') {
+      this._selectedLeague = value;
+      return;
+    }
+
+    // If it's a string, try to find the corresponding League object
+    if (typeof value === 'string') {
+      const foundLeague = this.leagues().find((league) => this.getLeagueDisplayName(league) === value);
+      this._selectedLeague = foundLeague || value;
+    } else {
+      this._selectedLeague = value;
+    }
+  }
+
+  get selectedLeague(): LeagueData | '' {
+    return this._selectedLeague;
+  }
+
   newLeague = '';
   newLeagueEventType: EventType = 'League';
   leaguesToDelete: string[] = [];
@@ -61,41 +82,80 @@ export class LeagueSelectorComponent {
   isEditModalOpen = false;
   selectedLeagueForEdit: LeagueData | null = null;
 
-  // Helper method to check if a league is a string (legacy)
   isLegacyLeague(league: LeagueData): boolean {
     return typeof league === 'string';
   }
 
-  // Helper method to check if a league is a League object
   isLeagueObjectType(league: LeagueData): league is League {
     return isLeagueObject(league);
   }
 
-  // Helper method to get display name for leagues
   getLeagueDisplayName(league: LeagueData): string {
     return this.storageService.getLeagueDisplayName(league);
   }
 
-  // Helper method to get league value for form binding
+  getLeagueDisplayText(league: LeagueData): string {
+    if (typeof league === 'string') {
+      return league;
+    }
+    if (isLeagueObject(league)) {
+      return `${league.name} (${league.event})`;
+    }
+    return String(league);
+  }
+
   getLeagueValue(league: LeagueData): string {
-    // For form binding, we always use the league name
     return this.getLeagueDisplayName(league);
   }
 
-  // Helper method to get League object (with type assertion)
+  getSelectedLeagueValue(): string {
+    if (!this.selectedLeague) {
+      return '';
+    }
+    return this.getLeagueDisplayName(this.selectedLeague);
+  }
+
+  setSelectedLeagueFromValue(value: string): void {
+    if (!value || value === 'new' || value === 'edit' || value === 'delete') {
+      this.selectedLeague = value;
+      return;
+    }
+
+    const foundLeague = this.leagues().find((league) => this.getLeagueDisplayName(league) === value);
+    this.selectedLeague = foundLeague || value;
+  }
+
+  getSelectLabel(): string {
+    if (!this.selectedLeague) {
+      return 'League/Tournament';
+    }
+
+    if (isLeagueObject(this.selectedLeague)) {
+      return this.selectedLeague.event;
+    }
+
+    if (typeof this.selectedLeague === 'string') {
+      const foundLeague = this.leagues().find((league) => this.getLeagueDisplayName(league) === this.selectedLeague);
+      if (foundLeague && isLeagueObject(foundLeague)) {
+        return foundLeague.event;
+      }
+    }
+
+    return 'League/Tournament';
+  }
+
   asLeagueObject(league: LeagueData): League {
     return league as League;
   }
   leagues = computed(() => {
     const savedLeagues = this.storageService.leagues();
-    this.hiddenLeagueSelectionService.selectionState();
     const savedJson = localStorage.getItem('leagueSelection');
 
     return savedLeagues.filter((league) => {
       const leagueName = this.storageService.getLeagueDisplayName(league);
 
       // Check Show property for League objects
-      if (isLeagueObject(league) && !league.Show) {
+      if (isLeagueObject(league) && !league.show) {
         return false;
       }
 
@@ -113,7 +173,6 @@ export class LeagueSelectorComponent {
     private toastService: ToastService,
     private alertController: AlertController,
     private actionSheetController: ActionSheetController,
-    private hiddenLeagueSelectionService: HiddenLeagueSelectionService,
   ) {
     // this.leagueSubscriptions.add(
     //   merge(this.storageService.newLeagueAdded, this.storageService.leagueDeleted, this.storageService.leagueChanged).subscribe(() => {
@@ -128,6 +187,7 @@ export class LeagueSelectorComponent {
 
     // Handle special cases
     if (!selectedValue || selectedValue === 'new' || selectedValue === 'edit' || selectedValue === 'delete') {
+      this.selectedLeague = selectedValue;
       this.leagueChanged.emit(selectedValue);
       return;
     }
@@ -136,20 +196,33 @@ export class LeagueSelectorComponent {
     const selectedLeague = this.leagues().find((league) => this.getLeagueValue(league) === selectedValue);
 
     if (selectedLeague) {
+      this.selectedLeague = selectedLeague;
       this.leagueChanged.emit(selectedLeague);
     } else {
       // Fallback to string if league not found
+      this.selectedLeague = selectedValue;
       this.leagueChanged.emit(selectedValue);
     }
   }
 
   async onLeagueChange(event: IonSelectCustomEvent<SelectChangeEventDetail>): Promise<void> {
-    if (event.detail.value === 'new') {
+    const selectedValue = event.detail.value;
+
+    if (selectedValue === 'new') {
       this.isAddModalOpen = true;
-    } else if (event.detail.value === 'edit') {
+    } else if (selectedValue === 'edit') {
       this.isEditModalOpen = true;
-    } else if (event.detail.value === 'delete') {
+    } else if (selectedValue === 'delete') {
       await this.openDeleteAlert();
+    }
+
+    // Reset the select to empty after handling management actions
+    if (selectedValue === 'new' || selectedValue === 'edit' || selectedValue === 'delete') {
+      // Don't update selectedLeague for management actions
+      setTimeout(() => {
+        // Reset the select value after the action
+        this.selectedLeague = '';
+      }, 100);
     }
   }
 
@@ -157,13 +230,13 @@ export class LeagueSelectorComponent {
     try {
       // Create new League object with all required properties
       const newLeagueObj: League = {
-        Name: this.newLeague,
-        Show: true, // Default to visible
-        Event: this.newLeagueEventType,
+        name: this.newLeague,
+        show: true, // Default to visible
+        event: this.newLeagueEventType,
       };
 
       await this.storageService.addLeague(newLeagueObj);
-      this.selectedLeague = this.newLeague;
+      this.selectedLeague = newLeagueObj;
       this.leagueChanged.emit(newLeagueObj); // Emit the new League object
       this.newLeague = '';
       this.newLeagueEventType = 'League';
@@ -200,7 +273,7 @@ export class LeagueSelectorComponent {
 
     // If it's a League object, set the event type
     if (this.selectedLeagueForEdit && isLeagueObject(this.selectedLeagueForEdit)) {
-      this.newLeagueEventType = this.selectedLeagueForEdit.Event;
+      this.newLeagueEventType = this.selectedLeagueForEdit.event;
     }
   }
 
@@ -209,9 +282,9 @@ export class LeagueSelectorComponent {
       if (this.selectedLeagueForEdit && isLeagueObject(this.selectedLeagueForEdit)) {
         // Create updated League object with new name and event type
         const updatedLeague: League = {
-          Name: this.newLeague,
-          Show: this.selectedLeagueForEdit.Show, // Preserve Show setting
-          Event: this.newLeagueEventType,
+          name: this.newLeague,
+          show: this.selectedLeagueForEdit.show, // Preserve show setting
+          event: this.newLeagueEventType,
         };
         await this.storageService.editLeague(updatedLeague, this.selectedLeagueForEdit);
       } else {
@@ -234,14 +307,14 @@ export class LeagueSelectorComponent {
   async toggleLeagueVisibility(league: LeagueData): Promise<void> {
     try {
       if (isLeagueObject(league)) {
-        // Create updated league with toggled Show property
+        // Create updated league with toggled show property
         const updatedLeague: League = {
           ...league,
-          Show: !league.Show,
+          show: !league.show,
         };
         await this.storageService.editLeague(updatedLeague, league);
-        const statusText = updatedLeague.Show ? 'shown' : 'hidden';
-        this.toastService.showToast(`${league.Name} is now ${statusText}`, updatedLeague.Show ? 'eye' : 'eye-off');
+        const statusText = updatedLeague.show ? 'shown' : 'hidden';
+        this.toastService.showToast(`${league.name} is now ${statusText}`, updatedLeague.show ? 'eye' : 'eye-off');
       } else {
         // For legacy string leagues, we can't toggle Show property directly
         // This would need to be converted to League object first
@@ -335,5 +408,25 @@ export class LeagueSelectorComponent {
     });
 
     await actionSheet.present();
+  }
+
+  // Method to programmatically open edit modal with specific league
+  openEditModalWithLeague(league: LeagueData): void {
+    // Set the league to change to the display name of the provided league
+    this.leagueToChange = this.getLeagueDisplayName(league);
+    this.selectedLeagueForEdit = league;
+
+    // Set the new league name to the current name
+    this.newLeague = this.leagueToChange;
+
+    // If it's a League object, set the event type
+    if (isLeagueObject(league)) {
+      this.newLeagueEventType = league.event;
+    } else {
+      this.newLeagueEventType = 'League'; // Default for legacy leagues
+    }
+
+    // Open the edit modal
+    this.isEditModalOpen = true;
   }
 }

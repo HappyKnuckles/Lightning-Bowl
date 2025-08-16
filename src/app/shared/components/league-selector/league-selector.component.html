@@ -1,14 +1,10 @@
 @if (isAddPage) {
   <ion-item>
-    <ion-select [label]="'League/Tournament'" [(ngModel)]="selectedLeague" (ionChange)="onLeagueSelectionChange($event); onLeagueChange($event)">
+    <ion-select [label]="getSelectLabel()" [value]="getSelectedLeagueValue()" (ionChange)="onLeagueSelectionChange($event); onLeagueChange($event)">
       <ion-select-option value="new">Add new</ion-select-option>
       <ion-select-option value="">None</ion-select-option>
       <ion-select-option *ngFor="let league of leagues()" [value]="getLeagueValue(league)">
-        @if (isLegacyLeague(league)) {
-          {{ league }}
-        } @else {
-          {{ asLeagueObject(league).Name }} ({{ asLeagueObject(league).Event }})
-        }
+        {{ getLeagueDisplayText(league) }}
       </ion-select-option>
     </ion-select>
   </ion-item>
@@ -20,7 +16,7 @@
       (ionChange)="onLeagueChange($event)"
       interface="action-sheet"
       placeholder="Edit leagues"
-      [(ngModel)]="selectedLeague">
+      [value]="getSelectedLeagueValue()">
       <ion-select-option value="new">Add league</ion-select-option>
       <ion-select-option value="edit" *ngIf="leagues().length !== 0">Edit league</ion-select-option>
       <ion-select-option value="delete" *ngIf="leagues().length !== 0">Delete league</ion-select-option>
@@ -77,11 +73,7 @@
         <ion-icon name="medal-outline" slot="start"></ion-icon>
         <ion-select label="Choose League" [(ngModel)]="leagueToChange" (ionChange)="onLeagueToChangeSelect()">
           <ion-select-option *ngFor="let league of leagues()" [value]="getLeagueValue(league)">
-            @if (isLegacyLeague(league)) {
-              {{ league }}
-            } @else {
-              {{ asLeagueObject(league).Name }} ({{ asLeagueObject(league).Event }})
-            }
+            {{ getLeagueDisplayText(league) }}
           </ion-select-option>
         </ion-select>
       </ion-item>

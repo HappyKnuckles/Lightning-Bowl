@@ -556,7 +556,7 @@ export class GameComponent implements OnChanges, OnInit {
     if (typeof league === 'string') {
       return league;
     } else if (isLeagueObject(league)) {
-      return `${league.Event}: ${league.Name}`; // Show "League: Name" or "Tournament: Name"
+      return `${league.event}: ${league.name}`; // Show "League: Name" or "Tournament: Name"
     }
     return '';
   }
@@ -570,7 +570,7 @@ export class GameComponent implements OnChanges, OnInit {
   }
 
   getLeagueValue(league: LeagueData): string {
-    return typeof league === 'string' ? league : league.Name;
+    return typeof league === 'string' ? league : league.name;
   }
 
   // Handle league selection change in edit mode

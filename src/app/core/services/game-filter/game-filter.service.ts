@@ -66,7 +66,7 @@ export class GameFilterService {
   // Helper method to get league name from LeagueData
   private getLeagueName(league: LeagueData | undefined): string {
     if (!league) return '';
-    return typeof league === 'string' ? league : league.Name;
+    return typeof league === 'string' ? league : league.name;
   }
 
   filterGames(games: Game[], filters: GameFilter): Game[] {
