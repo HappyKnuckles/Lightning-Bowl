@@ -25,6 +25,9 @@
 @import url("@ionic/angular/css/text-transformation.css");
 @import url("@ionic/angular/css/flex-utils.css");
 
+/* Custom styles */
+@import url("./app/core/styles/high-score-alert.scss");
+
 ion-segment-view {
   height: fit-content;
 }
@@ -72,11 +75,11 @@ ion-header {
     display: flex;
     flex: 1 1 0%;
     align-items: center;
-  }  
+  }
 
-  ion-searchbar{
-      padding-bottom: 0 !important;
-    }
+  ion-searchbar {
+    padding-bottom: 0 !important;
+  }
 
   ion-icon {
     font-size: 1.5rem !important;
@@ -229,9 +232,9 @@ ion-button {
 }
 
 ion-content::part(scroll) {
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
-  }
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
 
 .segment-label {
   font-size: clamp(0.875rem, 4vw, 1.063rem);

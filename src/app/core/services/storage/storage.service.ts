@@ -8,6 +8,7 @@ import { LoadingService } from '../loader/loading.service';
 import { BallService } from '../ball/ball.service';
 import { Pattern } from '../../models/pattern.model';
 import { PatternService } from '../pattern/pattern.service';
+import { HighScoreAlertService } from '../high-score-alert/high-score-alert.service';
 
 @Injectable({
   providedIn: 'root',
@@ -42,8 +43,10 @@ export class StorageService {
     private loadingService: LoadingService,
     private ballService: BallService,
     private patternService: PatternService,
+    private highScoreAlertService: HighScoreAlertService,
   ) {
     this.init();
+    // this.highScoreAlertService.displayHighScoreAlert({type: 'single_game', newRecord: 150, previousRecord: 110, details: 'Du coole sau', gameOrSeries: []});
   }
 
   async init() {
@@ -238,6 +241,10 @@ export class StorageService {
   async saveGameToLocalStorage(gameData: Game): Promise<void> {
     try {
       const key = 'game' + gameData.gameId;
+
+      // Check if this is a new game (not an update)
+      const isNewGame = !this.games().find((game) => game.gameId === gameData.gameId);
+
       await this.save(key, gameData);
       this.games.update((games) => {
         const index = games.findIndex((game) => game.gameId === gameData.gameId);
@@ -247,6 +254,11 @@ export class StorageService {
           return [gameData, ...games];
         }
       });
+
+      // Check for high score achievements only for new games
+      if (isNewGame) {
+        await this.highScoreAlertService.checkAndDisplayHighScoreAlerts(gameData, this.games());
+      }
     } catch (error) {
       console.error('Error saving game to local storage:', error);
       throw error;
