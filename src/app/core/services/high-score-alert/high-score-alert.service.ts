@@ -1,8 +1,6 @@
 import { Injectable } from '@angular/core';
 import { AlertController } from '@ionic/angular';
 import { Game } from '../../models/game.model';
-import { GameStatsService } from '../game-stats/game-stats.service';
-import { StorageService } from '../storage/storage.service';
 
 export interface HighScoreRecord {
   type: 'single_game' | 'series';
@@ -16,17 +14,13 @@ export interface HighScoreRecord {
   providedIn: 'root',
 })
 export class HighScoreAlertService {
-  constructor(
-    private alertController: AlertController,
-    private gameStatsService: GameStatsService,
-    private storageService: StorageService,
-  ) {}
+  constructor(private alertController: AlertController) {}
 
   /**
    * Check if a new game achieves any new high scores and display alerts
    */
-  async checkAndDisplayHighScoreAlerts(newGame: Game): Promise<void> {
-    const records = await this.checkForNewRecords(newGame);
+  async checkAndDisplayHighScoreAlerts(newGame: Game, allGames: Game[]): Promise<void> {
+    const records = await this.checkForNewRecords(newGame, allGames);
 
     for (const record of records) {
       await this.displayHighScoreAlert(record);
@@ -36,13 +30,12 @@ export class HighScoreAlertService {
   /**
    * Check for new high score records
    */
-  private async checkForNewRecords(newGame: Game): Promise<HighScoreRecord[]> {
+  private async checkForNewRecords(newGame: Game, allGames: Game[]): Promise<HighScoreRecord[]> {
     const records: HighScoreRecord[] = [];
-    const allGames = this.storageService.games();
 
     // Get previous stats (all games except the new one)
     const previousGames = allGames.filter((game: Game) => game.gameId !== newGame.gameId);
-    const previousStats = previousGames.length > 0 ? this.gameStatsService.calculateBowlingStats(previousGames) : { highGame: 0, highSeries: 0 };
+    const previousStats = this.calculateHighScores(previousGames);
 
     // Check for new single game high score
     if (newGame.totalScore > (previousStats.highGame || 0)) {
@@ -58,20 +51,25 @@ export class HighScoreAlertService {
     // Check for new series high score if this game is part of a series
     if (newGame.isSeries && newGame.seriesId) {
       const seriesGames = allGames.filter((game: Game) => game.seriesId === newGame.seriesId);
-      const seriesTotal = seriesGames.reduce((total: number, game: Game) => total + game.totalScore, 0);
+      const seriesGameCount = seriesGames.length;
 
-      // Get previous best series
-      const previousSeriesScores = this.getPreviousSeriesScores(allGames, newGame.seriesId);
-      const previousBestSeries = Math.max(...previousSeriesScores, 0);
+      // Only alert for series of 3, 4, 5, or 6 games (standard series formats)
+      if (seriesGameCount >= 3 && seriesGameCount <= 6) {
+        const seriesTotal = seriesGames.reduce((total: number, game: Game) => total + game.totalScore, 0);
 
-      if (seriesTotal > previousBestSeries) {
-        records.push({
-          type: 'series',
-          newRecord: seriesTotal,
-          previousRecord: previousBestSeries,
-          details: this.getSeriesDetails(seriesGames),
-          gameOrSeries: seriesGames,
-        });
+        // Get previous best series of the same length
+        const previousSeriesScores = this.getPreviousSeriesScores(allGames, newGame.seriesId, seriesGameCount);
+        const previousBestSeries = Math.max(...previousSeriesScores, 0);
+
+        if (seriesTotal > previousBestSeries) {
+          records.push({
+            type: 'series',
+            newRecord: seriesTotal,
+            previousRecord: previousBestSeries,
+            details: this.getSeriesDetails(seriesGames),
+            gameOrSeries: seriesGames,
+          });
+        }
       }
     }
 
@@ -81,13 +79,22 @@ export class HighScoreAlertService {
   /**
    * Display congratulatory alert for new high score
    */
-  private async displayHighScoreAlert(record: HighScoreRecord): Promise<void> {
+  public async displayHighScoreAlert(record: HighScoreRecord): Promise<void> {
     const isNewRecord = record.previousRecord === 0;
     const improvementText = isNewRecord ? 'Your first record!' : `Previous best: ${record.previousRecord}`;
 
+    // Extract series info for better subheader
+    let subHeaderText = record.type === 'single_game' ? 'Single Game Record' : 'Series Record';
+    if (record.type === 'series' && record.details.includes('-Game Series')) {
+      const gameCountMatch = record.details.match(/(\d+)-Game Series/);
+      if (gameCountMatch) {
+        subHeaderText = `${gameCountMatch[1]}-Game Series Record`;
+      }
+    }
+
     const alert = await this.alertController.create({
-      header: '🎉 NEW HIGH SCORE! 🎉',
-      subHeader: record.type === 'single_game' ? 'Single Game Record' : 'Series Record',
+      header: 'NEW HIGH SCORE!',
+      subHeader: subHeaderText,
       message: `
         <div style="text-align: center; padding: 10px;">
           <h2 style="color: #4CAF50; margin: 10px 0;">${record.newRecord}</h2>
@@ -137,8 +144,10 @@ export class HighScoreAlertService {
   private getSeriesDetails(seriesGames: Game[]): string {
     const details = [];
     const scores = seriesGames.map((g) => g.totalScore).join(', ');
+    const gameCount = seriesGames.length;
 
-    details.push(`Games: ${scores}`);
+    const seriesTypeText = gameCount ? `${gameCount}-Game Series` : 'Series';
+    details.push(`${seriesTypeText}: ${scores}`);
 
     if (seriesGames[0]?.league) {
       details.push(`League: ${seriesGames[0].league}`);
@@ -152,7 +161,10 @@ export class HighScoreAlertService {
   /**
    * Get all previous series scores excluding the current series
    */
-  private getPreviousSeriesScores(allGames: Game[], currentSeriesId: string): number[] {
+  /**
+   * Get all previous series scores excluding the current series, optionally filtered by game count
+   */
+  private getPreviousSeriesScores(allGames: Game[], currentSeriesId: string, targetGameCount?: number): number[] {
     const seriesMap = new Map<string, Game[]>();
 
     // Group games by series ID, excluding current series
@@ -165,7 +177,40 @@ export class HighScoreAlertService {
         seriesMap.get(game.seriesId!)!.push(game);
       });
 
-    // Calculate total score for each series
-    return Array.from(seriesMap.values()).map((seriesGames: Game[]) => seriesGames.reduce((total: number, game: Game) => total + game.totalScore, 0));
+    // Calculate total score for each series, optionally filtering by game count
+    return Array.from(seriesMap.values())
+      .filter((seriesGames: Game[]) => !targetGameCount || seriesGames.length === targetGameCount)
+      .map((seriesGames: Game[]) => seriesGames.reduce((total: number, game: Game) => total + game.totalScore, 0));
+  }
+
+  /**
+   * Calculate high game and high series from a list of games
+   */
+  private calculateHighScores(games: Game[]): { highGame: number; highSeries: number } {
+    if (games.length === 0) {
+      return { highGame: 0, highSeries: 0 };
+    }
+
+    // Calculate high game
+    const highGame = Math.max(...games.map((game) => game.totalScore));
+
+    // Calculate high series by grouping games by seriesId
+    const seriesMap = new Map<string, Game[]>();
+
+    games
+      .filter((game) => game.isSeries && game.seriesId)
+      .forEach((game) => {
+        if (!seriesMap.has(game.seriesId!)) {
+          seriesMap.set(game.seriesId!, []);
+        }
+        seriesMap.get(game.seriesId!)!.push(game);
+      });
+
+    // Calculate total score for each series and find the highest
+    const seriesScores = Array.from(seriesMap.values()).map((seriesGames) => seriesGames.reduce((total, game) => total + game.totalScore, 0));
+
+    const highSeries = seriesScores.length > 0 ? Math.max(...seriesScores) : 0;
+
+    return { highGame, highSeries };
   }
 }
