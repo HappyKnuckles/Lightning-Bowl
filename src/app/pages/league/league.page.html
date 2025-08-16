@@ -115,7 +115,7 @@
 @for (league of leagues(); track $index) {
   @if (league.show && !isVisibilityEdit()) {
     <ion-modal
-      [trigger]="league"
+      [trigger]="league.name"
       #modal
       (didDismiss)="destroyCharts(league.name)"
       (didPresent)="loadingService.setLoading(false); generateCharts(league.name, true)">
