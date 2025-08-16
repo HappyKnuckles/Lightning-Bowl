@@ -6,6 +6,7 @@ import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { ImpactStyle } from '@capacitor/haptics';
 import { Game } from 'src/app/core/models/game.model';
+import { LeagueData, League } from 'src/app/core/models/league.model';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { SortUtilsService } from '../sort-utils/sort-utils.service';
 import { GameFilterService } from '../game-filter/game-filter.service';
@@ -132,10 +133,9 @@ export class ExcelService {
     }
   }
 
-  async transformData(data: ExcelRow[]): Promise<void> {
+  async transformData(data: ExcelRow[], leagueAssociationMap = new Map<string, League>()): Promise<void> {
     try {
       const gameData: Game[] = [];
-      const leagueMap = new Set<string>();
       const ballMap = new Set<string>();
 
       for (let i = 1; i < data.length; i++) {
@@ -167,7 +167,7 @@ export class ExcelService {
           frames: frames,
           totalScore: parseInt(row['Total Score'] as string),
           frameScores: (row['Frame Scores'] as string).split(', ').map((score: string) => parseInt(score)),
-          league: row['League'] as string,
+          league: row['League'] as string, // Keep as string initially
           isPractice: (row['Practice'] as string)?.trim().toLowerCase() === 'true',
           isClean: (row['Clean'] as string)?.trim().toLowerCase() === 'true',
           isPerfect: (row['Perfect'] as string)?.trim().toLowerCase() === 'true',
@@ -182,10 +182,6 @@ export class ExcelService {
           note: row['Notes'] as string,
         };
 
-        if (game.league !== undefined && game.league !== '') {
-          leagueMap.add(game.league);
-        }
-
         if (game.balls) {
           for (const ball of game.balls) {
             ballMap.add(ball);
@@ -195,20 +191,34 @@ export class ExcelService {
         gameData.push(game);
       }
 
-      // Save leagues and balls into storage if needed
-      for (const league of leagueMap.values()) {
-        await this.storageService.addLeague(league);
-      }
+      // Update games to use League objects instead of strings
+      const updatedGameData = gameData.map((game) => {
+        const leagueName = this.getLeagueName(game.league);
+        if (leagueName && leagueAssociationMap.has(leagueName)) {
+          return { ...game, league: leagueAssociationMap.get(leagueName)! };
+        }
+        return game;
+      });
 
+      // Handle balls
       for (const ball of ballMap.values()) {
         const ballToAdd = this.storageService.allBalls().find((b) => b.ball_name === ball);
         if (ballToAdd !== undefined && !this.storageService.arsenal().some((b) => b.ball_name === ball)) {
           await this.storageService.saveBallToArsenal(ballToAdd);
         }
       }
-      const sortedGames = this.sortUtils.sortGameHistoryByDate(gameData);
+
+      const sortedGames = this.sortUtils.sortGameHistoryByDate(updatedGameData);
       await this.storageService.saveGamesToLocalStorage(sortedGames);
       this.gameFilterService.setDefaultFilters();
+
+      // Show success message
+      if (leagueAssociationMap.size > 0) {
+        this.toastService.showToast(
+          `Successfully imported ${updatedGameData.length} games with ${leagueAssociationMap.size} leagues!`,
+          'checkmark-outline',
+        );
+      }
     } catch (error) {
       console.error('Error transforming data:', error);
       throw new Error(`Data transformation failed: ${error}`);
@@ -289,7 +299,7 @@ export class ExcelService {
         ...frameValues,
         game.totalScore.toString(),
         game.frameScores.map((s) => s.toString()).join(', '),
-        game.league || '',
+        this.getLeagueName(game.league),
         game.isPractice ? 'true' : 'false',
         game.isClean ? 'true' : 'false',
         game.isPerfect ? 'true' : 'false',
@@ -430,6 +440,11 @@ export class ExcelService {
       const maxContentLength = Math.max(header.length, ...data.map((row) => (row[header] ?? '').toString().length));
       worksheet.getColumn(startIndex + index).width = maxContentLength + 1;
     });
+  }
+
+  private getLeagueName(league: LeagueData | undefined): string {
+    if (!league) return '';
+    return typeof league === 'string' ? league : league.name;
   }
 
   private async fileExists(path: string): Promise<boolean> {

@@ -1,3 +1,5 @@
+import { LeagueData } from './league.model';
+
 export interface Game {
   gameId: string;
   date: number;
@@ -10,7 +12,7 @@ export interface Game {
   isSeries?: boolean;
   seriesId?: string;
   note?: string;
-  league?: string;
+  league?: LeagueData;
   patterns: string[];
   balls?: string[];
 }

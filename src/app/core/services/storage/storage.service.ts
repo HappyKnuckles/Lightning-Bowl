@@ -8,13 +8,15 @@ import { LoadingService } from '../loader/loading.service';
 import { BallService } from '../ball/ball.service';
 import { Pattern } from '../../models/pattern.model';
 import { PatternService } from '../pattern/pattern.service';
+import { League, LeagueData, isLeagueObject } from '../../models/league.model';
+import { LeagueMigrationService } from '../league-migration/league-migration.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class StorageService {
   url = 'https://bowwwl.com';
-  #leagues = signal<string[]>([]);
+  #leagues = signal<LeagueData[]>([]);
   #games = signal<Game[]>([]);
   #arsenal = signal<Ball[]>([]);
   #allBalls = signal<Ball[]>([]);
@@ -42,6 +44,7 @@ export class StorageService {
     private loadingService: LoadingService,
     private ballService: BallService,
     private patternService: PatternService,
+    private migrationService: LeagueMigrationService,
   ) {
     this.init();
   }
@@ -83,11 +86,24 @@ export class StorageService {
     }
   }
 
-  async loadLeagues(): Promise<string[]> {
+  async loadLeagues(): Promise<LeagueData[]> {
     try {
-      const leagues = await this.loadData<string>('league');
-      this.leagues.set(leagues.reverse());
-      return leagues.reverse();
+      const leagues = await this.loadData<LeagueData>('league');
+      // Sort and handle both legacy strings and new League objects
+      const processedLeagues = leagues.map((league) => {
+        if (typeof league === 'string') {
+          // Keep legacy strings as-is for backward compatibility
+          return league;
+        } else if (isLeagueObject(league)) {
+          // Return League objects as-is
+          return league;
+        } else {
+          // Convert any malformed data to legacy string
+          return String(league);
+        }
+      });
+      this.leagues.set(processedLeagues.reverse());
+      return processedLeagues.reverse();
     } catch (error) {
       console.error('Error loading leagues:', error);
       throw error;
@@ -201,11 +217,23 @@ export class StorageService {
     }
   }
 
-  async addLeague(league: string) {
+  async addLeague(league: string | League): Promise<void> {
     try {
-      const key = 'league' + '_' + league;
-      await this.save(key, league);
-      this.leagues.update((leagues) => [...leagues, league]);
+      let leagueData: LeagueData;
+      let key: string;
+
+      if (typeof league === 'string') {
+        // Legacy string format
+        leagueData = league;
+        key = 'league' + '_' + league;
+      } else {
+        // New League object format
+        leagueData = league;
+        key = 'league' + '_' + league.name;
+      }
+
+      await this.save(key, leagueData);
+      this.leagues.update((leagues) => [...leagues, leagueData]);
     } catch (error) {
       console.error('Error adding league:', error);
       throw error;
@@ -265,11 +293,21 @@ export class StorageService {
     }
   }
 
-  async deleteLeague(league: string) {
+  private getLeagueName(league: LeagueData | undefined): string {
+    if (!league) return '';
+    return typeof league === 'string' ? league : league.name;
+  }
+
+  public getLeagueDisplayName(league: LeagueData): string {
+    return this.getLeagueName(league);
+  }
+
+  async deleteLeague(league: string | LeagueData) {
     try {
-      const key = 'league' + '_' + league;
+      const leagueName = typeof league === 'string' ? league : this.getLeagueName(league);
+      const key = 'league' + '_' + leagueName;
       await this.storage.remove(key);
-      this.leagues.update((leagues) => leagues.filter((l) => l !== key.replace('league_', '')));
+      this.leagues.update((leagues) => leagues.filter((l) => this.getLeagueName(l) !== leagueName));
     } catch (error) {
       console.error('Error deleting league:', error);
       throw error;
@@ -290,14 +328,26 @@ export class StorageService {
     }
   }
 
-  async editLeague(newLeague: string, oldLeague: string) {
+  async editLeague(newLeague: string | League, oldLeague: string | League): Promise<void> {
     try {
+      const oldLeagueName = typeof oldLeague === 'string' ? oldLeague : oldLeague.name;
+
       await this.deleteLeague(oldLeague);
-      await this.addLeague(newLeague);
+
+      // Use type assertion since we know the implementation matches our usage
+      if (typeof newLeague === 'string') {
+        await (this.addLeague as (league: string) => Promise<void>)(newLeague);
+      } else {
+        await (this.addLeague as (league: League) => Promise<void>)(newLeague);
+      }
+
       const games = await this.loadData<Game>('game');
       const updatedGames = games.map((game) => {
-        if (game.league === oldLeague) {
-          game.league = newLeague;
+        const currentLeagueName = this.getLeagueName(game.league);
+        if (currentLeagueName === oldLeagueName) {
+          // For backward compatibility, update as string if newLeague is string
+          // Otherwise update with the League object
+          game.league = typeof newLeague === 'string' ? newLeague : newLeague;
         }
         return game;
       });
@@ -334,6 +384,11 @@ export class StorageService {
         this.ballService.getCores(),
         this.ballService.getCoverstocks(),
       ]);
+
+      // After loading initial data, run migration if needed
+      // We don't await this to avoid blocking the app initialization
+      this.runMigrationIfNeeded();
+
       if (this.games().length > 0) {
         if (localStorage.getItem('first-game') === null) {
           localStorage.setItem('first-game', this.games()[this.games().length - 1].date.toString());
@@ -342,6 +397,20 @@ export class StorageService {
     } catch (error) {
       console.error('Error during initial data load:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Runs league migration if needed, called after initial data load
+   */
+  private async runMigrationIfNeeded(): Promise<void> {
+    try {
+      // Add a small delay to ensure the UI is ready
+      setTimeout(async () => {
+        await this.migrationService.migrateLeagues(this);
+      }, 1000);
+    } catch (error) {
+      console.error('Error during migration:', error);
     }
   }
 

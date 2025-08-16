@@ -1,9 +1,11 @@
 @if (isAddPage) {
   <ion-item>
-    <ion-select label="League/Tournament" [(ngModel)]="selectedLeague" (ionChange)="leagueChanged.emit(this.selectedLeague); onLeagueChange($event)">
+    <ion-select [label]="getSelectLabel()" [value]="getSelectedLeagueValue()" (ionChange)="onLeagueSelectionChange($event); onLeagueChange($event)">
       <ion-select-option value="new">Add new</ion-select-option>
       <ion-select-option value="">None</ion-select-option>
-      <ion-select-option *ngFor="let league of leagues()" [value]="league">{{ league }}</ion-select-option>
+      <ion-select-option *ngFor="let league of leagues()" [value]="getLeagueValue(league)">
+        {{ getLeagueDisplayText(league) }}
+      </ion-select-option>
     </ion-select>
   </ion-item>
 } @else {
@@ -14,7 +16,7 @@
       (ionChange)="onLeagueChange($event)"
       interface="action-sheet"
       placeholder="Edit leagues"
-      [(ngModel)]="selectedLeague">
+      [value]="getSelectedLeagueValue()">
       <ion-select-option value="new">Add league</ion-select-option>
       <ion-select-option value="edit" *ngIf="leagues().length !== 0">Edit league</ion-select-option>
       <ion-select-option value="delete" *ngIf="leagues().length !== 0">Delete league</ion-select-option>
@@ -22,14 +24,45 @@
   </ion-item>
 }
 
-<ion-modal [isOpen]="isModalOpen" #modal>
+<!-- Add League Modal -->
+<ion-modal [isOpen]="isAddModalOpen" #addModal>
   <ng-template>
     <ion-header>
       <ion-toolbar>
         <ion-buttons slot="start">
-          <ion-button (click)="cancel()">Cancel</ion-button>
+          <ion-button (click)="cancelAdd()">Cancel</ion-button>
         </ion-buttons>
-        <ion-title>Edit league</ion-title>
+        <ion-title>Add League/Tournament</ion-title>
+        <ion-buttons slot="end">
+          <ion-button type="submit" (click)="saveLeague()" [disabled]="newLeague === ''">Add</ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content>
+      <ion-item>
+        <ion-icon name="create-outline" slot="start"></ion-icon>
+        <ion-input label="Name" placeholder="Enter league/tournament name" [(ngModel)]="newLeague"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-icon name="flag-outline" slot="start"></ion-icon>
+        <ion-select label="Type" [(ngModel)]="newLeagueEventType">
+          <ion-select-option value="League">League</ion-select-option>
+          <ion-select-option value="Tournament">Tournament</ion-select-option>
+        </ion-select>
+      </ion-item>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+<!-- Edit League Modal -->
+<ion-modal [isOpen]="isEditModalOpen" #editModal>
+  <ng-template>
+    <ion-header>
+      <ion-toolbar>
+        <ion-buttons slot="start">
+          <ion-button (click)="cancelEdit()">Cancel</ion-button>
+        </ion-buttons>
+        <ion-title>Edit League</ion-title>
         <ion-buttons slot="end">
           <ion-button type="submit" (click)="editLeague()" [disabled]="newLeague === ''">Save</ion-button>
         </ion-buttons>
@@ -38,19 +71,30 @@
     <ion-content>
       <ion-item>
         <ion-icon name="medal-outline" slot="start"></ion-icon>
-        <ion-select label="Choose League" [(ngModel)]="leagueToChange">
-          <ion-select-option *ngFor="let league of leagues()" [value]="league">{{ league }}</ion-select-option>
+        <ion-select label="Choose League" [(ngModel)]="leagueToChange" (ionChange)="onLeagueToChangeSelect()">
+          <ion-select-option *ngFor="let league of leagues()" [value]="getLeagueValue(league)">
+            {{ getLeagueDisplayText(league) }}
+          </ion-select-option>
         </ion-select>
       </ion-item>
       <ion-item>
         <ion-icon name="create-outline" slot="start"></ion-icon>
         <ion-input
-          label="Change league name"
+          label="League name"
           [value]="leagueToChange"
           [readonly]="leagueToChange === ''"
           placeholder="League name"
-          (ionChange)="newLeague = $event.target.value!.toString()"></ion-input>
+          [(ngModel)]="newLeague"></ion-input>
       </ion-item>
+      @if (selectedLeagueForEdit && isLeagueObjectType(selectedLeagueForEdit)) {
+        <ion-item>
+          <ion-icon name="flag-outline" slot="start"></ion-icon>
+          <ion-select label="Event type" [(ngModel)]="newLeagueEventType">
+            <ion-select-option value="League">League</ion-select-option>
+            <ion-select-option value="Tournament">Tournament</ion-select-option>
+          </ion-select>
+        </ion-item>
+      }
     </ion-content>
   </ng-template>
 </ion-modal>

@@ -42,6 +42,7 @@ import { GameFilterActiveComponent } from 'src/app/shared/components/game-filter
 import { GameFilterComponent } from 'src/app/shared/components/game-filter/game-filter.component';
 import { GameComponent } from 'src/app/shared/components/game/game.component';
 import { SortHeaderComponent } from 'src/app/shared/components/sort-header/sort-header.component';
+import { LeagueMigrationService } from 'src/app/core/services/league-migration/league-migration.service';
 
 @Component({
   selector: 'app-history',
@@ -92,6 +93,7 @@ export class HistoryPage {
     private modalCtrl: ModalController,
     public gameFilterService: GameFilterService,
     private excelService: ExcelService,
+    private leagueMigrationService: LeagueMigrationService,
     // public sortService: SortService,
   ) {
     addIcons({
@@ -141,10 +143,36 @@ export class HistoryPage {
       this.loadingService.setLoading(true);
       const input = event.target as HTMLInputElement;
       if (!input.files || input.files.length === 0) return;
+
       const file = input.files[0];
       const gameData = await this.excelService.readExcelData(file);
-      await this.excelService.transformData(gameData);
-      this.toastService.showToast(ToastMessages.excelFileUploadSuccess, 'checkmark-outline');
+
+      // Extract league names to check if we need user input
+      const leagueNames = this.leagueMigrationService.extractLeagueNamesFromData(gameData);
+
+      // Disable loading screen for league association alerts
+      this.loadingService.setLoading(false);
+
+      // Handle league association for imported leagues
+      let leagueAssociationMap = new Map();
+      if (leagueNames.size > 0) {
+        try {
+          leagueAssociationMap = await this.leagueMigrationService.associateImportedLeagues(leagueNames, this.storageService);
+        } catch (error) {
+          // If user cancelled or error occurred, don't continue with import
+          if (error instanceof Error && error.message.includes('cancelled')) {
+            this.toastService.showToast('Import cancelled by user', 'information', false);
+            return;
+          }
+          throw error;
+        }
+      }
+
+      // Re-enable loading screen for data transformation
+      this.loadingService.setLoading(true);
+
+      await this.excelService.transformData(gameData, leagueAssociationMap);
+      // this.toastService.showToast(ToastMessages.excelFileUploadSuccess, 'checkmark-outline');
     } catch (error) {
       this.toastService.showToast(ToastMessages.excelFileUploadError, 'bug', true);
       console.error(error);

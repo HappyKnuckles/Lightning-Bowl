@@ -2,7 +2,7 @@
   <ion-toolbar>
     @if (!isVisibilityEdit()) {
       <ion-buttons slot="end">
-        <ion-button type="button" class="action-sheet" fill="clear" (click)="addLeague()">
+        <ion-button type="button" class="action-sheet" fill="clear" (click)="openLeagueSelector()">
           <ion-icon slot="icon-only" name="add-outline"></ion-icon>
         </ion-button>
       </ion-buttons>
@@ -14,7 +14,7 @@
         <ion-button type="button" class="action-sheet" fill="clear" (click)="cancelEdit()"> Cancel </ion-button>
       </ion-buttons>
     }
-    <ion-title> Leagues </ion-title>
+    <ion-title> Leagues/Tournaments </ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -22,6 +22,9 @@
   <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
+
+  <!-- Hidden League Selector Component for League Management -->
+  <app-league-selector [isAddPage]="false" style="display: none" #leagueSelector></app-league-selector>
   <!-- Show this message if there are no game history items and it's not loading -->
   <ng-container *ngIf="storageService.games().length <= 0 && !loadingService.isLoading(); else noLeagues">
     <ion-text class="no-game-text"> Start playing a few games to see your leagues here! </ion-text>
@@ -54,7 +57,7 @@
             </div>
           }
         } @else {
-          @if (leagueSelectionState[league]) {
+          @if (visibleLeagues().includes(league)) {
             @if (league === "Practice") {
               <div class="sliding">
                 <ion-item (click)="loadingService.setLoading(true)" button [id]="league" (longPressed)="editVisibility()" [delay]="1000" appLongPress>
@@ -97,8 +100,8 @@
   </ng-template>
 </ion-content>
 
-@for (league of leagueKeys(); track $index) {
-  @if (leagueSelectionState[league] && !isVisibilityEdit()) {
+@for (league of visibleLeagues(); track $index) {
+  @if (!isVisibilityEdit()) {
     <ion-modal
       [trigger]="league"
       #modal

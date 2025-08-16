@@ -1,6 +1,7 @@
 import { computed, Injectable, Signal, signal } from '@angular/core';
 import { GameFilter, TimeRange } from 'src/app/core/models/filter.model';
 import { Game } from 'src/app/core/models/game.model';
+import { LeagueData } from 'src/app/core/models/league.model';
 import { UtilsService } from '../utils/utils.service';
 import { StorageService } from '../storage/storage.service';
 
@@ -62,6 +63,12 @@ export class GameFilterService {
     this.setDefaultFilters();
   }
 
+  // Helper method to get league name from LeagueData
+  private getLeagueName(league: LeagueData | undefined): string {
+    if (!league) return '';
+    return typeof league === 'string' ? league : league.name;
+  }
+
   filterGames(games: Game[], filters: GameFilter): Game[] {
     const filteredGames = games.filter((game) => {
       const formatDate = (date: string) => date.split('T')[0];
@@ -77,7 +84,7 @@ export class GameFilterService {
         (filters.excludePractice ? !game.isPractice : true) &&
         (!filters.isPerfect || game.isPerfect) &&
         (!filters.isClean || game.isClean) &&
-        (filters.leagues.includes('all') || filters.leagues.length === 0 || filters.leagues.includes(game.league || '')) &&
+        (filters.leagues.includes('all') || filters.leagues.length === 0 || filters.leagues.includes(this.getLeagueName(game.league))) &&
         (filters.patterns.includes('all') || filters.patterns.length === 0 || game.patterns!.some((pattern) => filters.patterns.includes(pattern))) &&
         (filters.balls.includes('all') || filters.balls.length === 0 || game.balls!.some((ball) => filters.balls.includes(ball)))
       );

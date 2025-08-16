@@ -1,4 +1,4 @@
-import { Component, CUSTOM_ELEMENTS_SCHEMA, ElementRef, ViewChild, ViewChildren, QueryList, computed, Signal, signal, effect } from '@angular/core';
+import { Component, CUSTOM_ELEMENTS_SCHEMA, ElementRef, ViewChild, ViewChildren, QueryList, computed, Signal, signal } from '@angular/core';
 import { DecimalPipe, NgIf } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import {
@@ -53,8 +53,9 @@ import { GameComponent } from 'src/app/shared/components/game/game.component';
 import { SpareDisplayComponent } from 'src/app/shared/components/spare-display/spare-display.component';
 import { StatDisplayComponent } from 'src/app/shared/components/stat-display/stat-display.component';
 import { LongPressDirective } from 'src/app/core/directives/long-press/long-press.directive';
-import { HiddenLeagueSelectionService } from 'src/app/core/services/hidden-league/hidden-league.service';
 import { BallStatsComponent } from '../../shared/components/ball-stats/ball-stats.component';
+import { LeagueSelectorComponent } from '../../shared/components/league-selector/league-selector.component';
+import { LeagueData, League, isLeagueObject } from 'src/app/core/models/league.model';
 
 @Component({
   selector: 'app-league',
@@ -90,6 +91,7 @@ import { BallStatsComponent } from '../../shared/components/ball-stats/ball-stat
     IonSegmentContent,
     LongPressDirective,
     BallStatsComponent,
+    LeagueSelectorComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
@@ -98,6 +100,7 @@ export class LeaguePage {
   @ViewChildren('modal') modals!: QueryList<IonModal>;
   @ViewChild('scoreChart', { static: false }) scoreChart?: ElementRef;
   @ViewChild('pinChart', { static: false }) pinChart?: ElementRef;
+  @ViewChild('leagueSelector') leagueSelector!: LeagueSelectorComponent;
   selectedSegment = 'Overall';
   segments: string[] = ['Overall', 'Spares', 'Games'];
   isEditMode: Record<string, boolean> = {};
@@ -155,15 +158,52 @@ export class LeaguePage {
   private scoreChartInstances: Record<string, Chart> = {};
   private pinChartInstances: Record<string, Chart> = {};
 
-  isVisibilityEdit = signal(false);
-  get noLeaguesShown(): boolean {
-    const state = this.hiddenLeagueSelectionService.selectionState();
+  // Add computed for visible leagues based on show property
+  visibleLeagues: Signal<string[]> = computed(() => {
+    const leagues = this.storageService.leagues();
+    return this.leagueKeys().filter((leagueKey) => {
+      const league = leagues.find((l) => {
+        if (isLeagueObject(l)) {
+          return l.name === leagueKey;
+        }
+        return l === leagueKey;
+      });
 
-    return !Object.values(state).some((isVisible) => isVisible);
+      if (league && isLeagueObject(league)) {
+        return league.show;
+      }
+      // For legacy string leagues, show by default
+      return true;
+    });
+  });
+
+  isVisibilityEdit = signal(false);
+
+  get noLeaguesShown(): boolean {
+    return this.visibleLeagues().length === 0;
   }
 
   get leagueSelectionState() {
-    return this.hiddenLeagueSelectionService.selectionState();
+    const leagues = this.storageService.leagues();
+    const state: Record<string, boolean> = {};
+
+    this.leagueKeys().forEach((leagueKey) => {
+      const league = leagues.find((l) => {
+        if (isLeagueObject(l)) {
+          return l.name === leagueKey;
+        }
+        return l === leagueKey;
+      });
+
+      if (league && isLeagueObject(league)) {
+        state[leagueKey] = league.show;
+      } else {
+        // For legacy string leagues, show by default
+        state[leagueKey] = true;
+      }
+    });
+
+    return state;
   }
   private previousLeagueSelectionState: Record<string, boolean> = {};
 
@@ -176,7 +216,6 @@ export class LeaguePage {
     private alertController: AlertController,
     private toastService: ToastService,
     private chartService: ChartGenerationService,
-    private hiddenLeagueSelectionService: HiddenLeagueSelectionService,
   ) {
     addIcons({
       addOutline,
@@ -190,19 +229,39 @@ export class LeaguePage {
       documentTextOutline,
       medalOutline,
     });
-    effect(
-      () => {
-        this.hiddenLeagueSelectionService.setAvailableLeagues(this.leagueKeys());
-      },
-      { allowSignalWrites: true },
-    );
   }
-  updateLeagueSelection(league: string, checked: boolean) {
-    this.hiddenLeagueSelectionService.updateSelection(league, checked);
+  async updateLeagueSelection(leagueName: string, show: boolean): Promise<void> {
+    try {
+      const leagues = this.storageService.leagues();
+      const foundLeague = leagues.find((league) => {
+        if (isLeagueObject(league)) {
+          return league.name === leagueName;
+        }
+        return league === leagueName;
+      });
+
+      if (foundLeague && isLeagueObject(foundLeague)) {
+        // Update existing League object
+        const updatedLeague: League = { ...foundLeague, show: show };
+        await this.storageService.editLeague(updatedLeague, foundLeague);
+      } else if (typeof foundLeague === 'string') {
+        // Convert legacy league to League object
+        const newLeagueObj: League = {
+          name: foundLeague,
+          show: show,
+          event: 'League',
+        };
+        await this.storageService.editLeague(newLeagueObj, foundLeague);
+      }
+    } catch (error) {
+      console.error('Error updating league visibility:', error);
+      this.toastService.showToast('Error updating league visibility', 'bug', true);
+    }
   }
 
   cancelEdit() {
-    this.hiddenLeagueSelectionService.selectionStateValue = this.previousLeagueSelectionState;
+    // Reload leagues from storage to revert any unsaved changes
+    this.storageService.loadLeagues();
     this.editVisibility();
   }
 
@@ -211,10 +270,10 @@ export class LeaguePage {
     this.isVisibilityEdit.set(newState);
 
     if (newState) {
-      this.previousLeagueSelectionState = { ...this.hiddenLeagueSelectionService.selectionState() };
+      this.previousLeagueSelectionState = { ...this.leagueSelectionState };
       this.toastService.showToast(ToastMessages.leagueEditMode, 'eye-outline');
     } else {
-      const current = this.hiddenLeagueSelectionService.selectionState();
+      const current = this.leagueSelectionState;
       const previous = this.previousLeagueSelectionState;
 
       const nowHiding: string[] = [];
@@ -299,45 +358,42 @@ export class LeaguePage {
     }
   }
 
-  async addLeague() {
-    const alert = await this.alertController.create({
-      header: 'Add League',
-      message: 'Enter the league name',
-      inputs: [
-        {
-          name: 'league',
-          type: 'text',
-          placeholder: 'League name',
-          cssClass: 'league-alert-input',
-        },
-      ],
-      buttons: [
-        {
-          text: 'Cancel',
-          role: 'cancel',
-        },
-        {
-          text: 'Add',
-          handler: async (data: { league: string }) => {
-            try {
-              await this.storageService.addLeague(data.league);
-              this.toastService.showToast(ToastMessages.leagueSaveSuccess, 'add');
-            } catch (error) {
-              this.toastService.showToast(ToastMessages.leagueSaveError, 'bug', true);
-              console.error('Error saving league:', error);
-            }
-          },
-        },
-      ],
-    });
-    await alert.present();
+  openLeagueSelector(): void {
+    // Trigger the league selector's management interface
+    if (this.leagueSelector) {
+      this.leagueSelector.showLeagueManagementOptions();
+    }
+  }
+
+  async editLeague(league: LeagueData | string): Promise<void> {
+    // Find the actual league object from the leagues array
+    const leagues = this.storageService.leagues();
+    let leagueToEdit: LeagueData;
+
+    if (typeof league === 'string') {
+      // Find the league object that matches the string name
+      const foundLeague = leagues.find((l) => {
+        if (isLeagueObject(l)) {
+          return l.name === league;
+        }
+        return l === league;
+      });
+      leagueToEdit = foundLeague || league;
+    } else {
+      leagueToEdit = league;
+    }
+
+    // Use the league selector component to edit the league
+    if (this.leagueSelector) {
+      this.leagueSelector.openEditModalWithLeague(leagueToEdit);
+    }
   }
 
   async deleteLeague(league: string): Promise<void> {
     this.hapticService.vibrate(ImpactStyle.Heavy);
     const alert = await this.alertController.create({
       header: 'Confirm Deletion',
-      message: 'Are you sure you want to delete this league?',
+      message: `Are you sure you want to delete ${league}?`,
       buttons: [
         {
           text: 'Cancel',
@@ -353,44 +409,6 @@ export class LeaguePage {
             } catch (error) {
               this.toastService.showToast(ToastMessages.leagueDeleteError, 'bug', true);
               console.error('Error deleting league:', error);
-            }
-          },
-        },
-      ],
-    });
-
-    await alert.present();
-  }
-
-  async editLeague(league: string): Promise<void> {
-    const alert = await this.alertController.create({
-      header: 'Edit League',
-      message: 'Enter the new league name',
-      inputs: [
-        {
-          name: 'league',
-          type: 'text',
-          value: league,
-          placeholder: 'League name',
-          cssClass: 'alert-input',
-        },
-      ],
-      buttons: [
-        {
-          text: 'Cancel',
-          role: 'cancel',
-        },
-        {
-          text: 'Edit',
-          handler: async (data: { league: string }) => {
-            const newLeagueName = data.league;
-            const oldLeagueName = league;
-            try {
-              await this.storageService.editLeague(newLeagueName, oldLeagueName);
-              this.toastService.showToast(ToastMessages.leagueEditSuccess, 'checkmark-outline');
-            } catch (error) {
-              this.toastService.showToast(ToastMessages.leagueEditError, 'bug', true);
-              console.error('Error editing league:', error);
             }
           },
         },

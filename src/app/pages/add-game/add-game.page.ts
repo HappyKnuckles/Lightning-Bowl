@@ -23,6 +23,7 @@ import {
 } from '@ionic/angular/standalone';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Game } from 'src/app/core/models/game.model';
+import { LeagueData } from 'src/app/core/models/league.model';
 import { addIcons } from 'ionicons';
 import { add, chevronDown, chevronUp, cameraOutline, documentTextOutline, medalOutline } from 'ionicons/icons';
 import { NgIf, NgFor } from '@angular/common';
@@ -127,6 +128,12 @@ export class AddGamePage implements OnInit {
     addIcons({ cameraOutline, chevronDown, chevronUp, medalOutline, documentTextOutline, add });
   }
 
+  // Helper method to get league name from LeagueData
+  private getLeagueName(league: LeagueData | undefined): string {
+    if (!league) return '';
+    return typeof league === 'string' ? league : league.name;
+  }
+
   async ngOnInit(): Promise<void> {
     this.userService.getUsername().subscribe((username: string) => {
       this.username = username;
@@ -178,8 +185,17 @@ export class AddGamePage implements OnInit {
     this.modal.dismiss(null, 'cancel');
   }
 
-  onLeagueChange(league: string, isModal = false): void {
-    const isPractice = league === '' || league === 'New';
+  onLeagueChange(league: LeagueData, isModal = false): void {
+    // Helper function to determine if a league selection means "practice"
+    const isPracticeLeague = (leagueData: LeagueData): boolean => {
+      if (!leagueData) return true;
+      if (typeof leagueData === 'string') {
+        return leagueData === '' || leagueData === 'New';
+      }
+      return false; // League objects are never practice
+    };
+
+    const isPractice = isPracticeLeague(league);
 
     if (isModal) {
       this.gameData.league = league;
@@ -188,7 +204,7 @@ export class AddGamePage implements OnInit {
       this.modalCheckbox.disabled = !isPractice;
     } else {
       this.gameGrids.forEach((trackGrid: GameGridComponent) => {
-        trackGrid.leagueSelector.selectedLeague = league;
+        trackGrid.leagueSelector.selectedLeague = this.getLeagueName(league);
         trackGrid.game().league = league;
         trackGrid.game().isPractice = isPractice;
         trackGrid.checkbox.checked = isPractice;
@@ -357,7 +373,7 @@ export class AddGamePage implements OnInit {
         gameGrid.game().isPractice = data.isPractice!;
         gameGrid.game().patterns = data.patterns!;
         gameGrid.onPatternChanged(data.patterns!);
-        gameGrid.onLeagueChanged(data.league!);
+        gameGrid.onLeagueChanged(this.getLeagueName(data.league!));
         gameGrid.updateScores();
       });
     });

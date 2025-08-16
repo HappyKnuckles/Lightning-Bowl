@@ -46,6 +46,7 @@ import {
 } from 'ionicons/icons';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { Game } from 'src/app/core/models/game.model';
+import { League, LeagueData, isLeagueObject } from 'src/app/core/models/league.model';
 import { GameUtilsService } from 'src/app/core/services/game-utils/game-utils.service';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
@@ -117,13 +118,29 @@ export class GameComponent implements OnChanges, OnInit {
 
   leagues = computed(() => {
     const savedLeagues = this.storageService.leagues();
-    const leagueKeys = this.games.reduce((acc: string[], game: Game) => {
-      if (game.league && !acc.includes(game.league)) {
-        acc.push(game.league);
+    const gameLeagues: LeagueData[] = this.games.reduce((acc: LeagueData[], game: Game) => {
+      if (game.league) {
+        const leagueName = this.getLeagueValue(game.league);
+        // Check if we already have this league by name
+        const exists = acc.some((existingLeague) => this.getLeagueValue(existingLeague) === leagueName);
+        if (!exists) {
+          acc.push(game.league);
+        }
       }
       return acc;
     }, []);
-    return [...new Set([...leagueKeys, ...savedLeagues])];
+
+    // Combine saved leagues with game leagues, avoiding duplicates by name
+    const allLeagues = [...savedLeagues];
+    gameLeagues.forEach((gameLeague) => {
+      const gameLeagueName = this.getLeagueValue(gameLeague);
+      const existsInSaved = allLeagues.some((savedLeague) => this.getLeagueValue(savedLeague) === gameLeagueName);
+      if (!existsInSaved) {
+        allLeagues.push(gameLeague);
+      }
+    });
+
+    return allLeagues;
   });
 
   // leagues = computed(() => {
@@ -188,9 +205,7 @@ export class GameComponent implements OnChanges, OnInit {
 
   ngOnInit(): void {
     this.presentingElement = document.querySelector('.ion-page')!;
-    this.patternTypeaheadConfig = createPartialPatternTypeaheadConfig(
-      (searchTerm: string) => this.patternService.searchPattern(searchTerm)
-    );
+    this.patternTypeaheadConfig = createPartialPatternTypeaheadConfig((searchTerm: string) => this.patternService.searchPattern(searchTerm));
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -287,7 +302,7 @@ export class GameComponent implements OnChanges, OnInit {
     delete this.delayedCloseMap[game.gameId];
   }
 
-  updateSeries(game: Game, league?: string, patterns?: string[]): void {
+  updateSeries(game: Game, league?: LeagueData, patterns?: string[]): void {
     if (!game.isSeries) return;
 
     this.storageService.games.update((gamesArr) =>
@@ -534,5 +549,45 @@ export class GameComponent implements OnChanges, OnInit {
       this.delayedCloseMap[game.gameId] = false;
       this.loadingService.setLoading(false);
     }
+  }
+
+  // Helper methods for League display
+  getLeagueDisplayText(league: LeagueData): string {
+    if (typeof league === 'string') {
+      return league;
+    } else if (isLeagueObject(league)) {
+      return `${league.event}: ${league.name}`; // Show "League: Name" or "Tournament: Name"
+    }
+    return '';
+  }
+
+  isLegacyLeague(league: LeagueData): boolean {
+    return typeof league === 'string';
+  }
+
+  asLeagueObject(league: LeagueData): League {
+    return league as League;
+  }
+
+  getLeagueValue(league: LeagueData): string {
+    return typeof league === 'string' ? league : league.name;
+  }
+
+  // Handle league selection change in edit mode
+  onLeagueSelectionChange(game: Game, selectedValue: string): void {
+    if (selectedValue === '') {
+      game.league = undefined;
+    } else {
+      // Find the actual League object based on selected value
+      const selectedLeague = this.leagues().find((league) => this.getLeagueValue(league) === selectedValue);
+
+      if (selectedLeague) {
+        game.league = selectedLeague; // Set the full League object
+      } else {
+        // Fallback to string if league not found (shouldn't happen, but safety)
+        game.league = selectedValue;
+      }
+    }
+    this.updateSeries(game, game.league);
   }
 }

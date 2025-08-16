@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Game } from 'src/app/core/models/game.model';
+import { LeagueData } from 'src/app/core/models/league.model';
 
 @Injectable({
   providedIn: 'root',
@@ -10,7 +11,7 @@ export class GameDataTransformerService {
     frameScores: number[],
     totalScore: number,
     isPractice: boolean,
-    league?: string,
+    league?: LeagueData,
     isSeries?: boolean,
     seriesId?: string,
     note?: string,
