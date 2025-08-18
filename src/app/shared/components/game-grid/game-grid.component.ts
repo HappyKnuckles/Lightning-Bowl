@@ -147,9 +147,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
       this.game().frames = Array.from({ length: 10 }, () => []);
     }
     this.presentingElement = document.querySelector('.ion-page')!;
-    this.patternTypeaheadConfig = createPartialPatternTypeaheadConfig(
-      (searchTerm: string) => this.patternService.searchPattern(searchTerm)
-    );
+    this.patternTypeaheadConfig = createPartialPatternTypeaheadConfig((searchTerm: string) => this.patternService.searchPattern(searchTerm));
   }
 
   ngOnDestroy() {

@@ -22,6 +22,8 @@ export interface Ball {
   thumbnail_image: string;
   us_int: string;
   position?: number;
+  notes?: string;
+  tags?: string[];
 }
 
 export interface Core {
