@@ -465,4 +465,17 @@ export class GameGridComponent implements OnInit, OnDestroy {
       }
     }
   }
+
+  getPatternDisplayNames(): string {
+    if (!this.game().patterns || this.game().patterns.length === 0) {
+      return 'None';
+    }
+    
+    const patternTitles = this.game().patterns.map(patternUrl => {
+      const pattern = this.storageService.allPatterns().find((p: Partial<Pattern>) => p.url === patternUrl);
+      return pattern?.title || patternUrl;
+    });
+    
+    return patternTitles.join(', ');
+  }
 }
