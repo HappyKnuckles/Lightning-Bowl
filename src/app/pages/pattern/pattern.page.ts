@@ -84,6 +84,7 @@ export class PatternPage implements OnInit {
   currentPage = 1;
   hasMoreData = true;
   isPageLoading = signal(false);
+  searchTerm = signal('');
   currentSortOption: PatternSortOption = {
     field: PatternSortField.TITLE,
     direction: SortDirection.ASC,
@@ -91,6 +92,11 @@ export class PatternPage implements OnInit {
   };
 
   get displayedPatterns(): Pattern[] {
+    // If there's a search term, return patterns without additional sorting to preserve relevance ranking
+    if (this.searchTerm().trim() !== '') {
+      return this.patterns;
+    }
+    // Apply sorting only when not searching
     return this.sortService.sortPatterns(this.patterns, this.currentSortOption);
   }
 
@@ -119,6 +125,7 @@ export class PatternPage implements OnInit {
       this.currentPage = 1;
       this.hasMoreData = true;
       this.patterns = [];
+      this.searchTerm.set(''); // Clear search term on refresh
       await this.loadPatterns();
     } catch (error) {
       console.error(error);
@@ -159,13 +166,16 @@ export class PatternPage implements OnInit {
   async searchPatterns(event: CustomEvent): Promise<void> {
     try {
       this.loadingService.setLoading(true);
-      if (event.detail.value === '') {
+      const searchValue = event.detail.value || '';
+      this.searchTerm.set(searchValue);
+      
+      if (searchValue === '') {
         this.hasMoreData = true;
         const response = await this.patternService.getPatterns(this.currentPage);
         this.patterns = response.patterns;
         this.currentPage++;
       } else {
-        const response = await this.patternService.searchPattern(event.detail.value);
+        const response = await this.patternService.searchPattern(searchValue);
         this.patterns = response.patterns;
         this.hasMoreData = false;
         this.currentPage = 1;
