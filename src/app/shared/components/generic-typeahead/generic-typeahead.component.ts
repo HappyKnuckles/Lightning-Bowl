@@ -162,17 +162,21 @@ export class GenericTypeaheadComponent<T> implements OnInit, OnDestroy {
 
   resetSelection() {
     this.selectedItems = [];
-    // Clear the search bar
+    // Clear the search bar and trigger search reset
     if (this.searchbar) {
       this.searchbar.value = '';
-    }
-    // Reset the filtered items back to original order without selected items first
-    this.filteredItems.set([...this.items()]);
-    // Reset loaded count to initial batch size
-    this.loadedCount.set(Math.min(this.batchSize, this.items().length));
-    // Re-enable infinite scroll if it was disabled
-    if (this.infiniteScroll) {
-      this.infiniteScroll.disabled = this.loadedCount() >= this.filteredItems().length;
+      // Manually trigger search with empty term to ensure proper reset
+      const emptySearchEvent = {
+        detail: { value: '' }
+      } as CustomEvent;
+      this.searchItems(emptySearchEvent);
+    } else {
+      // Fallback if searchbar is not available
+      this.filteredItems.set([...this.items()]);
+      this.loadedCount.set(Math.min(this.batchSize, this.items().length));
+      if (this.infiniteScroll) {
+        this.infiniteScroll.disabled = this.loadedCount() >= this.filteredItems().length;
+      }
     }
   }
 

@@ -1,8 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { GenericTypeaheadComponent } from './generic-typeahead.component';
-import { ModalController } from '@ionic/angular';
+import { ModalController, IonSearchbar } from '@ionic/angular';
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
-import { signal } from '@angular/core';
 
 // Mock interfaces for testing
 interface TestItem {
@@ -13,8 +12,6 @@ interface TestItem {
 describe('GenericTypeaheadComponent', () => {
   let component: GenericTypeaheadComponent<TestItem>;
   let fixture: ComponentFixture<GenericTypeaheadComponent<TestItem>>;
-  let mockModalController: jasmine.SpyObj<ModalController>;
-  let mockLoadingService: jasmine.SpyObj<LoadingService>;
 
   const testItems: TestItem[] = [
     { id: 1, name: 'Item 1' },
@@ -47,8 +44,6 @@ describe('GenericTypeaheadComponent', () => {
 
     fixture = TestBed.createComponent(GenericTypeaheadComponent<TestItem>);
     component = fixture.componentInstance;
-    mockModalController = TestBed.inject(ModalController) as jasmine.SpyObj<ModalController>;
-    mockLoadingService = TestBed.inject(LoadingService) as jasmine.SpyObj<LoadingService>;
 
     // Set required inputs
     fixture.componentRef.setInput('items', testItems);
@@ -70,8 +65,11 @@ describe('GenericTypeaheadComponent', () => {
     component.filteredItems.set([testItems[0], testItems[1], testItems[2]]);
     
     // Mock the searchbar
-    const mockSearchbar = { value: 'test search' } as any;
+    const mockSearchbar = { value: 'test search' } as IonSearchbar;
     component.searchbar = mockSearchbar;
+    
+    // Spy on searchItems method to verify it gets called
+    spyOn(component, 'searchItems').and.callThrough();
     
     // Call resetSelection
     component.resetSelection();
@@ -81,6 +79,11 @@ describe('GenericTypeaheadComponent', () => {
     
     // Verify search bar is cleared
     expect(component.searchbar.value).toBe('');
+    
+    // Verify searchItems was called with empty search term
+    expect(component.searchItems).toHaveBeenCalledWith(jasmine.objectContaining({
+      detail: { value: '' }
+    }));
     
     // Verify filteredItems is reset to original order
     expect(component.filteredItems()).toEqual(testItems);
@@ -103,5 +106,35 @@ describe('GenericTypeaheadComponent', () => {
       { id: 2, name: 'Item 2' },
       { id: 3, name: 'Item 3' }
     ]);
+  });
+
+  it('should properly reset when search pattern was active', () => {
+    // Simulate a scenario where user had searched and selected items
+    component.selectedItems = [testItems[0]];
+    component.filteredItems.set([testItems[0]]); // Simulate filtered state from search
+    
+    // Mock searchbar with active search
+    const mockSearchbar = { value: 'Item 1' } as IonSearchbar;
+    component.searchbar = mockSearchbar;
+    
+    // Spy on searchItems
+    spyOn(component, 'searchItems').and.callThrough();
+    
+    // Call resetSelection
+    component.resetSelection();
+    
+    // Verify searchbar is cleared
+    expect(mockSearchbar.value).toBe('');
+    
+    // Verify searchItems was called to reset the search
+    expect(component.searchItems).toHaveBeenCalledWith(jasmine.objectContaining({
+      detail: { value: '' }
+    }));
+    
+    // Verify selectedItems is empty
+    expect(component.selectedItems).toEqual([]);
+    
+    // Verify all items are restored
+    expect(component.filteredItems()).toEqual(testItems);
   });
 });
