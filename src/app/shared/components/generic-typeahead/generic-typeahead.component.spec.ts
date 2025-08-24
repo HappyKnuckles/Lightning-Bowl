@@ -65,7 +65,24 @@ describe('GenericTypeaheadComponent', () => {
     component.filteredItems.set([testItems[0], testItems[1], testItems[2]]);
     
     // Mock the searchbar
-    const mockSearchbar = { value: 'test search' } as IonSearchbar;
+    const mockSearchbar = { 
+      value: 'test search',
+      handleIonInput: jasmine.createSpy(),
+      injector: null,
+      elementRef: null,
+      onChange: jasmine.createSpy(),
+      onInput: jasmine.createSpy(),
+      onBlur: jasmine.createSpy(),
+      onFocus: jasmine.createSpy(),
+      onCancel: jasmine.createSpy(),
+      onClear: jasmine.createSpy(),
+      onIonChange: jasmine.createSpy(),
+      onIonInput: jasmine.createSpy(),
+      onIonBlur: jasmine.createSpy(),
+      onIonFocus: jasmine.createSpy(),
+      onIonCancel: jasmine.createSpy(),
+      onIonClear: jasmine.createSpy()
+    } as any;
     component.searchbar = mockSearchbar;
     
     // Spy on searchItems method to verify it gets called
@@ -114,7 +131,24 @@ describe('GenericTypeaheadComponent', () => {
     component.filteredItems.set([testItems[0]]); // Simulate filtered state from search
     
     // Mock searchbar with active search
-    const mockSearchbar = { value: 'Item 1' } as IonSearchbar;
+    const mockSearchbar = { 
+      value: 'Item 1',
+      handleIonInput: jasmine.createSpy(),
+      injector: null,
+      elementRef: null,
+      onChange: jasmine.createSpy(),
+      onInput: jasmine.createSpy(),
+      onBlur: jasmine.createSpy(),
+      onFocus: jasmine.createSpy(),
+      onCancel: jasmine.createSpy(),
+      onClear: jasmine.createSpy(),
+      onIonChange: jasmine.createSpy(),
+      onIonInput: jasmine.createSpy(),
+      onIonBlur: jasmine.createSpy(),
+      onIonFocus: jasmine.createSpy(),
+      onIonCancel: jasmine.createSpy(),
+      onIonClear: jasmine.createSpy()
+    } as any;
     component.searchbar = mockSearchbar;
     
     // Spy on searchItems
@@ -136,5 +170,68 @@ describe('GenericTypeaheadComponent', () => {
     
     // Verify all items are restored
     expect(component.filteredItems()).toEqual(testItems);
+  });
+
+  it('should emit selectedItemsChange on ngOnDestroy even when selection is empty', () => {
+    // Spy on the selectedItemsChange emit
+    spyOn(component.selectedItemsChange, 'emit');
+    
+    // Test case 1: No items selected
+    component.selectedItems = [];
+    component.ngOnDestroy();
+    
+    // Should emit empty array
+    expect(component.selectedItemsChange.emit).toHaveBeenCalledWith([]);
+    
+    // Reset spy
+    component.selectedItemsChange.emit = jasmine.createSpy();
+    
+    // Test case 2: Items selected
+    component.selectedItems = [testItems[0], testItems[1]];
+    component.ngOnDestroy();
+    
+    // Should emit selected item identifiers
+    expect(component.selectedItemsChange.emit).toHaveBeenCalledWith([1, 2]);
+  });
+
+  it('should reset selection and emit change when destroyed after reset', () => {
+    // Start with selected items
+    component.selectedItems = [testItems[0], testItems[1]];
+    
+    // Mock the searchbar
+    const mockSearchbar = { 
+      value: 'test search',
+      handleIonInput: jasmine.createSpy(),
+      injector: null,
+      elementRef: null,
+      onChange: jasmine.createSpy(),
+      onInput: jasmine.createSpy(),
+      onBlur: jasmine.createSpy(),
+      onFocus: jasmine.createSpy(),
+      onCancel: jasmine.createSpy(),
+      onClear: jasmine.createSpy(),
+      onIonChange: jasmine.createSpy(),
+      onIonInput: jasmine.createSpy(),
+      onIonBlur: jasmine.createSpy(),
+      onIonFocus: jasmine.createSpy(),
+      onIonCancel: jasmine.createSpy(),
+      onIonClear: jasmine.createSpy()
+    } as any;
+    component.searchbar = mockSearchbar;
+    
+    // Spy on the selectedItemsChange emit
+    spyOn(component.selectedItemsChange, 'emit');
+    
+    // Reset selection
+    component.resetSelection();
+    
+    // Verify selectedItems is empty
+    expect(component.selectedItems).toEqual([]);
+    
+    // Now destroy component - it should emit empty array
+    component.ngOnDestroy();
+    
+    // Should emit empty array to notify parent that selection was cleared
+    expect(component.selectedItemsChange.emit).toHaveBeenCalledWith([]);
   });
 });

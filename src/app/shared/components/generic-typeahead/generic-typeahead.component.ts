@@ -242,8 +242,6 @@ export class GenericTypeaheadComponent<T> implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     const selectedIdentifiers = this.selectedItems.map((item) => this.getItemIdentifier(item));
-    if (selectedIdentifiers.length !== 0) {
-      this.selectedItemsChange.emit(selectedIdentifiers);
-    }
+    this.selectedItemsChange.emit(selectedIdentifiers);
   }
 }
