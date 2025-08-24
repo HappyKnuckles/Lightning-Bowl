@@ -161,6 +161,14 @@ export class GenericTypeaheadComponent<T> implements OnInit, OnDestroy {
 
   resetSelection() {
     this.selectedItems = [];
+    // Reset the filtered items back to original order without selected items first
+    this.filteredItems.set([...this.items()]);
+    // Reset loaded count to initial batch size
+    this.loadedCount.set(Math.min(this.batchSize, this.items().length));
+    // Re-enable infinite scroll if it was disabled
+    if (this.infiniteScroll) {
+      this.infiniteScroll.disabled = this.loadedCount() >= this.filteredItems().length;
+    }
   }
 
   saveSelection() {
