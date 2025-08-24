@@ -58,6 +58,7 @@ export class GenericTypeaheadComponent<T> implements OnInit, OnDestroy {
   @Output() selectedItemsChange = new EventEmitter<any[]>();
   @ViewChild(IonContent, { static: false }) content!: IonContent;
   @ViewChild('infiniteScroll') infiniteScroll!: IonInfiniteScroll;
+  @ViewChild(IonSearchbar, { static: false }) searchbar!: IonSearchbar;
 
   filteredItems = signal<T[]>([]);
   selectedItems: T[] = [];
@@ -161,6 +162,10 @@ export class GenericTypeaheadComponent<T> implements OnInit, OnDestroy {
 
   resetSelection() {
     this.selectedItems = [];
+    // Clear the search bar
+    if (this.searchbar) {
+      this.searchbar.value = '';
+    }
     // Reset the filtered items back to original order without selected items first
     this.filteredItems.set([...this.items()]);
     // Reset loaded count to initial batch size

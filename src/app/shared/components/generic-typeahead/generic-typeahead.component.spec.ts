@@ -62,18 +62,25 @@ describe('GenericTypeaheadComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should reset selection properly', () => {
+  it('should reset selection and search bar properly', () => {
     // Select some items first
     component.selectedItems = [testItems[0], testItems[1]];
     
     // Simulate the reordering that would happen when items are selected
     component.filteredItems.set([testItems[0], testItems[1], testItems[2]]);
     
+    // Mock the searchbar
+    const mockSearchbar = { value: 'test search' } as any;
+    component.searchbar = mockSearchbar;
+    
     // Call resetSelection
     component.resetSelection();
     
     // Verify selectedItems is empty
     expect(component.selectedItems).toEqual([]);
+    
+    // Verify search bar is cleared
+    expect(component.searchbar.value).toBe('');
     
     // Verify filteredItems is reset to original order
     expect(component.filteredItems()).toEqual(testItems);
