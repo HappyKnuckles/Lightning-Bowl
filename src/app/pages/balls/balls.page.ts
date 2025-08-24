@@ -108,7 +108,7 @@ export class BallsPage implements OnInit {
   };
 
   // Computed getter for displayed balls.
-  // • If a search term exists, we build a Fuse instance over the correct data source.
+  // • If a search term exists, we build a Fuse instance over the correct data source and return results sorted by relevance.
   // • If filters are active and no search term exists, we display only a slice (up to filterDisplayCount) of the filtered list.
   // • Otherwise, we display the paged API-loaded balls.
   get displayedBalls(): Ball[] {
@@ -143,6 +143,9 @@ export class BallsPage implements OnInit {
 
       // Collect results for each search term
       result = searchTerms.flatMap((term) => fuseInstance.search(term).map((result) => result.item));
+      
+      // Return search results without additional sorting to preserve relevance ranking
+      return result;
     } else {
       result = this.isFilterActive() ? this.ballFilterService.filteredBalls() : this.balls();
       if (this.isFilterActive()) {
@@ -151,7 +154,7 @@ export class BallsPage implements OnInit {
       this.hasMoreData = true;
     }
 
-    // Apply sorting to the result
+    // Apply sorting only when not searching
     return this.sortService.sortBalls(result, this.currentSortOption);
   }
 
