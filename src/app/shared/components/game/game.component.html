@@ -40,7 +40,7 @@
                 <p>{{ game.date | date: "MM.dd.yyyy" }}</p>
                 <h2 class="title">Game {{ gameCount! - $index }}</h2>
                 <p class="score" *ngIf="game.league && !isLeaguePage">League/Tournament: {{ game.league }}</p>
-                <p class="score" *ngIf="game.patterns && game.patterns.length > 0">Patterns: {{ game.patterns.join(", ") }}</p>
+                <p class="score" *ngIf="game.patterns && game.patterns.length > 0">Patterns: {{ getPatternDisplayNames(game.patterns) }}</p>
                 <p class="score">Score: {{ game.totalScore }}</p>
                 <!-- <div class="score">{{game.date | date}}</div> -->
               </ion-label>
@@ -158,7 +158,7 @@
                 <ion-item class="pattern" button [id]="'selectPatternHistory' + $index">
                   <ion-icon src="assets/svg/lane.svg" slot="start"></ion-icon>
                   <ion-label>Patterns</ion-label>
-                  <span class="ion-text-right"> {{ game.patterns.join(", ") || "None" }}</span>
+                  <span class="ion-text-right"> {{ getPatternDisplayNames(game.patterns) }}</span>
                 </ion-item>
                 <ion-modal [presentingElement]="presentingElement" [trigger]="'selectPatternHistory' + $index">
                   <ng-template>

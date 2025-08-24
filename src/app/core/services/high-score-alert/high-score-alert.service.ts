@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import { AlertController } from '@ionic/angular';
 import { Game } from '../../models/game.model';
+import { StorageService } from '../storage/storage.service';
+import { Pattern } from '../../models/pattern.model';
 
 export interface HighScoreRecord {
   type: 'single_game' | 'series';
@@ -14,7 +16,10 @@ export interface HighScoreRecord {
   providedIn: 'root',
 })
 export class HighScoreAlertService {
-  constructor(private alertController: AlertController) {}
+  constructor(
+    private alertController: AlertController,
+    private storageService: StorageService
+  ) {}
 
   /**
    * Check if a new game achieves any new high scores and display alerts
@@ -126,7 +131,8 @@ export class HighScoreAlertService {
     }
 
     if (game.patterns && game.patterns.length > 0) {
-      details.push(`Patterns: ${game.patterns.join(', ')}`);
+      const patternNames = this.getPatternDisplayNames(game.patterns);
+      details.push(`Patterns: ${patternNames}`);
     }
 
     if (game.balls && game.balls.length > 0) {
@@ -136,6 +142,18 @@ export class HighScoreAlertService {
     details.push(`Date: ${new Date(game.date).toLocaleDateString()}`);
 
     return details.join(' • ');
+  }
+
+  /**
+   * Convert pattern URLs to display names
+   */
+  private getPatternDisplayNames(patternUrls: string[]): string {
+    const patternTitles = patternUrls.map(patternUrl => {
+      const pattern = this.storageService.allPatterns().find((p: Partial<Pattern>) => p.url === patternUrl);
+      return pattern?.title || patternUrl;
+    });
+    
+    return patternTitles.join(', ');
   }
 
   /**
