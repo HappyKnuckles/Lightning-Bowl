@@ -58,7 +58,6 @@ export class GenericTypeaheadComponent<T> implements OnInit, OnDestroy {
   @Output() selectedItemsChange = new EventEmitter<any[]>();
   @ViewChild(IonContent, { static: false }) content!: IonContent;
   @ViewChild('infiniteScroll') infiniteScroll!: IonInfiniteScroll;
-  @ViewChild(IonSearchbar, { static: false }) searchbar!: IonSearchbar;
 
   filteredItems = signal<T[]>([]);
   selectedItems: T[] = [];
@@ -66,6 +65,7 @@ export class GenericTypeaheadComponent<T> implements OnInit, OnDestroy {
   fuse!: Fuse<T>;
   private batchSize = 100;
   public loadedCount = signal(0);
+  private initialSelectedIdentifiers: any[] = [];
 
   constructor(
     private modalCtrl: ModalController,
@@ -99,6 +99,9 @@ export class GenericTypeaheadComponent<T> implements OnInit, OnDestroy {
     if (this.selectedItems.length > 0) {
       this.reorderItemsForSelected();
     }
+
+    // Store initial selected state for comparison in ngOnDestroy
+    this.initialSelectedIdentifiers = this.selectedItems.map((item) => this.getItemIdentifier(item));
   }
 
   loadData(event: InfiniteScrollCustomEvent): void {
@@ -162,22 +165,6 @@ export class GenericTypeaheadComponent<T> implements OnInit, OnDestroy {
 
   resetSelection() {
     this.selectedItems = [];
-    // Clear the search bar and trigger search reset
-    if (this.searchbar) {
-      this.searchbar.value = '';
-      // Manually trigger search with empty term to ensure proper reset
-      const emptySearchEvent = {
-        detail: { value: '' }
-      } as CustomEvent;
-      this.searchItems(emptySearchEvent);
-    } else {
-      // Fallback if searchbar is not available
-      this.filteredItems.set([...this.items()]);
-      this.loadedCount.set(Math.min(this.batchSize, this.items().length));
-      if (this.infiniteScroll) {
-        this.infiniteScroll.disabled = this.loadedCount() >= this.filteredItems().length;
-      }
-    }
   }
 
   saveSelection() {
@@ -242,6 +229,14 @@ export class GenericTypeaheadComponent<T> implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     const selectedIdentifiers = this.selectedItems.map((item) => this.getItemIdentifier(item));
-    this.selectedItemsChange.emit(selectedIdentifiers);
+    
+    // Only emit if the current selection is different from the initial selection
+    const isDifferent = selectedIdentifiers.length !== this.initialSelectedIdentifiers.length ||
+                       selectedIdentifiers.some(id => !this.initialSelectedIdentifiers.includes(id)) ||
+                       this.initialSelectedIdentifiers.some(id => !selectedIdentifiers.includes(id));
+    
+    if (isDifferent) {
+      this.selectedItemsChange.emit(selectedIdentifiers);
+    }
   }
 }
