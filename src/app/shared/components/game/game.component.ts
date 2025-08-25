@@ -475,7 +475,7 @@ export class GameComponent implements OnChanges, OnInit {
             : `Bowled with: ${game.balls.join(', ')}`
           : null,
 
-        game.patterns && game.patterns.length > 0 ? `Patterns: ${game.patterns.join(', ')}` : null,
+        game.patterns && game.patterns.length > 0 ? `Patterns: ${this.getPatternDisplayNames(game.patterns)}` : null,
       ];
 
       const message = messageParts.filter((part) => part !== null).join('\n');
@@ -534,5 +534,21 @@ export class GameComponent implements OnChanges, OnInit {
       this.delayedCloseMap[game.gameId] = false;
       this.loadingService.setLoading(false);
     }
+  }
+
+  /**
+   * Get pattern display names from pattern URLs
+   */
+  getPatternDisplayNames(patterns: string[]): string {
+    if (!patterns || patterns.length === 0) {
+      return 'None';
+    }
+    
+    const patternTitles = patterns.map(patternUrl => {
+      const pattern = this.storageService.allPatterns().find((p) => p.url === patternUrl);
+      return pattern?.title || patternUrl;
+    });
+    
+    return patternTitles.join(', ');
   }
 }
