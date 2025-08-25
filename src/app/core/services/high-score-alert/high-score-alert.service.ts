@@ -2,11 +2,25 @@ import { Injectable } from '@angular/core';
 import { AlertController } from '@ionic/angular';
 import { Game } from '../../models/game.model';
 
+export interface GameDetails {
+  league?: string;
+  patterns?: string[];
+  balls?: string[];
+  date: string;
+}
+
+export interface SeriesDetails {
+  seriesType: string;
+  scores: number[];
+  league?: string;
+  date: string;
+}
+
 export interface HighScoreRecord {
   type: 'single_game' | 'series';
   newRecord: number;
   previousRecord: number;
-  details: string;
+  details: GameDetails | SeriesDetails;
   gameOrSeries: Game | Game[];
 }
 
@@ -83,10 +97,9 @@ export class HighScoreAlertService {
     const isNewRecord = record.previousRecord === 0;
     const improvementText = isNewRecord ? 'Your first record!' : `Previous best: ${record.previousRecord}`;
 
-    // Extract series info for better subheader
     let subHeaderText = record.type === 'single_game' ? 'Single Game Record' : 'Series Record';
-    if (record.type === 'series' && record.details.includes('-Game Series')) {
-      const gameCountMatch = record.details.match(/(\d+)-Game Series/);
+    if (record.type === 'series' && 'seriesType' in record.details) {
+      const gameCountMatch = record.details.seriesType.match(/(\d+)-Game Series/);
       if (gameCountMatch) {
         subHeaderText = `${gameCountMatch[1]}-Game Series Record`;
       }
@@ -99,7 +112,7 @@ export class HighScoreAlertService {
         <div style="text-align: center; padding: 10px;">
           <h2 style="color: #4CAF50; margin: 10px 0;">${record.newRecord}</h2>
           <p style="margin: 5px 0;"><strong>${improvementText}</strong></p>
-          <p style="margin: 5px 0; font-size: 0.9em;">${record.details}</p>
+          <div style="margin: 5px 0; font-size: 0.9em;">${this.formatStructuredDetailsToHtml(record.details)}</div>
         </div>
       `,
       buttons: [
@@ -118,44 +131,29 @@ export class HighScoreAlertService {
   /**
    * Get formatted game details for display
    */
-  private getGameDetails(game: Game): string {
-    const details = [];
-
-    if (game.league) {
-      details.push(`League: ${game.league}`);
-    }
-
-    if (game.patterns && game.patterns.length > 0) {
-      details.push(`Patterns: ${game.patterns.join(', ')}`);
-    }
-
-    if (game.balls && game.balls.length > 0) {
-      details.push(`Balls: ${game.balls.join(', ')}`);
-    }
-
-    details.push(`Date: ${new Date(game.date).toLocaleDateString()}`);
-
-    return details.join(' • ');
+  private getGameDetails(game: Game): GameDetails {
+    return {
+      league: game.league || undefined,
+      patterns: game.patterns && game.patterns.length > 0 ? game.patterns : undefined,
+      balls: game.balls && game.balls.length > 0 ? game.balls : undefined,
+      date: new Date(game.date).toLocaleDateString(),
+    };
   }
 
   /**
    * Get formatted series details for display
    */
-  private getSeriesDetails(seriesGames: Game[]): string {
-    const details = [];
-    const scores = seriesGames.map((g) => g.totalScore).join(', ');
+  private getSeriesDetails(seriesGames: Game[]): SeriesDetails {
+    const scores = seriesGames.map((g) => g.totalScore);
     const gameCount = seriesGames.length;
-
     const seriesTypeText = gameCount ? `${gameCount}-Game Series` : 'Series';
-    details.push(`${seriesTypeText}: ${scores}`);
 
-    if (seriesGames[0]?.league) {
-      details.push(`League: ${seriesGames[0].league}`);
-    }
-
-    details.push(`Date: ${new Date(seriesGames[0]?.date || Date.now()).toLocaleDateString()}`);
-
-    return details.join(' • ');
+    return {
+      seriesType: seriesTypeText,
+      scores: scores,
+      league: seriesGames[0]?.league || undefined,
+      date: new Date(seriesGames[0]?.date || Date.now()).toLocaleDateString(),
+    };
   }
 
   /**
@@ -212,5 +210,36 @@ export class HighScoreAlertService {
     const highSeries = seriesScores.length > 0 ? Math.max(...seriesScores) : 0;
 
     return { highGame, highSeries };
+  }
+
+  /**
+   * Format structured details to HTML with bold titles and separate lines
+   */
+  private formatStructuredDetailsToHtml(details: GameDetails | SeriesDetails): string {
+    const htmlParts: string[] = [];
+
+    if ('seriesType' in details) {
+      // SeriesDetails
+      htmlParts.push(`<p style="margin: 3px 0; font-size: 0.9em;"><strong>${details.seriesType}:</strong> ${details.scores.join(', ')}</p>`);
+      if (details.league) {
+        htmlParts.push(`<p style="margin: 3px 0; font-size: 0.9em;"><strong>League:</strong> ${details.league}</p>`);
+      }
+    } else {
+      // GameDetails
+      if (details.league) {
+        htmlParts.push(`<p style="margin: 3px 0; font-size: 0.9em;"><strong>League:</strong> ${details.league}</p>`);
+      }
+      if (details.patterns && details.patterns.length > 0) {
+        htmlParts.push(`<p style="margin: 3px 0; font-size: 0.9em;"><strong>Patterns:</strong> ${details.patterns.join(', ')}</p>`);
+      }
+      if (details.balls && details.balls.length > 0) {
+        htmlParts.push(`<p style="margin: 3px 0; font-size: 0.9em;"><strong>Balls:</strong> ${details.balls.join(', ')}</p>`);
+      }
+    }
+
+    // Date is common to both types
+    htmlParts.push(`<p style="margin: 3px 0; font-size: 0.9em;"><strong>Date:</strong> ${details.date}</p>`);
+
+    return htmlParts.join('');
   }
 }

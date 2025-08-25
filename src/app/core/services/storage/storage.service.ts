@@ -46,7 +46,7 @@ export class StorageService {
     private highScoreAlertService: HighScoreAlertService,
   ) {
     this.init();
-    // this.highScoreAlertService.displayHighScoreAlert({type: 'single_game', newRecord: 150, previousRecord: 110, details: 'Du coole sau', gameOrSeries: []});
+    // this.highScoreAlertService.displayHighScoreAlert({ type: 'single_game', newRecord: 150, previousRecord: 110, details: { league: 'Monday Night', patterns: ['THS', 'Sport'], balls: ['Storm', 'Hammer'], date: '1/15/2025' }, gameOrSeries: []});
   }
 
   async init() {
