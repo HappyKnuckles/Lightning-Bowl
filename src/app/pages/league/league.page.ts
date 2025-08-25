@@ -188,7 +188,8 @@ export class LeaguePage {
 
   isVisibilityEdit = signal(false);
 
-  viewType = signal<'all' | 'leagues' | 'tournaments'>('all');
+  private readonly VIEWTYPE_STORAGE_KEY = 'league-view-type';
+  viewType = signal<'all' | 'leagues' | 'tournaments'>(this.loadViewTypeFromStorage());
 
   currentViewTitle = computed(() => {
     switch (this.viewType()) {
@@ -434,6 +435,7 @@ export class LeaguePage {
 
   selectViewType(type: 'all' | 'leagues' | 'tournaments') {
     this.viewType.set(type);
+    this.saveViewTypeToStorage(type);
   }
 
   getActionSheetButtons() {
@@ -464,5 +466,17 @@ export class LeaguePage {
         role: 'cancel',
       },
     ];
+  }
+
+  private loadViewTypeFromStorage(): 'all' | 'leagues' | 'tournaments' {
+    const saved = localStorage.getItem(this.VIEWTYPE_STORAGE_KEY);
+    if (saved && (saved === 'all' || saved === 'leagues' || saved === 'tournaments')) {
+      return saved;
+    }
+    return 'all';
+  }
+
+  private saveViewTypeToStorage(type: 'all' | 'leagues' | 'tournaments'): void {
+    localStorage.setItem(this.VIEWTYPE_STORAGE_KEY, type);
   }
 }
