@@ -65,6 +65,7 @@ export class GenericTypeaheadComponent<T> implements OnInit, OnDestroy {
   fuse!: Fuse<T>;
   private batchSize = 100;
   public loadedCount = signal(0);
+  private initialSelectedIdentifiers: any[] = [];
 
   constructor(
     private modalCtrl: ModalController,
@@ -98,6 +99,9 @@ export class GenericTypeaheadComponent<T> implements OnInit, OnDestroy {
     if (this.selectedItems.length > 0) {
       this.reorderItemsForSelected();
     }
+
+    // Store initial selected state for comparison in ngOnDestroy
+    this.initialSelectedIdentifiers = this.selectedItems.map((item) => this.getItemIdentifier(item));
   }
 
   loadData(event: InfiniteScrollCustomEvent): void {
@@ -225,7 +229,13 @@ export class GenericTypeaheadComponent<T> implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     const selectedIdentifiers = this.selectedItems.map((item) => this.getItemIdentifier(item));
-    if (selectedIdentifiers.length !== 0) {
+    
+    // Only emit if the current selection is different from the initial selection
+    const isDifferent = selectedIdentifiers.length !== this.initialSelectedIdentifiers.length ||
+                       selectedIdentifiers.some(id => !this.initialSelectedIdentifiers.includes(id)) ||
+                       this.initialSelectedIdentifiers.some(id => !selectedIdentifiers.includes(id));
+    
+    if (isDifferent) {
       this.selectedItemsChange.emit(selectedIdentifiers);
     }
   }
