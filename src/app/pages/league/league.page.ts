@@ -19,8 +19,11 @@ import {
   IonItemOptions,
   IonModal,
   IonRefresher,
+  IonRefresherContent,
   IonSegmentView,
   IonSegmentContent,
+  IonActionSheet,
+  IonCheckbox,
 } from '@ionic/angular/standalone';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { addIcons } from 'ionicons';
@@ -35,6 +38,7 @@ import {
   addOutline,
   chevronBack,
   checkmarkOutline,
+  chevronDownOutline,
 } from 'ionicons/icons';
 import { Game } from 'src/app/core/models/game.model';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
@@ -64,6 +68,7 @@ import { League, isLeagueObject } from 'src/app/core/models/league.model';
   standalone: true,
   imports: [
     IonRefresher,
+    IonRefresherContent,
     IonModal,
     IonText,
     IonItemOptions,
@@ -92,6 +97,8 @@ import { League, isLeagueObject } from 'src/app/core/models/league.model';
     LongPressDirective,
     BallStatsComponent,
     LeagueSelectorComponent,
+    IonActionSheet,
+    IonCheckbox,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
@@ -181,6 +188,32 @@ export class LeaguePage {
 
   isVisibilityEdit = signal(false);
 
+  viewType = signal<'all' | 'leagues' | 'tournaments'>('all');
+
+  currentViewTitle = computed(() => {
+    switch (this.viewType()) {
+      case 'leagues':
+        return 'Leagues';
+      case 'tournaments':
+        return 'Tournaments';
+      default:
+        return 'Leagues/Tournaments';
+    }
+  });
+
+  filteredLeagues = computed(() => {
+    const allLeagues = this.leagues();
+    const viewType = this.viewType();
+
+    if (viewType === 'all') {
+      return allLeagues;
+    } else if (viewType === 'leagues') {
+      return allLeagues.filter((league) => league.event === 'League');
+    } else {
+      return allLeagues.filter((league) => league.event === 'Tournament');
+    }
+  });
+
   get noLeaguesShown(): boolean {
     return !this.leagues().some((league) => league.show);
   }
@@ -213,6 +246,7 @@ export class LeaguePage {
       createOutline,
       chevronBack,
       chevronForward,
+      chevronDownOutline,
       cameraOutline,
       shareOutline,
       documentTextOutline,
@@ -396,5 +430,39 @@ export class LeaguePage {
       this.toastService.showToast(ToastMessages.chartGenerationError, 'bug', true);
       console.error('Error generating pin chart:', error);
     }
+  }
+
+  selectViewType(type: 'all' | 'leagues' | 'tournaments') {
+    this.viewType.set(type);
+  }
+
+  getActionSheetButtons() {
+    return [
+      {
+        text: 'Leagues/Tournaments',
+        role: this.viewType() === 'all' ? 'selected' : undefined,
+        handler: () => {
+          this.selectViewType('all');
+        },
+      },
+      {
+        text: 'Leagues',
+        role: this.viewType() === 'leagues' ? 'selected' : undefined,
+        handler: () => {
+          this.selectViewType('leagues');
+        },
+      },
+      {
+        text: 'Tournaments',
+        role: this.viewType() === 'tournaments' ? 'selected' : undefined,
+        handler: () => {
+          this.selectViewType('tournaments');
+        },
+      },
+      {
+        text: 'Cancel',
+        role: 'cancel',
+      },
+    ];
   }
 }

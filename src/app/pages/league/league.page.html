@@ -14,9 +14,17 @@
         <ion-button type="button" class="action-sheet" fill="clear" (click)="cancelEdit()"> Cancel </ion-button>
       </ion-buttons>
     }
-    <ion-title> Leagues/Tournaments </ion-title>
+    <ion-title id="view-trigger" class="ion-activatable ripple-parent rounded-rectangle">
+      <ion-ripple-effect style="width: 60%; margin: 0 auto; border-radius: 7px"></ion-ripple-effect>
+
+      {{ currentViewTitle() }}
+      <ion-icon name="chevron-down-outline" size="small" style="vertical-align: -3px"></ion-icon>
+    </ion-title>
   </ion-toolbar>
 </ion-header>
+
+<!-- Action Sheet for view selection -->
+<ion-action-sheet trigger="view-trigger" header="Select View" [buttons]="getActionSheetButtons()"> </ion-action-sheet>
 
 <ion-content [fullscreen]="true">
   <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
@@ -27,11 +35,19 @@
   <app-league-selector [isAddPage]="false" style="display: none" #leagueSelector></app-league-selector>
   <!-- Show this message if there are no game history items and it's not loading -->
   <ng-container *ngIf="storageService.games().length <= 0 && !loadingService.isLoading(); else noLeagues">
-    <ion-text class="no-game-text"> Start playing a few games to see your leagues here! </ion-text>
+    <ion-text class="no-game-text">
+      @if (viewType() === "leagues") {
+        Start playing a few games to see your leagues here!
+      } @else if (viewType() === "tournaments") {
+        Start playing a few games to see your tournaments here!
+      } @else {
+        Start playing a few games to see your leagues and tournaments here!
+      }
+    </ion-text>
   </ng-container>
 
   <ng-template #noLeagues>
-    <ng-container *ngIf="leagues().length <= 0 && !loadingService.isLoading(); else content">
+    <ng-container *ngIf="filteredLeagues().length <= 0 && !loadingService.isLoading(); else content">
       <ion-text class="no-game-text"> No leagues saved! </ion-text>
     </ng-container>
   </ng-template>
@@ -40,7 +56,7 @@
     @if (noLeaguesShown && !isVisibilityEdit()) {
       <ion-text class="no-game-text" (longPressed)="editVisibility()" [delay]="1000" appLongPress> No leagues selected to show! </ion-text>
     } @else {
-      @for (league of leagues(); track league.name) {
+      @for (league of filteredLeagues(); track league.name) {
         @if (isVisibilityEdit()) {
           @if (leagueSelectionState; as selectionState) {
             <div class="sliding">
@@ -112,7 +128,7 @@
   </ng-template>
 </ion-content>
 
-@for (league of leagues(); track $index) {
+@for (league of filteredLeagues(); track $index) {
   @if (league.show && !isVisibilityEdit()) {
     <ion-modal
       [trigger]="league.name"
