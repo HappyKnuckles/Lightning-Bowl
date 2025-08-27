@@ -3,7 +3,7 @@ import { Game } from 'src/app/core/models/game.model';
 import { Storage } from '@ionic/storage-angular';
 import { SortUtilsService } from '../sort-utils/sort-utils.service';
 import { Ball } from 'src/app/core/models/ball.model';
-import { signal } from '@angular/core';
+import { signal, computed } from '@angular/core';
 import { LoadingService } from '../loader/loading.service';
 import { BallService } from '../ball/ball.service';
 import { Pattern } from '../../models/pattern.model';
@@ -22,6 +22,21 @@ export class StorageService {
   #arsenal = signal<Ball[]>([]);
   #allBalls = signal<Ball[]>([]);
   #allPatterns = signal<Partial<Pattern>[]>([]);
+  
+  // Network and cache status signals
+  #isUsingCache = signal<boolean>(false);
+  
+  get usingCacheStatus() {
+    return computed(() => ({
+      isOffline: this.networkService.isOffline,
+      isUsingCache: this.#isUsingCache(),
+      statusMessage: this.networkService.isOffline 
+        ? 'Offline - Using cached data' 
+        : this.#isUsingCache() 
+          ? 'Using cached data' 
+          : 'Online - Data up to date'
+    }));
+  }
 
   get leagues() {
     return this.#leagues;
@@ -170,6 +185,7 @@ export class StorageService {
         // Use cached data if available and valid, or if we're offline
         if (cachedBalls && (isCacheValid || this.networkService.isOffline)) {
           this.allBalls.set(cachedBalls);
+          this.#isUsingCache.set(true);
           // Background refresh logging removed to satisfy linter
           
           // If online but cache is stale, refresh in background
@@ -188,6 +204,7 @@ export class StorageService {
 
       const response = await this.ballService.loadAllBalls(updated, weight);
       this.allBalls.set(response);
+      this.#isUsingCache.set(false);
       
       // Cache the fresh data
       await this.cacheService.set(cacheKey, response);
@@ -200,6 +217,7 @@ export class StorageService {
       const cachedBalls = await this.cacheService.get<Ball[]>(cacheKey);
       if (cachedBalls) {
         this.allBalls.set(cachedBalls);
+        this.#isUsingCache.set(true);
         // Fallback logging removed to satisfy linter
       } else {
         throw error;
@@ -211,6 +229,7 @@ export class StorageService {
     try {
       const response = await this.ballService.loadAllBalls(updated, weight);
       this.allBalls.set(response);
+      this.#isUsingCache.set(false);
       
       if (cacheKey) {
         await this.cacheService.set(cacheKey, response);
@@ -233,6 +252,7 @@ export class StorageService {
         // Use cached data if available and valid, or if we're offline
         if (cachedPatterns && (isCacheValid || this.networkService.isOffline)) {
           this.allPatterns.set(cachedPatterns);
+          this.#isUsingCache.set(true);
           // Cache loading logging removed to satisfy linter
           
           // If online but cache is stale, refresh in background
@@ -251,6 +271,7 @@ export class StorageService {
 
       const response = await this.patternService.getAllPatterns();
       this.allPatterns.set(response);
+      this.#isUsingCache.set(false);
       
       // Cache the fresh data
       await this.cacheService.set(cacheKey, response);
@@ -263,6 +284,7 @@ export class StorageService {
       const cachedPatterns = await this.cacheService.get<Pattern[]>(cacheKey);
       if (cachedPatterns) {
         this.allPatterns.set(cachedPatterns);
+        this.#isUsingCache.set(true);
         // Fallback logging removed to satisfy linter
       }
       // Don't throw error for patterns to maintain app functionality
@@ -273,6 +295,7 @@ export class StorageService {
     try {
       const response = await this.patternService.getAllPatterns();
       this.allPatterns.set(response);
+      this.#isUsingCache.set(false);
       
       if (cacheKey) {
         await this.cacheService.set(cacheKey, response);
