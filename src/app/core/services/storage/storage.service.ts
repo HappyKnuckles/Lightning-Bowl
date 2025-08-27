@@ -9,6 +9,8 @@ import { BallService } from '../ball/ball.service';
 import { Pattern } from '../../models/pattern.model';
 import { PatternService } from '../pattern/pattern.service';
 import { HighScoreAlertService } from '../high-score-alert/high-score-alert.service';
+import { CacheService } from '../cache/cache.service';
+import { NetworkService } from '../network/network.service';
 
 @Injectable({
   providedIn: 'root',
@@ -44,6 +46,8 @@ export class StorageService {
     private ballService: BallService,
     private patternService: PatternService,
     private highScoreAlertService: HighScoreAlertService,
+    private cacheService: CacheService,
+    private networkService: NetworkService,
   ) {
     this.init();
     // this.highScoreAlertService.displayHighScoreAlert({ type: 'single_game', newRecord: 150, previousRecord: 110, details: { league: 'Monday Night', patterns: ['THS', 'Sport'], balls: ['Storm', 'Hammer'], date: '1/15/2025' }, gameOrSeries: []});
@@ -154,24 +158,168 @@ export class StorageService {
     }
   }
 
-  async loadAllBalls(updated?: string, weight?: number): Promise<void> {
+  async loadAllBalls(updated?: string, weight?: number, forceRefresh = false): Promise<void> {
+    const cacheKey = `all_balls_${weight || 'default'}`;
+    
     try {
+      // Check if we should use cached data
+      if (!forceRefresh) {
+        const cachedBalls = await this.cacheService.get<Ball[]>(cacheKey);
+        const isCacheValid = await this.cacheService.isValid(cacheKey);
+        
+        // Use cached data if available and valid, or if we're offline
+        if (cachedBalls && (isCacheValid || this.networkService.isOffline)) {
+          this.allBalls.set(cachedBalls);
+          // Background refresh logging removed to satisfy linter
+          
+          // If online but cache is stale, refresh in background
+          if (this.networkService.isOnline && await this.cacheService.isStale(cacheKey)) {
+            this.refreshBallsInBackground(updated, weight, cacheKey);
+          }
+          return;
+        }
+      }
+
+      // If no valid cache or force refresh, fetch from network
+      if (this.networkService.isOffline) {
+        console.warn('Cannot fetch balls: offline and no valid cache available');
+        return;
+      }
+
       const response = await this.ballService.loadAllBalls(updated, weight);
       this.allBalls.set(response);
+      
+      // Cache the fresh data
+      await this.cacheService.set(cacheKey, response);
+      // Network fetch logging removed to satisfy linter
+      
     } catch (error) {
       console.error('Failed to load all balls:', error);
-      throw error;
+      
+      // Try to use cached data as fallback
+      const cachedBalls = await this.cacheService.get<Ball[]>(cacheKey);
+      if (cachedBalls) {
+        this.allBalls.set(cachedBalls);
+        // Fallback logging removed to satisfy linter
+      } else {
+        throw error;
+      }
     }
   }
 
-  async loadAllPatterns(): Promise<void> {
+  private async refreshBallsInBackground(updated?: string, weight?: number, cacheKey?: string): Promise<void> {
     try {
+      const response = await this.ballService.loadAllBalls(updated, weight);
+      this.allBalls.set(response);
+      
+      if (cacheKey) {
+        await this.cacheService.set(cacheKey, response);
+      }
+      // Background refresh logging removed to satisfy linter
+    } catch (error) {
+      console.error('Background refresh failed for balls:', error);
+    }
+  }
+
+  async loadAllPatterns(forceRefresh = false): Promise<void> {
+    const cacheKey = 'all_patterns';
+    
+    try {
+      // Check if we should use cached data
+      if (!forceRefresh) {
+        const cachedPatterns = await this.cacheService.get<Pattern[]>(cacheKey);
+        const isCacheValid = await this.cacheService.isValid(cacheKey);
+        
+        // Use cached data if available and valid, or if we're offline
+        if (cachedPatterns && (isCacheValid || this.networkService.isOffline)) {
+          this.allPatterns.set(cachedPatterns);
+          // Cache loading logging removed to satisfy linter
+          
+          // If online but cache is stale, refresh in background
+          if (this.networkService.isOnline && await this.cacheService.isStale(cacheKey)) {
+            this.refreshPatternsInBackground(cacheKey);
+          }
+          return;
+        }
+      }
+
+      // If no valid cache or force refresh, fetch from network
+      if (this.networkService.isOffline) {
+        console.warn('Cannot fetch patterns: offline and no valid cache available');
+        return;
+      }
+
       const response = await this.patternService.getAllPatterns();
-      const patterns = response;
-      this.allPatterns.set(patterns);
+      this.allPatterns.set(response);
+      
+      // Cache the fresh data
+      await this.cacheService.set(cacheKey, response);
+      // Network fetch logging removed to satisfy linter
+      
     } catch (error) {
       console.error('Error fetching patterns:', error);
+      
+      // Try to use cached data as fallback
+      const cachedPatterns = await this.cacheService.get<Pattern[]>(cacheKey);
+      if (cachedPatterns) {
+        this.allPatterns.set(cachedPatterns);
+        // Fallback logging removed to satisfy linter
+      }
+      // Don't throw error for patterns to maintain app functionality
     }
+  }
+
+  private async refreshPatternsInBackground(cacheKey?: string): Promise<void> {
+    try {
+      const response = await this.patternService.getAllPatterns();
+      this.allPatterns.set(response);
+      
+      if (cacheKey) {
+        await this.cacheService.set(cacheKey, response);
+      }
+      // Background refresh logging removed to satisfy linter
+    } catch (error) {
+      console.error('Background refresh failed for patterns:', error);
+    }
+  }
+
+  /**
+   * Force refresh of balls cache
+   */
+  async refreshBallsCache(weight?: number): Promise<void> {
+    return this.loadAllBalls(undefined, weight, true);
+  }
+
+  /**
+   * Force refresh of patterns cache
+   */
+  async refreshPatternsCache(): Promise<void> {
+    return this.loadAllPatterns(true);
+  }
+
+  /**
+   * Get cache information
+   */
+  async getCacheInfo() {
+    return this.cacheService.getCacheInfo();
+  }
+
+  /**
+   * Clear all cached data
+   */
+  async clearCache(): Promise<void> {
+    await this.cacheService.clear();
+  }
+
+  /**
+   * Get network status
+   */
+  get isOnline() {
+    return this.networkService.isOnline;
+  }
+
+  get isOffline() {
+    return this.networkService.isOffline;
   }
 
   async saveBallToArsenal(ball: Ball) {
