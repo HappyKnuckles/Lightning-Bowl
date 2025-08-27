@@ -128,3 +128,27 @@
     </ion-content>
   </ng-template>
 </ion-modal>
+
+<ion-modal [isOpen]="isSeriesRecapModalOpen" (didDismiss)="isSeriesRecapModalOpen = false">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar>
+        <ion-title>Series Complete!</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="closeSeriesRecapModal()" [strong]="true">Close</ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content class="ion-padding">
+      <div class="recap-header ion-text-center">
+        <h2>🎯 Series Recap</h2>
+        <p>Great job! Here are your series stats:</p>
+      </div>
+      <app-stat-display
+        [title]="'Series Statistics'"
+        [statDefinitions]="currentSeriesStatDefinitions"
+        [currentStats]="currentSeriesStats">
+      </app-stat-display>
+    </ion-content>
+  </ng-template>
+</ion-modal>

@@ -41,6 +41,10 @@ import { GameDataTransformerService } from 'src/app/core/services/game-transform
 import { InputCustomEvent, ModalController } from '@ionic/angular';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { GameGridComponent } from 'src/app/shared/components/game-grid/game-grid.component';
+import { StatDisplayComponent } from 'src/app/shared/components/stat-display/stat-display.component';
+import { GameStatsService } from 'src/app/core/services/game-stats/game-stats.service';
+import { StatDefinition } from 'src/app/core/models/stat-definitions.model';
+import { Stats } from 'src/app/core/models/stats.model';
 
 const enum SeriesMode {
   Single = 'Single',
@@ -78,6 +82,7 @@ defineCustomElements(window);
     NgIf,
     NgFor,
     GameGridComponent,
+    StatDisplayComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
@@ -91,10 +96,13 @@ export class AddGamePage implements OnInit {
   sheetOpen = false;
   isAlertOpen = false;
   isModalOpen = false;
+  isSeriesRecapModalOpen = false;
   is300 = false;
   username = '';
   gameData!: Game;
   deviceId = '';
+  currentSeriesStats: Stats = {} as Stats;
+  currentSeriesStatDefinitions: StatDefinition[] = [];
   @ViewChildren(GameGridComponent) gameGrids!: QueryList<GameGridComponent>;
   @ViewChild(IonModal) modal!: IonModal;
   @ViewChild('modalGrid', { static: false }) modalGrid!: GameGridComponent;
@@ -121,6 +129,7 @@ export class AddGamePage implements OnInit {
     private adService: AdService,
     private hapticService: HapticService,
     private gameUtilsService: GameUtilsService,
+    private gameStatsService: GameStatsService,
   ) {
     addIcons({ cameraOutline, chevronDown, chevronUp, medalOutline, documentTextOutline, add });
   }
@@ -266,6 +275,9 @@ export class AddGamePage implements OnInit {
     try {
       const perfectGame = gameGridArray.some((grid: GameGridComponent) => grid.game().totalScore === 300);
 
+      // Get the games before saving for series stats
+      const currentGames = gameGridArray.map((grid: GameGridComponent) => grid.game());
+
       gameGridArray.forEach((grid: GameGridComponent) => {
         setTimeout(async () => await grid.saveGameToLocalStorage(isSeries, this.seriesId), 5);
       });
@@ -273,6 +285,15 @@ export class AddGamePage implements OnInit {
       if (perfectGame) {
         this.is300 = true;
         setTimeout(() => (this.is300 = false), 4000);
+      }
+
+      // Show series recap modal after series save
+      if (isSeries) {
+        this.currentSeriesStats = this.calculateCurrentSeriesStats(currentGames);
+        this.currentSeriesStatDefinitions = this.getCurrentSeriesStatDefinitions();
+        setTimeout(() => {
+          this.isSeriesRecapModalOpen = true;
+        }, 500); // Small delay to ensure save completes
       }
 
       this.hapticService.vibrate(ImpactStyle.Medium);
@@ -530,5 +551,113 @@ export class AddGamePage implements OnInit {
 
   private generateUniqueSeriesId(): string {
     return 'series-' + Math.random().toString(36).substring(2, 15);
+  }
+
+  closeSeriesRecapModal(): void {
+    this.isSeriesRecapModalOpen = false;
+  }
+
+  private calculateCurrentSeriesStats(games: Game[]): Stats {
+    if (games.length === 0) {
+      return {} as Stats;
+    }
+
+    let totalStrikes = 0;
+    let totalSparesConverted = 0;
+    let totalSparesMissed = 0;
+    let cleanGameCount = 0;
+    let perfectGameCount = 0;
+
+    const totalScore = games.reduce((sum, game) => sum + game.totalScore, 0);
+    const totalGames = games.length;
+
+    games.forEach((game) => {
+      if (game.isClean) {
+        cleanGameCount++;
+        if (game.isPerfect) perfectGameCount++;
+      }
+
+      game.frames.forEach((frame: { throws: any[] }, idx: number) => {
+        const throws = frame.throws.map((t: any) => parseInt(t.value, 10));
+        const throw1 = throws[0];
+        const throw2 = throws.length > 1 ? throws[1] : undefined;
+        const throw3 = throws.length > 2 ? throws[2] : undefined;
+
+        const isStrike = throw1 === 10;
+        const isSpare = !isStrike && throw2 !== undefined && throw1 + throw2 === 10;
+        const isOpen = !isStrike && !isSpare;
+
+        if (isStrike) {
+          totalStrikes++;
+          if (idx === 9 && throws.length >= 2) {
+            if (throw2 === 10) totalStrikes++;
+            if (throw3 === 10) totalStrikes++;
+          }
+        } else if (isSpare) {
+          totalSparesConverted++;
+          if (idx === 9 && throw3 === 10) totalStrikes++;
+        } else if (isOpen) {
+          totalSparesMissed++;
+        }
+      });
+    });
+
+    const totalFrames = totalGames * 10;
+    const strikeChances = totalGames * 12;
+    const averageScore = totalScore / totalGames || 0;
+    const averageStrikesPerGame = totalStrikes / totalGames || 0;
+    const averageSparesPerGame = totalSparesConverted / totalGames || 0;
+    const averageOpensPerGame = totalSparesMissed / totalGames || 0;
+    const strikePercentage = (totalStrikes / strikeChances) * 100 || 0;
+    const sparePercentage = (totalSparesConverted / totalFrames) * 100 || 0;
+    const openPercentage = (totalSparesMissed / totalFrames) * 100 || 0;
+    const cleanGamePercentage = (cleanGameCount / totalGames) * 100 || 0;
+
+    return {
+      totalGames,
+      totalPins: totalScore,
+      totalStrikes,
+      totalSpares: totalSparesConverted,
+      totalSparesConverted,
+      totalSparesMissed,
+      averageScore,
+      averageStrikesPerGame,
+      averageSparesPerGame,
+      averageOpensPerGame,
+      strikePercentage,
+      sparePercentage,
+      openPercentage,
+      cleanGameCount,
+      perfectGameCount,
+      cleanGamePercentage,
+      highGame: Math.max(...games.map((g) => g.totalScore)),
+      // Add required properties with default values
+      pinCounts: [],
+      missedCounts: [],
+      markPercentage: 0,
+      spareConversionPercentage: 0,
+      averageFirstCount: 0,
+      spareRates: [],
+      overallSpareRate: 0,
+      overallMissedRate: 0,
+    } as Stats;
+  }
+
+  private getCurrentSeriesStatDefinitions(): StatDefinition[] {
+    return [
+      { label: 'Total Score', key: 'totalPins', id: 'currentSeriesScore' },
+      { label: 'Number of Games', key: 'totalGames', id: 'currentSeriesGames' },
+      { label: 'Average Score', key: 'averageScore', id: 'currentSeriesAverage' },
+      { label: 'High Game', key: 'highGame', id: 'currentSeriesHighGame' },
+      { label: 'Total Strikes', key: 'totalStrikes', id: 'currentSeriesTotalStrikes' },
+      { label: 'Total Spares', key: 'totalSpares', id: 'currentSeriesTotalSpares' },
+      { label: 'Missed Spares', key: 'totalSparesMissed', id: 'currentSeriesTotalMissedSpares' },
+      { label: 'Strikes per Game', key: 'averageStrikesPerGame', id: 'currentSeriesAvgStrikes' },
+      { label: 'Spares per Game', key: 'averageSparesPerGame', id: 'currentSeriesAvgSpares' },
+      { label: 'Strike Percentage', key: 'strikePercentage', id: 'currentSeriesStrikePercentage', isPercentage: true },
+      { label: 'Spare Percentage', key: 'sparePercentage', id: 'currentSeriesSparePercentage', isPercentage: true },
+      { label: 'Clean Games', key: 'cleanGameCount', id: 'currentSeriesCleanGames' },
+      { label: 'Perfect Games', key: 'perfectGameCount', id: 'currentSeriesPerfectGames' },
+    ];
   }
 }
