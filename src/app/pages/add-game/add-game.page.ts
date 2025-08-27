@@ -577,8 +577,8 @@ export class AddGamePage implements OnInit {
         if (game.isPerfect) perfectGameCount++;
       }
 
-      game.frames.forEach((frame: { throws: any[] }, idx: number) => {
-        const throws = frame.throws.map((t: any) => parseInt(t.value, 10));
+      game.frames.forEach((frame: any, idx: number) => {
+        const throws = Array.isArray(frame) ? frame : frame.throws?.map((t: any) => parseInt(t.value, 10)) || [];
         const throw1 = throws[0];
         const throw2 = throws.length > 1 ? throws[1] : undefined;
         const throw3 = throws.length > 2 ? throws[2] : undefined;
