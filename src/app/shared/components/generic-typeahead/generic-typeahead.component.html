@@ -32,7 +32,7 @@
           </ion-avatar>
 
           <ion-checkbox
-            [value]="item"
+            [value]="getItemValue(item)"
             [checked]="isItemSelected(item)"
             [disabled]="(!isItemSelected(item) && !canSelectMoreItems()) || getCustomDisplayLogic(item).disabled"
             (ionChange)="checkboxChange($event, item)"

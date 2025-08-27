@@ -35,7 +35,6 @@ import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { UserService } from 'src/app/core/services/user/user.service';
 import { defineCustomElements } from '@teamhive/lottie-player/loader';
 import { Device } from '@capacitor/device';
-import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { GameUtilsService } from 'src/app/core/services/game-utils/game-utils.service';
 import { GameScoreCalculatorService } from 'src/app/core/services/game-score-calculator/game-score-calculator.service';
 import { GameDataTransformerService } from 'src/app/core/services/game-transform/game-data-transform.service';
@@ -116,7 +115,6 @@ export class AddGamePage implements OnInit {
     private alertController: AlertController,
     private toastService: ToastService,
     private gameScoreCalculatorService: GameScoreCalculatorService,
-    public storageService: StorageService,
     private transformGameService: GameDataTransformerService,
     private loadingService: LoadingService,
     private userService: UserService,

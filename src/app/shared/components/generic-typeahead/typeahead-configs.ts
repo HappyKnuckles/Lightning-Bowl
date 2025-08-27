@@ -17,7 +17,8 @@ export function createBallCoreTypeaheadConfig(): TypeaheadConfig<Core> {
       { name: 'core_name', weight: 1 },
       { name: 'brand', weight: 0.7 },
     ],
-    identifierKey: 'core_name',
+    identifierKey: 'id',
+    valueKey: 'core_name',
     searchMode: 'local',
   };
 }
@@ -36,7 +37,8 @@ export function createBallCoverstockTypeaheadConfig(): TypeaheadConfig<Coverstoc
       { name: 'coverstock_name', weight: 1 },
       { name: 'brand', weight: 0.7 },
     ],
-    identifierKey: 'coverstock_name',
+    identifierKey: 'id',
+    valueKey: 'coverstock_name',
     searchMode: 'local',
   };
 }
@@ -59,6 +61,7 @@ export function createBallTypeaheadConfig(storageService: StorageService): Typea
       { name: 'factory_finish', weight: 0.5 },
     ],
     identifierKey: 'ball_id',
+    valueKey: 'ball_id',
     searchMode: 'local',
     showImages: true,
     imageUrlGenerator: (ball: Ball) => storageService.url + ball.thumbnail_image,
@@ -82,7 +85,8 @@ export function createPatternTypeaheadConfig(searchFn: (term: string) => Promise
       { key: 'title', isPrimary: true },
     ],
     searchKeys: [], // Not used for API search
-    identifierKey: 'title',
+    identifierKey: 'url',
+    valueKey: 'title',
     maxSelections: 2,
     searchMode: 'api',
     apiSearchFn: async (searchTerm: string) => {
@@ -118,7 +122,8 @@ export function createPartialPatternTypeaheadConfig(searchFn: (term: string) => 
       { key: 'title', isPrimary: true },
     ],
     searchKeys: [], // Not used for API search
-    identifierKey: 'title',
+    identifierKey: 'url',
+    valueKey: 'title',
     maxSelections: 2,
     searchMode: 'api',
     apiSearchFn: async (searchTerm: string) => {

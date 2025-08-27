@@ -18,6 +18,7 @@ export interface TypeaheadConfig<T> {
   displayFields: TypeaheadDisplayField[];
   searchKeys: TypeaheadSearchKey[];
   identifierKey: keyof T;
+  valueKey?: keyof T;
   maxSelections?: number;
   showImages?: boolean;
   imageUrlGenerator?: (item: T) => string;

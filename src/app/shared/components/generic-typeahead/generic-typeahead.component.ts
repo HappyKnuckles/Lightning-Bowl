@@ -65,7 +65,7 @@ export class GenericTypeaheadComponent<T> implements OnInit, OnDestroy {
   fuse!: Fuse<T>;
   private batchSize = 100;
   public loadedCount = signal(0);
-  private initialSelectedIdentifiers: any[] = [];
+  private initialSelectedValues: any[] = [];
 
   constructor(
     private modalCtrl: ModalController,
@@ -78,7 +78,7 @@ export class GenericTypeaheadComponent<T> implements OnInit, OnDestroy {
 
     const prevSelected = this.prevSelectedItems();
     if (prevSelected && prevSelected.length > 0) {
-      this.selectedItems = this.items().filter((item) => prevSelected.includes(this.getItemIdentifier(item)));
+      this.selectedItems = this.items().filter((item) => prevSelected.includes(this.getItemValue(item)));
     }
 
     if (this.config().searchMode === 'local') {
@@ -101,7 +101,7 @@ export class GenericTypeaheadComponent<T> implements OnInit, OnDestroy {
     }
 
     // Store initial selected state for comparison in ngOnDestroy
-    this.initialSelectedIdentifiers = this.selectedItems.map((item) => this.getItemIdentifier(item));
+    this.initialSelectedValues = this.selectedItems.map((item) => this.getItemValue(item));
   }
 
   loadData(event: InfiniteScrollCustomEvent): void {
@@ -189,6 +189,9 @@ export class GenericTypeaheadComponent<T> implements OnInit, OnDestroy {
   }
 
   isItemSelected(item: T): boolean {
+    if (this.config().valueKey) {
+      return this.selectedItems.some((selected) => this.getItemValue(selected) === this.getItemValue(item));
+    }
     return this.selectedItems.some((selected) => this.getItemIdentifier(selected) === this.getItemIdentifier(item));
   }
 
@@ -206,6 +209,14 @@ export class GenericTypeaheadComponent<T> implements OnInit, OnDestroy {
   }
 
   getItemIdentifier(item: T): any {
+    return (item as any)[this.config().identifierKey];
+  }
+
+  getItemValue(item: T): any {
+    const valueKey = this.config().valueKey;
+    if (valueKey) {
+      return (item as any)[valueKey];
+    }
     return (item as any)[this.config().identifierKey];
   }
 
@@ -228,15 +239,18 @@ export class GenericTypeaheadComponent<T> implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    const selectedIdentifiers = this.selectedItems.map((item) => this.getItemIdentifier(item));
-    
+    // Get current selected values for comparison
+    const selectedValues = this.selectedItems.map((item) => this.getItemValue(item));
+
     // Only emit if the current selection is different from the initial selection
-    const isDifferent = selectedIdentifiers.length !== this.initialSelectedIdentifiers.length ||
-                       selectedIdentifiers.some(id => !this.initialSelectedIdentifiers.includes(id)) ||
-                       this.initialSelectedIdentifiers.some(id => !selectedIdentifiers.includes(id));
-    
+    // Compare values since we now store and emit values
+    const isDifferent =
+      selectedValues.length !== this.initialSelectedValues.length ||
+      selectedValues.some((value) => !this.initialSelectedValues.includes(value)) ||
+      this.initialSelectedValues.some((value) => !selectedValues.includes(value));
+
     if (isDifferent) {
-      this.selectedItemsChange.emit(selectedIdentifiers);
+      this.selectedItemsChange.emit(selectedValues);
     }
   }
 }
