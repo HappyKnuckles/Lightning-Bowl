@@ -99,7 +99,7 @@
       </ion-item>
       <!-- TODO make this reset on save-->
       <app-league-selector [isAddPage]="true" (leagueChanged)="onLeagueChanged($event)" #leagueSelector></app-league-selector>
-      <ion-item [id]="patternId()" button>
+      <ion-item [id]="patternId()" button [disabled]="storageService.allPatterns().length === 0">
         <ion-label>Patterns</ion-label>
         <span class="ion-text-right">{{ game().patterns.join(", ") || "None" }}</span>
       </ion-item>
