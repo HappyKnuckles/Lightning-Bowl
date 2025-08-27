@@ -289,11 +289,16 @@ export class AddGamePage implements OnInit {
 
       // Show series recap modal after series save
       if (isSeries) {
-        this.currentSeriesStats = this.calculateCurrentSeriesStats(currentGames);
-        this.currentSeriesStatDefinitions = this.getCurrentSeriesStatDefinitions();
-        setTimeout(() => {
-          this.isSeriesRecapModalOpen = true;
-        }, 500); // Small delay to ensure save completes
+        try {
+          this.currentSeriesStats = this.calculateCurrentSeriesStats(currentGames);
+          this.currentSeriesStatDefinitions = this.getCurrentSeriesStatDefinitions();
+          setTimeout(() => {
+            this.isSeriesRecapModalOpen = true;
+          }, 500); // Small delay to ensure save completes
+        } catch (statsError) {
+          console.error('Error calculating series stats:', statsError);
+          // Don't show modal if stats calculation fails, but don't block the save
+        }
       }
 
       this.hapticService.vibrate(ImpactStyle.Medium);
@@ -568,24 +573,49 @@ export class AddGamePage implements OnInit {
     let cleanGameCount = 0;
     let perfectGameCount = 0;
 
-    const totalScore = games.reduce((sum, game) => sum + game.totalScore, 0);
+    const totalScore = games.reduce((sum, game) => sum + (game?.totalScore || 0), 0);
     const totalGames = games.length;
 
     games.forEach((game) => {
+      if (!game) return;
+      
       if (game.isClean) {
         cleanGameCount++;
         if (game.isPerfect) perfectGameCount++;
       }
 
+      if (!game.frames || !Array.isArray(game.frames)) {
+        return;
+      }
+
       game.frames.forEach((frame: any, idx: number) => {
-        const throws = Array.isArray(frame) ? frame : frame.throws?.map((t: any) => parseInt(t.value, 10)) || [];
-        const throw1 = throws[0];
+        if (!frame) return;
+        
+        let throws: number[] = [];
+        
+        try {
+          if (Array.isArray(frame)) {
+            throws = frame.map(t => parseInt(t, 10) || 0).filter((t: number) => !isNaN(t));
+          } else if (frame.throws && Array.isArray(frame.throws)) {
+            throws = frame.throws.map((t: any) => {
+              const value = t?.value !== undefined ? t.value : t;
+              return parseInt(value, 10) || 0;
+            }).filter((t: number) => !isNaN(t));
+          }
+        } catch (e) {
+          console.warn('Error parsing frame data:', e);
+          return;
+        }
+
+        if (throws.length === 0) return;
+
+        const throw1 = throws[0] || 0;
         const throw2 = throws.length > 1 ? throws[1] : undefined;
         const throw3 = throws.length > 2 ? throws[2] : undefined;
 
         const isStrike = throw1 === 10;
         const isSpare = !isStrike && throw2 !== undefined && throw1 + throw2 === 10;
-        const isOpen = !isStrike && !isSpare;
+        const isOpen = !isStrike && !isSpare && throw2 !== undefined;
 
         if (isStrike) {
           totalStrikes++;
