@@ -4,6 +4,8 @@ export interface League {
   name: string;
   show: boolean;
   event: EventType;
+  isActive: boolean;
+  isSanctioned: boolean;
 }
 
 // Type guard to check if a value is a League object
@@ -21,7 +23,9 @@ export function convertLegacyLeague(name: string): League {
   return {
     name: name,
     show: true,
-    event: 'League', // Default to League for legacy entries
+    event: 'League',
+    isActive: false,
+    isSanctioned: true,
   };
 }
 

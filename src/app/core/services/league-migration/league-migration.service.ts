@@ -60,6 +60,8 @@ export class LeagueMigrationService {
           name: leagueName,
           show: true,
           event: eventType,
+          isActive: false,
+          isSanctioned: true,
         };
 
         // Add to storage
@@ -171,6 +173,8 @@ export class LeagueMigrationService {
       name: name,
       show: true,
       event: eventType,
+      isActive: false,
+      isSanctioned: true,
     };
   }
 

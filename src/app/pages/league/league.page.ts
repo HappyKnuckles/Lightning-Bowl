@@ -136,6 +136,8 @@ export class LeaguePage {
         name: key,
         show: true,
         event: 'League' as const,
+        isActive: false,
+        isSanctioned: true,
       };
     });
   });

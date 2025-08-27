@@ -50,6 +50,14 @@
           <ion-select-option value="Tournament">Tournament</ion-select-option>
         </ion-select>
       </ion-item>
+      <ion-item>
+        <ion-icon name="checkmark-outline" slot="start"></ion-icon>
+        <ion-toggle [(ngModel)]="newLeagueIsActive">Active</ion-toggle>
+      </ion-item>
+      <ion-item>
+        <ion-icon name="medal-outline" slot="start"></ion-icon>
+        <ion-toggle [(ngModel)]="newLeagueIsSanctioned">Sanctioned</ion-toggle>
+      </ion-item>
     </ion-content>
   </ng-template>
 </ion-modal>
@@ -93,6 +101,14 @@
             <ion-select-option value="League">League</ion-select-option>
             <ion-select-option value="Tournament">Tournament</ion-select-option>
           </ion-select>
+        </ion-item>
+        <ion-item>
+          <ion-icon name="checkmark-outline" slot="start"></ion-icon>
+          <ion-toggle [(ngModel)]="newLeagueIsActive">Active</ion-toggle>
+        </ion-item>
+        <ion-item>
+          <ion-icon name="medal-outline" slot="start"></ion-icon>
+          <ion-toggle [(ngModel)]="newLeagueIsSanctioned">Sanctioned</ion-toggle>
         </ion-item>
       }
     </ion-content>

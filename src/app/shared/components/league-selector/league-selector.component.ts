@@ -15,6 +15,7 @@ import {
   IonHeader,
   IonTitle,
   IonContent,
+  IonToggle,
 } from '@ionic/angular/standalone';
 import { IonSelectCustomEvent } from '@ionic/core';
 import { addIcons } from 'ionicons';
@@ -29,6 +30,7 @@ import { League, LeagueData, isLeagueObject, EventType } from 'src/app/core/mode
   templateUrl: './league-selector.component.html',
   styleUrls: ['./league-selector.component.scss'],
   imports: [
+    IonToggle,
     IonContent,
     IonTitle,
     IonHeader,
@@ -76,6 +78,8 @@ export class LeagueSelectorComponent {
 
   newLeague = '';
   newLeagueEventType: EventType = 'League';
+  newLeagueIsActive = false;
+  newLeagueIsSanctioned = true;
   leaguesToDelete: string[] = [];
   leagueToChange = '';
   isAddModalOpen = false;
@@ -222,6 +226,8 @@ export class LeagueSelectorComponent {
         name: this.newLeague,
         show: true,
         event: this.newLeagueEventType,
+        isActive: false,
+        isSanctioned: true,
       };
 
       await this.storageService.addLeague(newLeagueObj);
@@ -270,6 +276,8 @@ export class LeagueSelectorComponent {
           name: this.newLeague,
           show: this.selectedLeagueForEdit.show,
           event: this.newLeagueEventType,
+          isActive: this.selectedLeagueForEdit.isActive,
+          isSanctioned: this.selectedLeagueForEdit.isSanctioned,
         };
         await this.storageService.editLeague(updatedLeague, this.selectedLeagueForEdit);
       } else {
