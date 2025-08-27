@@ -1,0 +1,43 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>Minigame</ion-title>
+    <ion-buttons slot="end" class="action-sheet">
+      <ion-button expand="block" color="primary" (click)="resetGame()" class="reset-button">
+        <ion-icon name="refresh" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="bowling-minigame-content">
+  <!-- Game Status (just the status, no score) -->
+  <!-- <div class="game-status">
+          <h2>{{ gameStatus }}</h2>
+        </div> -->
+
+  <!-- Game Canvas -->
+  <div class="canvas-container">
+    <canvas #gameCanvas class="game-canvas"></canvas>
+  </div>
+
+  <!-- Score Display - Now at Bottom -->
+  <!-- <div class="score-display">
+          <div class="score-item">
+            <span class="score-label">Score:</span>
+            <span class="score-value">{{ score }}</span>
+          </div>
+          <div class="score-item">
+            <span class="score-label">Pins:</span>
+            <span class="score-value">{{ pinsKnocked }}/10</span>
+          </div>
+        </div> -->
+
+  <!-- Instructions -->
+  <div class="instructions">
+    <h3>How to Play:</h3>
+    <ul>
+      <li>🎯 Swipe in any direction - ball follows your finger!</li>
+      <li>🎳 Game auto-resets after each throw!</li>
+    </ul>
+  </div>
+</ion-content>

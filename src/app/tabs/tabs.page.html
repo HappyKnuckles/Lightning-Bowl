@@ -27,7 +27,7 @@
   </ion-tab-bar>
 </ion-tabs>
 
-<ion-modal #modal trigger="more" [initialBreakpoint]="0.35" [breakpoints]="[0, 0.35, 0.5, 0.75]">
+<ion-modal #modal trigger="more" [initialBreakpoint]="0.45" [breakpoints]="[0, 0.35, 0.45, 0.5, 0.75]">
   <ng-template>
     <ion-content>
       <ion-list>
@@ -46,6 +46,10 @@
         <ion-item class="tab-btn" button [routerLink]="'/tabs/map'" [class.active-tab]="isActive('/tabs/map')" (click)="modal.dismiss()">
           <ion-icon name="map-outline" slot="start"></ion-icon>
           <ion-label>Map</ion-label>
+        </ion-item>
+        <ion-item class="tab-btn" button [routerLink]="'/tabs/minigame'" [class.active-tab]="isActive('/tabs/minigame')" (click)="modal.dismiss()">
+          <ion-icon name="game-controller-outline" slot="start"></ion-icon>
+          <ion-label>Minigame</ion-label>
         </ion-item>
         <ion-item class="tab-btn" button [routerLink]="'/tabs/settings'" [class.active-tab]="isActive('/tabs/settings')" (click)="modal.dismiss()">
           <ion-icon name="settings-outline" slot="start"></ion-icon>
