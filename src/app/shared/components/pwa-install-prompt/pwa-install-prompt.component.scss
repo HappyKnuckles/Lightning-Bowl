@@ -1,0 +1,238 @@
+.pwa-install-modal {
+  --width: 90%;
+  --max-width: 600px;
+  --height: auto;
+  --max-height: 90vh;
+  --border-radius: 16px;
+}
+
+.install-content {
+  padding-bottom: 16px;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 16px;
+  background: linear-gradient(135deg, #232034, #2d2a40);
+  border-radius: 12px;
+  color: white;
+
+  .app-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  .app-info {
+    h2 {
+      margin: 0 0 4px 0;
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    p {
+      margin: 0;
+      opacity: 0.8;
+      font-size: 0.9rem;
+    }
+  }
+}
+
+.benefits-section {
+  margin-bottom: 32px;
+
+  h3 {
+    margin-bottom: 16px;
+    font-size: 1.2rem;
+    font-weight: 600;
+  }
+
+  .benefits-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+
+    .benefit-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px;
+      background: var(--ion-color-light);
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 500;
+
+      ion-icon {
+        font-size: 1.2rem;
+      }
+    }
+  }
+}
+
+.screenshots-section {
+  margin-bottom: 32px;
+
+  h3 {
+    margin-bottom: 16px;
+    font-size: 1.2rem;
+    font-weight: 600;
+  }
+
+  .screenshots-carousel {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    padding: 8px 0;
+
+    .screenshot-container {
+      flex: 0 0 auto;
+      text-align: center;
+
+      .screenshot {
+        width: 120px;
+        height: auto;
+        max-height: 200px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 1px solid var(--ion-color-medium);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .screenshot-caption {
+        margin: 8px 0 0 0;
+        font-size: 0.8rem;
+        color: var(--ion-color-medium);
+        font-weight: 500;
+      }
+    }
+  }
+}
+
+.instructions-section {
+  margin-bottom: 24px;
+
+  h3 {
+    margin-bottom: 16px;
+    font-size: 1.2rem;
+    font-weight: 600;
+  }
+
+  .install-steps {
+    .step {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+      padding: 12px;
+      background: var(--ion-color-light);
+      border-radius: 8px;
+
+      .step-number {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        background: var(--ion-color-primary);
+        color: white;
+        border-radius: 50%;
+        font-size: 0.8rem;
+        font-weight: 600;
+        flex-shrink: 0;
+      }
+
+      p {
+        margin: 0;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+
+        ion-icon {
+          font-size: 1rem;
+        }
+      }
+    }
+  }
+
+  .ios-instructions {
+    .step {
+      p {
+        ion-icon {
+          color: var(--ion-color-primary);
+        }
+      }
+    }
+  }
+}
+
+.action-buttons {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  padding: 16px;
+
+  ion-button {
+    flex: 1;
+  }
+
+  ion-button[fill="clear"] {
+    flex: 0 0 auto;
+    min-width: 120px;
+  }
+}
+
+// Mobile responsive adjustments
+@media (max-width: 768px) {
+  .pwa-install-modal {
+    --width: 95%;
+    --max-height: 95vh;
+  }
+
+  .app-header {
+    padding: 12px;
+    gap: 12px;
+
+    .app-icon {
+      width: 56px;
+      height: 56px;
+    }
+
+    .app-info {
+      h2 {
+        font-size: 1.3rem;
+      }
+    }
+  }
+
+  .benefits-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .screenshots-carousel {
+    .screenshot-container {
+      .screenshot {
+        width: 100px;
+        max-height: 180px;
+      }
+    }
+  }
+}
+
+// Dark theme support
+@media (prefers-color-scheme: dark) {
+  .app-header {
+    background: linear-gradient(135deg, #1a1a2e, #232034);
+  }
+
+  .benefit-item,
+  .step {
+    background: var(--ion-color-dark-tint);
+    color: var(--ion-color-dark-contrast);
+  }
+}
