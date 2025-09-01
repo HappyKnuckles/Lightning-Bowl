@@ -1,11 +1,37 @@
+// --- Reusable Mixins & Utilities ---
+@mixin flex-center($gap: 12px, $align: center, $justify: flex-start) {
+  display: flex;
+  align-items: $align;
+  justify-content: $justify;
+  gap: $gap;
+}
+
+@mixin card($bg: var(--ion-color-light), $padding: 12px, $radius: 8px) {
+  background: $bg;
+  border-radius: $radius;
+  padding: $padding;
+}
+
+%section-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+%card-text {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--ion-color-medium);
+}
+
+// --- Styles ---
+
 .install-content {
   padding: 0 16px 16px;
 }
 
 .app-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+  @include flex-center(12px);
   margin-bottom: 24px;
   padding: 12px;
   background: linear-gradient(135deg, #1a1a2e, #232034);
@@ -38,9 +64,7 @@
   margin-bottom: 32px;
 
   h3 {
-    margin-bottom: 16px;
-    font-size: 1.2rem;
-    font-weight: 600;
+    @extend %section-title;
   }
 
   .benefits-grid {
@@ -49,14 +73,9 @@
     gap: 12px;
 
     .benefit-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 12px;
-      background: var(--ion-color-light);
-      border-radius: 8px;
-      font-size: 0.9rem;
-      font-weight: 500;
+      @include card;
+      @include flex-center(8px);
+      @extend %card-text;
       color: white;
     }
   }
@@ -66,14 +85,11 @@
   margin-bottom: 32px;
 
   h3 {
-    margin-bottom: 16px;
-    font-size: 1.2rem;
-    font-weight: 600;
+    @extend %section-title;
   }
 
   .screenshots-carousel {
-    display: flex;
-    gap: 16px;
+    @include flex-center(16px);
     overflow-x: auto;
     padding: 8px 0;
 
@@ -86,8 +102,8 @@
         border: none;
         padding: 0;
         cursor: pointer;
-        transition: transform 0.2s ease, opacity 0.2s ease;
         border-radius: 8px;
+        transition: transform 0.2s ease, opacity 0.2s ease;
 
         &:hover {
           transform: scale(1.05);
@@ -106,7 +122,6 @@
 
       .screenshot {
         width: 120px;
-        height: auto;
         max-height: 200px;
         object-fit: cover;
         border-radius: 8px;
@@ -116,10 +131,10 @@
       }
 
       .screenshot-caption {
-        margin: 8px 0 0 0;
+        margin-top: 8px;
         font-size: 0.8rem;
-        color: var(--ion-color-medium);
         font-weight: 500;
+        color: var(--ion-color-medium);
       }
     }
   }
@@ -129,39 +144,29 @@
   margin-bottom: 24px;
 
   h3 {
-    margin-bottom: 16px;
-    font-size: 1.2rem;
-    font-weight: 600;
+    @extend %section-title;
   }
 
   .install-steps .step {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+    @include card;
+    @include flex-center(12px);
     margin-bottom: 12px;
-    padding: 12px;
-    background: var(--ion-color-light);
-    border-radius: 8px;
 
     .step-number {
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      @include flex-center(12px, center, center);
       width: 24px;
       height: 24px;
+      border-radius: 50%;
       background: var(--ion-color-primary);
       color: black;
-      border-radius: 50%;
       font-size: 0.8rem;
       font-weight: 600;
       flex-shrink: 0;
     }
 
     .step-visual {
-      display: flex;
+      @include flex-center(6px, center, center);
       flex-direction: column;
-      align-items: center;
-      gap: 6px;
       flex-shrink: 0;
 
       .step-icon {
@@ -192,9 +197,7 @@
   }
 
   .ios-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+    @include flex-center(12px);
     margin-bottom: 16px;
 
     ion-icon {
@@ -204,30 +207,27 @@
 
     h3 {
       margin: 0;
-      color: var(--ion-color-primary);
       font-size: 1.3rem;
       font-weight: 600;
+      color: var(--ion-color-primary);
     }
   }
 
   .ios-description {
     margin-bottom: 18px;
-    color: var(--ion-color-medium);
     line-height: 1.5;
+    color: var(--ion-color-medium);
   }
 
   .ios-benefits {
-    padding: 10px;
-    background: #1e3a1e;
-    border-color: rgba(var(--ion-color-success-rgb), 0.3);
-    border-radius: 8px;
+    @include card(#1e3a1e, 10px);
     border: 1px solid rgba(var(--ion-color-success-rgb), 0.2);
 
     h4 {
       margin: 0 0 8px 0;
       font-weight: 600;
-      color: var(--ion-color-success-tint);
       font-size: 0.9rem;
+      color: var(--ion-color-success-tint);
     }
 
     ul {
@@ -254,11 +254,11 @@
   .modal-image {
     width: 100%;
     height: 100%;
+    max-width: 330px;
+    border-radius: 12px;
     background-position: center !important;
-    background-size: cover !important;
+    background-size: contain !important;
     background-origin: padding-box !important;
     background-repeat: no-repeat !important;
-    border-radius: 12px;
-    max-width: 330px;
   }
 }
