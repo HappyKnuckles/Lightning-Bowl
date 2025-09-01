@@ -150,6 +150,7 @@ export class PatternPage implements OnInit {
         this.currentPage++;
       } else if (this.networkService.isOffline) {
         this.toastService.showToast('You are offline and no cached data is available.', 'information-circle-outline', false);
+        this.hasMoreData = false;
       } else {
         this.hasMoreData = false;
       }

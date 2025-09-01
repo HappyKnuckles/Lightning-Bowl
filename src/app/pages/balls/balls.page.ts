@@ -285,6 +285,7 @@ export class BallsPage implements OnInit {
         this.currentPage++;
       } else if (this.networkService.isOffline) {
         this.toastService.showToast('You are offline and no cached data is available.', 'information-circle-outline', false);
+        this.hasMoreData = false;
       } else {
         this.hasMoreData = false;
       }
@@ -295,7 +296,7 @@ export class BallsPage implements OnInit {
       if (!event) {
         this.loadingService.setLoading(false);
       }
-      if (event && !this.isFilterActive()) {
+      if (event) {
         event.target.complete();
       }
     }
