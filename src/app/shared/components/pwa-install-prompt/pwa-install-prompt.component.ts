@@ -20,7 +20,9 @@ import {
   phonePortrait, 
   download, 
   shareOutline,
-  checkmark 
+  checkmark,
+  add,
+  checkmarkCircle
 } from 'ionicons/icons';
 
 @Component({
@@ -59,7 +61,9 @@ export class PwaInstallPromptComponent implements OnInit {
       phonePortrait, 
       download, 
       shareOutline,
-      checkmark 
+      checkmark,
+      add,
+      checkmarkCircle
     });
   }
 
@@ -69,11 +73,16 @@ export class PwaInstallPromptComponent implements OnInit {
 
   private detectBrowser(): void {
     const userAgent = navigator.userAgent;
-    this.isChrome = /Chrome|Chromium|Edge/.test(userAgent) && !/Safari/.test(userAgent);
+    // More precise Chrome/Chromium/Edge detection that excludes Safari
+    this.isChrome = (/Chrome|Chromium|Edg/.test(userAgent) && !/Safari\/[0-9]/.test(userAgent)) || 
+                    (/Chrome/.test(userAgent) && /Safari/.test(userAgent) && !/Mobile.*Safari/.test(userAgent));
+    
+    // Precise iOS Safari detection - iOS device with Safari but not Chrome/Firefox/Edge on iOS
     this.isIOS = /iPad|iPhone|iPod/.test(userAgent) && 
-                 !!(window as any).safari &&
-                 !(window as any).MSStream &&
-                 !/CriOS|FxiOS|EdgiOS/.test(userAgent); // True iOS Safari, not Chrome/Firefox/Edge on iOS
+                 /Safari/.test(userAgent) &&
+                 !/CriOS|FxiOS|EdgiOS|OPiOS/.test(userAgent); // Exclude Chrome, Firefox, Edge, Opera on iOS
+    
+    console.log('Browser detection:', { userAgent, isChrome: this.isChrome, isIOS: this.isIOS });
   }
 
   onInstall(): void {

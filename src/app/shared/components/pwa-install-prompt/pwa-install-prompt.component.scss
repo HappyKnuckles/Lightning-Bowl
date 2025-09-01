@@ -6,9 +6,7 @@
   --border-radius: 16px;
 }
 
-.install-content {
-  padding-bottom: 16px;
-}
+.install-content { padding-bottom: 16px; }
 
 .app-header {
   display: flex;
@@ -27,18 +25,16 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   }
 
-  .app-info {
-    h2 {
-      margin: 0 0 4px 0;
-      font-size: 1.5rem;
-      font-weight: 600;
-    }
+  .app-info h2 {
+    margin: 0 0 4px 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
 
-    p {
-      margin: 0;
-      opacity: 0.8;
-      font-size: 0.9rem;
-    }
+  .app-info p {
+    margin: 0;
+    opacity: 0.8;
+    font-size: 0.9rem;
   }
 }
 
@@ -65,10 +61,6 @@
       border-radius: 8px;
       font-size: 0.9rem;
       font-weight: 500;
-
-      ion-icon {
-        font-size: 1.2rem;
-      }
     }
   }
 }
@@ -121,51 +113,148 @@
     font-weight: 600;
   }
 
-  .install-steps {
-    .step {
+  .install-steps .step {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    padding: 12px;
+    background: var(--ion-color-light);
+    border-radius: 8px;
+
+    .step-number {
       display: flex;
       align-items: center;
-      gap: 12px;
-      margin-bottom: 12px;
-      padding: 12px;
-      background: var(--ion-color-light);
-      border-radius: 8px;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      background: var(--ion-color-primary);
+      color: white;
+      border-radius: 50%;
+      font-size: 0.8rem;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
 
+    p {
+      margin: 0;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+
+      ion-icon {
+        font-size: 1rem;
+        color: var(--ion-color-primary);
+      }
+    }
+  }
+}
+
+// iOS Installation Guide - Essential styles only
+.ios-installation-guide {
+  .ios-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    
+    ion-icon {
+      font-size: 1.5rem;
+      color: var(--ion-color-primary);
+    }
+    
+    h3 {
+      margin: 0;
+      color: var(--ion-color-primary);
+      font-size: 1.3rem;
+      font-weight: 600;
+    }
+  }
+  
+  .ios-description {
+    margin-bottom: 18px;
+    color: var(--ion-color-medium);
+    line-height: 1.5;
+  }
+  
+  .ios-steps .ios-step {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 14px;
+    padding: 12px;
+    background: #f8f9ff;
+    border: 1px solid rgba(var(--ion-color-primary-rgb), 0.1);
+    border-radius: 8px;
+    
+    .step-visual {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+      
       .step-number {
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 24px;
-        height: 24px;
+        width: 26px;
+        height: 26px;
         background: var(--ion-color-primary);
         color: white;
         border-radius: 50%;
         font-size: 0.8rem;
-        font-weight: 600;
-        flex-shrink: 0;
+        font-weight: 700;
       }
-
-      p {
-        margin: 0;
-        font-size: 0.9rem;
-        display: flex;
-        align-items: center;
-        gap: 4px;
-
-        ion-icon {
-          font-size: 1rem;
-        }
+      
+      .step-icon {
+        font-size: 1.4rem;
+        color: var(--ion-color-primary);
       }
     }
+    
+    .step-content h4 {
+      margin: 0 0 4px 0;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    
+    .step-content p {
+      margin: 0;
+      font-size: 0.9rem;
+      line-height: 1.3;
+      color: var(--ion-color-medium);
+    }
+    
+    .step-content p strong {
+      color: var(--ion-color-primary);
+      font-weight: 600;
+    }
   }
-
-  .ios-instructions {
-    .step {
-      p {
-        ion-icon {
-          color: var(--ion-color-primary);
-        }
-      }
+  
+  .ios-benefits {
+    padding: 10px;
+    background: #e8f5e8;
+    border-radius: 8px;
+    border: 1px solid rgba(var(--ion-color-success-rgb), 0.2);
+    
+    h4 {
+      margin: 0 0 8px 0;
+      font-weight: 600;
+      color: var(--ion-color-success);
+      font-size: 0.9rem;
+    }
+    
+    ul {
+      margin: 0;
+      padding-left: 16px;
+    }
+    
+    ul li {
+      font-size: 0.8rem;
+      line-height: 1.2;
+      margin-bottom: 3px;
+      color: var(--ion-color-medium);
     }
   }
 }
@@ -176,63 +265,55 @@
   width: 100%;
   padding: 16px;
 
-  ion-button {
-    flex: 1;
-  }
-
+  ion-button { flex: 1; }
   ion-button[fill="clear"] {
     flex: 0 0 auto;
     min-width: 120px;
   }
 }
 
-// Mobile responsive adjustments
+// Mobile
 @media (max-width: 768px) {
   .pwa-install-modal {
     --width: 95%;
     --max-height: 95vh;
   }
-
   .app-header {
     padding: 12px;
     gap: 12px;
-
-    .app-icon {
-      width: 56px;
-      height: 56px;
-    }
-
-    .app-info {
-      h2 {
-        font-size: 1.3rem;
-      }
-    }
   }
-
-  .benefits-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
+  .app-header .app-icon {
+    width: 56px;
+    height: 56px;
   }
-
-  .screenshots-carousel {
-    .screenshot-container {
-      .screenshot {
-        width: 100px;
-        max-height: 180px;
-      }
-    }
+  .app-header .app-info h2 { font-size: 1.3rem; }
+  .benefits-grid { grid-template-columns: 1fr; gap: 12px; }
+  .screenshots-carousel .screenshot-container .screenshot {
+    width: 100px;
+    max-height: 180px;
+  }
+  .ios-installation-guide .ios-steps .ios-step {
+    padding: 10px;
+    gap: 10px;
   }
 }
 
-// Dark theme support
+// Dark theme
 @media (prefers-color-scheme: dark) {
-  .app-header {
-    background: linear-gradient(135deg, #1a1a2e, #232034);
-  }
-
-  .benefit-item,
-  .step {
+  .app-header { background: linear-gradient(135deg, #1a1a2e, #232034); }
+  .benefit-item, .step { 
     background: var(--ion-color-dark-tint);
     color: var(--ion-color-dark-contrast);
+  }
+  .ios-installation-guide .ios-steps .ios-step {
+    background: #2a2a3e;
+    border-color: rgba(var(--ion-color-primary-rgb), 0.3);
+  }
+  .ios-installation-guide .ios-benefits {
+    background: #1e3a1e;
+    border-color: rgba(var(--ion-color-success-rgb), 0.3);
+  }
+  .ios-installation-guide .ios-benefits h4 {
+    color: var(--ion-color-success-tint);
   }
 }

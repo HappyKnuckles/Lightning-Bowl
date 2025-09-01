@@ -66,35 +66,77 @@
 
         <!-- Installation Instructions -->
         <div class="instructions-section">
-          <h3>How to install:</h3>
-          <div class="install-steps">
-            <div class="step" *ngIf="isChrome">
-              <span class="step-number">1</span>
-              <p>Tap "Install" below</p>
-            </div>
-            <div class="step" *ngIf="isChrome">
-              <span class="step-number">2</span>
-              <p>Confirm installation in the popup</p>
-            </div>
-            <div class="step" *ngIf="isChrome">
-              <span class="step-number">3</span>
-              <p>Find the app on your home screen</p>
-            </div>
-            
-            <!-- iOS Safari Instructions -->
-            <div class="ios-instructions" *ngIf="isIOS">
+          <div *ngIf="!isIOS">
+            <h3>How to install:</h3>
+            <div class="install-steps">
               <div class="step">
                 <span class="step-number">1</span>
-                <p>Tap the <ion-icon name="share-outline"></ion-icon> share button</p>
+                <p>Tap "Install" below</p>
               </div>
               <div class="step">
                 <span class="step-number">2</span>
-                <p>Scroll down and tap "Add to Home Screen"</p>
+                <p>Confirm installation in the popup</p>
               </div>
               <div class="step">
                 <span class="step-number">3</span>
-                <p>Tap "Add" in the top right corner</p>
+                <p>Find the app on your home screen</p>
               </div>
+            </div>
+          </div>
+
+          <!-- Enhanced iOS Safari Instructions -->
+          <div class="ios-installation-guide" *ngIf="isIOS">
+            <div class="ios-header">
+              <ion-icon name="phone-portrait" color="primary" class="ios-icon"></ion-icon>
+              <h3>Install on iOS Safari</h3>
+            </div>
+            <p class="ios-description">
+              Follow these simple steps to add Lightning Bowl to your home screen for the best mobile experience:
+            </p>
+            
+            <div class="ios-steps">
+              <div class="ios-step">
+                <div class="step-visual">
+                  <span class="step-number">1</span>
+                  <ion-icon name="share-outline" class="step-icon"></ion-icon>
+                </div>
+                <div class="step-content">
+                  <h4>Find the Share Button</h4>
+                  <p>Tap the <strong>Share</strong> button at the bottom of your Safari browser</p>
+                </div>
+              </div>
+              
+              <div class="ios-step">
+                <div class="step-visual">
+                  <span class="step-number">2</span>
+                  <ion-icon name="add" class="step-icon"></ion-icon>
+                </div>
+                <div class="step-content">
+                  <h4>Add to Home Screen</h4>
+                  <p>Scroll down in the share menu and tap <strong>"Add to Home Screen"</strong></p>
+                </div>
+              </div>
+              
+              <div class="ios-step">
+                <div class="step-visual">
+                  <span class="step-number">3</span>
+                  <ion-icon name="checkmark-circle" class="step-icon"></ion-icon>
+                </div>
+                <div class="step-content">
+                  <h4>Complete Installation</h4>
+                  <p>Tap <strong>"Add"</strong> in the top right corner to finish installing</p>
+                </div>
+              </div>
+            </div>
+            
+            <div class="ios-benefits">
+              <h4>After installation, you'll enjoy:</h4>
+              <ul>
+                <li>App icon on your home screen</li>
+                <li>Full-screen experience without Safari UI</li>
+                <li>Faster loading and better performance</li>
+                <li>Works offline for uninterrupted gameplay</li>
+              </ul>
             </div>
           </div>
         </div>

@@ -114,10 +114,10 @@ export class PwaInstallService {
 
   private isIOSSafari(): boolean {
     const userAgent = navigator.userAgent;
+    // More reliable iOS Safari detection
     return /iPad|iPhone|iPod/.test(userAgent) && 
-           !!(window as any).safari &&
-           !(window as any).MSStream &&
-           !/CriOS|FxiOS|EdgiOS/.test(userAgent); // Exclude Chrome, Firefox, Edge on iOS
+           /Safari/.test(userAgent) &&
+           !/CriOS|FxiOS|EdgiOS|OPiOS/.test(userAgent); // Exclude Chrome, Firefox, Edge, Opera on iOS
   }
 
   private isPWAInstallable(): boolean {
