@@ -5,84 +5,93 @@
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-list>
-    <ion-item>
-      <ion-icon name="person-circle-outline" slot="start"></ion-icon>
-      <ion-input
-        class="ion-text-right"
-        label="Your name"
-        type="text"
-        [value]="username"
-        placeholder="{{ username }}"
-        (ionChange)="username = $event.target.value!.toString()"
-        (ionChange)="changeName()"
-        style="margin-right: 21px">
-      </ion-input>
-    </ion-item>
-    <ion-item>
-      <ion-icon name="color-palette-outline" slot="start"></ion-icon>
-      <ion-select
-        label="Color Theme"
-        interface="popover"
-        [(ngModel)]="currentColor"
-        [ngClass]="currentColor?.toLowerCase()"
-        placeholder="{{ currentColor }}"
-        (ionChange)="changeColor()">
-        <ion-select-option *ngFor="let color of optionsWithClasses; let i = index" [value]="color.name" [ngClass]="color.class">
-          {{ color.name }}
-        </ion-select-option>
-      </ion-select>
-    </ion-item>
+  <main role="main" aria-label="Application settings">
+    <ion-list>
+      <ion-item>
+        <ion-icon name="person-circle-outline" slot="start" aria-hidden="true"></ion-icon>
+        <ion-input
+          class="ion-text-right"
+          label="Your name"
+          type="text"
+          [value]="username"
+          placeholder="{{ username }}"
+          (ionChange)="username = $event.target.value!.toString()"
+          (ionChange)="changeName()"
+          style="margin-right: 21px"
+          aria-describedby="name-description">
+        </ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-icon name="color-palette-outline" slot="start" aria-hidden="true"></ion-icon>
+        <ion-select
+          label="Color Theme"
+          interface="popover"
+          [(ngModel)]="currentColor"
+          [ngClass]="currentColor?.toLowerCase()"
+          placeholder="{{ currentColor }}"
+          (ionChange)="changeColor()"
+          aria-label="Select app color theme">
+          <ion-select-option *ngFor="let color of optionsWithClasses; let i = index" [value]="color.name" [ngClass]="color.class">
+            {{ color.name }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
 
-    <app-league-selector></app-league-selector>
+      <app-league-selector></app-league-selector>
 
-    <ion-item button id="spare-names-modal">
-      <ion-icon src="/assets/svg/pin.svg" slot="start"></ion-icon>
-      <ion-label>Spare Names</ion-label>
-    </ion-item>
+      <ion-item button id="spare-names-modal" aria-label="Configure spare pin names">
+        <ion-icon src="/assets/svg/pin.svg" slot="start" aria-hidden="true"></ion-icon>
+        <ion-label>Spare Names</ion-label>
+      </ion-item>
 
-    <ion-item>
-      <ion-icon src="/assets/svg/target-82-svgrepo-com.svg" slot="start"></ion-icon>
-      <ion-input
-        label="Goal Average"
-        class="ion-text-right"
-        (ionChange)="getGameCountForAverage($event)"
-        placeholder="230"
-        max="300"
-        inputmode="numeric"
-        type="number"
-        clearOnEdit="true"></ion-input>
-    </ion-item>
+      <ion-item>
+        <ion-icon src="/assets/svg/target-82-svgrepo-com.svg" slot="start" aria-hidden="true"></ion-icon>
+        <ion-input
+          label="Goal Average"
+          class="ion-text-right"
+          (ionChange)="getGameCountForAverage($event)"
+          placeholder="230"
+          type="number"
+          inputmode="numeric"
+          max="300"
+          clearOnEdit="true"
+          aria-describedby="goal-description">
+        </ion-input>
+      </ion-item>
 
-    <!-- TODO maybe add InAppBrowser for this -->
-    <ion-item href="https://github.com/HappyKnuckles/bowling-stats/issues" button detail="false">
-      <ion-icon name="logo-github" slot="start"></ion-icon>
-      <ion-label>Feature/Bug overview</ion-label>
-      <p class="link">Follow me</p>
-    </ion-item>
-    <ion-item id="feedback-modal" class="ion-activatable ripple-parent rectangle">
-      <ion-icon name="mail-outline" slot="start"></ion-icon>
-      <ion-label>Feedback/Requests</ion-label>
-      <p class="link">Open form</p>
-    </ion-item>
-    <ion-item (click)="updateApp()" button [detail]="false" *ngIf="updateAvailable">
-      <ion-icon name="refresh-circle-outline" slot="start"></ion-icon>
-      <ion-label>Load update</ion-label>
-      <ion-button slot="end"> Update </ion-button>
-    </ion-item>
-  </ion-list>
+      <!-- TODO maybe add InAppBrowser for this -->
+      <ion-item href="https://github.com/HappyKnuckles/bowling-stats/issues" button detail="false" 
+                aria-label="View feature requests and bug reports on GitHub">
+        <ion-icon name="logo-github" slot="start" aria-hidden="true"></ion-icon>
+        <ion-label>Feature/Bug overview</ion-label>
+        <p class="link">Follow me</p>
+      </ion-item>
+      <ion-item id="feedback-modal" class="ion-activatable ripple-parent rectangle"
+                button aria-label="Open feedback form">
+        <ion-icon name="mail-outline" slot="start" aria-hidden="true"></ion-icon>
+        <ion-label>Feedback/Requests</ion-label>
+        <p class="link">Open form</p>
+      </ion-item>
+      <ion-item (click)="updateApp()" button [detail]="false" *ngIf="updateAvailable"
+                aria-label="Update application to latest version">
+        <ion-icon name="refresh-circle-outline" slot="start" aria-hidden="true"></ion-icon>
+        <ion-label>Load update</ion-label>
+        <ion-button slot="end"> Update </ion-button>
+      </ion-item>
+    </ion-list>
+  </main>
 </ion-content>
 
-<ion-modal trigger="spare-names-modal" #spareNamesModal>
+<ion-modal trigger="spare-names-modal" #spareNamesModal aria-labelledby="spare-names-title">
   <ng-template>
     <ion-header [translucent]="true">
       <ion-toolbar>
         <ion-buttons slot="start" style="padding: 4px">
-          <ion-button color="medium" (click)="spareNamesModal.dismiss()">
-            <ion-icon name="chevron-back"></ion-icon>
+          <ion-button color="medium" (click)="spareNamesModal.dismiss()" aria-label="Close spare names configuration">
+            <ion-icon name="chevron-back" aria-hidden="true"></ion-icon>
           </ion-button>
         </ion-buttons>
-        <ion-title>Spare Names</ion-title>
+        <ion-title id="spare-names-title">Spare Names</ion-title>
       </ion-toolbar>
     </ion-header>
     <ion-content [fullscreen]="true">
@@ -91,14 +100,14 @@
   </ng-template>
 </ion-modal>
 
-<ion-modal trigger="feedback-modal" #feedback [keepContentsMounted]="true">
+<ion-modal trigger="feedback-modal" #feedback [keepContentsMounted]="true" aria-labelledby="feedback-title">
   <ng-template>
     <ion-header [translucent]="true">
       <ion-toolbar>
         <ion-buttons slot="start">
-          <ion-button color="medium" (click)="feedback.dismiss()">Cancel</ion-button>
+          <ion-button color="medium" (click)="feedback.dismiss()" aria-label="Cancel feedback">Cancel</ion-button>
         </ion-buttons>
-        <ion-title>Feedback/Request</ion-title>
+        <ion-title id="feedback-title">Feedback/Request</ion-title>
       </ion-toolbar>
     </ion-header>
     <ion-content>
@@ -107,7 +116,7 @@
           <ion-card-title>Contact Us</ion-card-title>
         </ion-card-header>
         <ion-card-content>
-          <form #feedbackForm="ngForm" (ngSubmit)="submitFeedback(feedbackForm)">
+          <form #feedbackForm="ngForm" (ngSubmit)="submitFeedback(feedbackForm)" role="form" aria-label="Feedback form">
             <ion-item>
               <ion-input
                 label="Your email"
@@ -118,7 +127,9 @@
                 errorText="Invalid email address."
                 [(ngModel)]="userEmail"
                 name="userEmail"
-                required></ion-input>
+                required
+                aria-describedby="email-description">
+              </ion-input>
             </ion-item>
 
             <ion-item>
@@ -133,10 +144,15 @@
                 [autoGrow]="true"
                 required
                 #feedbackInput="ngModel"
-                errorText="Feedback is required."></ion-textarea>
+                errorText="Feedback is required."
+                aria-describedby="feedback-description">
+              </ion-textarea>
             </ion-item>
 
-            <ion-button expand="full" color="primary" type="submit" [disabled]="feedbackForm.invalid"> Submit Feedback </ion-button>
+            <ion-button expand="full" color="primary" type="submit" [disabled]="feedbackForm.invalid"
+                        [attr.aria-label]="feedbackForm.invalid ? 'Please fill required fields before submitting' : 'Submit feedback'"> 
+              Submit Feedback 
+            </ion-button>
           </form>
         </ion-card-content>
       </ion-card>

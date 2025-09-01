@@ -2,6 +2,6 @@
   <ion-router-outlet></ion-router-outlet>
 </ion-app>
 
-<ion-backdrop *ngIf="loadingService.isLoading()" style="opacity: 0.3; z-index: 999999"></ion-backdrop>
-<ion-spinner *ngIf="loadingService.isLoading()" name="lines" color="primary" class="custom-loader"></ion-spinner>
-<app-toast></app-toast>
+<ion-backdrop *ngIf="loadingService.isLoading()" style="opacity: 0.3; z-index: 999999" aria-hidden="true"></ion-backdrop>
+<ion-spinner *ngIf="loadingService.isLoading()" name="lines" color="primary" class="custom-loader" role="status" aria-label="Loading, please wait"></ion-spinner>
+<app-toast aria-live="polite"></app-toast>

@@ -8,21 +8,24 @@
         slot="start"
         fill="clear"
         [disabled]="storageService.allBalls().length === 0"
-        (click)="openExcelFileInput()">
-        <ion-icon slot="icon-only" name="cloud-upload-outline"></ion-icon>
+        (click)="openExcelFileInput()"
+        aria-label="Import games from Excel file">
+        <ion-icon slot="icon-only" name="cloud-upload-outline" aria-hidden="true"></ion-icon>
       </ion-button>
       <ion-button
         (click)="exportToExcel()"
         class="action-sheet"
         fill="clear"
-        [disabled]="storageService.games().length <= 0 && !loadingService.isLoading()">
-        <ion-icon slot="icon-only" name="cloud-download-outline"></ion-icon> </ion-button
+        [disabled]="storageService.games().length <= 0 && !loadingService.isLoading()"
+        aria-label="Export games to Excel file">
+        <ion-icon slot="icon-only" name="cloud-download-outline" aria-hidden="true"></ion-icon> </ion-button
     ></ion-buttons>
     <!-- Clear Input on Upload-->
-    <input type="file" id="excelUpload" class="ion-hide" (input)="handleFileUpload($event)" placeholder="Upload file" accept=".xlsx" />
+    <input type="file" id="excelUpload" class="ion-hide" (input)="handleFileUpload($event)" 
+           placeholder="Upload file" accept=".xlsx" aria-label="Select Excel file to import" />
     <ion-title>
       History
-      <ion-badge>{{ gameFilterService.filteredGames().length }}</ion-badge>
+      <ion-badge [attr.aria-label]="gameFilterService.filteredGames().length + ' games in filtered results'">{{ gameFilterService.filteredGames().length }}</ion-badge>
     </ion-title>
     <ion-buttons slot="end" class="action-sheet">
       <!-- <app-sort-header
@@ -32,9 +35,12 @@
         storageKey="games-sort-option"
         (sortChanged)="onSortChanged($event)">
       </app-sort-header> -->
-      <ion-button fill="clear" (click)="openFilterModal()" [disabled]="storageService.games().length <= 0 && !loadingService.isLoading()">
-        <ion-icon slot="icon-only" name="filter-outline"></ion-icon>
-        <ion-text class="filter-indicator" *ngIf="gameFilterService.activeFilterCount() !== 0">{{ gameFilterService.activeFilterCount() }}</ion-text>
+      <ion-button fill="clear" (click)="openFilterModal()" 
+                  [disabled]="storageService.games().length <= 0 && !loadingService.isLoading()"
+                  aria-label="Filter game history" [attr.aria-pressed]="gameFilterService.activeFilterCount() !== 0">
+        <ion-icon slot="icon-only" name="filter-outline" aria-hidden="true"></ion-icon>
+        <ion-text class="filter-indicator" *ngIf="gameFilterService.activeFilterCount() !== 0" 
+                  [attr.aria-label]="gameFilterService.activeFilterCount() + ' active filters'">{{ gameFilterService.activeFilterCount() }}</ion-text>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
@@ -50,16 +56,18 @@
 
   <!-- Show this message if there are no game history items and it's not loading -->
   <ng-container *ngIf="storageService.games().length <= 0 && !loadingService.isLoading(); else checkFilteredGames">
-    <ion-text class="no-game-text"> Start playing a few games to see your history here! </ion-text>
+    <ion-text class="no-game-text" role="status"> Start playing a few games to see your history here! </ion-text>
   </ng-container>
   <ng-template #checkFilteredGames>
     <ng-container *ngIf="gameFilterService.filteredGames().length <= 0 && !loadingService.isLoading(); else content">
-      <ion-text class="no-game-text"> No games for this filter! </ion-text>
+      <ion-text class="no-game-text" role="status"> No games for this filter! </ion-text>
     </ng-container>
   </ng-template>
   <!-- Main content to display when there is game history or when loading is done -->
   <ng-template #content>
     <!-- <ion-button (click)="deleteAll()">Delete</ion-button>-->
-    <app-game [games]="gameFilterService.filteredGames()" [gameCount]="gameFilterService.filteredGames().length"></app-game>
+    <main aria-label="Game history" role="main">
+      <app-game [games]="gameFilterService.filteredGames()" [gameCount]="gameFilterService.filteredGames().length"></app-game>
+    </main>
   </ng-template>
 </ion-content>

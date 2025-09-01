@@ -2,22 +2,22 @@
   <ion-toolbar>
     <ion-title>Arsenal</ion-title>
     <ion-buttons slot="end">
-      <ion-button class="action-sheet" id="addBall">
-        <ion-icon slot="icon-only" name="add"></ion-icon>
+      <ion-button class="action-sheet" id="addBall" aria-label="Add ball to arsenal">
+        <ion-icon slot="icon-only" name="add" aria-hidden="true"></ion-icon>
       </ion-button>
     </ion-buttons>
     <ion-buttons slot="start">
-      <ion-button [href]="storageService.url">
+      <ion-button [href]="storageService.url" aria-label="Visit bowwwl.com website">
         <div class="powered-by">powered by</div>
-        <img [src]="storageService.url + '/sites/default/files/logo/bowwwl-logo.svg'" alt="bowwwl" title="bowwwl.com" style="height: 1.5rem" />
+        <img [src]="storageService.url + '/sites/default/files/logo/bowwwl-logo.svg'" alt="bowwwl.com logo" title="bowwwl.com" style="height: 1.5rem" />
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
   @if (storageService.arsenal().length > 0) {
     <ion-toolbar>
-      <ion-segment [(ngModel)]="selectedSegment">
-        <ion-segment-button value="arsenal" contentId="arsenal">Arsenal</ion-segment-button>
-        <ion-segment-button value="compare" contentId="compare">Compare Chart</ion-segment-button>
+      <ion-segment [(ngModel)]="selectedSegment" aria-label="Arsenal view options">
+        <ion-segment-button value="arsenal" contentId="arsenal" aria-label="View arsenal list">Arsenal</ion-segment-button>
+        <ion-segment-button value="compare" contentId="compare" aria-label="View comparison chart">Compare Chart</ion-segment-button>
       </ion-segment>
     </ion-toolbar>
   }
@@ -27,29 +27,30 @@
   <ion-segment-view>
     <ion-segment-content id="arsenal">
       @if (storageService.arsenal().length > 0) {
-        <ion-list>
-          <ion-reorder-group disabled="false" (ionItemReorder)="reorderArsenal($event)">
+        <ion-list aria-label="Your bowling ball arsenal">
+          <ion-reorder-group disabled="false" (ionItemReorder)="reorderArsenal($event)" aria-label="Reorder your arsenal balls by dragging">
             <ion-item-sliding *ngFor="let ball of storageService.arsenal()" #slidingItem class="sliding">
               <ion-item-options side="end" (ionSwipe)="removeFromArsenal(ball); slidingItem.closeOpened()">
-                <ion-item-option color="danger" expandable (click)="removeFromArsenal(ball); slidingItem.closeOpened()">
-                  <ion-icon class="title" style="transform: translateY(-2px)" name="trash-outline"></ion-icon>
+                <ion-item-option color="danger" expandable (click)="removeFromArsenal(ball); slidingItem.closeOpened()" 
+                                [attr.aria-label]="'Remove ' + ball.ball_name + ' from arsenal'">
+                  <ion-icon class="title" style="transform: translateY(-2px)" name="trash-outline" aria-hidden="true"></ion-icon>
                 </ion-item-option>
               </ion-item-options>
 
-              <ion-item button [id]="ball.ball_id + ball.core_weight">
-                <ion-reorder slot="start">
+              <ion-item button [id]="ball.ball_id + ball.core_weight" [attr.aria-label]="'View details for ' + ball.ball_name + ' bowling ball'">
+                <ion-reorder slot="start" aria-label="Drag to reorder">
                   <ion-thumbnail>
-                    <ion-img [src]="storageService.url + ball.thumbnail_image"></ion-img>
+                    <ion-img [src]="storageService.url + ball.thumbnail_image" [alt]="ball.ball_name + ' bowling ball image'"></ion-img>
                   </ion-thumbnail>
                 </ion-reorder>
 
                 <ion-label>
                   <p>{{ ball.brand_name }} ({{ ball.release_date }})</p>
-                  <h1>{{ ball.ball_name }}</h1>
+                  <h2>{{ ball.ball_name }}</h2>
                   <div class="ball-info">
-                    <ion-chip>{{ ball.core_weight }}lbs</ion-chip>
-                    <ion-chip>{{ ball.core_type }}</ion-chip>
-                    <ion-chip>{{ ball.coverstock_type }}</ion-chip>
+                    <ion-chip [attr.aria-label]="'Ball weight: ' + ball.core_weight + ' pounds'">{{ ball.core_weight }}lbs</ion-chip>
+                    <ion-chip [attr.aria-label]="'Core type: ' + ball.core_type">{{ ball.core_type }}</ion-chip>
+                    <ion-chip [attr.aria-label]="'Coverstock type: ' + ball.coverstock_type">{{ ball.coverstock_type }}</ion-chip>
                   </div>
                 </ion-label>
               </ion-item>
@@ -62,14 +63,14 @@
     <ion-segment-content id="compare">
       @if (storageService.arsenal().length > 0) {
         <div class="arsenal-chart-container">
-          <canvas #balls style="width: 600px; height: 800px; max-height: 100%"> </canvas>
+          <canvas #balls style="width: 600px; height: 800px; max-height: 100%" aria-label="Arsenal comparison chart showing ball characteristics" role="img"> </canvas>
         </div>
       }
     </ion-segment-content>
   </ion-segment-view>
 
   <ng-container *ngIf="storageService.arsenal().length <= 0">
-    <ion-text class="no-game-text"> You have no balls in your arsenal. Add a ball to get started! </ion-text>
+    <ion-text class="no-game-text" role="status"> You have no balls in your arsenal. Add a ball to get started! </ion-text>
   </ng-container>
   <!-- <ng-template #content>
     <ion-list>
@@ -104,25 +105,28 @@
   </ng-template> -->
 </ion-content>
 
-<ion-modal *ngFor="let ball of storageService.arsenal()" [trigger]="ball.ball_id + ball.core_weight" #modal>
+<ion-modal *ngFor="let ball of storageService.arsenal()" [trigger]="ball.ball_id + ball.core_weight" #modal 
+          [attr.aria-labelledby]="'ball-details-title-' + ball.ball_id">
   <ng-template>
     <ion-header [translucent]="true">
       <ion-toolbar>
         <ion-buttons slot="start" style="padding: 4px">
-          <ion-button (click)="modal.dismiss()">
-            <ion-icon name="chevron-back" slot="icon-only"></ion-icon>
+          <ion-button (click)="modal.dismiss()" aria-label="Close ball details">
+            <ion-icon name="chevron-back" slot="icon-only" aria-hidden="true"></ion-icon>
           </ion-button>
         </ion-buttons>
-        <ion-title>{{ ball.ball_name }}</ion-title>
+        <ion-title [id]="'ball-details-title-' + ball.ball_id">{{ ball.ball_name }}</ion-title>
       </ion-toolbar>
     </ion-header>
     <ion-content [fullscreen]="true">
-      <ion-card button (click)="getSameCoverstockBalls(ball)">
+      <ion-card button (click)="getSameCoverstockBalls(ball)" 
+                [attr.aria-label]="'View balls with same coverstock as ' + ball.ball_name">
         <ion-card-header>
-          <ion-img [src]="storageService.url + ball.thumbnail_image" style="height: 15vh"></ion-img>
-          <ion-card-title
-            >Coverstock
-            <ion-icon name="open-outline" class="ion-float-right"></ion-icon>
+          <ion-img [src]="storageService.url + ball.thumbnail_image" style="height: 15vh" 
+                   [alt]="ball.ball_name + ' bowling ball'"></ion-img>
+          <ion-card-title>
+            Coverstock
+            <ion-icon name="open-outline" class="ion-float-right" aria-hidden="true"></ion-icon>
           </ion-card-title>
         </ion-card-header>
         <ion-card-content class="card-content">
@@ -143,12 +147,14 @@
         </ion-card-content>
       </ion-card>
 
-      <ion-card button (click)="getSameCoreBalls(ball)">
+      <ion-card button (click)="getSameCoreBalls(ball)" 
+                [attr.aria-label]="'View balls with same core as ' + ball.ball_name">
         <ion-card-header>
-          <ion-img [src]="storageService.url + ball.core_image" style="height: 15vh; width: 15vh; margin: 0 auto"></ion-img>
-          <ion-card-title
-            >Core
-            <ion-icon name="open-outline" class="ion-float-right"></ion-icon>
+          <ion-img [src]="storageService.url + ball.core_image" style="height: 15vh; width: 15vh; margin: 0 auto"
+                   [alt]="ball.core_name + ' bowling ball core'"></ion-img>
+          <ion-card-title>
+            Core
+            <ion-icon name="open-outline" class="ion-float-right" aria-hidden="true"></ion-icon>
           </ion-card-title>
         </ion-card-header>
         <ion-card-content class="card-content">
@@ -180,25 +186,26 @@
   </ng-template>
 </ion-modal>
 
-<ion-modal [initialBreakpoint]="0.35" [breakpoints]="[0, 0.35, 0.5, 0.75]" #coverstock>
+<ion-modal [initialBreakpoint]="0.35" [breakpoints]="[0, 0.35, 0.5, 0.75]" #coverstock aria-label="Balls with similar coverstock">
   <ng-template>
     <app-ball-list [balls]="coverstockBalls" [isCoverstock]="true"></app-ball-list>
   </ng-template>
 </ion-modal>
 
-<ion-modal [initialBreakpoint]="0.35" [breakpoints]="[0, 0.35, 0.5, 0.75]" #core>
+<ion-modal [initialBreakpoint]="0.35" [breakpoints]="[0, 0.35, 0.5, 0.75]" #core aria-label="Balls with similar core">
   <ng-template>
     <app-ball-list [balls]="coreBalls" [isCoverstock]="false"></app-ball-list>
   </ng-template>
 </ion-modal>
 
-<ion-modal [presentingElement]="presentingElement" trigger="addBall">
+<ion-modal [presentingElement]="presentingElement" trigger="addBall" aria-label="Add ball to arsenal">
   <ng-template>
     <app-generic-typeahead 
       [items]="ballsWithoutArsenal()" 
       [config]="ballTypeaheadConfig"
       (selectedItemsChange)="onBallSelectionChange($event)"
-      [prevSelectedItems]="[]">
+      [prevSelectedItems]="[]"
+      aria-label="Search and select balls to add to arsenal">
     </app-generic-typeahead>
   </ng-template>
 </ion-modal>

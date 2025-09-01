@@ -1,25 +1,29 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
     <ion-buttons slot="start">
-      <ion-button type="button" class="action-sheet" slot="start" fill="clear" (click)="handleImageUpload()">
-        <ion-icon slot="icon-only" name="camera-outline"></ion-icon>
+      <ion-button type="button" class="action-sheet" slot="start" fill="clear" (click)="handleImageUpload()"
+                  aria-label="Upload score sheet image for automatic scoring">
+        <ion-icon slot="icon-only" name="camera-outline" aria-hidden="true"></ion-icon>
       </ion-button>
     </ion-buttons>
-    <input type="file" id="upload" class="ion-hide" accept="image/*" />
+    <input type="file" id="upload" class="ion-hide" accept="image/*" aria-label="Select image file" />
     <ion-title> Add Game </ion-title>
     <ion-buttons slot="end">
-      <ion-button class="action-sheet" (click)="presentActionSheet()" fill="clear">
+      <ion-button class="action-sheet" (click)="presentActionSheet()" fill="clear"
+                  [attr.aria-label]="'Game mode: ' + selectedMode + '. Click to change'"
+                  [attr.aria-expanded]="sheetOpen">
         {{ selectedMode }}
-        <ion-icon *ngIf="!sheetOpen" name="chevron-down" class="chevron"></ion-icon>
-        <ion-icon *ngIf="sheetOpen" name="chevron-up" class="chevron"></ion-icon>
+        <ion-icon *ngIf="!sheetOpen" name="chevron-down" class="chevron" aria-hidden="true"></ion-icon>
+        <ion-icon *ngIf="sheetOpen" name="chevron-up" class="chevron" aria-hidden="true"></ion-icon>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
 
   @if (selectedMode !== "Single") {
     <ion-toolbar>
-      <ion-segment [value]="selectedSegment" [scrollable]="true">
-        <ion-segment-button *ngFor="let segment of segments" [value]="segment" [contentId]="segment">
+      <ion-segment [value]="selectedSegment" [scrollable]="true" aria-label="Select game in series">
+        <ion-segment-button *ngFor="let segment of segments" [value]="segment" [contentId]="segment"
+                            [attr.aria-label]="'Game ' + segment + ' in series'">
           <ion-label class="segment-label">{{ segment }}</ion-label>
         </ion-segment-button>
       </ion-segment>
@@ -43,8 +47,11 @@
     justify-content: center;
     align-items: center;
     z-index: 500;
-  ">
-  <lottie-player slot="end" autoplay loop src="https://lottie.host/7b3bdd2a-221b-463e-9f59-d95964639389/duMcnXopMJ.json"></lottie-player>
+  "
+  role="status"
+  aria-live="assertive"
+  aria-label="Celebrating perfect 300 game">
+  <lottie-player slot="end" autoplay loop src="https://lottie.host/7b3bdd2a-221b-463e-9f59-d95964639389/duMcnXopMJ.json" aria-hidden="true"></lottie-player>
 </div>
 
 <ng-container *ngFor="let mode of seriesMode; let i = index">

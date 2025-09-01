@@ -1,31 +1,37 @@
-<ion-accordion-group color="dark" multiple="true" #accordionGroup (ionChange)="hideContent($event)">
+<ion-accordion-group color="dark" multiple="true" #accordionGroup (ionChange)="hideContent($event)" 
+                   role="region" aria-label="Bowling game history">
   <ion-list>
     <!-- <ion-button (click)="deleteAll()"> Alles löschen</ion-button> -->
     @for (game of showingGames; track game.gameId) {
-      <ion-item-divider *ngIf="$index === 0 || isNewMonth($index)" style="padding: 8px; font-size: 1.2rem">
-        <ion-badge slot="end">{{ getMonthGameCount(game.date) }}</ion-badge>
+      <ion-item-divider *ngIf="$index === 0 || isNewMonth($index)" style="padding: 8px; font-size: 1.2rem"
+                        role="separator" [attr.aria-label]="getMonthName(game.date) + ' with ' + getMonthGameCount(game.date) + ' games'">
+        <ion-badge slot="end" [attr.aria-label]="getMonthGameCount(game.date) + ' games this month'">{{ getMonthGameCount(game.date) }}</ion-badge>
         <ion-label>{{ getMonthName(game.date) }} </ion-label>
       </ion-item-divider>
 
       <ion-item-sliding class="sliding" #slidingItem>
         <ion-item-options side="end" (ionSwipe)="deleteGame(game.gameId); slidingItem.closeOpened()">
-          <ion-item-option color="danger" expandable (click)="deleteGame(game.gameId); slidingItem.closeOpened()">
-            <ion-icon class="title" style="transform: translateY(-2px)" name="trash-outline"></ion-icon>
+          <ion-item-option color="danger" expandable (click)="deleteGame(game.gameId); slidingItem.closeOpened()"
+                           [attr.aria-label]="'Delete game ' + (gameCount! - $index)">
+            <ion-icon class="title" style="transform: translateY(-2px)" name="trash-outline" aria-hidden="true"></ion-icon>
           </ion-item-option>
         </ion-item-options>
 
         <ion-item-options side="start" *ngIf="!isEditMode[game.gameId]" (ionSwipe)="saveOriginalStateAndEnableEdit(game); slidingItem.closeOpened()">
-          <ion-item-option expandable (click)="saveOriginalStateAndEnableEdit(game); slidingItem.closeOpened()">
-            <ion-icon class="title" style="transform: translateY(-2px)" name="create-outline"></ion-icon>
+          <ion-item-option expandable (click)="saveOriginalStateAndEnableEdit(game); slidingItem.closeOpened()"
+                           [attr.aria-label]="'Edit game ' + (gameCount! - $index)">
+            <ion-icon class="title" style="transform: translateY(-2px)" name="create-outline" aria-hidden="true"></ion-icon>
           </ion-item-option>
-          <ion-item-option *ngIf="!isEditMode[game.gameId]" (click)="takeScreenshotAndShare(game); slidingItem.closeOpened()">
-            <ion-icon class="title" style="transform: translateY(-2px)" name="share-outline"></ion-icon>
+          <ion-item-option *ngIf="!isEditMode[game.gameId]" (click)="takeScreenshotAndShare(game); slidingItem.closeOpened()"
+                           [attr.aria-label]="'Share game ' + (gameCount! - $index)">
+            <ion-icon class="title" style="transform: translateY(-2px)" name="share-outline" aria-hidden="true"></ion-icon>
           </ion-item-option>
         </ion-item-options>
 
         <ion-item-options side="start" *ngIf="isEditMode[game.gameId]" (ionSwipe)="cancelEdit(game); slidingItem.closeOpened()">
-          <ion-item-option expandable (click)="cancelEdit(game); slidingItem.closeOpened()">
-            <ion-icon class="title" style="transform: translateY(-2px)" name="create-outline"></ion-icon>
+          <ion-item-option expandable (click)="cancelEdit(game); slidingItem.closeOpened()"
+                           [attr.aria-label]="'Cancel editing game ' + (gameCount! - $index)">
+            <ion-icon class="title" style="transform: translateY(-2px)" name="create-outline" aria-hidden="true"></ion-icon>
           </ion-item-option>
         </ion-item-options>
 
@@ -35,10 +41,11 @@
           [delay]="1000"
           appLongPress>
           <ion-accordion #accordionRef [value]="game.gameId" [id]="game.gameId">
-            <ion-item slot="header" lines="none" class="expansion-header">
+            <ion-item slot="header" lines="none" class="expansion-header" 
+                      [attr.aria-label]="'Game ' + (gameCount! - $index) + ' scored ' + game.totalScore + ' on ' + (game.date | date: 'MM.dd.yyyy') + (game.league ? ' in ' + game.league : '')">
               <ion-label class="game-info">
                 <p>{{ game.date | date: "MM.dd.yyyy" }}</p>
-                <h2 class="title">Game {{ gameCount! - $index }}</h2>
+                <h3 class="title">Game {{ gameCount! - $index }}</h3>
                 <p class="score" *ngIf="game.league && !isLeaguePage">League/Tournament: {{ game.league }}</p>
                 <p class="score" *ngIf="game.patterns && game.patterns.length > 0">Patterns: {{ game.patterns.join(", ") }}</p>
                 <p class="score">Score: {{ game.totalScore }}</p>
