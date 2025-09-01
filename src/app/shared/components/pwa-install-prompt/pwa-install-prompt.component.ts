@@ -19,7 +19,8 @@ import {
   notifications, 
   phonePortrait, 
   download, 
-  shareOutline 
+  shareOutline,
+  checkmark 
 } from 'ionicons/icons';
 
 @Component({
@@ -57,7 +58,8 @@ export class PwaInstallPromptComponent implements OnInit {
       notifications, 
       phonePortrait, 
       download, 
-      shareOutline 
+      shareOutline,
+      checkmark 
     });
   }
 
@@ -68,7 +70,10 @@ export class PwaInstallPromptComponent implements OnInit {
   private detectBrowser(): void {
     const userAgent = navigator.userAgent;
     this.isChrome = /Chrome|Chromium|Edge/.test(userAgent) && !/Safari/.test(userAgent);
-    this.isIOS = /iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream;
+    this.isIOS = /iPad|iPhone|iPod/.test(userAgent) && 
+                 !!(window as any).safari &&
+                 !(window as any).MSStream &&
+                 !/CriOS|FxiOS|EdgiOS/.test(userAgent); // True iOS Safari, not Chrome/Firefox/Edge on iOS
   }
 
   onInstall(): void {
