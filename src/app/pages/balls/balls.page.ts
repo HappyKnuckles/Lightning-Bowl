@@ -48,6 +48,7 @@ import { SearchBlurDirective } from 'src/app/core/directives/search-blur/search-
 import { SortHeaderComponent } from 'src/app/shared/components/sort-header/sort-header.component';
 import { SortService } from 'src/app/core/services/sort/sort.service';
 import { BallSortOption, BallSortField, SortDirection } from 'src/app/core/models/sort.model';
+import { NetworkService } from 'src/app/core/services/network/network.service';
 
 @Component({
   selector: 'app-balls',
@@ -106,7 +107,6 @@ export class BallsPage implements OnInit {
     direction: SortDirection.DESC,
     label: 'Newest First',
   };
-
   // Computed getter for displayed balls.
   // • If a search term exists, we build a Fuse instance over the correct data source and return results sorted by relevance.
   // • If filters are active and no search term exists, we display only a slice (up to filterDisplayCount) of the filtered list.
@@ -143,7 +143,7 @@ export class BallsPage implements OnInit {
 
       // Collect results for each search term
       result = searchTerms.flatMap((term) => fuseInstance.search(term).map((result) => result.item));
-      
+
       // Return search results without additional sorting to preserve relevance ranking
       return result;
     } else {
@@ -168,6 +168,7 @@ export class BallsPage implements OnInit {
     public ballFilterService: BallFilterService,
     private route: ActivatedRoute,
     public sortService: SortService,
+    private networkService: NetworkService,
   ) {
     addIcons({ filterOutline, closeCircle, globeOutline, openOutline, addOutline, camera });
     this.searchSubject.subscribe((query) => {
@@ -282,6 +283,8 @@ export class BallsPage implements OnInit {
       if (response.length > 0) {
         this.balls.set([...this.balls(), ...response]);
         this.currentPage++;
+      } else if (this.networkService.isOffline) {
+        this.toastService.showToast('You are offline and no cached data is available.', 'information-circle-outline', false);
       } else {
         this.hasMoreData = false;
       }

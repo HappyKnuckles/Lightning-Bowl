@@ -43,6 +43,7 @@ import { SearchBlurDirective } from 'src/app/core/directives/search-blur/search-
 import { SortHeaderComponent } from 'src/app/shared/components/sort-header/sort-header.component';
 import { SortService } from 'src/app/core/services/sort/sort.service';
 import { PatternSortOption, PatternSortField, SortDirection } from 'src/app/core/models/sort.model';
+import { NetworkService } from 'src/app/core/services/network/network.service';
 
 @Component({
   selector: 'app-pattern',
@@ -109,6 +110,7 @@ export class PatternPage implements OnInit {
     private sanitizer: DomSanitizer,
     private modalCtrl: ModalController,
     public sortService: SortService,
+    private networkService: NetworkService,
   ) {
     addIcons({ addOutline, arrowUpOutline, arrowDownOutline, chevronBack, add });
   }
@@ -146,6 +148,8 @@ export class PatternPage implements OnInit {
       if (response.total > 0) {
         this.patterns = [...this.patterns, ...patterns];
         this.currentPage++;
+      } else if (this.networkService.isOffline) {
+        this.toastService.showToast('You are offline and no cached data is available.', 'information-circle-outline', false);
       } else {
         this.hasMoreData = false;
       }
@@ -168,7 +172,7 @@ export class PatternPage implements OnInit {
       this.loadingService.setLoading(true);
       const searchValue = event.detail.value || '';
       this.searchTerm.set(searchValue);
-      
+
       if (searchValue === '') {
         this.hasMoreData = true;
         const response = await this.patternService.getPatterns(this.currentPage);
