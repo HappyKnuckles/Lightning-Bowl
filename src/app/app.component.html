@@ -5,3 +5,11 @@
 <ion-backdrop *ngIf="loadingService.isLoading()" style="opacity: 0.3; z-index: 999999"></ion-backdrop>
 <ion-spinner *ngIf="loadingService.isLoading()" name="lines" color="primary" class="custom-loader"></ion-spinner>
 <app-toast></app-toast>
+
+<!-- PWA Install Prompt -->
+<app-pwa-install-prompt
+  [isOpen]="showPwaInstallPrompt"
+  [canInstall]="canInstallPwa"
+  (install)="onPwaInstall()"
+  (dismiss)="onPwaDismiss()">
+</app-pwa-install-prompt>

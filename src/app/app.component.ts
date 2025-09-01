@@ -11,18 +11,23 @@ import { ToastService } from './core/services/toast/toast.service';
 import { UserService } from './core/services/user/user.service';
 import { ToastComponent } from './shared/components/toast/toast.component';
 import { ThemeChangerService } from './core/services/theme-changer/theme-changer.service';
+import { PwaInstallService } from './core/services/pwa-install/pwa-install.service';
+import { PwaInstallPromptComponent } from './shared/components/pwa-install-prompt/pwa-install-prompt.component';
 
 @Component({
   selector: 'app-root',
   templateUrl: 'app.component.html',
   styleUrls: ['app.component.scss'],
   standalone: true,
-  imports: [IonApp, NgIf, IonBackdrop, IonSpinner, IonRouterOutlet, ToastComponent],
+  imports: [IonApp, NgIf, IonBackdrop, IonSpinner, IonRouterOutlet, ToastComponent, PwaInstallPromptComponent],
 })
 export class AppComponent implements OnInit, OnDestroy {
   private userNameSubscription: Subscription;
+  private pwaInstallSubscription: Subscription;
   username = '';
   private updateInterval: any;
+  showPwaInstallPrompt = false;
+  canInstallPwa = false;
 
   constructor(
     private alertController: AlertController,
@@ -33,12 +38,18 @@ export class AppComponent implements OnInit, OnDestroy {
     private themeService: ThemeChangerService,
     private http: HttpClient,
     private sanitizer: DomSanitizer,
+    private pwaInstallService: PwaInstallService,
   ) {
     this.initializeApp();
     const currentTheme = this.themeService.getCurrentTheme();
     this.themeService.applyTheme(currentTheme);
     this.userNameSubscription = this.userService.getUsername().subscribe((username: string) => {
       this.username = username;
+    });
+
+    this.pwaInstallSubscription = this.pwaInstallService.canShowInstallPrompt().subscribe((canShow) => {
+      this.showPwaInstallPrompt = canShow;
+      this.canInstallPwa = this.pwaInstallService.isInstallable();
     });
   }
 
@@ -48,6 +59,9 @@ export class AppComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.userNameSubscription.unsubscribe();
+    if (this.pwaInstallSubscription) {
+      this.pwaInstallSubscription.unsubscribe();
+    }
     if (this.updateInterval) {
       clearInterval(this.updateInterval);
     }
@@ -179,6 +193,24 @@ export class AppComponent implements OnInit, OnDestroy {
     });
 
     await alert.present();
+  }
+
+  async onPwaInstall(): Promise<void> {
+    try {
+      const installed = await this.pwaInstallService.triggerInstall();
+      if (installed) {
+        this.toastService.showToast('App installed successfully!', 'checkmark-circle', false);
+        this.showPwaInstallPrompt = false;
+      }
+    } catch (error) {
+      console.error('Error installing PWA:', error);
+      this.toastService.showToast('Installation failed. Please try again.', 'alert-circle', true);
+    }
+  }
+
+  onPwaDismiss(): void {
+    this.pwaInstallService.dismissInstallPrompt();
+    this.showPwaInstallPrompt = false;
   }
 
   private async presentGreetingAlert(name: string): Promise<void> {
