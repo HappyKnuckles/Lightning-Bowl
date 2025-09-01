@@ -35,7 +35,6 @@ export class CacheService {
         return null;
       }
 
-      // Check if cache has expired
       if (Date.now() > cacheEntry.metadata.expires) {
         await this.delete(key);
         return null;
@@ -83,7 +82,7 @@ export class CacheService {
 
     const age = Date.now() - metadata.lastUpdated;
     const maxAgeLimit = maxAge || DEFAULT_CACHE_CONFIG.maxAge;
-    
+
     return age > maxAgeLimit;
   }
 
@@ -99,8 +98,8 @@ export class CacheService {
    */
   async clear(): Promise<void> {
     const keys = await this.storage.keys();
-    const cacheKeys = keys.filter(key => key.startsWith('cache_'));
-    await Promise.all(cacheKeys.map(key => this.storage.remove(key)));
+    const cacheKeys = keys.filter((key) => key.startsWith('cache_'));
+    await Promise.all(cacheKeys.map((key) => this.storage.remove(key)));
   }
 
   /**
@@ -108,10 +107,10 @@ export class CacheService {
    */
   async getCacheInfo(): Promise<{ count: number; keys: string[] }> {
     const keys = await this.storage.keys();
-    const cacheKeys = keys.filter(key => key.startsWith('cache_'));
+    const cacheKeys = keys.filter((key) => key.startsWith('cache_'));
     return {
       count: cacheKeys.length,
-      keys: cacheKeys.map(key => key.replace('cache_', '')),
+      keys: cacheKeys.map((key) => key.replace('cache_', '')),
     };
   }
 }

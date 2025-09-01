@@ -1,6 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { fromEvent, merge } from 'rxjs';
-import { map, startWith } from 'rxjs/operators';
+import { map, pairwise, startWith } from 'rxjs/operators';
+import { ToastService } from '../toast/toast.service';
 
 @Injectable({
   providedIn: 'root',
@@ -16,13 +17,17 @@ export class NetworkService {
     return !this._isOnline();
   }
 
-  constructor() {
+  constructor(private toastService: ToastService) {
     // Listen for online/offline events
-    merge(
-      fromEvent(window, 'online').pipe(map(() => true)),
-      fromEvent(window, 'offline').pipe(map(() => false))
-    )
-      .pipe(startWith(navigator.onLine))
-      .subscribe(status => this._isOnline.set(status));
+    merge(fromEvent(window, 'online').pipe(map(() => true)), fromEvent(window, 'offline').pipe(map(() => false)))
+      .pipe(startWith(navigator.onLine), pairwise())
+      .subscribe(([previous, current]) => {
+        this._isOnline.set(current);
+        if (current && !previous) {
+          this.toastService.showToast('You are back online!', 'information-circle-outline');
+        } else {
+          this.toastService.showToast('You are offline. Some features may not be available.', 'information-circle-outline');
+        }
+      });
   }
 }

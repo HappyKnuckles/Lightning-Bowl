@@ -32,18 +32,16 @@ export class BallService {
 
   async loadBalls(page: number): Promise<Ball[]> {
     const cacheKey = `balls_page_${page}`;
-    
+
     try {
       // Check cache first
       const cachedBalls = await this.cacheService.get<Ball[]>(cacheKey);
       const isCacheValid = await this.cacheService.isValid(cacheKey);
-      
-      // Use cached data if available and valid, or if offline
+
       if (cachedBalls && (isCacheValid || this.networkService.isOffline)) {
         return cachedBalls;
       }
 
-      // If offline and no cache, throw error
       if (this.networkService.isOffline) {
         throw new Error('Cannot load balls: offline and no cached data available');
       }
@@ -55,21 +53,21 @@ export class BallService {
           },
         }),
       );
-      
-      // Cache the response
-      await this.cacheService.set(cacheKey, response, 6 * 60 * 60 * 1000); // 6 hours
-      
+
+      if (response.length !== 0) {
+        await this.cacheService.set(cacheKey, response, 24 * 60 * 60 * 1000); // 6 hours
+      }
+
       return response;
     } catch (error) {
       console.error(`Error loading balls for page ${page}:`, error);
-      
+
       // Try to use cached data as fallback
       const cachedBalls = await this.cacheService.get<Ball[]>(cacheKey);
       if (cachedBalls) {
-        // Fallback logging removed to satisfy linter
         return cachedBalls;
       }
-      
+
       throw error;
     }
   }
@@ -143,19 +141,16 @@ export class BallService {
 
   async getBrands(): Promise<Brand[]> {
     const cacheKey = 'brands';
-    
+
     try {
-      // Check cache first
       const cachedBrands = await this.cacheService.get<Brand[]>(cacheKey);
       const isCacheValid = await this.cacheService.isValid(cacheKey);
-      
-      // Use cached data if available and valid, or if offline
+
       if (cachedBrands && (isCacheValid || this.networkService.isOffline)) {
         this.brands.set(cachedBrands);
         return cachedBrands;
       }
 
-      // If offline and no cache, return empty array
       if (this.networkService.isOffline) {
         console.warn('Cannot load brands: offline and no cached data available');
         return [];
@@ -163,45 +158,106 @@ export class BallService {
 
       const response = await firstValueFrom(this.http.get<Brand[]>(`${environment.bowwwlEndpoint}brands`));
       this.brands.set(response);
-      
-      // Cache the response for a long time since brands don't change often
-      await this.cacheService.set(cacheKey, response, 7 * 24 * 60 * 60 * 1000); // 7 days
-      
+
+      if (response.length !== 0) {
+        await this.cacheService.set(cacheKey, response, 7 * 24 * 60 * 60 * 1000); // 7 days
+      }
+
       return response;
     } catch (error) {
       console.error('Error loading brands:', error);
-      
+
       // Try to use cached data as fallback
       const cachedBrands = await this.cacheService.get<Brand[]>(cacheKey);
       if (cachedBrands) {
         this.brands.set(cachedBrands);
         return cachedBrands;
       }
-      
+
       throw error;
     }
   }
 
   async getCores(): Promise<Core[]> {
+    const cacheKey = 'cores';
+
     try {
+      const cachedCores = await this.cacheService.get<Core[]>(cacheKey);
+      const isCacheValid = await this.cacheService.isValid(cacheKey);
+
+      if (cachedCores && (isCacheValid || this.networkService.isOffline)) {
+        cachedCores.sort((a, b) => a.brand.localeCompare(b.brand));
+        this.cores.set(cachedCores);
+        return cachedCores;
+      }
+
+      if (this.networkService.isOffline) {
+        console.warn('Cannot load cores: offline and no cached data available');
+        return [];
+      }
+
       const response = await firstValueFrom(this.http.get<Core[]>(`${environment.bowwwlEndpoint}cores`));
       response.sort((a, b) => a.brand.localeCompare(b.brand));
       this.cores.set(response);
+
+      if (response.length !== 0) {
+        await this.cacheService.set(cacheKey, response, 7 * 24 * 60 * 60 * 1000); // 7 days
+      }
+
       return response;
     } catch (error) {
       console.error('Error loading cores:', error);
+
+      // Try to use cached data as fallback
+      const cachedCores = await this.cacheService.get<Core[]>(cacheKey);
+      if (cachedCores) {
+        cachedCores.sort((a, b) => a.brand.localeCompare(b.brand));
+        this.cores.set(cachedCores);
+        return cachedCores;
+      }
+
       throw error;
     }
   }
 
   async getCoverstocks(): Promise<Coverstock[]> {
+    const cacheKey = 'coverstocks';
+
     try {
+      const cachedCoverstocks = await this.cacheService.get<Coverstock[]>(cacheKey);
+      const isCacheValid = await this.cacheService.isValid(cacheKey);
+
+      if (cachedCoverstocks && (isCacheValid || this.networkService.isOffline)) {
+        cachedCoverstocks.sort((a, b) => a.brand.localeCompare(b.brand));
+        this.coverstocks.set(cachedCoverstocks);
+        return cachedCoverstocks;
+      }
+
+      if (this.networkService.isOffline) {
+        console.warn('Cannot load coverstocks: offline and no cached data available');
+        return [];
+      }
+
       const response = await firstValueFrom(this.http.get<Coverstock[]>(`${environment.bowwwlEndpoint}coverstocks`));
       response.sort((a, b) => a.brand.localeCompare(b.brand));
       this.coverstocks.set(response);
+
+      if (response.length !== 0) {
+        await this.cacheService.set(cacheKey, response, 7 * 24 * 60 * 60 * 1000); // 7 days
+      }
+
       return response;
     } catch (error) {
       console.error('Error loading coverstocks:', error);
+
+      // Try to use cached data as fallback
+      const cachedCoverstocks = await this.cacheService.get<Coverstock[]>(cacheKey);
+      if (cachedCoverstocks) {
+        cachedCoverstocks.sort((a, b) => a.brand.localeCompare(b.brand));
+        this.coverstocks.set(cachedCoverstocks);
+        return cachedCoverstocks;
+      }
+
       throw error;
     }
   }
