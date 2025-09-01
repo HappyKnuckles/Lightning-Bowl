@@ -3,10 +3,12 @@
     <ion-header>
       <ion-toolbar>
         <ion-title>Install Lightning Bowl</ion-title>
+        <ion-buttons slot="start">
+          <ion-button fill="clear" type="reset" (click)="onDismiss()"> Cancel </ion-button>
+        </ion-buttons>
         <ion-buttons slot="end">
-          <ion-button fill="clear" (click)="onDismiss()">
-            <ion-icon name="close"></ion-icon>
-          </ion-button>
+          <ion-button *ngIf="!isIOS" strong="true" (click)="onInstall()" [disabled]="!canInstall"> Install! </ion-button>
+          <ion-button *ngIf="isIOS" strong="true" type="submit" (click)="onDismiss()"> Got it! </ion-button>
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
@@ -83,7 +85,7 @@
             <div class="install-steps">
               <div class="step">
                 <span class="step-number">1</span>
-                <p>Tap "Install" below</p>
+                <p>Tap "Install" in the upper right corner</p>
               </div>
               <div class="step">
                 <span class="step-number">2</span>
@@ -96,15 +98,15 @@
             </div>
           </div>
 
-          <div class="ios-installation-guide" *ngIf="isIOS">
+          <div class="instruction-section" *ngIf="isIOS">
             <div class="ios-header">
               <ion-icon name="phone-portrait" color="primary" class="ios-icon"></ion-icon>
               <h3>Install on iOS Safari</h3>
             </div>
             <p class="ios-description">Follow these simple steps to add Lightning Bowl to your home screen for the best mobile experience:</p>
 
-            <div class="ios-steps">
-              <div class="ios-step">
+            <div class="install-steps">
+              <div class="step">
                 <div class="step-visual">
                   <span class="step-number">1</span>
                   <ion-icon name="share-outline" class="step-icon"></ion-icon>
@@ -115,7 +117,7 @@
                 </div>
               </div>
 
-              <div class="ios-step">
+              <div class="step">
                 <div class="step-visual">
                   <span class="step-number">2</span>
                   <ion-icon
@@ -129,7 +131,7 @@
                 </div>
               </div>
 
-              <div class="ios-step">
+              <div class="step">
                 <div class="step-visual">
                   <span class="step-number">3</span>
                 </div>
@@ -153,21 +155,5 @@
         </div>
       </div>
     </ion-content>
-
-    <ion-footer>
-      <ion-toolbar>
-        <div class="action-buttons">
-          <ion-button fill="clear" color="medium" (click)="onDismiss()"> Maybe Later </ion-button>
-          <ion-button *ngIf="!isIOS" expand="block" color="primary" (click)="onInstall()" [disabled]="!canInstall">
-            <ion-icon name="download" slot="start"></ion-icon>
-            Install App
-          </ion-button>
-          <ion-button *ngIf="isIOS" expand="block" color="primary" (click)="onDismiss()">
-            <ion-icon name="checkmark" slot="start"></ion-icon>
-            Got it!
-          </ion-button>
-        </div>
-      </ion-toolbar>
-    </ion-footer>
   </ng-template>
 </ion-modal>
