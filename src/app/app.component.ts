@@ -47,7 +47,6 @@ export class AppComponent implements OnInit, OnDestroy {
       this.username = username;
     });
 
-    // Initialize PWA install prompt
     this.pwaInstallSubscription = this.pwaInstallService.canShowInstallPrompt().subscribe((canShow) => {
       this.showPwaInstallPrompt = canShow;
       this.canInstallPwa = this.pwaInstallService.isInstallable();
@@ -196,6 +195,24 @@ export class AppComponent implements OnInit, OnDestroy {
     await alert.present();
   }
 
+  async onPwaInstall(): Promise<void> {
+    try {
+      const installed = await this.pwaInstallService.triggerInstall();
+      if (installed) {
+        this.toastService.showToast('App installed successfully!', 'checkmark-circle', false);
+        this.showPwaInstallPrompt = false;
+      }
+    } catch (error) {
+      console.error('Error installing PWA:', error);
+      this.toastService.showToast('Installation failed. Please try again.', 'alert-circle', true);
+    }
+  }
+
+  onPwaDismiss(): void {
+    this.pwaInstallService.dismissInstallPrompt();
+    this.showPwaInstallPrompt = false;
+  }
+
   private async presentGreetingAlert(name: string): Promise<void> {
     const alert = await this.alertController.create({
       header: `Hello ${name}!`,
@@ -214,23 +231,5 @@ export class AppComponent implements OnInit, OnDestroy {
     });
 
     await alert.present();
-  }
-
-  async onPwaInstall(): Promise<void> {
-    try {
-      const installed = await this.pwaInstallService.triggerInstall();
-      if (installed) {
-        this.toastService.showToast('App installed successfully!', 'checkmark-circle', false);
-        this.showPwaInstallPrompt = false;
-      }
-    } catch (error) {
-      console.error('Error installing PWA:', error);
-      this.toastService.showToast('Installation failed. Please try again.', 'alert-circle', true);
-    }
-  }
-
-  onPwaDismiss(): void {
-    this.pwaInstallService.dismissInstallPrompt();
-    this.showPwaInstallPrompt = false;
   }
 }

@@ -1,4 +1,4 @@
-<ion-modal [isOpen]="isOpen" (ionModalDidDismiss)="onDismiss()" class="pwa-install-modal">
+<ion-modal [isOpen]="isOpen" (ionModalDidDismiss)="onDismiss()" [presentingElement]="presentingElement">
   <ng-template>
     <ion-header>
       <ion-toolbar>
@@ -10,19 +10,17 @@
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
-    
+
     <ion-content class="ion-padding">
       <div class="install-content">
-        <!-- App Icon and Title -->
         <div class="app-header">
-          <img src="assets/icons/android/android-launchericon-192-192.png" alt="Lightning Bowl Icon" class="app-icon">
+          <img src="assets/icons/android/android-launchericon-192-192.png" alt="Lightning Bowl Icon" class="app-icon" />
           <div class="app-info">
             <h2>Lightning Bowl</h2>
             <p>Your ultimate bowling companion</p>
           </div>
         </div>
 
-        <!-- Benefits -->
         <div class="benefits-section">
           <h3>Why install Lightning Bowl?</h3>
           <div class="benefits-grid">
@@ -45,26 +43,40 @@
           </div>
         </div>
 
-        <!-- Screenshots -->
         <div class="screenshots-section">
           <h3>App Screenshots</h3>
           <div class="screenshots-carousel">
             <div class="screenshot-container">
-              <img src="assets/screenshots/start.png" alt="Start Page" class="screenshot">
+              <img src="assets/screenshots/start.png" alt="Start Page" class="screenshot" />
               <p class="screenshot-caption">Track your games</p>
             </div>
             <div class="screenshot-container">
-              <img src="assets/screenshots/stats.png" alt="Statistics Page" class="screenshot">
+              <img src="assets/screenshots/stats.png" alt="Statistics Page" class="screenshot" />
               <p class="screenshot-caption">View detailed stats</p>
             </div>
             <div class="screenshot-container">
-              <img src="assets/screenshots/history.png" alt="History Page" class="screenshot">
+              <img src="assets/screenshots/history.png" alt="History Page" class="screenshot" />
               <p class="screenshot-caption">Browse game history</p>
+            </div>
+            <div class="screenshot-container">
+              <img src="assets/screenshots/arsenal.png" alt="Arsenal Page" class="screenshot" />
+              <p class="screenshot-caption">Manage your arsenals</p>
+            </div>
+            <div class="screenshot-container">
+              <img src="assets/screenshots/history.png" alt="History Page" class="screenshot" />
+              <p class="screenshot-caption">Browse game history</p>
+            </div>
+            <div class="screenshot-container">
+              <img src="assets/screenshots/balls.png" alt="Balls Page" class="screenshot" />
+              <p class="screenshot-caption">Browse balls</p>
+            </div>
+            <div class="screenshot-container">
+              <img src="assets/screenshots/pattern.png" alt="Pattern Page" class="screenshot" />
+              <p class="screenshot-caption">Browse patterns</p>
             </div>
           </div>
         </div>
 
-        <!-- Installation Instructions -->
         <div class="instructions-section">
           <div *ngIf="!isIOS">
             <h3>How to install:</h3>
@@ -84,16 +96,13 @@
             </div>
           </div>
 
-          <!-- Enhanced iOS Safari Instructions -->
           <div class="ios-installation-guide" *ngIf="isIOS">
             <div class="ios-header">
               <ion-icon name="phone-portrait" color="primary" class="ios-icon"></ion-icon>
               <h3>Install on iOS Safari</h3>
             </div>
-            <p class="ios-description">
-              Follow these simple steps to add Lightning Bowl to your home screen for the best mobile experience:
-            </p>
-            
+            <p class="ios-description">Follow these simple steps to add Lightning Bowl to your home screen for the best mobile experience:</p>
+
             <div class="ios-steps">
               <div class="ios-step">
                 <div class="step-visual">
@@ -105,22 +114,24 @@
                   <p>Tap the <strong>Share</strong> button at the bottom of your Safari browser</p>
                 </div>
               </div>
-              
+
               <div class="ios-step">
                 <div class="step-visual">
                   <span class="step-number">2</span>
-                  <ion-icon name="add" class="step-icon"></ion-icon>
+                  <ion-icon
+                    name="add"
+                    class="step-icon"
+                    style="border: 1px solid var(--ion-color-primary); border-radius: 4px; font-size: 1.2rem"></ion-icon>
                 </div>
                 <div class="step-content">
                   <h4>Add to Home Screen</h4>
                   <p>Scroll down in the share menu and tap <strong>"Add to Home Screen"</strong></p>
                 </div>
               </div>
-              
+
               <div class="ios-step">
                 <div class="step-visual">
                   <span class="step-number">3</span>
-                  <ion-icon name="checkmark-circle" class="step-icon"></ion-icon>
                 </div>
                 <div class="step-content">
                   <h4>Complete Installation</h4>
@@ -128,41 +139,30 @@
                 </div>
               </div>
             </div>
-            
+
             <div class="ios-benefits">
               <h4>After installation, you'll enjoy:</h4>
               <ul>
                 <li>App icon on your home screen</li>
                 <li>Full-screen experience without Safari UI</li>
                 <li>Faster loading and better performance</li>
-                <li>Works offline for uninterrupted gameplay</li>
+                <li>Works offline</li>
               </ul>
             </div>
           </div>
         </div>
       </div>
     </ion-content>
-    
+
     <ion-footer>
       <ion-toolbar>
         <div class="action-buttons">
-          <ion-button fill="clear" color="medium" (click)="onDismiss()">
-            Maybe Later
-          </ion-button>
-          <ion-button 
-            *ngIf="!isIOS" 
-            expand="block" 
-            color="primary" 
-            (click)="onInstall()"
-            [disabled]="!canInstall">
+          <ion-button fill="clear" color="medium" (click)="onDismiss()"> Maybe Later </ion-button>
+          <ion-button *ngIf="!isIOS" expand="block" color="primary" (click)="onInstall()" [disabled]="!canInstall">
             <ion-icon name="download" slot="start"></ion-icon>
             Install App
           </ion-button>
-          <ion-button 
-            *ngIf="isIOS" 
-            expand="block" 
-            color="primary" 
-            (click)="onDismiss()">
+          <ion-button *ngIf="isIOS" expand="block" color="primary" (click)="onDismiss()">
             <ion-icon name="checkmark" slot="start"></ion-icon>
             Got it!
           </ion-button>
