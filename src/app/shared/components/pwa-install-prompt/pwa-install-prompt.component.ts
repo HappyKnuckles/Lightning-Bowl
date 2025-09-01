@@ -21,6 +21,11 @@ export class PwaInstallPromptComponent implements OnInit {
   isChrome = false;
   isIOS = false;
 
+  // Image viewing functionality
+  isImageModalOpen = false;
+  selectedImageSrc = '';
+  selectedImageAlt = '';
+
   constructor() {
     addIcons({
       close,
@@ -58,5 +63,17 @@ export class PwaInstallPromptComponent implements OnInit {
 
   onDismiss(): void {
     this.dismiss.emit();
+  }
+
+  openImageModal(imageSrc: string, imageAlt: string): void {
+    this.selectedImageSrc = imageSrc;
+    this.selectedImageAlt = imageAlt;
+    this.isImageModalOpen = true;
+  }
+
+  closeImageModal(): void {
+    this.isImageModalOpen = false;
+    this.selectedImageSrc = '';
+    this.selectedImageAlt = '';
   }
 }

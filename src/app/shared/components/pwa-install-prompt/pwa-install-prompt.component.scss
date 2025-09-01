@@ -32,8 +32,6 @@
       font-size: 0.9rem;
     }
   }
-
-
 }
 
 .benefits-section {
@@ -83,6 +81,29 @@
       flex: 0 0 auto;
       text-align: center;
 
+      .screenshot-button {
+        background: none;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        transition: transform 0.2s ease, opacity 0.2s ease;
+        border-radius: 8px;
+
+        &:hover {
+          transform: scale(1.05);
+          opacity: 0.9;
+        }
+
+        &:focus {
+          outline: 2px solid var(--ion-color-primary);
+          outline-offset: 2px;
+        }
+
+        &:active {
+          transform: scale(0.98);
+        }
+      }
+
       .screenshot {
         width: 120px;
         height: auto;
@@ -91,6 +112,7 @@
         border-radius: 8px;
         border: 1px solid var(--ion-color-medium);
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        display: block;
       }
 
       .screenshot-caption {
@@ -219,5 +241,24 @@
         color: var(--ion-color-medium);
       }
     }
+  }
+}
+
+.image-modal {
+  --width: 80%;
+  --height: 80%;
+  --background: transparent;
+  --border-radius: 12px;
+  --max-width: 330px;
+
+  .modal-image {
+    width: 100%;
+    height: 100%;
+    background-position: center !important;
+    background-size: cover !important;
+    background-origin: padding-box !important;
+    background-repeat: no-repeat !important;
+    border-radius: 12px;
+    max-width: 330px;
   }
 }
