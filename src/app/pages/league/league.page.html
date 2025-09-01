@@ -2,16 +2,16 @@
   <ion-toolbar>
     @if (!isVisibilityEdit()) {
       <ion-buttons slot="end">
-        <ion-button type="button" class="action-sheet" fill="clear" (click)="addLeague()">
-          <ion-icon slot="icon-only" name="add-outline"></ion-icon>
+        <ion-button type="button" class="action-sheet" fill="clear" (click)="addLeague()" aria-label="Add new league">
+          <ion-icon slot="icon-only" name="add-outline" aria-hidden="true"></ion-icon>
         </ion-button>
       </ion-buttons>
     } @else {
       <ion-buttons slot="end">
-        <ion-button type="button" class="action-sheet" fill="clear" strong="true" (click)="editVisibility()"> Save </ion-button>
+        <ion-button type="button" class="action-sheet" fill="clear" strong="true" (click)="editVisibility()" aria-label="Save league visibility changes"> Save </ion-button>
       </ion-buttons>
       <ion-buttons slot="start">
-        <ion-button type="button" class="action-sheet" fill="clear" (click)="cancelEdit()"> Cancel </ion-button>
+        <ion-button type="button" class="action-sheet" fill="clear" (click)="cancelEdit()" aria-label="Cancel league editing"> Cancel </ion-button>
       </ion-buttons>
     }
     <ion-title> Leagues </ion-title>
@@ -24,7 +24,7 @@
   </ion-refresher>
   <!-- Show this message if there are no game history items and it's not loading -->
   <ng-container *ngIf="storageService.games().length <= 0 && !loadingService.isLoading(); else noLeagues">
-    <ion-text class="no-game-text"> Start playing a few games to see your leagues here! </ion-text>
+    <ion-text class="no-game-text" role="status"> Start playing a few games to see your leagues here! </ion-text>
   </ng-container>
 
   <ng-template #noLeagues>
