@@ -81,6 +81,11 @@
       ">
       <ion-col class="middle count" style="color: var(--ion-color-quartiary)">0</ion-col>
     </ion-row>
+    <!-- Max score display for 10th frame when no input -->
+    <ion-row
+      *ngIf="i === 10 && game().frames[frameIndex][0] === undefined">
+      <ion-col class="middle count" style="color: var(--ion-color-medium)">Max: {{ maxScore }}</ion-col>
+    </ion-row>
   </ion-grid>
 
   <div class="score-toolbar" *ngIf="showMetadata()" [class.show]="showButtonToolbar" [ngStyle]="{ bottom: keyboardOffset + 'px' }">
