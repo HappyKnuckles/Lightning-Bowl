@@ -99,16 +99,16 @@ export class SortService {
       return option!.direction === SortDirection.DESC ? -comparison : comparison;
     });
   }
-  sortBalls(balls: Ball[], sortOption: BallSortOption, favoritesFirst: boolean = false): Ball[] {
+  sortBalls(balls: Ball[], sortOption: BallSortOption, favoritesFirst = false): Ball[] {
     const sortedBalls = [...balls];
-    
+
     if (favoritesFirst) {
       const favorites = this.favoritesService.favoriteBalls();
       const favoriteBalls: Ball[] = [];
       const nonFavoriteBalls: Ball[] = [];
-      
+
       // Separate favorites from non-favorites
-      sortedBalls.forEach(ball => {
+      sortedBalls.forEach((ball) => {
         const ballKey = `${ball.ball_id}-${ball.core_weight}`;
         if (favorites.has(ballKey)) {
           favoriteBalls.push(ball);
@@ -116,14 +116,14 @@ export class SortService {
           nonFavoriteBalls.push(ball);
         }
       });
-      
+
       // Sort both groups using the selected sort option
       const sortedFavorites = this.applySortToBalls(favoriteBalls, sortOption);
       const sortedNonFavorites = this.applySortToBalls(nonFavoriteBalls, sortOption);
-      
+
       return [...sortedFavorites, ...sortedNonFavorites];
     }
-    
+
     return this.applySortToBalls(sortedBalls, sortOption);
   }
 
@@ -161,30 +161,30 @@ export class SortService {
     });
   }
 
-  sortPatterns(patterns: Pattern[], sortOption: PatternSortOption, favoritesFirst: boolean = false): Pattern[] {
+  sortPatterns(patterns: Pattern[], sortOption: PatternSortOption, favoritesFirst = false): Pattern[] {
     const sortedPatterns = [...patterns];
-    
+
     if (favoritesFirst) {
       const favorites = this.favoritesService.favoritePatterns();
       const favoritePatterns: Pattern[] = [];
       const nonFavoritePatterns: Pattern[] = [];
-      
+
       // Separate favorites from non-favorites
-      sortedPatterns.forEach(pattern => {
+      sortedPatterns.forEach((pattern) => {
         if (favorites.has(pattern.url)) {
           favoritePatterns.push(pattern);
         } else {
           nonFavoritePatterns.push(pattern);
         }
       });
-      
+
       // Sort both groups using the selected sort option
       const sortedFavorites = this.applySortToPatterns(favoritePatterns, sortOption);
       const sortedNonFavorites = this.applySortToPatterns(nonFavoritePatterns, sortOption);
-      
+
       return [...sortedFavorites, ...sortedNonFavorites];
     }
-    
+
     return this.applySortToPatterns(sortedPatterns, sortOption);
   }
 
