@@ -1,6 +1,6 @@
 # Lightning Bowl - Bowling Score Tracker
 
-Lightning Bowl is an Ionic Angular 18 mobile-first web application for tracking bowling games, statistics, and equipment. It supports PWA installation, mobile deployment via Capacitor 7, and offline functionality.
+Lightning Bowl is an Ionic Angular 18 mobile-first web application for tracking bowling games, statistics, and equipment. It supports PWA installation, mobile deployment via Capacitor 7, and is built as an **offline-first application** using IndexedDB for local data storage with seamless online/offline synchronization.
 
 Always reference these instructions first and fallback to search or bash commands only when you encounter unexpected information that does not match the info here.
 
@@ -60,11 +60,15 @@ Always reference these instructions first and fallback to search or bash command
 - Lint warnings are acceptable; lint errors must be fixed
 
 ### External API Dependencies:
-- App expects external services that may be offline in development:
-  - `https://bowwwl-proxy.vercel.app/api/` (bowling ball data)
-  - `http://localhost:5000/api/` (pattern data)
+- App integrates with 3 main external APIs (configured in `src/environments/environment.ts`):
+  - **Bowwwl.com** (`https://bowwwl.com`) - Bowling ball images and product details
+  - **Bowwwl Proxy** (`https://bowwwl-proxy.vercel.app/api/`) - Bowling ball data, specifications, and search
+  - **Pattern Scraper** (`https://pattern-scraper.vercel.app/api/` in prod, `http://localhost:5000/api/` in dev) - Oil pattern data and analysis
+- Additional services:
   - `https://va.vercel-scripts.com/` (Vercel analytics)
-- Connection failures to these services are EXPECTED and do not indicate build problems
+  - `https://bowling-ocr.vercel.app/api/server` (OCR processing)
+- **Important**: Connection failures to these services are EXPECTED in development and do not indicate build problems
+- The application gracefully handles offline scenarios with cached data fallbacks
 
 ## Common Tasks
 
@@ -90,25 +94,28 @@ Key Configuration Files:
 - ionic.config.json        # Ionic framework configuration  
 - capacitor.config.ts      # Mobile deployment configuration
 - tsconfig.json            # TypeScript configuration
+- src/environments/        # API endpoints and environment-specific settings
 ```
 
 ### Architecture Overview:
 - **Framework**: Angular 18 + Ionic 8 + Capacitor 7
 - **Routing**: Uses Ionic tabs with Angular Router
-- **Storage**: Ionic Storage (IndexedDB/SQLite) 
+- **Storage**: **Offline-First with IndexedDB** - Ionic Storage provides IndexedDB/SQLite with automatic online/offline sync
 - **Charts**: Chart.js with zoom plugin
 - **Maps**: Leaflet.js with marker clustering
-- **Offline**: Service Worker with `ngsw-config.json`
+- **Offline**: Service Worker with `ngsw-config.json` + comprehensive caching system
 - **Build**: Angular application builder (not webpack)
 
 ### Key Technologies and Libraries:
 - **UI Framework**: Ionic 8 with iOS/Android platform styling
-- **State Management**: Angular services (no NgRx)
+- **State Management**: Angular services with signals (no NgRx)
+- **Data Storage**: **IndexedDB-first architecture** with automatic cache management and network-aware synchronization
 - **Data Visualization**: Chart.js for statistics charts
 - **Excel Export**: ExcelJS for game history export
 - **Maps**: Leaflet.js for bowling alley locations
 - **PWA**: Angular Service Worker + custom install prompts
 - **Mobile**: Capacitor plugins for device features (camera, haptics, geolocation)
+- **Offline Support**: Comprehensive caching system with intelligent cache invalidation
 
 ### Working with the Codebase:
 - **Component Updates**: Most UI is in `src/app/shared/components/`
@@ -129,7 +136,8 @@ Key Configuration Files:
 - **Bundle Size**: Main bundle ~1.8MB with lazy loading for pages
 - **Build Time**: Production builds take 25+ seconds
 - **Memory Usage**: Large Angular + Ionic + Chart.js bundle
-- **Offline Support**: Caches app shell and assets via service worker
+- **Offline Support**: Caches app shell and assets via service worker + IndexedDB for application data
+- **Network Awareness**: Automatic online/offline detection with intelligent cache fallbacks
 
 ### Deployment:
 - **Web**: Deploy `www/` directory after `npm run build`
@@ -144,3 +152,4 @@ Key Configuration Files:
 - **Lint warnings are acceptable** - focus on functionality over perfect linting
 - **PWA features work offline** - test with network disabled
 - **Mobile deployment requires platform-specific tooling** (Android SDK, Xcode)
+- **IndexedDB and caching** - Application prioritizes offline functionality with automatic sync when online
