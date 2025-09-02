@@ -28,7 +28,7 @@ import {
 } from '@ionic/angular/standalone';
 import { Ball } from 'src/app/core/models/ball.model';
 import { addIcons } from 'ionicons';
-import { globeOutline, camera, addOutline, filterOutline, openOutline, closeCircle } from 'ionicons/icons';
+import { globeOutline, camera, addOutline, filterOutline, openOutline, closeCircle, heart, heartOutline } from 'ionicons/icons';
 import { InfiniteScrollCustomEvent, ModalController, RefresherCustomEvent, SearchbarCustomEvent } from '@ionic/angular';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
@@ -49,6 +49,7 @@ import { SortHeaderComponent } from 'src/app/shared/components/sort-header/sort-
 import { SortService } from 'src/app/core/services/sort/sort.service';
 import { BallSortOption, BallSortField, SortDirection } from 'src/app/core/models/sort.model';
 import { NetworkService } from 'src/app/core/services/network/network.service';
+import { FavoritesService } from 'src/app/core/services/favorites/favorites.service';
 
 @Component({
   selector: 'app-balls',
@@ -155,7 +156,18 @@ export class BallsPage implements OnInit {
     }
 
     // Apply sorting only when not searching
-    return this.sortService.sortBalls(result, this.currentSortOption);
+    const sortedResult = this.sortService.sortBalls(result, this.currentSortOption);
+
+    // Sort to show favorites first
+    const favorites = this.favoritesService.favoriteBalls();
+    return sortedResult.sort((a, b) => {
+      const aIsFavorite = favorites.has(`${a.ball_id}-${a.core_weight}`);
+      const bIsFavorite = favorites.has(`${b.ball_id}-${b.core_weight}`);
+      
+      if (aIsFavorite && !bIsFavorite) return -1;
+      if (!aIsFavorite && bIsFavorite) return 1;
+      return 0;
+    });
   }
 
   private lastLoadTime = 0;
@@ -172,8 +184,9 @@ export class BallsPage implements OnInit {
     private route: ActivatedRoute,
     public sortService: SortService,
     private networkService: NetworkService,
+    public favoritesService: FavoritesService,
   ) {
-    addIcons({ filterOutline, closeCircle, globeOutline, openOutline, addOutline, camera });
+    addIcons({ filterOutline, closeCircle, globeOutline, openOutline, addOutline, camera, heart, heartOutline });
     this.searchSubject.subscribe((query) => {
       this.searchTerm.set(query);
       if (this.content) {
@@ -391,6 +404,17 @@ export class BallsPage implements OnInit {
       setTimeout(() => {
         this.content.scrollToTop(300);
       }, 100);
+    }
+  }
+
+  toggleFavorite(event: Event, ball: Ball): void {
+    event.stopPropagation();
+    const isFavorited = this.favoritesService.toggleBallFavorite(ball.ball_id, ball.core_weight);
+    
+    if (isFavorited) {
+      this.toastService.showToast(`Added ${ball.ball_name} to favorites`, 'heart');
+    } else {
+      this.toastService.showToast(`Removed ${ball.ball_name} from favorites`, 'heart-outline');
     }
   }
 }
