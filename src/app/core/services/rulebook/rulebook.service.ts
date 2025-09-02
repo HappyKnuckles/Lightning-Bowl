@@ -1,6 +1,11 @@
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { firstValueFrom, retry } from 'rxjs';
 import { BowlingOrganization, Rulebook } from '../../models/rulebook.model';
 import { Storage } from '@ionic/storage-angular';
+import { environment } from 'src/environments/environment';
+import { CacheService } from '../cache/cache.service';
+import { NetworkService } from '../network/network.service';
 
 @Injectable({
   providedIn: 'root',
@@ -8,58 +13,91 @@ import { Storage } from '@ionic/storage-angular';
 export class RulebookService {
   private readonly STORAGE_KEY = 'selected-bowling-organization';
   
-  constructor(private storage: Storage) {}
+  constructor(
+    private storage: Storage,
+    private http: HttpClient,
+    private cacheService: CacheService,
+    private networkService: NetworkService
+  ) {}
 
   async getAvailableOrganizations(): Promise<BowlingOrganization[]> {
-    // For now, return a static list of bowling organizations
-    // In the future, this could be fetched from an API
-    return [
-      { name: 'United States Bowling Congress', code: 'USBC', country: 'United States' },
-      { name: 'Bowls Canada', code: 'BC', country: 'Canada' },
-      { name: 'European Bowling Federation', code: 'EBF', country: 'Europe' },
-      { name: 'Deutscher Bowling Verband', code: 'DBV', country: 'Germany' },
-      { name: 'British Crown Green Bowling Association', code: 'BCGBA', country: 'United Kingdom' },
-      { name: 'Bowling Federation of Australia', code: 'BFA', country: 'Australia' },
-      { name: 'Japan Bowling Congress', code: 'JBC', country: 'Japan' },
-    ];
+    const cacheKey = 'bowling-organizations';
+    
+    try {
+      // Check cache first
+      const cachedOrganizations = await this.cacheService.get<BowlingOrganization[]>(cacheKey);
+      const isCacheValid = await this.cacheService.isValid(cacheKey);
+
+      if (cachedOrganizations && (isCacheValid || this.networkService.isOffline)) {
+        return cachedOrganizations;
+      }
+
+      if (this.networkService.isOffline) {
+        return [];
+      }
+
+      // Fetch from API
+      const response = await firstValueFrom(
+        this.http.get<BowlingOrganization[]>(`${environment.bowwwlEndpoint}bowling-organizations`)
+          .pipe(retry({ count: 3, delay: 1000 }))
+      );
+
+      // Cache the response
+      await this.cacheService.set(cacheKey, response);
+      
+      return response;
+    } catch (error) {
+      console.error('Error fetching bowling organizations:', error);
+      
+      // Try to return cached data if available
+      const cachedOrganizations = await this.cacheService.get<BowlingOrganization[]>(cacheKey);
+      if (cachedOrganizations) {
+        return cachedOrganizations;
+      }
+      
+      // Return empty array as fallback
+      return [];
+    }
   }
 
   async getRulebookForOrganization(organization: BowlingOrganization): Promise<Rulebook> {
-    // For now, return sample rulebook data
-    // In the future, this could be fetched from an API based on organization
-    return {
-      organization,
-      title: `${organization.name} Official Rulebook`,
-      version: '2024.1',
-      lastUpdated: '2024-01-15',
-      sections: [
-        {
-          title: 'Basic Rules and Regulations',
-          content: 'Standard bowling rules and game regulations as defined by the organization.',
-          order: 1,
-        },
-        {
-          title: 'Equipment Standards',
-          content: 'Requirements for balls, pins, lanes, and other bowling equipment.',
-          order: 2,
-        },
-        {
-          title: 'Scoring System',
-          content: 'Official scoring methods and procedures.',
-          order: 3,
-        },
-        {
-          title: 'Tournament Guidelines',
-          content: 'Rules specific to tournament play and competitions.',
-          order: 4,
-        },
-        {
-          title: 'League Play Standards',
-          content: 'Regulations for league bowling and seasonal play.',
-          order: 5,
-        },
-      ],
-    };
+    const cacheKey = `rulebook-${organization.code}`;
+    
+    try {
+      // Check cache first
+      const cachedRulebook = await this.cacheService.get<Rulebook>(cacheKey);
+      const isCacheValid = await this.cacheService.isValid(cacheKey);
+
+      if (cachedRulebook && (isCacheValid || this.networkService.isOffline)) {
+        return cachedRulebook;
+      }
+
+      if (this.networkService.isOffline) {
+        throw new Error('No cached rulebook available and device is offline');
+      }
+
+      // Fetch from API
+      const response = await firstValueFrom(
+        this.http.get<Rulebook>(`${environment.bowwwlEndpoint}rulebooks/${organization.code}`)
+          .pipe(retry({ count: 3, delay: 1000 }))
+      );
+
+      // Cache the response
+      await this.cacheService.set(cacheKey, response);
+      
+      return response;
+    } catch (error) {
+      console.error('Error fetching rulebook for organization:', organization.code, error);
+      
+      // Try to return cached data if available
+      const cachedRulebook = await this.cacheService.get<Rulebook>(cacheKey);
+      if (cachedRulebook) {
+        return cachedRulebook;
+      }
+      
+      // Throw error if no fallback is available
+      throw new Error(`Unable to load rulebook for ${organization.name}`);
+    }
   }
 
   async saveSelectedOrganization(organization: BowlingOrganization): Promise<void> {

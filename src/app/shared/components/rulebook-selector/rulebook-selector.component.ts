@@ -78,7 +78,7 @@ export class RulebookSelectorComponent implements OnInit {
     this.selectedValue = this.selectedOrganization?.code || '';
   }
 
-  async onOrganizationChange(event: any): Promise<void> {
+  async onOrganizationChange(event: { detail: { value: string } }): Promise<void> {
     const selectedCode = event.detail.value;
     
     if (selectedCode === 'view' && this.selectedOrganization) {
