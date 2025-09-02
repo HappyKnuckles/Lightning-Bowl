@@ -102,6 +102,7 @@ export class BallsPage implements OnInit {
   isPageLoading = signal(false);
   hasMoreData = true;
   filterDisplayCount = 100;
+  private offlineToastShown = false;
   currentSortOption: BallSortOption = {
     field: BallSortField.RELEASE_DATE,
     direction: SortDirection.DESC,
@@ -188,6 +189,7 @@ export class BallsPage implements OnInit {
 
   async ngOnInit(): Promise<void> {
     this.isPageLoading.set(true);
+    this.offlineToastShown = false; // Reset offline toast flag on page init
     try {
       await this.loadBalls();
     } catch (error) {
@@ -203,6 +205,7 @@ export class BallsPage implements OnInit {
       this.isPageLoading.set(true);
       this.currentPage = 0;
       this.hasMoreData = true;
+      this.offlineToastShown = false; // Reset offline toast flag on refresh
       this.balls.set([]);
       if (this.isFilterActive()) {
         this.filterDisplayCount = 100;
@@ -284,7 +287,10 @@ export class BallsPage implements OnInit {
         this.balls.set([...this.balls(), ...response]);
         this.currentPage++;
       } else if (this.networkService.isOffline) {
-        this.toastService.showToast('You are offline and no cached data is available.', 'information-circle-outline', false);
+        if (!this.offlineToastShown) {
+          this.toastService.showToast('You are offline and no cached data is available.', 'information-circle-outline', false);
+          this.offlineToastShown = true;
+        }
         this.hasMoreData = false;
       } else {
         this.hasMoreData = false;

@@ -86,6 +86,7 @@ export class PatternPage implements OnInit {
   hasMoreData = true;
   isPageLoading = signal(false);
   searchTerm = signal('');
+  private offlineToastShown = false;
   currentSortOption: PatternSortOption = {
     field: PatternSortField.TITLE,
     direction: SortDirection.ASC,
@@ -115,6 +116,7 @@ export class PatternPage implements OnInit {
     addIcons({ addOutline, arrowUpOutline, arrowDownOutline, chevronBack, add });
   }
   async ngOnInit() {
+    this.offlineToastShown = false; // Reset offline toast flag on page init
     await this.loadPatterns();
     this.generateChartImages();
     // this.renderCharts();
@@ -126,6 +128,7 @@ export class PatternPage implements OnInit {
       this.isPageLoading.set(true);
       this.currentPage = 1;
       this.hasMoreData = true;
+      this.offlineToastShown = false; // Reset offline toast flag on refresh
       this.patterns = [];
       this.searchTerm.set(''); // Clear search term on refresh
       await this.loadPatterns();
@@ -149,7 +152,10 @@ export class PatternPage implements OnInit {
         this.patterns = [...this.patterns, ...patterns];
         this.currentPage++;
       } else if (this.networkService.isOffline) {
-        this.toastService.showToast('You are offline and no cached data is available.', 'information-circle-outline', false);
+        if (!this.offlineToastShown) {
+          this.toastService.showToast('You are offline and no cached data is available.', 'information-circle-outline', false);
+          this.offlineToastShown = true;
+        }
         this.hasMoreData = false;
       } else {
         this.hasMoreData = false;
