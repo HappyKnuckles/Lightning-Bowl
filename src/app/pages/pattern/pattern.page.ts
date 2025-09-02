@@ -35,7 +35,7 @@ import { ImpactStyle } from '@capacitor/haptics';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { PatternInfoComponent } from 'src/app/shared/components/pattern-info/pattern-info.component';
 import { addIcons } from 'ionicons';
-import { chevronBack, add, addOutline, arrowUpOutline, arrowDownOutline } from 'ionicons/icons';
+import { chevronBack, add, addOutline, arrowUpOutline, arrowDownOutline, heart, heartOutline } from 'ionicons/icons';
 import { ChartGenerationService } from 'src/app/core/services/chart/chart-generation.service';
 import { DomSanitizer } from '@angular/platform-browser';
 import { PatternFormComponent } from '../../shared/components/pattern-form/pattern-form.component';
@@ -44,6 +44,7 @@ import { SortHeaderComponent } from 'src/app/shared/components/sort-header/sort-
 import { SortService } from 'src/app/core/services/sort/sort.service';
 import { PatternSortOption, PatternSortField, SortDirection } from 'src/app/core/models/sort.model';
 import { NetworkService } from 'src/app/core/services/network/network.service';
+import { FavoritesService } from 'src/app/core/services/favorites/favorites.service';
 
 @Component({
   selector: 'app-pattern',
@@ -93,12 +94,26 @@ export class PatternPage implements OnInit {
   };
 
   get displayedPatterns(): Pattern[] {
+    let patterns: Pattern[];
+    
     // If there's a search term, return patterns without additional sorting to preserve relevance ranking
     if (this.searchTerm().trim() !== '') {
-      return this.patterns;
+      patterns = this.patterns;
+    } else {
+      // Apply sorting only when not searching
+      patterns = this.sortService.sortPatterns(this.patterns, this.currentSortOption);
     }
-    // Apply sorting only when not searching
-    return this.sortService.sortPatterns(this.patterns, this.currentSortOption);
+
+    // Sort to show favorites first
+    const favorites = this.favoritesService.favoritePatterns();
+    return patterns.sort((a, b) => {
+      const aIsFavorite = favorites.has(a.url);
+      const bIsFavorite = favorites.has(b.url);
+      
+      if (aIsFavorite && !bIsFavorite) return -1;
+      if (!aIsFavorite && bIsFavorite) return 1;
+      return 0;
+    });
   }
 
   private lastLoadTime = 0;
@@ -113,8 +128,9 @@ export class PatternPage implements OnInit {
     private modalCtrl: ModalController,
     public sortService: SortService,
     private networkService: NetworkService,
+    public favoritesService: FavoritesService,
   ) {
-    addIcons({ addOutline, arrowUpOutline, arrowDownOutline, chevronBack, add });
+    addIcons({ addOutline, arrowUpOutline, arrowDownOutline, chevronBack, add, heart, heartOutline });
   }
   async ngOnInit() {
     await this.loadPatterns();
@@ -237,6 +253,17 @@ export class PatternPage implements OnInit {
       setTimeout(() => {
         this.content.scrollToTop(300);
       }, 100);
+    }
+  }
+
+  toggleFavorite(event: Event, pattern: Pattern): void {
+    event.stopPropagation();
+    const isFavorited = this.favoritesService.toggleFavorite(pattern.url);
+    
+    if (isFavorited) {
+      this.toastService.showToast(`Added ${pattern.title} to favorites`, 'heart');
+    } else {
+      this.toastService.showToast(`Removed ${pattern.title} from favorites`, 'heart-outline');
     }
   }
 }

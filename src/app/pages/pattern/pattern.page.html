@@ -72,7 +72,18 @@
             'green-card': getRatioValue(pattern.ratio ?? '0') >= 8,
           }"
           button
-          id="{{ pattern.url }}">
+          id="{{ pattern.url }}"
+          style="position: relative">
+          <ion-button
+            fill="clear"
+            size="small"
+            (click)="toggleFavorite($event, pattern)"
+            style="position: absolute; top: 8px; right: 8px; z-index: 10; --color: var(--ion-color-danger)">
+            <ion-icon
+              [name]="favoritesService.isFavorite(pattern.url) ? 'heart' : 'heart-outline'"
+              slot="icon-only">
+            </ion-icon>
+          </ion-button>
           <img *ngIf="pattern.chartImageSrc" [src]="pattern.chartImageSrc" alt="{{ pattern.title }} Oil Pattern Chart" class="pattern-chart-image" />
           <ion-card-header>
             <ion-card-title>{{ pattern.title }}</ion-card-title>
