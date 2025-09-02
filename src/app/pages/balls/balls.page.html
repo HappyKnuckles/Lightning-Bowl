@@ -14,7 +14,10 @@
         [sortOptions]="sortService.BALL_SORT_OPTIONS"
         [selectedSort]="currentSortOption"
         [storageKey]="'balls-sort-option'"
-        (sortChanged)="onSortChanged($event)">
+        [favoritesFirst]="favoritesFirst()"
+        [favoritesFirstStorageKey]="'balls-favorites-first'"
+        (sortChanged)="onSortChanged($event)"
+        (favoritesFirstChanged)="onFavoritesFirstChange($event)">
       </app-sort-header>
       <ion-button fill="clear" (click)="openFilterModal()">
         <ion-icon slot="icon-only" name="filter-outline"></ion-icon>
@@ -30,12 +33,6 @@
       placeholder="Search for a ball"
       showCancelButton="focus"
       debounce="300"></ion-searchbar>
-  </ion-toolbar>
-  <ion-toolbar>
-    <ion-item lines="none">
-      <ion-checkbox slot="start" [checked]="favoritesFirst()" (ionChange)="onFavoritesFirstChange($event)"> </ion-checkbox>
-      <ion-label style="margin-left: 8px">Favorites first</ion-label>
-    </ion-item>
   </ion-toolbar>
   <ion-toolbar style="text-align: center">
     <app-ball-filter-active></app-ball-filter-active>

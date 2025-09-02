@@ -415,9 +415,9 @@ export class BallsPage implements OnInit {
     }
   }
 
-  onFavoritesFirstChange(event: any): void {
-    this.favoritesFirst.set(event.detail.checked);
-    this.saveFavoritesFirstSetting(event.detail.checked);
+  onFavoritesFirstChange(checked: boolean): void {
+    this.favoritesFirst.set(checked);
+    this.saveFavoritesFirstSetting(checked);
     if (this.content) {
       setTimeout(() => {
         this.content.scrollToTop(300);

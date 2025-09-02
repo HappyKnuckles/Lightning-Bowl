@@ -8,7 +8,10 @@
         [sortOptions]="sortService.PATTERN_SORT_OPTIONS"
         [selectedSort]="currentSortOption"
         [storageKey]="'patterns-sort-option'"
-        (sortChanged)="onSortChanged($event)">
+        [favoritesFirst]="favoritesFirst()"
+        [favoritesFirstStorageKey]="'patterns-favorites-first'"
+        (sortChanged)="onSortChanged($event)"
+        (favoritesFirstChanged)="onFavoritesFirstChange($event)">
       </app-sort-header>
     </ion-buttons>
   </ion-toolbar>
@@ -19,12 +22,6 @@
       placeholder="Search for a pattern"
       showCancelButton="focus"
       debounce="300"></ion-searchbar>
-  </ion-toolbar>
-  <ion-toolbar>
-    <ion-item lines="none">
-      <ion-checkbox slot="start" [checked]="favoritesFirst()" (ionChange)="onFavoritesFirstChange($event)"> </ion-checkbox>
-      <ion-label style="margin-left: 8px">Favorites first</ion-label>
-    </ion-item>
   </ion-toolbar>
 </ion-header>
 

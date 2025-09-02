@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter, OnInit, model, ViewChild, ElementRef } from '@angular/core';
-import { IonButton, IonIcon, IonPopover, IonList, IonItem, IonLabel, IonRadioGroup, IonRadio } from '@ionic/angular/standalone';
+import { IonButton, IonIcon, IonPopover, IonList, IonItem, IonLabel, IonRadioGroup, IonRadio, IonCheckbox } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { addIcons } from 'ionicons';
@@ -11,14 +11,17 @@ import { SortOption, BallSortField, PatternSortField, GameSortField } from 'src/
   templateUrl: './sort-header.component.html',
   styleUrls: ['./sort-header.component.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, IonButton, IonIcon, IonPopover, IonList, IonItem, IonLabel, IonRadioGroup, IonRadio],
+  imports: [CommonModule, FormsModule, IonButton, IonIcon, IonPopover, IonList, IonItem, IonLabel, IonRadioGroup, IonRadio, IonCheckbox],
 })
 export class SortHeaderComponent implements OnInit {
   sortOptions = model.required<SortOption<BallSortField | PatternSortField | GameSortField>[]>();
   selectedSort = model.required<SortOption<BallSortField | PatternSortField | GameSortField>>();
   id = model.required<string>();
   @Input() storageKey = '';
+  @Input() favoritesFirst = false;
+  @Input() favoritesFirstStorageKey = '';
   @Output() sortChanged = new EventEmitter<SortOption<BallSortField | PatternSortField | GameSortField>>();
+  @Output() favoritesFirstChanged = new EventEmitter<boolean>();
   @ViewChild('sortList', { read: ElementRef }) sortList!: ElementRef;
 
   selectedSortKey = '';
@@ -29,6 +32,7 @@ export class SortHeaderComponent implements OnInit {
 
   ngOnInit() {
     this.loadSortFromStorage();
+    this.loadFavoritesFirstFromStorage();
     this.updateSelectedSortKey();
   }
 
@@ -93,6 +97,28 @@ export class SortHeaderComponent implements OnInit {
     setTimeout(() => {
       this.scrollToSelectedItem();
     }, 50);
+  }
+
+  private loadFavoritesFirstFromStorage() {
+    if (this.favoritesFirstStorageKey && typeof localStorage !== 'undefined') {
+      const saved = localStorage.getItem(this.favoritesFirstStorageKey);
+      if (saved !== null) {
+        this.favoritesFirst = saved === 'true';
+      }
+    }
+  }
+
+  private saveFavoritesFirstToStorage(value: boolean) {
+    if (this.favoritesFirstStorageKey && typeof localStorage !== 'undefined') {
+      localStorage.setItem(this.favoritesFirstStorageKey, value.toString());
+    }
+  }
+
+  onFavoritesFirstChange(event: any) {
+    const checked = event.detail.checked;
+    this.favoritesFirst = checked;
+    this.saveFavoritesFirstToStorage(checked);
+    this.favoritesFirstChanged.emit(checked);
   }
 
   private scrollToSelectedItem() {
