@@ -229,6 +229,295 @@ export class BallRecommendationsComponent {
 - **iOS**: Use `npx cap open ios` after `npx cap sync` (requires macOS)
 - **PWA**: Service worker handles caching and offline functionality
 
+## Quick Reference
+
+### Common Commands & Timing
+```bash
+# Development Setup
+npm install                    # 60+ seconds, timeout: 300+
+npm run build                  # 25+ seconds, timeout: 120+  
+npm start                      # 20+ seconds, timeout: 120+
+npx ionic serve                # Alternative dev server
+npm run lint                   # 4+ seconds
+npm run stylelint              # 2+ seconds
+
+# Mobile Development  
+npx cap sync                   # 30+ seconds
+npx cap open android           # Opens Android Studio
+npx cap open ios               # Opens Xcode (macOS only)
+
+# Key Development URLs
+http://localhost:4200/         # Angular dev server
+http://localhost:8100/         # Ionic dev server
+```
+
+### File Structure Quick Access
+```
+src/app/
+├── pages/                     # New pages go here (REQUIRED)
+├── shared/components/         # Reusable components
+├── core/services/            # Business logic
+├── core/models/              # TypeScript interfaces
+├── app.routes.ts             # Route registration (REQUIRED)
+└── tabs/tabs.page.ts         # Tab navigation (REQUIRED)
+
+Key Config Files:
+├── src/environments/         # API endpoints & settings
+├── src/theme/variables.scss  # Color themes (5 themes)
+├── angular.json              # Build configuration
+├── capacitor.config.ts       # Mobile deployment
+└── .github/copilot-instructions.md
+```
+
+### Essential Validation Workflow
+1. **Build**: `npm run build` (verify no errors)
+2. **Test Navigation**: All 5 tabs (New, Stats, History, Leagues, More)
+3. **Test Bowling Input**: Enter scores, verify auto-calculation
+4. **Test PWA**: Install prompt appears and dismisses correctly
+5. **Lint**: `npm run lint && npm run stylelint` (warnings OK)
+
+## Code Patterns & Style Guide
+
+Lightning Bowl follows **Angular 18 + Ionic 8** modern patterns with emphasis on **signals**, **standalone components**, and **offline-first architecture**.
+
+### Angular Modern Patterns
+
+#### **Dependency Injection**
+```typescript
+// ✅ Modern: inject() function
+import { inject } from '@angular/core';
+import { MyService } from './my.service';
+
+@Component({...})
+export class MyComponent {
+  private myService = inject(MyService);
+  private router = inject(Router);
+}
+
+// ✅ Traditional: Constructor injection (also used)
+export class MyComponent {
+  constructor(
+    private myService: MyService,
+    private router: Router
+  ) {}
+}
+```
+
+#### **Signals (Primary State Management)**
+```typescript
+import { signal, computed, effect } from '@angular/core';
+
+@Injectable({ providedIn: 'root' })
+export class MyService {
+  // Private signal
+  #isLoading = signal<boolean>(false);
+  
+  // Public readonly getter
+  get isLoading() {
+    return this.#isLoading;
+  }
+  
+  // Computed signals
+  status = computed(() => this.#isLoading() ? 'Loading...' : 'Ready');
+  
+  setLoading(loading: boolean): void {
+    this.#isLoading.set(loading);
+  }
+}
+```
+
+#### **Component Input Signals**
+```typescript
+@Component({...})
+export class MyComponent {
+  // Required input
+  data = input.required<MyData>();
+  
+  // Optional input with default
+  items = input<Item[]>([]);
+  
+  // Computed from inputs
+  displayItems = computed(() => this.items().slice(0, 10));
+}
+```
+
+#### **Modern Control Flow (Template)**
+```html
+<!-- ✅ Modern: @if, @for, @switch -->
+@if (isLoading()) {
+  <ion-spinner></ion-spinner>
+} @else {
+  <ion-list>
+    @for (item of items(); track item.id) {
+      <ion-item>{{ item.name }}</ion-item>
+    } @empty {
+      <ion-text>No items found</ion-text>
+    }
+  </ion-list>
+}
+
+@switch (status()) {
+  @case ('loading') {
+    <ion-spinner></ion-spinner>
+  }
+  @case ('error') {
+    <ion-text color="danger">Error occurred</ion-text>
+  }
+  @default {
+    <ion-content>Ready</ion-content>
+  }
+}
+```
+
+### Ionic Standalone Component Pattern
+
+#### **Component Structure**
+```typescript
+import { Component } from '@angular/core';
+import { 
+  IonHeader, IonToolbar, IonTitle, IonContent,
+  IonButton, IonIcon, IonCard 
+} from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { heart, star } from 'ionicons/icons';
+
+@Component({
+  selector: 'app-my-component',
+  templateUrl: './my-component.component.html',
+  styleUrls: ['./my-component.component.scss'],
+  standalone: true,
+  imports: [
+    // Import only required Ionic components
+    IonHeader, IonToolbar, IonTitle, IonContent,
+    IonButton, IonIcon, IonCard,
+    // Angular common
+    NgIf, NgFor, DatePipe
+  ]
+})
+export class MyComponent {
+  constructor() {
+    // Register only required icons
+    addIcons({ heart, star });
+  }
+}
+```
+
+#### **Service Integration**
+```typescript
+@Component({...})
+export class MyComponent {
+  // Inject signals-based services
+  private loadingService = inject(LoadingService);
+  private gameService = inject(GameService);
+  
+  // Access signals
+  isLoading = this.loadingService.isLoading;
+  
+  // Use computed for derived state
+  canSave = computed(() => 
+    !this.isLoading() && this.form.valid
+  );
+}
+```
+
+### Theme & Styling Patterns
+
+#### **Multi-Theme Support**
+```scss
+// Use CSS custom properties from theme
+.my-component {
+  background: var(--ion-color-primary);
+  color: var(--ion-color-primary-contrast);
+  border: 1px solid var(--ion-color-medium);
+}
+
+// Support all 5 themes automatically
+.my-button {
+  --background: var(--ion-color-secondary);
+  --color: var(--ion-color-secondary-contrast);
+}
+```
+
+#### **Component Naming Convention**
+```typescript
+// ✅ Prefix with data structure
+ball-filter.component.ts        // Handles Ball data
+pattern-info.component.ts       // Displays Pattern information
+game-stats.component.ts         // Shows Game statistics
+league-selector.component.ts    // Selects League data
+```
+
+### Page Creation Pattern
+
+#### **1. Create in pages/ folder**
+```bash
+src/app/pages/my-feature/
+├── my-feature.page.ts
+├── my-feature.page.html
+├── my-feature.page.scss
+└── my-feature.page.spec.ts
+```
+
+#### **2. Register route (app.routes.ts)**
+```typescript
+export const routes: Routes = [
+  // ... existing routes
+  {
+    path: 'my-feature',
+    loadComponent: () => import('./pages/my-feature/my-feature.page').then(m => m.MyFeaturePage)
+  }
+];
+```
+
+#### **3. Add to tabs navigation (tabs.page.ts)**
+```typescript
+export class TabsPage {
+  // For main tabs (replace existing)
+  readonly tabs = [
+    { title: 'New', url: '/tabs/add-game', icon: 'add' },
+    { title: 'My Feature', url: '/tabs/my-feature', icon: 'star' }
+  ];
+  
+  // For "More" modal tabs
+  readonly moreTabs = [
+    // ... existing tabs
+    '/tabs/my-feature'
+  ];
+}
+```
+
+### IndexedDB & Offline Patterns
+
+#### **Service Pattern**
+```typescript
+@Injectable({ providedIn: 'root' })
+export class DataService {
+  private storage = inject(StorageService);
+  private network = inject(NetworkService);
+  
+  // Signal for offline-first data
+  #data = signal<MyData[]>([]);
+  
+  async loadData(): Promise<void> {
+    // Always try local first
+    const localData = await this.storage.get('myData');
+    this.#data.set(localData || []);
+    
+    // Then sync with API if online
+    if (this.network.isOnline()) {
+      try {
+        const apiData = await this.fetchFromApi();
+        await this.storage.set('myData', apiData);
+        this.#data.set(apiData);
+      } catch {
+        // Graceful fallback to cached data
+        console.log('Using cached data');
+      }
+    }
+  }
+}
+```
+
 ## Critical Reminders:
 - **NEVER CANCEL builds or long-running commands** - they may take 60+ seconds
 - **ALWAYS manually test after changes** - automated tests are not reliable
