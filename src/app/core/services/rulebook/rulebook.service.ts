@@ -1,11 +1,8 @@
-import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { firstValueFrom, retry } from 'rxjs';
 import { BowlingOrganization, Rulebook } from '../../models/rulebook.model';
 import { Storage } from '@ionic/storage-angular';
-import { environment } from 'src/environments/environment';
 import { CacheService } from '../cache/cache.service';
-import { NetworkService } from '../network/network.service';
+import { RulebookDataService } from './rulebook-data.service';
 
 @Injectable({
   providedIn: 'root',
@@ -15,9 +12,8 @@ export class RulebookService {
   
   constructor(
     private storage: Storage,
-    private http: HttpClient,
     private cacheService: CacheService,
-    private networkService: NetworkService
+    private rulebookDataService: RulebookDataService
   ) {}
 
   async getAvailableOrganizations(): Promise<BowlingOrganization[]> {
@@ -28,24 +24,17 @@ export class RulebookService {
       const cachedOrganizations = await this.cacheService.get<BowlingOrganization[]>(cacheKey);
       const isCacheValid = await this.cacheService.isValid(cacheKey);
 
-      if (cachedOrganizations && (isCacheValid || this.networkService.isOffline)) {
+      if (cachedOrganizations && isCacheValid) {
         return cachedOrganizations;
       }
 
-      if (this.networkService.isOffline) {
-        return [];
-      }
+      // Get data from local service
+      const organizations = this.rulebookDataService.getOrganizations();
 
-      // Fetch from API
-      const response = await firstValueFrom(
-        this.http.get<BowlingOrganization[]>(`${environment.bowwwlEndpoint}bowling-organizations`)
-          .pipe(retry({ count: 3, delay: 1000 }))
-      );
-
-      // Cache the response
-      await this.cacheService.set(cacheKey, response);
+      // Cache the response for future use
+      await this.cacheService.set(cacheKey, organizations, 7 * 24 * 60 * 60 * 1000); // 7 days
       
-      return response;
+      return organizations;
     } catch (error) {
       console.error('Error fetching bowling organizations:', error);
       
@@ -55,8 +44,8 @@ export class RulebookService {
         return cachedOrganizations;
       }
       
-      // Return empty array as fallback
-      return [];
+      // Return data directly as fallback
+      return this.rulebookDataService.getOrganizations();
     }
   }
 
@@ -68,24 +57,17 @@ export class RulebookService {
       const cachedRulebook = await this.cacheService.get<Rulebook>(cacheKey);
       const isCacheValid = await this.cacheService.isValid(cacheKey);
 
-      if (cachedRulebook && (isCacheValid || this.networkService.isOffline)) {
+      if (cachedRulebook && isCacheValid) {
         return cachedRulebook;
       }
 
-      if (this.networkService.isOffline) {
-        throw new Error('No cached rulebook available and device is offline');
-      }
+      // Get data from local service
+      const rulebook = this.rulebookDataService.getRulebook(organization.code);
 
-      // Fetch from API
-      const response = await firstValueFrom(
-        this.http.get<Rulebook>(`${environment.bowwwlEndpoint}rulebooks/${organization.code}`)
-          .pipe(retry({ count: 3, delay: 1000 }))
-      );
-
-      // Cache the response
-      await this.cacheService.set(cacheKey, response);
+      // Cache the response for future use
+      await this.cacheService.set(cacheKey, rulebook, 7 * 24 * 60 * 60 * 1000); // 7 days
       
-      return response;
+      return rulebook;
     } catch (error) {
       console.error('Error fetching rulebook for organization:', organization.code, error);
       
@@ -95,8 +77,12 @@ export class RulebookService {
         return cachedRulebook;
       }
       
-      // Throw error if no fallback is available
-      throw new Error(`Unable to load rulebook for ${organization.name}`);
+      // Try to get data directly from service as final fallback
+      try {
+        return this.rulebookDataService.getRulebook(organization.code);
+      } catch {
+        throw new Error(`Unable to load rulebook for ${organization.name}`);
+      }
     }
   }
 
