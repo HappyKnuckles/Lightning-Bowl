@@ -43,7 +43,6 @@ export class PatternService {
       }
 
       if (this.networkService.isOffline) {
-        console.warn('Cannot fetch patterns: offline and no cached data available');
         return { total: 0, patterns: [] };
       }
 

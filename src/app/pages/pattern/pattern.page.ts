@@ -101,6 +101,8 @@ export class PatternPage implements OnInit {
     return this.sortService.sortPatterns(this.patterns, this.currentSortOption);
   }
 
+  private lastLoadTime = 0;
+  private debounceMs = 300;
   constructor(
     private patternService: PatternService,
     private hapticService: HapticService,
@@ -139,6 +141,12 @@ export class PatternPage implements OnInit {
   }
 
   async loadPatterns(event?: InfiniteScrollCustomEvent): Promise<void> {
+    const now = Date.now();
+    if (now - this.lastLoadTime < this.debounceMs) {
+      if (event) event.target.complete();
+      return;
+    }
+    this.lastLoadTime = now;
     try {
       if (!event) {
         this.isPageLoading.set(true);
@@ -149,7 +157,7 @@ export class PatternPage implements OnInit {
         this.patterns = [...this.patterns, ...patterns];
         this.currentPage++;
       } else if (this.networkService.isOffline) {
-        this.toastService.showToast('You are offline and no cached data is available.', 'information-circle-outline', false);
+        this.toastService.showToast('You are offline and no cached data is available.', 'information-circle-outline', true);
       } else {
         this.hasMoreData = false;
       }

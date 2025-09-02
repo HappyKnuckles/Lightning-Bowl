@@ -43,7 +43,7 @@ export class BallService {
       }
 
       if (this.networkService.isOffline) {
-        throw new Error('Cannot load balls: offline and no cached data available');
+        return [];
       }
 
       const response = await firstValueFrom(

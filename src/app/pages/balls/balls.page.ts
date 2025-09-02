@@ -158,6 +158,9 @@ export class BallsPage implements OnInit {
     return this.sortService.sortBalls(result, this.currentSortOption);
   }
 
+  private lastLoadTime = 0;
+  private debounceMs = 300;
+
   constructor(
     private modalCtrl: ModalController,
     public loadingService: LoadingService,
@@ -264,6 +267,13 @@ export class BallsPage implements OnInit {
   }
 
   async loadBalls(event?: InfiniteScrollCustomEvent): Promise<void> {
+    const now = Date.now();
+    if (now - this.lastLoadTime < this.debounceMs) {
+      if (event) event.target.complete();
+      return;
+    }
+    this.lastLoadTime = now;
+
     try {
       if (!event) {
         // this.loadingService.setLoading(true);
@@ -284,7 +294,7 @@ export class BallsPage implements OnInit {
         this.balls.set([...this.balls(), ...response]);
         this.currentPage++;
       } else if (this.networkService.isOffline) {
-        this.toastService.showToast('You are offline and no cached data is available.', 'information-circle-outline', false);
+        this.toastService.showToast('You are offline and no cached data is available.', 'information-circle-outline', true);
       } else {
         this.hasMoreData = false;
       }
