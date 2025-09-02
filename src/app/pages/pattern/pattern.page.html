@@ -22,12 +22,8 @@
   </ion-toolbar>
   <ion-toolbar>
     <ion-item lines="none">
-      <ion-checkbox 
-        slot="start"
-        [checked]="favoritesFirst()"
-        (ionChange)="onFavoritesFirstChange($event)">
-      </ion-checkbox>
-      <ion-label style="margin-left: 8px;">Favorites first</ion-label>
+      <ion-checkbox slot="start" [checked]="favoritesFirst()" (ionChange)="onFavoritesFirstChange($event)"> </ion-checkbox>
+      <ion-label style="margin-left: 8px">Favorites first</ion-label>
     </ion-item>
   </ion-toolbar>
 </ion-header>
@@ -85,17 +81,13 @@
           id="{{ pattern.url }}">
           <img *ngIf="pattern.chartImageSrc" [src]="pattern.chartImageSrc" alt="{{ pattern.title }} Oil Pattern Chart" class="pattern-chart-image" />
           <ion-card-header>
-            <ion-card-title style="display: flex; align-items: center; justify-content: space-between;">
+            <ion-card-title style="display: flex; align-items: center; justify-content: space-between">
               <span>{{ pattern.title }}</span>
-              <ion-button
-                fill="clear"
-                size="default"
-                (click)="toggleFavorite($event, pattern)"
-                style="--color: #000000; margin: 0; height: auto; min-height: auto;">
+              <ion-button fill="clear" size="default" (click)="toggleFavorite($event, pattern)" style="margin: 0; height: auto; min-height: auto">
                 <ion-icon
                   [name]="favoritesService.isFavorite(pattern.url) ? 'heart' : 'heart-outline'"
                   slot="icon-only"
-                  style="color: #000000; font-size: 24px;">
+                  style="color: var(--ion-color-primary); font-size: 24px">
                 </ion-icon>
               </ion-button>
             </ion-card-title>
