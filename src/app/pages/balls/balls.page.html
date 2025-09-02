@@ -14,7 +14,10 @@
         [sortOptions]="sortService.BALL_SORT_OPTIONS"
         [selectedSort]="currentSortOption"
         [storageKey]="'balls-sort-option'"
-        (sortChanged)="onSortChanged($event)">
+        [favoritesFirst]="favoritesFirst()"
+        [favoritesFirstStorageKey]="'balls-favorites-first'"
+        (sortChanged)="onSortChanged($event)"
+        (favoritesFirstChanged)="onFavoritesFirstChange($event)">
       </app-sort-header>
       <ion-button fill="clear" (click)="openFilterModal()">
         <ion-icon slot="icon-only" name="filter-outline"></ion-icon>
@@ -50,7 +53,16 @@
       @for (ball of displayedBalls; track ball.ball_id) {
         <ion-card role="article">
           <ion-card-header>
-            <ion-card-title>{{ ball.ball_name }}</ion-card-title>
+            <ion-card-title style="display: flex; align-items: center; justify-content: space-between">
+              <span>{{ ball.ball_name }}</span>
+              <ion-button fill="clear" size="default" (click)="toggleFavorite($event, ball)" style="margin: 0; height: auto; min-height: auto">
+                <ion-icon
+                  [name]="favoritesService.isBallFavorite(ball.ball_id, ball.core_weight) ? 'heart' : 'heart-outline'"
+                  slot="icon-only"
+                  style="color: var(--ion-color-primary); font-size: 24px">
+                </ion-icon>
+              </ion-button>
+            </ion-card-title>
             <ion-card-subtitle>
               {{ ball.brand_name }} ({{ ball.release_date }})
               <ion-icon *ngIf="ball.us_int === 'Overseas'" name="globe-outline" style="vertical-align: text-top"></ion-icon>

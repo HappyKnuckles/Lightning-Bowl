@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Ball } from '../../models/ball.model';
 import { Pattern } from '../../models/pattern.model';
 import {
@@ -11,11 +11,13 @@ import {
   GameSortOption,
 } from '../../models/sort.model';
 import { Game } from '../../models/game.model';
+import { FavoritesService } from '../favorites/favorites.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class SortService {
+  private favoritesService = inject(FavoritesService);
   // Default sort options for balls
   readonly BALL_SORT_OPTIONS: BallSortOption[] = [
     { field: BallSortField.BALL_NAME, direction: SortDirection.ASC, label: 'Name (A-Z)' },
@@ -97,9 +99,38 @@ export class SortService {
       return option!.direction === SortDirection.DESC ? -comparison : comparison;
     });
   }
-  sortBalls(balls: Ball[], sortOption: BallSortOption): Ball[] {
-    return [...balls].sort((a, b) => {
+  sortBalls(balls: Ball[], sortOption: BallSortOption, favoritesFirst = false): Ball[] {
+    const sortedBalls = [...balls];
+
+    if (favoritesFirst) {
+      const favorites = this.favoritesService.favoriteBalls();
+      const favoriteBalls: Ball[] = [];
+      const nonFavoriteBalls: Ball[] = [];
+
+      // Separate favorites from non-favorites
+      sortedBalls.forEach((ball) => {
+        const ballKey = `${ball.ball_id}-${ball.core_weight}`;
+        if (favorites.has(ballKey)) {
+          favoriteBalls.push(ball);
+        } else {
+          nonFavoriteBalls.push(ball);
+        }
+      });
+
+      // Sort both groups using the selected sort option
+      const sortedFavorites = this.applySortToBalls(favoriteBalls, sortOption);
+      const sortedNonFavorites = this.applySortToBalls(nonFavoriteBalls, sortOption);
+
+      return [...sortedFavorites, ...sortedNonFavorites];
+    }
+
+    return this.applySortToBalls(sortedBalls, sortOption);
+  }
+
+  private applySortToBalls(balls: Ball[], sortOption: BallSortOption): Ball[] {
+    return balls.sort((a, b) => {
       const { field, direction } = sortOption;
+
       let aValue: string | number = a[field];
       let bValue: string | number = b[field];
 
@@ -130,9 +161,37 @@ export class SortService {
     });
   }
 
-  sortPatterns(patterns: Pattern[], sortOption: PatternSortOption): Pattern[] {
-    return [...patterns].sort((a, b) => {
+  sortPatterns(patterns: Pattern[], sortOption: PatternSortOption, favoritesFirst = false): Pattern[] {
+    const sortedPatterns = [...patterns];
+
+    if (favoritesFirst) {
+      const favorites = this.favoritesService.favoritePatterns();
+      const favoritePatterns: Pattern[] = [];
+      const nonFavoritePatterns: Pattern[] = [];
+
+      // Separate favorites from non-favorites
+      sortedPatterns.forEach((pattern) => {
+        if (favorites.has(pattern.url)) {
+          favoritePatterns.push(pattern);
+        } else {
+          nonFavoritePatterns.push(pattern);
+        }
+      });
+
+      // Sort both groups using the selected sort option
+      const sortedFavorites = this.applySortToPatterns(favoritePatterns, sortOption);
+      const sortedNonFavorites = this.applySortToPatterns(nonFavoritePatterns, sortOption);
+
+      return [...sortedFavorites, ...sortedNonFavorites];
+    }
+
+    return this.applySortToPatterns(sortedPatterns, sortOption);
+  }
+
+  private applySortToPatterns(patterns: Pattern[], sortOption: PatternSortOption): Pattern[] {
+    return patterns.sort((a, b) => {
       const { field, direction } = sortOption;
+
       let aValue: string | number | undefined | null = a[field];
       let bValue: string | number | undefined | null = b[field];
 
