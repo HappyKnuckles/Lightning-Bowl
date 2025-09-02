@@ -79,27 +79,38 @@ src/app/
 │   ├── models/             # TypeScript interfaces (Game, Stats, Ball, etc.)
 │   ├── services/           # Business logic services  
 │   └── constants/          # App constants and configurations
-├── pages/                  # Main application pages
+├── pages/                  # Main application pages (REQUIRED for new pages)
 │   ├── add-game/          # Game entry form
 │   ├── stats/             # Statistics display
 │   ├── history/           # Game history
+│   ├── balls/             # Bowling ball database
+│   ├── arsenal/           # Personal ball collection
+│   ├── pattern/           # Oil pattern analysis
+│   ├── league/            # League management
+│   ├── settings/          # App settings & themes
+│   ├── minigame/          # Bowling mini-games
 │   └── alley-map/         # Bowling alley map (uses Leaflet)
 ├── shared/                # Reusable components
-│   └── components/        # UI components
+│   └── components/        # UI components (prefix with data structure name)
 └── tabs/                  # Tab navigation structure
+    └── tabs.page.ts       # Main tabs + "More" modal configuration
 
 Key Configuration Files:
+- app.routes.ts            # Route definitions (REQUIRED for new pages)
 - package.json             # Dependencies and scripts
 - angular.json             # Angular build configuration
 - ionic.config.json        # Ionic framework configuration  
 - capacitor.config.ts      # Mobile deployment configuration
 - tsconfig.json            # TypeScript configuration
 - src/environments/        # API endpoints and environment-specific settings
+- src/theme/variables.scss # Color theme definitions (5 themes supported)
 ```
 
 ### Architecture Overview:
 - **Framework**: Angular 18 + Ionic 8 + Capacitor 7
-- **Routing**: Uses Ionic tabs with Angular Router
+- **Routing**: Uses Ionic tabs with Angular Router (`app.routes.ts` - standalone routing, no modules)
+- **Pages**: Lazy-loaded standalone components in `/pages/` directory  
+- **Navigation**: 5 main tabs (New, Stats, History, Leagues, More) + "More" modal with additional pages
 - **Storage**: **Offline-First with IndexedDB** - Ionic Storage provides IndexedDB/SQLite with automatic online/offline sync
 - **Charts**: Chart.js with zoom plugin
 - **Maps**: Leaflet.js with marker clustering
@@ -124,6 +135,79 @@ Key Configuration Files:
 - **Testing**: Limited test coverage; focus on manual testing
 - **Linting**: ESLint for TypeScript, Stylelint for SCSS
 - **Formatting**: Prettier with pre-commit hooks (Husky + lint-staged)
+
+### Development Guidelines & Best Practices:
+
+#### **New Page Creation:**
+- **ALWAYS place new pages in the `src/app/pages/` directory**
+- **MUST register new pages in two locations:**
+  1. **Route Configuration**: Add lazy-loaded route in `src/app/app.routes.ts`
+  2. **Tab Navigation**: Update `src/app/tabs/tabs.page.ts` for tab access (either main tabs or "More" modal)
+- **Pages use Angular standalone components** with lazy loading via `loadComponent()`
+
+#### **Component Naming Convention:**
+- **ALWAYS prefix components with the data structure they handle**
+- **Examples:**
+  - `ball-filter` - filters bowling ball data
+  - `pattern-info` - displays oil pattern information  
+  - `game-filter` - filters game data
+  - `league-selector` - handles league selection
+- **Components go in `src/app/shared/components/[component-name]/`**
+- **Use kebab-case for component names and folders**
+
+#### **Design & Styling Requirements:**
+- **ALWAYS examine existing app styles before creating new components**
+- **MUST support all color themes defined in settings page:**
+  - Red, Blue, Gray, Purple/Lila, Green (default)
+  - Themes defined in `src/theme/variables.scss` using CSS custom properties
+  - Managed by `ThemeChangerService` with automatic class application
+- **Use Ionic CSS variables for theming (`--ion-color-primary`, `--ion-color-secondary`, etc.)**
+- **Test component appearance across all color themes**
+- **Follow existing component styling patterns from `src/app/shared/components/`**
+
+#### **Code Safety & Architecture:**
+- **ALWAYS follow Single Responsibility Principle** - one component, one purpose
+- **NEVER delete or modify existing code unrelated to your specific issue**
+- **Use Angular standalone components** (no NgModule declarations needed)
+- **Import only required Ionic components** (tree-shaking optimization)
+- **Follow existing service injection patterns** from `src/app/core/services/`
+
+#### **Example: Adding a New Page**
+```typescript
+// 1. Create page in src/app/pages/my-feature/my-feature.page.ts
+@Component({
+  selector: 'app-my-feature',
+  templateUrl: './my-feature.page.html',
+  standalone: true,
+  imports: [IonHeader, IonToolbar, IonTitle, IonContent]
+})
+export class MyFeaturePage {}
+
+// 2. Add route in src/app/app.routes.ts
+{
+  path: 'my-feature',
+  loadComponent: () => import('./pages/my-feature/my-feature.page').then(m => m.MyFeaturePage)
+}
+
+// 3. Add to tabs in src/app/tabs/tabs.page.ts (if needed in navigation)
+readonly moreTabs = [..., '/tabs/my-feature'];
+```
+
+#### **Example: Adding a New Component**
+```typescript
+// Component name: ball-recommendations (handles ball data)
+// Location: src/app/shared/components/ball-recommendations/
+
+@Component({
+  selector: 'app-ball-recommendations', 
+  templateUrl: './ball-recommendations.component.html',
+  standalone: true,
+  imports: [IonCard, IonButton, NgFor]
+})
+export class BallRecommendationsComponent {
+  // Single responsibility: recommend bowling balls
+}
+```
 
 ### Development Tips:
 - **Hot Reload**: Development server supports hot module replacement
