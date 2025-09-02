@@ -156,18 +156,7 @@ export class BallsPage implements OnInit {
     }
 
     // Apply sorting only when not searching
-    const sortedResult = this.sortService.sortBalls(result, this.currentSortOption);
-
-    // Sort to show favorites first
-    const favorites = this.favoritesService.favoriteBalls();
-    return sortedResult.sort((a, b) => {
-      const aIsFavorite = favorites.has(`${a.ball_id}-${a.core_weight}`);
-      const bIsFavorite = favorites.has(`${b.ball_id}-${b.core_weight}`);
-      
-      if (aIsFavorite && !bIsFavorite) return -1;
-      if (!aIsFavorite && bIsFavorite) return 1;
-      return 0;
-    });
+    return this.sortService.sortBalls(result, this.currentSortOption);
   }
 
   private lastLoadTime = 0;

@@ -104,16 +104,7 @@ export class PatternPage implements OnInit {
       patterns = this.sortService.sortPatterns(this.patterns, this.currentSortOption);
     }
 
-    // Sort to show favorites first
-    const favorites = this.favoritesService.favoritePatterns();
-    return patterns.sort((a, b) => {
-      const aIsFavorite = favorites.has(a.url);
-      const bIsFavorite = favorites.has(b.url);
-      
-      if (aIsFavorite && !bIsFavorite) return -1;
-      if (!aIsFavorite && bIsFavorite) return 1;
-      return 0;
-    });
+    return patterns;
   }
 
   private lastLoadTime = 0;
