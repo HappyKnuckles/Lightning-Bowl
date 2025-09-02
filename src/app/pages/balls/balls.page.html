@@ -54,13 +54,13 @@
               <span>{{ ball.ball_name }}</span>
               <ion-button
                 fill="clear"
-                size="small"
+                size="default"
                 (click)="toggleFavorite($event, ball)"
                 style="--color: #000000; margin: 0; height: auto; min-height: auto;">
                 <ion-icon
                   [name]="favoritesService.isBallFavorite(ball.ball_id, ball.core_weight) ? 'heart' : 'heart-outline'"
                   slot="icon-only"
-                  style="color: #000000;">
+                  style="color: #000000; font-size: 24px;">
                 </ion-icon>
               </ion-button>
             </ion-card-title>

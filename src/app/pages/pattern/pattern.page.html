@@ -79,13 +79,13 @@
               <span>{{ pattern.title }}</span>
               <ion-button
                 fill="clear"
-                size="small"
+                size="default"
                 (click)="toggleFavorite($event, pattern)"
                 style="--color: #000000; margin: 0; height: auto; min-height: auto;">
                 <ion-icon
                   [name]="favoritesService.isFavorite(pattern.url) ? 'heart' : 'heart-outline'"
                   slot="icon-only"
-                  style="color: #000000;">
+                  style="color: #000000; font-size: 24px;">
                 </ion-icon>
               </ion-button>
             </ion-card-title>
