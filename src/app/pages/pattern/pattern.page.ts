@@ -23,6 +23,9 @@ import {
   IonButtons,
   IonButton,
   IonIcon,
+  IonCheckbox,
+  IonItem,
+  IonLabel,
   ModalController,
 } from '@ionic/angular/standalone';
 import { Pattern } from 'src/app/core/models/pattern.model';
@@ -52,6 +55,9 @@ import { FavoritesService } from 'src/app/core/services/favorites/favorites.serv
   styleUrls: ['./pattern.page.scss'],
   standalone: true,
   imports: [
+    IonLabel,
+    IonItem,
+    IonCheckbox,
     IonIcon,
     IonButton,
     IonButtons,
@@ -87,6 +93,7 @@ export class PatternPage implements OnInit {
   hasMoreData = true;
   isPageLoading = signal(false);
   searchTerm = signal('');
+  favoritesFirst = signal(false);
   currentSortOption: PatternSortOption = {
     field: PatternSortField.TITLE,
     direction: SortDirection.ASC,
@@ -101,7 +108,7 @@ export class PatternPage implements OnInit {
       patterns = this.patterns;
     } else {
       // Apply sorting only when not searching
-      patterns = this.sortService.sortPatterns(this.patterns, this.currentSortOption);
+      patterns = this.sortService.sortPatterns(this.patterns, this.currentSortOption, this.favoritesFirst());
     }
 
     return patterns;
@@ -124,6 +131,7 @@ export class PatternPage implements OnInit {
     addIcons({ addOutline, arrowUpOutline, arrowDownOutline, chevronBack, add, heart, heartOutline });
   }
   async ngOnInit() {
+    this.loadFavoritesFirstSetting();
     await this.loadPatterns();
     this.generateChartImages();
     // this.renderCharts();
@@ -255,6 +263,31 @@ export class PatternPage implements OnInit {
       this.toastService.showToast(`Added ${pattern.title} to favorites`, 'heart');
     } else {
       this.toastService.showToast(`Removed ${pattern.title} from favorites`, 'heart-outline');
+    }
+  }
+
+  onFavoritesFirstChange(event: any): void {
+    this.favoritesFirst.set(event.detail.checked);
+    this.saveFavoritesFirstSetting(event.detail.checked);
+    if (this.content) {
+      setTimeout(() => {
+        this.content.scrollToTop(300);
+      }, 100);
+    }
+  }
+
+  private loadFavoritesFirstSetting(): void {
+    if (typeof localStorage !== 'undefined') {
+      const saved = localStorage.getItem('patterns-favorites-first');
+      if (saved !== null) {
+        this.favoritesFirst.set(saved === 'true');
+      }
+    }
+  }
+
+  private saveFavoritesFirstSetting(value: boolean): void {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('patterns-favorites-first', value.toString());
     }
   }
 }

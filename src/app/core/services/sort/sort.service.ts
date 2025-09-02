@@ -20,7 +20,6 @@ export class SortService {
   private favoritesService = inject(FavoritesService);
   // Default sort options for balls
   readonly BALL_SORT_OPTIONS: BallSortOption[] = [
-    { field: BallSortField.FAVORITES_FIRST, direction: SortDirection.DESC, label: 'Favorites first' },
     { field: BallSortField.BALL_NAME, direction: SortDirection.ASC, label: 'Name (A-Z)' },
     { field: BallSortField.BALL_NAME, direction: SortDirection.DESC, label: 'Name (Z-A)' },
     { field: BallSortField.BRAND_NAME, direction: SortDirection.ASC, label: 'Brand (A-Z)' },
@@ -39,7 +38,6 @@ export class SortService {
 
   // Default sort options for patterns
   readonly PATTERN_SORT_OPTIONS: PatternSortOption[] = [
-    { field: PatternSortField.FAVORITES_FIRST, direction: SortDirection.DESC, label: 'Favorites first' },
     { field: PatternSortField.TITLE, direction: SortDirection.ASC, label: 'Title (A-Z)' },
     { field: PatternSortField.TITLE, direction: SortDirection.DESC, label: 'Title (Z-A)' },
     { field: PatternSortField.CATEGORY, direction: SortDirection.ASC, label: 'Category (A-Z)' },
@@ -101,23 +99,37 @@ export class SortService {
       return option!.direction === SortDirection.DESC ? -comparison : comparison;
     });
   }
-  sortBalls(balls: Ball[], sortOption: BallSortOption): Ball[] {
-    return [...balls].sort((a, b) => {
-      const { field, direction } = sortOption;
+  sortBalls(balls: Ball[], sortOption: BallSortOption, favoritesFirst: boolean = false): Ball[] {
+    const sortedBalls = [...balls];
+    
+    if (favoritesFirst) {
+      const favorites = this.favoritesService.favoriteBalls();
+      const favoriteBalls: Ball[] = [];
+      const nonFavoriteBalls: Ball[] = [];
       
-      // Handle favorites first sorting
-      if (field === BallSortField.FAVORITES_FIRST) {
-        const favorites = this.favoritesService.favoriteBalls();
-        const aIsFavorite = favorites.has(`${a.ball_id}-${a.core_weight}`);
-        const bIsFavorite = favorites.has(`${b.ball_id}-${b.core_weight}`);
-        
-        if (aIsFavorite && !bIsFavorite) return direction === SortDirection.DESC ? -1 : 1;
-        if (!aIsFavorite && bIsFavorite) return direction === SortDirection.DESC ? 1 : -1;
-        
-        // If both are favorited or both are not favorited, sort by name as secondary sort
-        const nameComparison = a.ball_name.toLowerCase().localeCompare(b.ball_name.toLowerCase());
-        return nameComparison;
-      }
+      // Separate favorites from non-favorites
+      sortedBalls.forEach(ball => {
+        const ballKey = `${ball.ball_id}-${ball.core_weight}`;
+        if (favorites.has(ballKey)) {
+          favoriteBalls.push(ball);
+        } else {
+          nonFavoriteBalls.push(ball);
+        }
+      });
+      
+      // Sort both groups using the selected sort option
+      const sortedFavorites = this.applySortToBalls(favoriteBalls, sortOption);
+      const sortedNonFavorites = this.applySortToBalls(nonFavoriteBalls, sortOption);
+      
+      return [...sortedFavorites, ...sortedNonFavorites];
+    }
+    
+    return this.applySortToBalls(sortedBalls, sortOption);
+  }
+
+  private applySortToBalls(balls: Ball[], sortOption: BallSortOption): Ball[] {
+    return balls.sort((a, b) => {
+      const { field, direction } = sortOption;
 
       let aValue: string | number = a[field];
       let bValue: string | number = b[field];
@@ -149,23 +161,36 @@ export class SortService {
     });
   }
 
-  sortPatterns(patterns: Pattern[], sortOption: PatternSortOption): Pattern[] {
-    return [...patterns].sort((a, b) => {
-      const { field, direction } = sortOption;
+  sortPatterns(patterns: Pattern[], sortOption: PatternSortOption, favoritesFirst: boolean = false): Pattern[] {
+    const sortedPatterns = [...patterns];
+    
+    if (favoritesFirst) {
+      const favorites = this.favoritesService.favoritePatterns();
+      const favoritePatterns: Pattern[] = [];
+      const nonFavoritePatterns: Pattern[] = [];
       
-      // Handle favorites first sorting
-      if (field === PatternSortField.FAVORITES_FIRST) {
-        const favorites = this.favoritesService.favoritePatterns();
-        const aIsFavorite = favorites.has(a.url);
-        const bIsFavorite = favorites.has(b.url);
-        
-        if (aIsFavorite && !bIsFavorite) return direction === SortDirection.DESC ? -1 : 1;
-        if (!aIsFavorite && bIsFavorite) return direction === SortDirection.DESC ? 1 : -1;
-        
-        // If both are favorited or both are not favorited, sort by title as secondary sort
-        const titleComparison = (a.title || '').toLowerCase().localeCompare((b.title || '').toLowerCase());
-        return titleComparison;
-      }
+      // Separate favorites from non-favorites
+      sortedPatterns.forEach(pattern => {
+        if (favorites.has(pattern.url)) {
+          favoritePatterns.push(pattern);
+        } else {
+          nonFavoritePatterns.push(pattern);
+        }
+      });
+      
+      // Sort both groups using the selected sort option
+      const sortedFavorites = this.applySortToPatterns(favoritePatterns, sortOption);
+      const sortedNonFavorites = this.applySortToPatterns(nonFavoritePatterns, sortOption);
+      
+      return [...sortedFavorites, ...sortedNonFavorites];
+    }
+    
+    return this.applySortToPatterns(sortedPatterns, sortOption);
+  }
+
+  private applySortToPatterns(patterns: Pattern[], sortOption: PatternSortOption): Pattern[] {
+    return patterns.sort((a, b) => {
+      const { field, direction } = sortOption;
 
       let aValue: string | number | undefined | null = a[field];
       let bValue: string | number | undefined | null = b[field];

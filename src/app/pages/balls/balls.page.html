@@ -31,6 +31,16 @@
       showCancelButton="focus"
       debounce="300"></ion-searchbar>
   </ion-toolbar>
+  <ion-toolbar>
+    <ion-item lines="none">
+      <ion-checkbox 
+        slot="start"
+        [checked]="favoritesFirst()"
+        (ionChange)="onFavoritesFirstChange($event)">
+      </ion-checkbox>
+      <ion-label style="margin-left: 8px;">Favorites first</ion-label>
+    </ion-item>
+  </ion-toolbar>
   <ion-toolbar style="text-align: center">
     <app-ball-filter-active></app-ball-filter-active>
   </ion-toolbar>

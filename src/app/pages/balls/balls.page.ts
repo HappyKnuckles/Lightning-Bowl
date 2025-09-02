@@ -25,6 +25,9 @@ import {
   IonRefresherContent,
   IonRefresher,
   IonSkeletonText,
+  IonCheckbox,
+  IonItem,
+  IonLabel,
 } from '@ionic/angular/standalone';
 import { Ball } from 'src/app/core/models/ball.model';
 import { addIcons } from 'ionicons';
@@ -58,6 +61,9 @@ import { FavoritesService } from 'src/app/core/services/favorites/favorites.serv
   standalone: true,
   providers: [ModalController],
   imports: [
+    IonLabel,
+    IonItem,
+    IonCheckbox,
     IonSkeletonText,
     IonRefresher,
     IonRefresherContent,
@@ -99,6 +105,7 @@ export class BallsPage implements OnInit {
   coverstockBalls: Ball[] = [];
   searchSubject = new Subject<string>();
   searchTerm = signal('');
+  favoritesFirst = signal(false);
   currentPage = 0;
   isPageLoading = signal(false);
   hasMoreData = true;
@@ -156,7 +163,7 @@ export class BallsPage implements OnInit {
     }
 
     // Apply sorting only when not searching
-    return this.sortService.sortBalls(result, this.currentSortOption);
+    return this.sortService.sortBalls(result, this.currentSortOption, this.favoritesFirst());
   }
 
   private lastLoadTime = 0;
@@ -193,6 +200,7 @@ export class BallsPage implements OnInit {
 
   async ngOnInit(): Promise<void> {
     this.isPageLoading.set(true);
+    this.loadFavoritesFirstSetting();
     try {
       await this.loadBalls();
     } catch (error) {
@@ -404,6 +412,31 @@ export class BallsPage implements OnInit {
       this.toastService.showToast(`Added ${ball.ball_name} to favorites`, 'heart');
     } else {
       this.toastService.showToast(`Removed ${ball.ball_name} from favorites`, 'heart-outline');
+    }
+  }
+
+  onFavoritesFirstChange(event: any): void {
+    this.favoritesFirst.set(event.detail.checked);
+    this.saveFavoritesFirstSetting(event.detail.checked);
+    if (this.content) {
+      setTimeout(() => {
+        this.content.scrollToTop(300);
+      }, 100);
+    }
+  }
+
+  private loadFavoritesFirstSetting(): void {
+    if (typeof localStorage !== 'undefined') {
+      const saved = localStorage.getItem('balls-favorites-first');
+      if (saved !== null) {
+        this.favoritesFirst.set(saved === 'true');
+      }
+    }
+  }
+
+  private saveFavoritesFirstSetting(value: boolean): void {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('balls-favorites-first', value.toString());
     }
   }
 }
