@@ -70,6 +70,12 @@
       ">
       <ion-col class="middle count">{{ game().frameScores[i - 1] }}</ion-col>
     </ion-row>
+    <!-- Max score display for 10th frame when no input -->
+    <ion-row
+      *ngIf="i === 10 && game().frames[frameIndex][0] === undefined">
+      <ion-col class="middle count" style="color: var(--ion-color-medium)">Max: {{ maxScore }}</ion-col>
+    </ion-row>
+    <!-- Show "0" for frames with no input and no score, but not for empty 10th frame (shows max instead) -->
     <ion-row
       *ngIf="
         !(
@@ -77,14 +83,9 @@
             game().frames[frameIndex][1] !== undefined ||
             (i === 10 && game().frames[frameIndex][0] !== undefined)) &&
           isNumber(game().frameScores[i - 1])
-        )
+        ) && !(i === 10 && game().frames[frameIndex][0] === undefined)
       ">
       <ion-col class="middle count" style="color: var(--ion-color-quartiary)">0</ion-col>
-    </ion-row>
-    <!-- Max score display for 10th frame when no input -->
-    <ion-row
-      *ngIf="i === 10 && game().frames[frameIndex][0] === undefined">
-      <ion-col class="middle count" style="color: var(--ion-color-medium)">Max: {{ maxScore }}</ion-col>
     </ion-row>
   </ion-grid>
 
