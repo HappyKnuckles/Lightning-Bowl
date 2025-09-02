@@ -43,6 +43,7 @@ import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { LeagueSelectorComponent } from 'src/app/shared/components/league-selector/league-selector.component';
 import { SpareNamesComponent } from 'src/app/shared/components/spare-names/spare-names.component';
+import { RulebookSelectorComponent } from 'src/app/shared/components/rulebook-selector/rulebook-selector.component';
 import { GameStatsService } from 'src/app/core/services/game-stats/game-stats.service';
 import { AlertController, InputCustomEvent } from '@ionic/angular';
 
@@ -77,6 +78,7 @@ import { AlertController, InputCustomEvent } from '@ionic/angular';
     ReactiveFormsModule,
     LeagueSelectorComponent,
     SpareNamesComponent,
+    RulebookSelectorComponent,
     NgIf
   ],
 })

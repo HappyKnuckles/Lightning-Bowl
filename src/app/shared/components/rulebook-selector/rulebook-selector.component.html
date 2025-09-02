@@ -1,0 +1,55 @@
+<ion-item>
+  <ion-icon name="book-outline" slot="start"></ion-icon>
+  <ion-select
+    label="Bowling Organization"
+    interface="action-sheet"
+    placeholder="Select organization"
+    [(ngModel)]="selectedValue"
+    (ionChange)="onOrganizationChange($event)">
+    <ion-select-option value="">None</ion-select-option>
+    <ion-select-option *ngFor="let org of organizations" [value]="org.code">
+      {{ org.name }} ({{ org.country }})
+    </ion-select-option>
+    <ion-select-option value="view" *ngIf="selectedOrganization">
+      View Rulebook
+    </ion-select-option>
+  </ion-select>
+</ion-item>
+
+<ion-modal [isOpen]="isRulebookModalOpen" #rulebookModal>
+  <ng-template>
+    <ion-header>
+      <ion-toolbar>
+        <ion-buttons slot="start">
+          <ion-button (click)="closeRulebookModal()">
+            <ion-icon name="chevron-back"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+        <ion-title>{{ currentRulebook?.title || 'Rulebook' }}</ion-title>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content>
+      <div *ngIf="currentRulebook">
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>{{ currentRulebook.organization.name }}</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <p><strong>Version:</strong> {{ currentRulebook.version }}</p>
+            <p><strong>Last Updated:</strong> {{ currentRulebook.lastUpdated }}</p>
+          </ion-card-content>
+        </ion-card>
+
+        <ion-list>
+          <ion-item *ngFor="let section of currentRulebook.sections">
+            <ion-icon name="library-outline" slot="start"></ion-icon>
+            <ion-label>
+              <h3>{{ section.title }}</h3>
+              <p>{{ section.content }}</p>
+            </ion-label>
+          </ion-item>
+        </ion-list>
+      </div>
+    </ion-content>
+  </ng-template>
+</ion-modal>
