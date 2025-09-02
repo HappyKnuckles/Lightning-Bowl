@@ -51,8 +51,10 @@ export class PwaInstallService {
 
       const isDismissed = this.isInstallPromptDismissed();
       const isInstalled = this.isAppInstalled();
+      // Additional check: don't show if prompt was recently dismissed (within last 5 minutes)
+      const recentDismissal = this.isRecentlyDismissed(5 * 60 * 1000); // 5 minutes
 
-      if (!isDismissed && !isInstalled) {
+      if (!isDismissed && !isInstalled && !recentDismissal) {
         if (canShowPrompt) {
           this.showInstallPromptSubject.next(true);
         } else {
@@ -64,7 +66,7 @@ export class PwaInstallService {
     window.addEventListener('appinstalled', () => {
       this.deferredPrompt = null;
       this.showInstallPromptSubject.next(false);
-      sessionStorage.removeItem('pwa-install-dismissed');
+      localStorage.removeItem('pwa-install-dismissed');
     });
 
     if (this.isIOSSafari() && this.isPWAInstallable()) {
@@ -72,7 +74,10 @@ export class PwaInstallService {
         const isDismissed = this.isInstallPromptDismissed();
         const isInstalled = this.isAppInstalled();
 
-        if (!isDismissed && !isInstalled) {
+        // Additional check: don't show if prompt was recently dismissed (within last 5 minutes)
+        const recentDismissal = this.isRecentlyDismissed(5 * 60 * 1000); // 5 minutes
+
+        if (!isDismissed && !isInstalled && !recentDismissal) {
           if (canShowPrompt) {
             this.showInstallPromptSubject.next(true);
           } else {
@@ -112,12 +117,36 @@ export class PwaInstallService {
   }
 
   dismissInstallPrompt(): void {
-    sessionStorage.setItem('pwa-install-dismissed', 'true');
+    // Store dismissal timestamp in localStorage to persist across sessions
+    const dismissalTime = Date.now().toString();
+    localStorage.setItem('pwa-install-dismissed', dismissalTime);
     this.showInstallPromptSubject.next(false);
   }
 
   private isInstallPromptDismissed(): boolean {
-    return sessionStorage.getItem('pwa-install-dismissed') === 'true';
+    const dismissedTime = localStorage.getItem('pwa-install-dismissed');
+    if (!dismissedTime) {
+      return false;
+    }
+    
+    // Check if dismissal was within the last 24 hours (86400000 ms)
+    const dismissalTimestamp = parseInt(dismissedTime, 10);
+    const currentTime = Date.now();
+    const twentyFourHours = 24 * 60 * 60 * 1000;
+    
+    return (currentTime - dismissalTimestamp) < twentyFourHours;
+  }
+
+  private isRecentlyDismissed(timeWindow: number): boolean {
+    const dismissedTime = localStorage.getItem('pwa-install-dismissed');
+    if (!dismissedTime) {
+      return false;
+    }
+    
+    const dismissalTimestamp = parseInt(dismissedTime, 10);
+    const currentTime = Date.now();
+    
+    return (currentTime - dismissalTimestamp) < timeWindow;
   }
 
   private isAppInstalled(): boolean {
