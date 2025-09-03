@@ -1,0 +1,149 @@
+<app-generic-filter [filterService]="gameFilterService" itemType="Games">
+  <!-- Score range inputs -->
+  <ion-item>
+    <ion-input
+      class="ion-text-center"
+      [ngModel]="gameFilterService.filters().minScore"
+      name="minScore"
+      clearOnEdit="true"
+      inputmode="numeric"
+      label="Score range"
+      (ionChange)="updateFilter('minScore', $event.detail.value)"></ion-input>
+    <ion-input
+      label="-"
+      class="ion-text-center"
+      style="width: 60%"
+      [ngModel]="gameFilterService.filters().maxScore"
+      name="maxScore"
+      clearOnEdit="true"
+      inputmode="numeric"
+      (ionChange)="updateFilter('maxScore', $event.detail.value)"></ion-input>
+  </ion-item>
+
+  <!-- Time Range select -->
+  <ion-item>
+    <ion-select name="timeRange" label="Time Range" (ionChange)="startDateChange($event)" [ngModel]="gameFilterService.filters().timeRange">
+      <ion-select-option [value]="0">Today</ion-select-option>
+      <ion-select-option [value]="1">Last week</ion-select-option>
+      <ion-select-option [value]="2">Last month</ion-select-option>
+      <ion-select-option [value]="3">Last 3 months</ion-select-option>
+      <ion-select-option [value]="4">Last 6 months</ion-select-option>
+      <ion-select-option [value]="5">Last year</ion-select-option>
+      <ion-select-option [value]="6">All time</ion-select-option>
+    </ion-select>
+  </ion-item>
+
+  <!-- Advanced time range -->
+  <ion-item>
+    <ion-label style="flex: 2">Advanced time range</ion-label>
+    <ion-datetime-button datetime="datetime-min"></ion-datetime-button>
+    <ion-label class="ion-text-center" style="margin: 0">-</ion-label>
+    <ion-datetime-button datetime="datetime-max"></ion-datetime-button>
+  </ion-item>
+
+  <!-- Practice games toggle -->
+  <ion-item>
+    <ion-toggle
+      [ngModel]="gameFilterService.filters().excludePractice"
+      name="isPractice"
+      (ionChange)="updateFilter('excludePractice', $event.detail.checked)"
+      >Exclude practice games</ion-toggle>
+  </ion-item>
+
+  <!-- Perfect games toggle -->
+  <ion-item>
+    <ion-toggle [ngModel]="gameFilterService.filters().isPerfect" name="isPerfect" (ionChange)="updateFilter('isPerfect', $event.detail.checked)"
+      >Only perfect games</ion-toggle>
+  </ion-item>
+
+  <!-- Clean games toggle -->
+  <ion-item>
+    <ion-toggle [ngModel]="gameFilterService.filters().isClean" name="isClean" (ionChange)="updateFilter('isClean', $event.detail.checked)"
+      >Only clean games</ion-toggle>
+  </ion-item>
+
+  <!-- League select -->
+  <ion-item>
+    <ion-select
+      name="league"
+      [ngModel]="gameFilterService.filters().leagues"
+      label="League"
+      multiple="true"
+      (ionChange)="updateFilter('leagues', $event.detail.value)">
+      <ion-select-option value="all">All</ion-select-option>
+      <ion-select-option value="">None</ion-select-option>
+      <ion-select-option *ngFor="let league of leagues" [value]="league">{{ league }}</ion-select-option>
+    </ion-select>
+  </ion-item>
+
+  <!-- Balls select -->
+  <ion-item>
+    <ion-select
+      name="balls"
+      [ngModel]="gameFilterService.filters().balls"
+      label="Balls"
+      multiple="true"
+      placeholder="All"
+      (ionChange)="updateFilter('balls', $event.detail.value)">
+      <ion-select-option *ngFor="let ball of storageService.arsenal()" [value]="ball.ball_name">{{ ball.ball_name }}</ion-select-option>
+    </ion-select>
+  </ion-item>
+
+  <!-- Patterns select -->
+  <ion-item>
+    <ion-select
+      name="patterns"
+      [ngModel]="gameFilterService.filters().patterns"
+      label="Patterns"
+      multiple="true"
+      (ionChange)="updateFilter('patterns', $event.detail.value)">
+      <ion-select-option value="all">All</ion-select-option>
+      <ion-select-option value="">None</ion-select-option>
+      <ion-select-option *ngFor="let league of patterns()" [value]="league">{{ league }}</ion-select-option>
+    </ion-select>
+  </ion-item>
+</app-generic-filter>
+
+<!-- DateTime modals -->
+<ion-modal [keepContentsMounted]="true">
+  <ng-template>
+    <ion-datetime
+      id="datetime-min"
+      locale="de-DE"
+      [formatOptions]="{
+        date: {
+          month: '2-digit',
+          day: '2-digit',
+          year: 'numeric',
+        },
+      }"
+      [ngModel]="gameFilterService.filters().startDate"
+      name="startDate"
+      [highlightedDates]="highlightedDates"
+      (ionChange)="updateFilter('startDate', $event.detail.value)"
+      presentation="date"
+      [min]="defaultFilters.startDate"
+      [max]="gameFilterService.filters().endDate"></ion-datetime>
+  </ng-template>
+</ion-modal>
+
+<ion-modal [keepContentsMounted]="true">
+  <ng-template>
+    <ion-datetime
+      id="datetime-max"
+      locale="de-DE"
+      [formatOptions]="{
+        date: {
+          month: '2-digit',
+          day: '2-digit',
+          year: 'numeric',
+        },
+      }"
+      [ngModel]="gameFilterService.filters().endDate"
+      name="endDate"
+      [highlightedDates]="highlightedDates"
+      (ionChange)="updateFilter('endDate', $event.detail.value)"
+      presentation="date"
+      [min]="gameFilterService.filters().startDate"></ion-datetime>
+  </ng-template>
+</ion-modal>

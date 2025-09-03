@@ -38,7 +38,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ExcelService } from 'src/app/core/services/excel/excel.service';
 import { GameFilterService } from 'src/app/core/services/game-filter/game-filter.service';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
-import { GameFilterComponent } from 'src/app/shared/components/game-filter/game-filter.component';
+import { GameFilterNewComponent } from 'src/app/shared/components/game-filter-new/game-filter-new.component';
 import { GenericFilterActiveComponent } from 'src/app/shared/components/generic-filter-active/generic-filter-active.component';
 import { GAME_FILTER_CONFIG } from 'src/app/shared/components/generic-filter-active/filter-configs';
 import { UtilsService } from 'src/app/core/services/utils/utils.service';
@@ -122,7 +122,7 @@ export class HistoryPage {
 
   async openFilterModal() {
     const modal = await this.modalCtrl.create({
-      component: GameFilterComponent,
+      component: GameFilterNewComponent,
     });
 
     return await modal.present();

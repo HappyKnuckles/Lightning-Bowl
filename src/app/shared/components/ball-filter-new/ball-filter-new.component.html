@@ -1,0 +1,157 @@
+<app-generic-filter [filterService]="ballFilterService" itemType="Balls">
+  <!-- Brands select -->
+  <ion-item>
+    <ion-select
+      label="Brands"
+      name="brands"
+      multiple="true"
+      placeholder="All"
+      [ngModel]="ballFilterService.filters().brands"
+      (ionChange)="updateFilter('brands', $event.detail.value)">
+      <ion-select-option *ngFor="let brand of ballService.brands()" [value]="brand.brand_name">{{ brand.brand_name }}</ion-select-option>
+    </ion-select>
+  </ion-item>
+
+  <!-- Coverstocks typeahead -->
+  <ion-item button id="select-coverstocks">
+    <ion-label>Coverstocks</ion-label>
+    <p style="overflow: hidden; white-space: nowrap; text-overflow: ellipsis; margin-left: 10px; text-align: right">
+      {{ ballFilterService.filters().coverstocks.join(", ") }}
+    </p>
+  </ion-item>
+
+  <!-- Coverstock types select -->
+  <ion-item>
+    <ion-select
+      label="Coverstock types"
+      name="coverstockTypes"
+      placeholder="All"
+      [ngModel]="ballFilterService.filters().coverstockTypes"
+      (ionChange)="updateFilter('coverstockTypes', $event.detail.value)"
+      multiple="true">
+      <ion-select-option *ngFor="let coverstockType of coverstockTypes" [value]="coverstockType">{{ coverstockType }}</ion-select-option>
+    </ion-select>
+  </ion-item>
+
+  <!-- Cores typeahead -->
+  <ion-item button id="select-cores">
+    <ion-label>Cores</ion-label>
+    <p style="overflow: hidden; white-space: nowrap; text-overflow: ellipsis; margin-left: 10px; text-align: right">
+      {{ ballFilterService.filters().cores.join(", ") }}
+    </p>
+  </ion-item>
+
+  <!-- Core type select -->
+  <ion-item>
+    <ion-select
+      label="Core type"
+      name="coreType"
+      placeholder="All"
+      [ngModel]="ballFilterService.filters().coreType"
+      (ionChange)="updateFilter('coreType', $event.detail.value)">
+      <ion-select-option *ngFor="let coreType of coreTypes" [value]="coreType">{{ coreType }}</ion-select-option>
+    </ion-select>
+  </ion-item>
+
+  <!-- Market select -->
+  <ion-item>
+    <ion-select
+      label="Market"
+      name="market"
+      placeholder="All"
+      [ngModel]="ballFilterService.filters().market"
+      (ionChange)="updateFilter('market', $event.detail.value)">
+      <ion-select-option *ngFor="let market of markets" [value]="market">{{ market }}</ion-select-option>
+    </ion-select>
+  </ion-item>
+
+  <!-- Weight select -->
+  <ion-item>
+    <ion-select
+      label="Weight"
+      name="weight"
+      placeholder="15"
+      [ngModel]="ballFilterService.filters().weight"
+      (ionChange)="updateFilter('weight', $event.detail.value)">
+      <ion-select-option *ngFor="let weight of weights" [value]="weight">{{ weight }}</ion-select-option>
+    </ion-select>
+  </ion-item>
+
+  <!-- RG range inputs -->
+  <ion-item>
+    <ion-input
+      class="ion-text-center"
+      [ngModel]="ballFilterService.filters().minRg"
+      name="minRg"
+      clearOnEdit="true"
+      inputmode="decimal"
+      label="RG range"
+      (ionChange)="updateFilter('minRg', $event.detail.value?.replace(',', '.'))"></ion-input>
+    <ion-input
+      label="-"
+      class="ion-text-center"
+      style="width: 60%"
+      [ngModel]="ballFilterService.filters().maxRg"
+      name="maxRg"
+      clearOnEdit="true"
+      inputmode="decimal"
+      (ionChange)="updateFilter('maxRg', $event.detail.value?.replace(',', '.'))"></ion-input>
+  </ion-item>
+
+  <!-- Diff range inputs -->
+  <ion-item>
+    <ion-input
+      class="ion-text-center"
+      [ngModel]="ballFilterService.filters().minDiff"
+      name="minDiff"
+      clearOnEdit="true"
+      inputmode="decimal"
+      label="Diff range"
+      (ionChange)="updateFilter('minDiff', $event.detail.value?.replace(',', '.'))"></ion-input>
+    <ion-input
+      label="-"
+      class="ion-text-center"
+      style="width: 60%"
+      [ngModel]="ballFilterService.filters().maxDiff"
+      name="maxDiff"
+      clearOnEdit="true"
+      inputmode="decimal"
+      (ionChange)="updateFilter('maxDiff', $event.detail.value?.replace(',', '.'))"></ion-input>
+  </ion-item>
+
+  <!-- Arsenal toggle -->
+  <ion-item>
+    <ion-toggle [ngModel]="ballFilterService.filters().inArsenal" (ionChange)="updateFilter('inArsenal', $event.detail.checked)"
+      >Only arsenal</ion-toggle>
+  </ion-item>
+
+  <!-- Availability toggle -->
+  <ion-item>
+    <ion-toggle [ngModel]="ballFilterService.filters().availability" (ionChange)="updateFilter('availability', $event.detail.checked)"
+      >Exclude discontinued</ion-toggle>
+  </ion-item>
+</app-generic-filter>
+
+<!-- Cores modal -->
+<ion-modal [presentingElement]="presentingElement" trigger="select-cores">
+  <ng-template>
+    <app-generic-typeahead
+      [items]="ballService.cores()"
+      [config]="coreTypeaheadConfig"
+      (selectedItemsChange)="updateFilter('cores', $event)"
+      [prevSelectedItems]="ballFilterService.filters().cores">
+    </app-generic-typeahead>
+  </ng-template>
+</ion-modal>
+
+<!-- Coverstocks modal -->
+<ion-modal [presentingElement]="presentingElement" trigger="select-coverstocks">
+  <ng-template>
+    <app-generic-typeahead
+      [items]="ballService.coverstocks()"
+      [config]="coverstockTypeaheadConfig"
+      (selectedItemsChange)="updateFilter('coverstocks', $event)"
+      [prevSelectedItems]="ballFilterService.filters().coverstocks">
+    </app-generic-typeahead>
+  </ng-template>
+</ion-modal>

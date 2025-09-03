@@ -43,7 +43,7 @@ import { ImpactStyle } from '@capacitor/haptics';
 import { BallService } from 'src/app/core/services/ball/ball.service';
 import { BallFilterService } from 'src/app/core/services/ball-filter/ball-filter.service';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
-import { BallFilterComponent } from 'src/app/shared/components/ball-filter/ball-filter.component';
+import { BallFilterNewComponent } from 'src/app/shared/components/ball-filter-new/ball-filter-new.component';
 import { GenericFilterActiveComponent } from 'src/app/shared/components/generic-filter-active/generic-filter-active.component';
 import { BALL_FILTER_CONFIG } from 'src/app/shared/components/generic-filter-active/filter-configs';
 import { BallListComponent } from 'src/app/shared/components/ball-list/ball-list.component';
@@ -263,7 +263,7 @@ export class BallsPage implements OnInit {
 
   async openFilterModal(): Promise<void> {
     const modal = await this.modalCtrl.create({
-      component: BallFilterComponent,
+      component: BallFilterNewComponent,
     });
     modal.onDidDismiss().then(() => {
       this.currentPage = 0;
