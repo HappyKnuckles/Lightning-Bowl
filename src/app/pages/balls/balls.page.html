@@ -35,7 +35,9 @@
       debounce="300"></ion-searchbar>
   </ion-toolbar>
   <ion-toolbar style="text-align: center">
-    <app-ball-filter-active></app-ball-filter-active>
+    <app-generic-filter-active 
+      [filterConfigs]="ballFilterConfig"
+      [filterService]="ballFilterService"></app-generic-filter-active>
   </ion-toolbar>
 </ion-header>
 

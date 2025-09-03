@@ -38,8 +38,10 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ExcelService } from 'src/app/core/services/excel/excel.service';
 import { GameFilterService } from 'src/app/core/services/game-filter/game-filter.service';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
-import { GameFilterActiveComponent } from 'src/app/shared/components/game-filter-active/game-filter-active.component';
 import { GameFilterComponent } from 'src/app/shared/components/game-filter/game-filter.component';
+import { GenericFilterActiveComponent } from 'src/app/shared/components/generic-filter-active/generic-filter-active.component';
+import { GAME_FILTER_CONFIG } from 'src/app/shared/components/generic-filter-active/filter-configs';
+import { UtilsService } from 'src/app/core/services/utils/utils.service';
 import { GameComponent } from 'src/app/shared/components/game/game.component';
 import { SortHeaderComponent } from 'src/app/shared/components/sort-header/sort-header.component';
 
@@ -65,13 +67,14 @@ import { SortHeaderComponent } from 'src/app/shared/components/sort-header/sort-
     ReactiveFormsModule,
     FormsModule,
     GameComponent,
-    GameFilterActiveComponent,
+    GenericFilterActiveComponent,
     SortHeaderComponent,
   ],
 })
 export class HistoryPage {
   @ViewChild('accordionGroup') accordionGroup!: IonAccordionGroup;
   @ViewChild(IonContent, { static: false }) content!: IonContent;
+  gameFilterConfig = GAME_FILTER_CONFIG;
 
   // currentSortOption: GameSortOption = {
   //   field: GameSortField.DATE,
@@ -92,6 +95,7 @@ export class HistoryPage {
     private modalCtrl: ModalController,
     public gameFilterService: GameFilterService,
     private excelService: ExcelService,
+    public utilsService: UtilsService,
     // public sortService: SortService,
   ) {
     addIcons({

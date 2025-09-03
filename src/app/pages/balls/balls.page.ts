@@ -43,8 +43,9 @@ import { ImpactStyle } from '@capacitor/haptics';
 import { BallService } from 'src/app/core/services/ball/ball.service';
 import { BallFilterService } from 'src/app/core/services/ball-filter/ball-filter.service';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
-import { BallFilterActiveComponent } from 'src/app/shared/components/ball-filter-active/ball-filter-active.component';
 import { BallFilterComponent } from 'src/app/shared/components/ball-filter/ball-filter.component';
+import { GenericFilterActiveComponent } from 'src/app/shared/components/generic-filter-active/generic-filter-active.component';
+import { BALL_FILTER_CONFIG } from 'src/app/shared/components/generic-filter-active/filter-configs';
 import { BallListComponent } from 'src/app/shared/components/ball-list/ball-list.component';
 import { ActivatedRoute } from '@angular/router';
 import { SearchBlurDirective } from 'src/app/core/directives/search-blur/search-blur.directive';
@@ -90,7 +91,7 @@ import { FavoritesService } from 'src/app/core/services/favorites/favorites.serv
     CommonModule,
     FormsModule,
     BallListComponent,
-    BallFilterActiveComponent,
+    GenericFilterActiveComponent,
     SearchBlurDirective,
     SortHeaderComponent,
   ],
@@ -115,6 +116,7 @@ export class BallsPage implements OnInit {
     direction: SortDirection.DESC,
     label: 'Newest First',
   };
+  ballFilterConfig = BALL_FILTER_CONFIG;
   // Computed getter for displayed balls.
   // • If a search term exists, we build a Fuse instance over the correct data source and return results sorted by relevance.
   // • If filters are active and no search term exists, we display only a slice (up to filterDisplayCount) of the filtered list.
