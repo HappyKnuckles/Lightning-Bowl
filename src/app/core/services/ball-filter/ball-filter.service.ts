@@ -1,13 +1,14 @@
-import { computed, Injectable, Signal, signal } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { BallFilter, CoreType, CoverstockType, Market } from 'src/app/core/models/filter.model';
 import { UtilsService } from '../utils/utils.service';
 import { Ball } from 'src/app/core/models/ball.model';
 import { StorageService } from '../storage/storage.service';
+import { BaseFilterService } from '../base-filter/base-filter.service';
 
 @Injectable({
   providedIn: 'root',
 })
-export class BallFilterService {
+export class BallFilterService extends BaseFilterService<BallFilter, Ball> {
   defaultFilters: BallFilter = {
     brands: [],
     coverstocks: [],
@@ -24,50 +25,28 @@ export class BallFilterService {
     maxDiff: 0.1,
     inArsenal: false,
   };
-  activeFilterCount: Signal<number> = computed(() => {
-    return Object.keys(this.filters()).reduce((count, key) => {
-      const filterValue = this.filters()[key as keyof BallFilter];
-      const defaultValue = this.defaultFilters[key as keyof BallFilter];
-      if (key === 'startDate' || key === 'endDate') {
-        if (!this.utilsService.areDatesEqual(filterValue as string, defaultValue as string)) {
-          return count + 1;
-        }
-      } else if (Array.isArray(filterValue) && Array.isArray(defaultValue)) {
-        if (!this.utilsService.areArraysEqual(filterValue, defaultValue)) {
-          return count + 1;
-        }
-      } else if (filterValue !== defaultValue) {
-        return count + 1;
-      }
-      return count;
-    }, 0);
-  });
 
-  #filters = signal<BallFilter>(this.loadInitialFilters());
-  get filters() {
-    return this.#filters;
-  }
-
-  #filteredBalls = computed(() => {
-    const balls = this.storageService.allBalls();
-    const filters = this.filters();
-    return this.filterBalls(balls, filters);
-  });
   get filteredBalls() {
-    return this.#filteredBalls;
+    return this.filteredItems;
   }
 
   constructor(
-    private utilsService: UtilsService,
+    protected override utilsService: UtilsService,
     private storageService: StorageService,
-  ) {}
-
-  saveFilters(): void {
-    localStorage.setItem('ball-filter', JSON.stringify(this.filters()));
+  ) {
+    super(utilsService);
   }
 
-  resetFilters(): void {
-    this.filters.update(() => ({ ...this.defaultFilters }));
+  getAllItems(): Ball[] {
+    return this.storageService.allBalls();
+  }
+
+  getStorageKey(): string {
+    return 'ball-filter';
+  }
+
+  filterItems(balls: Ball[], filters: BallFilter): Ball[] {
+    return this.filterBalls(balls, filters);
   }
 
   filterBalls(balls: Ball[], filters: BallFilter): Ball[] {
@@ -89,10 +68,5 @@ export class BallFilterService {
       );
     });
     return filteredBalls;
-  }
-
-  loadInitialFilters(): BallFilter {
-    const storedFilter = localStorage.getItem('ball-filter');
-    return storedFilter ? JSON.parse(storedFilter) : { ...this.defaultFilters };
   }
 }
