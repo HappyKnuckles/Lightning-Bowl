@@ -20,7 +20,7 @@ export class PwaInstallService {
 
     setTimeout(() => {
       canShowPrompt = true;
-      if (shouldShowPrompt) {
+      if (shouldShowPrompt && !this.isInstallPromptDismissed() && !this.isAppInstalled()) {
         this.showInstallPromptSubject.next(true);
       }
     }, 10000);
@@ -31,7 +31,7 @@ export class PwaInstallService {
 
       if (interactionCount >= requiredInteractions) {
         canShowPrompt = true;
-        if (shouldShowPrompt) {
+        if (shouldShowPrompt && !this.isInstallPromptDismissed() && !this.isAppInstalled()) {
           this.showInstallPromptSubject.next(true);
         }
         userInteractionEvents.forEach((event) => {
