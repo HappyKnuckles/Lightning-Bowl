@@ -1,19 +1,5 @@
-ion-modal {
-  --background: none;
-  --backdrop-opacity: var(--ion-backdrop-opacity, 0.4) !important;
-  --box-shadow: 0 28px 48px rgb(0 0 0 / 40%) !important;
-
-  ion-datetime {
-    border-radius: 16px;
-    box-shadow: rgba(var(--ion-color-primary), 0.3) 0 10px 15px -3px;
-  }
-}
-
+/* Copy styles from existing game-filter component if needed */
 .confirm-btn {
-  width: 90%;
-  margin: 20px 0 32px;
+  width: 100%;
+  margin: 0;
 }
-
-// ion-datetime-button::part(native) {
-//   font-size: 17px;
-// }

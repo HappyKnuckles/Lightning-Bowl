@@ -1,28 +1,19 @@
-import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit } from '@angular/core';
+import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit, ViewChild } from '@angular/core';
 import { BallFilterService } from 'src/app/core/services/ball-filter/ball-filter.service';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { BallService } from 'src/app/core/services/ball/ball.service';
 import { CommonModule } from '@angular/common';
 import { BallFilter, CoreType, CoverstockType, Market } from 'src/app/core/models/filter.model';
 import {
-  IonButton,
-  IonButtons,
-  IonContent,
   IonDatetime,
   IonDatetimeButton,
-  IonFooter,
-  IonHeader,
   IonInput,
   IonItem,
   IonLabel,
-  IonList,
   IonModal,
   IonSelect,
   IonSelectOption,
-  IonTitle,
   IonToggle,
-  IonToolbar,
-  ModalController,
 } from '@ionic/angular/standalone';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
@@ -32,39 +23,33 @@ import { GenericTypeaheadComponent } from '../generic-typeahead/generic-typeahea
 import { createBallCoreTypeaheadConfig, createBallCoverstockTypeaheadConfig } from '../generic-typeahead/typeahead-configs';
 import { TypeaheadConfig } from '../generic-typeahead/typeahead-config.interface';
 import { Core, Coverstock } from 'src/app/core/models/ball.model';
+import { GenericFilterComponent } from '../generic-filter/generic-filter.component';
+
 @Component({
   selector: 'app-ball-filter',
   templateUrl: './ball-filter.component.html',
   styleUrls: ['./ball-filter.component.scss'],
   standalone: true,
-  providers: [ModalController],
   imports: [
     FormsModule,
-    IonList,
-    IonFooter,
     IonToggle,
     IonModal,
     IonDatetime,
     IonDatetimeButton,
     IonLabel,
     IonInput,
-    IonButton,
     IonItem,
-    IonContent,
-    IonHeader,
-    IonTitle,
-    IonToolbar,
-    IonButtons,
     IonSelect,
-    FormsModule,
-    ReactiveFormsModule,
     CommonModule,
     IonSelectOption,
     GenericTypeaheadComponent,
+    GenericFilterComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class BallFilterComponent implements OnInit {
+  @ViewChild(GenericFilterComponent) genericFilter!: GenericFilterComponent<BallFilter, any>;
+
   markets: Market[] = [Market.ALL, Market.US, Market.INT];
   coreTypes: CoreType[] = [CoreType.ALL, CoreType.ASYMMETRIC, CoreType.SYMMETRIC];
   coverstockTypes: CoverstockType[] = Object.values(CoverstockType);
@@ -75,26 +60,16 @@ export class BallFilterComponent implements OnInit {
 
   constructor(
     public ballFilterService: BallFilterService,
-    private modalCtrl: ModalController,
     public ballService: BallService,
     private storageService: StorageService,
     private toastService: ToastService,
     private loadingService: LoadingService,
   ) {}
+
   ngOnInit() {
     this.presentingElement = document.querySelector('.ion-page')!;
     this.coreTypeaheadConfig = createBallCoreTypeaheadConfig();
     this.coverstockTypeaheadConfig = createBallCoverstockTypeaheadConfig();
-  }
-  cancel(): Promise<boolean> {
-    this.ballFilterService.filters.update(() =>
-      localStorage.getItem('ball-filter') ? JSON.parse(localStorage.getItem('ball-filter')!) : this.ballFilterService.filters,
-    );
-    return this.modalCtrl.dismiss(null, 'cancel');
-  }
-
-  reset(): void {
-    this.ballFilterService.resetFilters();
   }
 
   async updateFilter<T extends keyof BallFilter>(key: T, value: unknown): Promise<void> {
@@ -105,15 +80,6 @@ export class BallFilterComponent implements OnInit {
       ...filters,
       [key]: value,
     }));
-  }
-
-  confirm(): Promise<boolean> {
-    this.ballFilterService.filters.update((filters) => ({
-      ...filters,
-    }));
-    this.ballFilterService.saveFilters();
-    // this.ballFilterService.filterGames(this.games);
-    return this.modalCtrl.dismiss('confirm');
   }
 
   async changeWeight(weight: number): Promise<void> {

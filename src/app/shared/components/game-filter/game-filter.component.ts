@@ -1,7 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, CUSTOM_ELEMENTS_SCHEMA, Input, OnInit } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { ModalController } from '@ionic/angular';
 import {
   IonContent,
   IonHeader,
@@ -27,6 +26,7 @@ import { GameFilterService } from 'src/app/core/services/game-filter/game-filter
 import { SortUtilsService } from 'src/app/core/services/sort-utils/sort-utils.service';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { UtilsService } from 'src/app/core/services/utils/utils.service';
+import { GenericFilterComponent } from '../generic-filter/generic-filter.component';
 
 @Component({
   selector: 'app-game-filter',
@@ -54,6 +54,7 @@ import { UtilsService } from 'src/app/core/services/utils/utils.service';
     ReactiveFormsModule,
     CommonModule,
     IonSelectOption,
+    GenericFilterComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
@@ -71,7 +72,6 @@ export class GameFilterComponent implements OnInit {
   });
 
   constructor(
-    private modalCtrl: ModalController,
     public gameFilterService: GameFilterService,
     private sortUtilsService: SortUtilsService,
     public storageService: StorageService,
@@ -126,27 +126,8 @@ export class GameFilterComponent implements OnInit {
     }
   }
 
-  cancel(): Promise<boolean> {
-    this.gameFilterService.filters.update(() =>
-      localStorage.getItem('game-filter') ? JSON.parse(localStorage.getItem('game-filter')!) : this.gameFilterService.filters(),
-    );
-    return this.modalCtrl.dismiss(null, 'cancel');
-  }
-
   updateFilter<T extends keyof GameFilter>(key: T, value: unknown): void {
     this.gameFilterService.filters.update((filters) => ({ ...filters, [key]: value }));
-  }
-
-  reset(): void {
-    this.gameFilterService.resetFilters();
-  }
-
-  confirm(): Promise<boolean> {
-    this.gameFilterService.filters.update((filters) => ({ ...filters }));
-    this.gameFilterService.saveFilters();
-    // this.filterService.filterGames(this.storageService.games());
-    this.getHighlightedDates();
-    return this.modalCtrl.dismiss('confirm');
   }
 
   private getLeagues(): void {

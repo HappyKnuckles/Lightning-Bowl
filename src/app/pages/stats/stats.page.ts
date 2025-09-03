@@ -57,7 +57,7 @@ import { Filesystem } from '@capacitor/filesystem';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { GenericFilterActiveComponent } from 'src/app/shared/components/generic-filter-active/generic-filter-active.component';
 import { GAME_FILTER_CONFIG } from 'src/app/shared/components/generic-filter-active/filter-configs';
-import { GameFilterNewComponent } from 'src/app/shared/components/game-filter-new/game-filter-new.component';
+import { GameFilterComponent } from 'src/app/shared/components/game-filter/game-filter.component';
 import { SpareDisplayComponent } from 'src/app/shared/components/spare-display/spare-display.component';
 import { StatDisplayComponent } from 'src/app/shared/components/stat-display/stat-display.component';
 import { BallStatsComponent } from '../../shared/components/ball-stats/ball-stats.component';
@@ -180,7 +180,7 @@ export class StatsPage implements OnInit, AfterViewInit {
   async openFilterModal(): Promise<void> {
     // TODO Think if using it like this so highlighted dates are only that match the current filter or not
     const modal = await this.modalCtrl.create({
-      component: GameFilterNewComponent,
+      component: GameFilterComponent,
       componentProps: {},
     });
 
