@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { GenericTypeaheadComponent } from './generic-typeahead.component';
-import { ModalController, IonSearchbar } from '@ionic/angular';
+import { ModalController } from '@ionic/angular';
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
 
 // Mock interfaces for testing
