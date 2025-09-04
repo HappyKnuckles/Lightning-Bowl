@@ -1,4 +1,4 @@
-export interface GameFilter {
+export interface GameFilter extends Record<string, unknown> {
   excludePractice: boolean;
   minScore: number;
   maxScore: number;
@@ -12,7 +12,7 @@ export interface GameFilter {
   endDate?: string;
 }
 
-export interface BallFilter {
+export interface BallFilter extends Record<string, unknown> {
   brands: string[];
   coverstocks: string[];
   coverstockTypes: CoverstockType[];

@@ -31,7 +31,9 @@ import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import { GenericTypeaheadComponent } from '../generic-typeahead/generic-typeahead.component';
 import { createBallCoreTypeaheadConfig, createBallCoverstockTypeaheadConfig } from '../generic-typeahead/typeahead-configs';
 import { TypeaheadConfig } from '../generic-typeahead/typeahead-config.interface';
-import { Core, Coverstock } from 'src/app/core/models/ball.model';
+import { Core, Coverstock, Ball } from 'src/app/core/models/ball.model';
+import { GenericFilterComponent } from '../generic-filter/generic-filter.component';
+
 @Component({
   selector: 'app-ball-filter',
   templateUrl: './ball-filter.component.html',
@@ -56,7 +58,6 @@ import { Core, Coverstock } from 'src/app/core/models/ball.model';
     IonToolbar,
     IonButtons,
     IonSelect,
-    FormsModule,
     ReactiveFormsModule,
     CommonModule,
     IonSelectOption,
@@ -64,7 +65,7 @@ import { Core, Coverstock } from 'src/app/core/models/ball.model';
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
-export class BallFilterComponent implements OnInit {
+export class BallFilterComponent extends GenericFilterComponent<BallFilter, Ball> implements OnInit {
   markets: Market[] = [Market.ALL, Market.US, Market.INT];
   coreTypes: CoreType[] = [CoreType.ALL, CoreType.ASYMMETRIC, CoreType.SYMMETRIC];
   coverstockTypes: CoverstockType[] = Object.values(CoverstockType);
@@ -75,29 +76,39 @@ export class BallFilterComponent implements OnInit {
 
   constructor(
     public ballFilterService: BallFilterService,
-    private modalCtrl: ModalController,
+    modalCtrl: ModalController,
     public ballService: BallService,
     private storageService: StorageService,
     private toastService: ToastService,
     private loadingService: LoadingService,
-  ) {}
+  ) {
+    super(modalCtrl);
+    // Don't assign filterService here, we'll override the methods directly
+  }
+  
   ngOnInit() {
     this.presentingElement = document.querySelector('.ion-page')!;
     this.coreTypeaheadConfig = createBallCoreTypeaheadConfig();
     this.coverstockTypeaheadConfig = createBallCoverstockTypeaheadConfig();
   }
-  cancel(): Promise<boolean> {
+
+  override cancel(): Promise<boolean> {
     this.ballFilterService.filters.update(() =>
-      localStorage.getItem('ball-filter') ? JSON.parse(localStorage.getItem('ball-filter')!) : this.ballFilterService.filters,
+      localStorage.getItem('ball-filter') ? JSON.parse(localStorage.getItem('ball-filter')!) : this.ballFilterService.filters(),
     );
     return this.modalCtrl.dismiss(null, 'cancel');
   }
 
-  reset(): void {
+  override reset(): void {
     this.ballFilterService.resetFilters();
   }
 
-  async updateFilter<T extends keyof BallFilter>(key: T, value: unknown): Promise<void> {
+  override confirm(): Promise<boolean> {
+    this.ballFilterService.saveFilters();
+    return this.modalCtrl.dismiss('confirm');
+  }
+
+  override async updateFilter<T extends keyof BallFilter>(key: T, value: unknown): Promise<void> {
     if (key === 'weight') {
       await this.changeWeight(value as number);
     }
@@ -105,15 +116,6 @@ export class BallFilterComponent implements OnInit {
       ...filters,
       [key]: value,
     }));
-  }
-
-  confirm(): Promise<boolean> {
-    this.ballFilterService.filters.update((filters) => ({
-      ...filters,
-    }));
-    this.ballFilterService.saveFilters();
-    // this.ballFilterService.filterGames(this.games);
-    return this.modalCtrl.dismiss('confirm');
   }
 
   async changeWeight(weight: number): Promise<void> {

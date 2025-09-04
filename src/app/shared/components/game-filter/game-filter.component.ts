@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, CUSTOM_ELEMENTS_SCHEMA, Input, OnInit } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { ModalController } from '@ionic/angular';
+import { ModalController } from '@ionic/angular/standalone';
 import {
   IonContent,
   IonHeader,
@@ -27,6 +27,7 @@ import { GameFilterService } from 'src/app/core/services/game-filter/game-filter
 import { SortUtilsService } from 'src/app/core/services/sort-utils/sort-utils.service';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { UtilsService } from 'src/app/core/services/utils/utils.service';
+import { GenericFilterComponent } from '../generic-filter/generic-filter.component';
 
 @Component({
   selector: 'app-game-filter',
@@ -57,7 +58,7 @@ import { UtilsService } from 'src/app/core/services/utils/utils.service';
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
-export class GameFilterComponent implements OnInit {
+export class GameFilterComponent extends GenericFilterComponent<GameFilter, Game> implements OnInit {
   @Input() filteredGames!: Game[];
   defaultFilters = this.gameFilterService.defaultFilters;
   highlightedDates: { date: string; textColor: string; backgroundColor: string }[] = [];
@@ -71,12 +72,15 @@ export class GameFilterComponent implements OnInit {
   });
 
   constructor(
-    private modalCtrl: ModalController,
+    modalCtrl: ModalController,
     public gameFilterService: GameFilterService,
     private sortUtilsService: SortUtilsService,
     public storageService: StorageService,
     private utilsService: UtilsService,
-  ) {}
+  ) {
+    super(modalCtrl);
+    // Don't assign filterService here, we'll override the methods directly
+  }
 
   ngOnInit(): void {
     if (!this.gameFilterService.filters().startDate && !this.gameFilterService.filters().endDate) {
@@ -88,6 +92,27 @@ export class GameFilterComponent implements OnInit {
     }
     this.getHighlightedDates();
     this.getLeagues();
+  }
+
+  override cancel(): Promise<boolean> {
+    this.gameFilterService.filters.update(() =>
+      localStorage.getItem('game-filter') ? JSON.parse(localStorage.getItem('game-filter')!) : this.gameFilterService.filters(),
+    );
+    return this.modalCtrl.dismiss(null, 'cancel');
+  }
+
+  override reset(): void {
+    this.gameFilterService.resetFilters();
+  }
+
+  override confirm(): Promise<boolean> {
+    this.gameFilterService.saveFilters();
+    this.getHighlightedDates();
+    return this.modalCtrl.dismiss('confirm');
+  }
+
+  override updateFilter<T extends keyof GameFilter>(key: T, value: unknown): void {
+    this.gameFilterService.filters.update((filters) => ({ ...filters, [key]: value }));
   }
 
   startDateChange(event: CustomEvent): void {
@@ -124,29 +149,6 @@ export class GameFilterComponent implements OnInit {
     if (event.detail.value.includes('all')) {
       this.gameFilterService.filters.update((filters) => ({ ...filters, leagues: ['all'] }));
     }
-  }
-
-  cancel(): Promise<boolean> {
-    this.gameFilterService.filters.update(() =>
-      localStorage.getItem('game-filter') ? JSON.parse(localStorage.getItem('game-filter')!) : this.gameFilterService.filters(),
-    );
-    return this.modalCtrl.dismiss(null, 'cancel');
-  }
-
-  updateFilter<T extends keyof GameFilter>(key: T, value: unknown): void {
-    this.gameFilterService.filters.update((filters) => ({ ...filters, [key]: value }));
-  }
-
-  reset(): void {
-    this.gameFilterService.resetFilters();
-  }
-
-  confirm(): Promise<boolean> {
-    this.gameFilterService.filters.update((filters) => ({ ...filters }));
-    this.gameFilterService.saveFilters();
-    // this.filterService.filterGames(this.storageService.games());
-    this.getHighlightedDates();
-    return this.modalCtrl.dismiss('confirm');
   }
 
   private getLeagues(): void {

@@ -17,6 +17,7 @@ export class GameFilterActiveComponent {
     private gameFilterService: GameFilterService,
     private utilsService: UtilsService,
   ) {}
+  
   isFilterActive(key: keyof GameFilter): boolean {
     const defaultFilter = this.gameFilterService.defaultFilters;
     const activeFilters = this.gameFilterService.filters();

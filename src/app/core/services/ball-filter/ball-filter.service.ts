@@ -3,11 +3,12 @@ import { BallFilter, CoreType, CoverstockType, Market } from 'src/app/core/model
 import { UtilsService } from '../utils/utils.service';
 import { Ball } from 'src/app/core/models/ball.model';
 import { StorageService } from '../storage/storage.service';
+import { FilterService } from 'src/app/shared/components/generic-filter/filter-service.interface';
 
 @Injectable({
   providedIn: 'root',
 })
-export class BallFilterService {
+export class BallFilterService implements FilterService<BallFilter, Ball> {
   defaultFilters: BallFilter = {
     brands: [],
     coverstocks: [],

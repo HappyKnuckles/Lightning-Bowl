@@ -13,6 +13,7 @@ import { NgIf } from '@angular/common';
 })
 export class BallFilterActiveComponent {
   constructor(private ballFilterService: BallFilterService) {}
+  
   isFilterActive(key: keyof BallFilter): boolean {
     const defaultFilter = this.ballFilterService.defaultFilters;
     const activeFilters = this.ballFilterService.filters();

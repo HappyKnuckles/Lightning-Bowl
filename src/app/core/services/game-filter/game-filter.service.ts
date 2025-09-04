@@ -3,11 +3,12 @@ import { GameFilter, TimeRange } from 'src/app/core/models/filter.model';
 import { Game } from 'src/app/core/models/game.model';
 import { UtilsService } from '../utils/utils.service';
 import { StorageService } from '../storage/storage.service';
+import { FilterService } from 'src/app/shared/components/generic-filter/filter-service.interface';
 
 @Injectable({
   providedIn: 'root',
 })
-export class GameFilterService {
+export class GameFilterService implements FilterService<GameFilter, Game> {
   defaultFilters: GameFilter = {
     excludePractice: false,
     minScore: 0,
