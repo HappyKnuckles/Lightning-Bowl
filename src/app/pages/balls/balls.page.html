@@ -34,8 +34,9 @@
       showCancelButton="focus"
       debounce="300"></ion-searchbar>
   </ion-toolbar>
-  <ion-toolbar style="text-align: center">
-    <app-ball-filter-active></app-ball-filter-active>
+  <ion-toolbar style="text-align: center" *ngIf="ballFilterService.activeFilterCount() !== 0">
+    <app-generic-filter-active [filters]="currentFilters" [defaultFilters]="defaultFilters" [filterConfigs]="ballFilterConfigs">
+    </app-generic-filter-active>
   </ion-toolbar>
 </ion-header>
 

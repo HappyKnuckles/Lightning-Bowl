@@ -55,7 +55,8 @@ import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { ExcelService } from 'src/app/core/services/excel/excel.service';
 import { Filesystem } from '@capacitor/filesystem';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
-import { GameFilterActiveComponent } from 'src/app/shared/components/game-filter-active/game-filter-active.component';
+import { GenericFilterActiveComponent } from 'src/app/shared/components/generic-filter-active/generic-filter-active.component';
+import { GAME_FILTER_CONFIGS } from 'src/app/shared/components/filter-configs/filter-configs';
 import { GameFilterComponent } from 'src/app/shared/components/game-filter/game-filter.component';
 import { SpareDisplayComponent } from 'src/app/shared/components/spare-display/spare-display.component';
 import { StatDisplayComponent } from 'src/app/shared/components/stat-display/stat-display.component';
@@ -88,7 +89,7 @@ import { BallStatsComponent } from '../../shared/components/ball-stats/ball-stat
     DatePipe,
     StatDisplayComponent,
     SpareDisplayComponent,
-    GameFilterActiveComponent,
+    GenericFilterActiveComponent,
     BallStatsComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -137,6 +138,8 @@ export class StatsPage implements OnInit, AfterViewInit {
   private pinChartInstance: Chart | null = null;
   private throwChartInstance: Chart | null = null;
   private scoreChartInstance: Chart | null = null;
+
+  gameFilterConfigs = GAME_FILTER_CONFIGS;
 
   constructor(
     public loadingService: LoadingService,
@@ -383,5 +386,13 @@ export class StatsPage implements OnInit, AfterViewInit {
       this.toastService.showToast(ToastMessages.chartGenerationError, 'bug', true);
       console.error('Error generating throw chart:', error);
     }
+  }
+
+  get currentFilters(): Record<string, unknown> {
+    return this.gameFilterService.filters() as unknown as Record<string, unknown>;
+  }
+
+  get defaultFilters(): Record<string, unknown> {
+    return this.gameFilterService.defaultFilters as unknown as Record<string, unknown>;
   }
 }

@@ -25,9 +25,6 @@ import {
   IonRefresherContent,
   IonRefresher,
   IonSkeletonText,
-  IonCheckbox,
-  IonItem,
-  IonLabel,
 } from '@ionic/angular/standalone';
 import { Ball } from 'src/app/core/models/ball.model';
 import { addIcons } from 'ionicons';
@@ -43,7 +40,8 @@ import { ImpactStyle } from '@capacitor/haptics';
 import { BallService } from 'src/app/core/services/ball/ball.service';
 import { BallFilterService } from 'src/app/core/services/ball-filter/ball-filter.service';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
-import { BallFilterActiveComponent } from 'src/app/shared/components/ball-filter-active/ball-filter-active.component';
+import { GenericFilterActiveComponent } from 'src/app/shared/components/generic-filter-active/generic-filter-active.component';
+import { BALL_FILTER_CONFIGS } from 'src/app/shared/components/filter-configs/filter-configs';
 import { BallFilterComponent } from 'src/app/shared/components/ball-filter/ball-filter.component';
 import { BallListComponent } from 'src/app/shared/components/ball-list/ball-list.component';
 import { ActivatedRoute } from '@angular/router';
@@ -61,9 +59,6 @@ import { FavoritesService } from 'src/app/core/services/favorites/favorites.serv
   standalone: true,
   providers: [ModalController],
   imports: [
-    IonLabel,
-    IonItem,
-    IonCheckbox,
     IonSkeletonText,
     IonRefresher,
     IonRefresherContent,
@@ -90,7 +85,7 @@ import { FavoritesService } from 'src/app/core/services/favorites/favorites.serv
     CommonModule,
     FormsModule,
     BallListComponent,
-    BallFilterActiveComponent,
+    GenericFilterActiveComponent,
     SearchBlurDirective,
     SortHeaderComponent,
   ],
@@ -100,6 +95,17 @@ export class BallsPage implements OnInit {
   @ViewChild('core', { static: false }) coreModal!: IonModal;
   @ViewChild('coverstock', { static: false }) coverstockModal!: IonModal;
   @ViewChild(IonContent, { static: false }) content!: IonContent;
+
+  ballFilterConfigs = BALL_FILTER_CONFIGS;
+
+  get currentFilters(): Record<string, unknown> {
+    return this.ballFilterService.filters() as unknown as Record<string, unknown>;
+  }
+
+  get defaultFilters(): Record<string, unknown> {
+    return this.ballFilterService.defaultFilters as unknown as Record<string, unknown>;
+  }
+
   balls = signal<Ball[]>([]);
   coreBalls: Ball[] = [];
   coverstockBalls: Ball[] = [];
@@ -407,7 +413,7 @@ export class BallsPage implements OnInit {
   toggleFavorite(event: Event, ball: Ball): void {
     event.stopPropagation();
     const isFavorited = this.favoritesService.toggleBallFavorite(ball.ball_id, ball.core_weight);
-    
+
     if (isFavorited) {
       this.toastService.showToast(`Added ${ball.ball_name} to favorites`, 'heart');
     } else {

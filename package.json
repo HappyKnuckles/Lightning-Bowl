@@ -42,6 +42,8 @@
     "@capacitor/status-bar": "^7.0.0",
     "@capawesome/capacitor-android-edge-to-edge-support": "^7.2.2",
     "@emailjs/browser": "^4.4.1",
+    "@fontsource/material-icons": "^5.2.5",
+    "@fontsource/roboto": "^5.2.6",
     "@ionic/angular": "^8.0.0",
     "@ionic/storage-angular": "^4.0.0",
     "@teamhive/lottie-player": "^1.0.0",
@@ -56,8 +58,10 @@
     "ionicons": "^7.0.0",
     "leaflet": "^1.9.4",
     "leaflet.markercluster": "^1.5.3",
+    "material-design-icons-iconfont": "^6.7.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
+    "typeface-roboto": "^1.1.13",
     "zone.js": "~0.14.2"
   },
   "devDependencies": {
