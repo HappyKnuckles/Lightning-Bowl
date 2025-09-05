@@ -19,17 +19,20 @@ import {
   IonButtons,
   IonButton,
   IonText,
-  IonModal,
+  IonPopover,
   IonRippleEffect,
   IonList,
   IonRefresherContent,
   IonRefresher,
   IonSkeletonText,
+  IonItem,
+  IonLabel,
+  IonModal,
 } from '@ionic/angular/standalone';
 import { Ball } from 'src/app/core/models/ball.model';
 import { addIcons } from 'ionicons';
-import { globeOutline, camera, addOutline, filterOutline, openOutline, closeCircle, heart, heartOutline } from 'ionicons/icons';
-import { InfiniteScrollCustomEvent, ModalController, RefresherCustomEvent, SearchbarCustomEvent } from '@ionic/angular';
+import { globeOutline, camera, addOutline, filterOutline, openOutline, closeCircle, heart, heartOutline, documentTextOutline, addCircleOutline, removeCircleOutline } from 'ionicons/icons';
+import { InfiniteScrollCustomEvent, ModalController, RefresherCustomEvent, SearchbarCustomEvent, AlertController } from '@ionic/angular';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
@@ -46,6 +49,7 @@ import { BallFilterComponent } from 'src/app/shared/components/ball-filter/ball-
 import { BallListComponent } from 'src/app/shared/components/ball-list/ball-list.component';
 import { ActivatedRoute } from '@angular/router';
 import { SearchBlurDirective } from 'src/app/core/directives/search-blur/search-blur.directive';
+import { LongPressDirective } from 'src/app/core/directives/long-press/long-press.directive';
 import { SortHeaderComponent } from 'src/app/shared/components/sort-header/sort-header.component';
 import { SortService } from 'src/app/core/services/sort/sort.service';
 import { BallSortOption, BallSortField, SortDirection } from 'src/app/core/models/sort.model';
@@ -64,6 +68,7 @@ import { FavoritesService } from 'src/app/core/services/favorites/favorites.serv
     IonRefresherContent,
     IonList,
     IonRippleEffect,
+    IonPopover,
     IonModal,
     IonText,
     IonButton,
@@ -87,16 +92,22 @@ import { FavoritesService } from 'src/app/core/services/favorites/favorites.serv
     BallListComponent,
     GenericFilterActiveComponent,
     SearchBlurDirective,
+    LongPressDirective,
     SortHeaderComponent,
+    IonItem,
+    IonLabel,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BallsPage implements OnInit {
   @ViewChild('core', { static: false }) coreModal!: IonModal;
   @ViewChild('coverstock', { static: false }) coverstockModal!: IonModal;
+  @ViewChild('contextMenu', { static: false }) contextMenu!: IonPopover;
   @ViewChild(IonContent, { static: false }) content!: IonContent;
 
   ballFilterConfigs = BALL_FILTER_CONFIGS;
+  selectedBall: Ball | null = null;
+  selectedBallId = '';
 
   get currentFilters(): Record<string, unknown> {
     return this.ballFilterService.filters() as unknown as Record<string, unknown>;
@@ -187,8 +198,9 @@ export class BallsPage implements OnInit {
     public sortService: SortService,
     private networkService: NetworkService,
     public favoritesService: FavoritesService,
+    private alertCtrl: AlertController,
   ) {
-    addIcons({ filterOutline, closeCircle, globeOutline, openOutline, addOutline, camera, heart, heartOutline });
+    addIcons({ filterOutline, closeCircle, globeOutline, openOutline, addOutline, camera, heart, heartOutline, documentTextOutline, addCircleOutline, removeCircleOutline });
     this.searchSubject.subscribe((query) => {
       this.searchTerm.set(query);
       if (this.content) {
@@ -243,7 +255,8 @@ export class BallsPage implements OnInit {
     this.searchSubject.next(query);
   }
 
-  async removeFromArsenal(ball: Ball): Promise<void> {
+  async removeFromArsenal(event: Event, ball: Ball): Promise<void> {
+    event.stopPropagation();
     try {
       this.hapticService.vibrate(ImpactStyle.Light);
       await this.storageService.removeFromArsenal(ball);
@@ -254,7 +267,8 @@ export class BallsPage implements OnInit {
     }
   }
 
-  async saveBallToArsenal(ball: Ball): Promise<void> {
+  async saveBallToArsenal(event: Event, ball: Ball): Promise<void> {
+    event.stopPropagation();
     try {
       this.hapticService.vibrate(ImpactStyle.Light);
       await this.storageService.saveBallToArsenal(ball);
@@ -357,7 +371,8 @@ export class BallsPage implements OnInit {
     }
   }
 
-  async getSameCoreBalls(ball: Ball): Promise<void> {
+  async getSameCoreBalls(event: Event, ball: Ball): Promise<void> {
+    event.stopPropagation();
     try {
       this.hapticService.vibrate(ImpactStyle.Light);
       this.loadingService.setLoading(true);
@@ -375,7 +390,8 @@ export class BallsPage implements OnInit {
     }
   }
 
-  async getSameCoverstockBalls(ball: Ball): Promise<void> {
+  async getSameCoverstockBalls(event: Event, ball: Ball): Promise<void> {
+    event.stopPropagation();
     try {
       this.hapticService.vibrate(ImpactStyle.Light);
       this.loadingService.setLoading(true);
@@ -428,6 +444,100 @@ export class BallsPage implements OnInit {
       setTimeout(() => {
         this.content.scrollToTop(300);
       }, 100);
+    }
+  }
+
+  async showContextMenu(event: PointerEvent, ball: Ball): Promise<void> {
+    try {
+      this.hapticService.vibrate(ImpactStyle.Medium);
+      this.selectedBall = ball;
+      this.selectedBallId = `ball-card-${ball.ball_id}-${ball.core_weight}`;
+      await this.contextMenu.present();
+    } catch (error) {
+      console.error('Error showing context menu:', error);
+      this.toastService.showToast('Error showing context menu', 'bug', true);
+    }
+  }
+
+  async addNoteToball(): Promise<void> {
+    if (!this.selectedBall) return;
+
+    const alert = await this.alertCtrl.create({
+      header: 'Add Note',
+      subHeader: this.selectedBall.ball_name,
+      inputs: [
+        {
+          name: 'note',
+          type: 'textarea',
+          placeholder: 'Enter your personal note about this ball...',
+          value: this.selectedBall.note || '',
+        },
+      ],
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel',
+        },
+        {
+          text: 'Save',
+          handler: (data) => {
+            this.updateBallNote(this.selectedBall!, data.note);
+          },
+        },
+      ],
+    });
+
+    await alert.present();
+  }
+
+  async toggleArsenalFromContext(): Promise<void> {
+    if (!this.selectedBall) return;
+
+    if (this.isInArsenal(this.selectedBall)) {
+      await this.removeFromArsenal(new Event('click'), this.selectedBall);
+    } else {
+      await this.saveBallToArsenal(new Event('click'), this.selectedBall);
+    }
+  }
+
+  async toggleFavoriteFromContext(): Promise<void> {
+    if (!this.selectedBall) return;
+    this.toggleFavorite(new Event('click'), this.selectedBall);
+  }
+
+  isSelectedBallInArsenal(): boolean {
+    return this.selectedBall ? this.isInArsenal(this.selectedBall) : false;
+  }
+
+  isSelectedBallFavorite(): boolean {
+    return this.selectedBall ? this.favoritesService.isBallFavorite(this.selectedBall.ball_id, this.selectedBall.core_weight) : false;
+  }
+
+  async updateBallNote(ball: Ball, note?: string): Promise<void> {
+    try {
+      // Use provided note or existing ball note
+      const updatedNote = note !== undefined ? note : ball.note;
+      ball.note = updatedNote;
+      
+      // Find the ball in all balls and update it
+      const allBalls = this.storageService.allBalls();
+      const ballIndex = allBalls.findIndex(b => b.ball_id === ball.ball_id && b.core_weight === ball.core_weight);
+      if (ballIndex !== -1) {
+        allBalls[ballIndex].note = ball.note;
+      }
+
+      // Also update in arsenal if it exists there
+      const arsenalBalls = this.storageService.arsenal();
+      const arsenalIndex = arsenalBalls.findIndex(b => b.ball_id === ball.ball_id && b.core_weight === ball.core_weight);
+      if (arsenalIndex !== -1) {
+        arsenalBalls[arsenalIndex].note = ball.note;
+        await this.storageService.saveBallToArsenal(ball);
+      }
+
+      this.toastService.showToast(`Note updated for ${ball.ball_name}`, 'checkmark-outline');
+    } catch (error) {
+      console.error(`Error updating note for ball ${ball.ball_name}:`, error);
+      this.toastService.showToast(`Failed to update note for ${ball.ball_name}.`, 'bug', true);
     }
   }
 

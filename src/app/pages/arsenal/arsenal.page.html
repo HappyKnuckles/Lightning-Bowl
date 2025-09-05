@@ -36,7 +36,7 @@
                 </ion-item-option>
               </ion-item-options>
 
-              <ion-item button [id]="ball.ball_id + ball.core_weight">
+              <ion-item button [id]="ball.ball_id + ball.core_weight" appLongPress (longPressed)="showContextMenu($event, ball)">
                 <ion-reorder slot="start">
                   <ion-thumbnail>
                     <ion-img [src]="storageService.url + ball.thumbnail_image"></ion-img>
@@ -46,6 +46,13 @@
                 <ion-label>
                   <p>{{ ball.brand_name }} ({{ ball.release_date }})</p>
                   <h1>{{ ball.ball_name }}</h1>
+                  
+                  <!-- Personal Note Display -->
+                  <div *ngIf="ball.note" class="personal-note">
+                    <ion-icon name="document-text-outline" style="color: var(--ion-color-medium); margin-right: 4px;"></ion-icon>
+                    <span>{{ ball.note }}</span>
+                  </div>
+                  
                   <div class="ball-info">
                     <ion-chip>{{ ball.core_weight }}lbs</ion-chip>
                     <ion-chip>{{ ball.core_type }}</ion-chip>
@@ -103,6 +110,26 @@
     </ion-list>
   </ng-template> -->
 </ion-content>
+
+<!-- Context Menu Popover -->
+<ion-popover #contextMenu [trigger]="selectedBallId" dismissOnSelect="true" alignment="center" side="bottom">
+  <ng-template>
+    <ion-list>
+      <ion-item button (click)="addNoteToball()">
+        <ion-icon name="document-text-outline" slot="start"></ion-icon>
+        <ion-label>Add note to ball</ion-label>
+      </ion-item>
+      <ion-item button (click)="toggleArsenalFromContext()">
+        <ion-icon [name]="isSelectedBallInArsenal() ? 'remove-circle-outline' : 'add-circle-outline'" slot="start"></ion-icon>
+        <ion-label>{{ isSelectedBallInArsenal() ? 'Remove from arsenal' : 'Add to arsenal' }}</ion-label>
+      </ion-item>
+      <ion-item button (click)="toggleFavoriteFromContext()">
+        <ion-icon [name]="isSelectedBallFavorite() ? 'heart' : 'heart-outline'" slot="start"></ion-icon>
+        <ion-label>{{ isSelectedBallFavorite() ? 'Remove from favorites' : 'Add to favorites' }}</ion-label>
+      </ion-item>
+    </ion-list>
+  </ng-template>
+</ion-popover>
 
 <ion-modal *ngFor="let ball of storageService.arsenal()" [trigger]="ball.ball_id + ball.core_weight" #modal>
   <ng-template>
