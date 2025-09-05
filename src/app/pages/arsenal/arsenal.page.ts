@@ -33,12 +33,13 @@ import {
   IonSegmentButton,
   IonSegmentContent,
   IonSegmentView,
+  IonPopover,
 } from '@ionic/angular/standalone';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { Ball } from 'src/app/core/models/ball.model';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { addIcons } from 'ionicons';
-import { chevronBack, add, openOutline, trashOutline, ellipsisVerticalOutline } from 'ionicons/icons';
+import { chevronBack, add, openOutline, trashOutline, ellipsisVerticalOutline, documentTextOutline, addCircleOutline, removeCircleOutline, heart, heartOutline } from 'ionicons/icons';
 import { AlertController, ItemReorderCustomEvent, ModalController } from '@ionic/angular';
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import { ImpactStyle } from '@capacitor/haptics';
@@ -51,6 +52,8 @@ import { createBallTypeaheadConfig } from 'src/app/shared/components/generic-typ
 import { TypeaheadConfig } from 'src/app/shared/components/generic-typeahead/typeahead-config.interface';
 import { Chart } from 'chart.js';
 import { ChartGenerationService } from 'src/app/core/services/chart/chart-generation.service';
+import { LongPressDirective } from 'src/app/core/directives/long-press/long-press.directive';
+import { FavoritesService } from 'src/app/core/services/favorites/favorites.service';
 
 @Component({
   selector: 'app-arsenal',
@@ -94,15 +97,20 @@ import { ChartGenerationService } from 'src/app/core/services/chart/chart-genera
     GenericTypeaheadComponent,
     IonSegmentContent,
     IonSegmentView,
+    LongPressDirective,
+    IonPopover,
   ],
 })
 export class ArsenalPage implements OnInit {
   @ViewChild('core', { static: false }) coreModal!: IonModal;
   @ViewChild('coverstock', { static: false }) coverstockModal!: IonModal;
+  @ViewChild('contextMenu', { static: false }) contextMenu!: IonPopover;
   coverstockBalls: Ball[] = [];
   coreBalls: Ball[] = [];
   presentingElement?: HTMLElement;
   ballTypeaheadConfig!: TypeaheadConfig<Ball>;
+  selectedBall: Ball | null = null;
+  selectedBallId = '';
   ballsWithoutArsenal: Signal<Ball[]> = computed(() =>
     this.storageService
       .allBalls()
@@ -120,8 +128,10 @@ export class ArsenalPage implements OnInit {
     public modalCtrl: ModalController,
     private ballService: BallService,
     private chartGenerationService: ChartGenerationService,
+    public favoritesService: FavoritesService,
+    private alertCtrl: AlertController,
   ) {
-    addIcons({ add, ellipsisVerticalOutline, trashOutline, chevronBack, openOutline });
+    addIcons({ add, ellipsisVerticalOutline, trashOutline, chevronBack, openOutline, documentTextOutline, addCircleOutline, removeCircleOutline, heart, heartOutline });
     effect(() => {
       if (this.selectedSegment() === 'compare') {
         this.generateBallDistributionChart();
@@ -256,6 +266,115 @@ export class ArsenalPage implements OnInit {
       this.toastService.showToast(`Error fetching balls for coverstock ${ball.coverstock_name}`, 'bug', true);
     } finally {
       this.loadingService.setLoading(false);
+    }
+  }
+
+  async showContextMenu(event: PointerEvent, ball: Ball): Promise<void> {
+    try {
+      this.hapticService.vibrate(ImpactStyle.Medium);
+      this.selectedBall = ball;
+      this.selectedBallId = `ball-card-${ball.ball_id}-${ball.core_weight}`;
+      await this.contextMenu.present();
+    } catch (error) {
+      console.error('Error showing context menu:', error);
+      this.toastService.showToast('Error showing context menu', 'bug', true);
+    }
+  }
+
+  async addNoteToball(): Promise<void> {
+    if (!this.selectedBall) return;
+
+    const alert = await this.alertCtrl.create({
+      header: 'Add Note',
+      subHeader: this.selectedBall.ball_name,
+      inputs: [
+        {
+          name: 'note',
+          type: 'textarea',
+          placeholder: 'Enter your personal note about this ball...',
+          value: this.selectedBall.note || '',
+        },
+      ],
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel',
+        },
+        {
+          text: 'Save',
+          handler: (data) => {
+            this.updateBallNote(this.selectedBall!, data.note);
+          },
+        },
+      ],
+    });
+
+    await alert.present();
+  }
+
+  async toggleArsenalFromContext(): Promise<void> {
+    if (!this.selectedBall) return;
+
+    if (this.isSelectedBallInArsenal()) {
+      await this.removeFromArsenal(this.selectedBall);
+    } else {
+      this.saveBallToArsenal([this.selectedBall]);
+    }
+  }
+
+  async toggleFavoriteFromContext(): Promise<void> {
+    if (!this.selectedBall) return;
+    this.toggleFavorite(new Event('click'), this.selectedBall);
+  }
+
+  isSelectedBallInArsenal(): boolean {
+    return this.selectedBall ? this.isInArsenal(this.selectedBall) : false;
+  }
+
+  isSelectedBallFavorite(): boolean {
+    return this.selectedBall ? this.favoritesService.isBallFavorite(this.selectedBall.ball_id, this.selectedBall.core_weight) : false;
+  }
+
+  isInArsenal(ball: Ball): boolean {
+    return this.storageService.arsenal().some((b: Ball) => b.ball_id === ball.ball_id && b.core_weight === ball.core_weight);
+  }
+
+  toggleFavorite(event: Event, ball: Ball): void {
+    event.stopPropagation();
+    const isFavorited = this.favoritesService.toggleBallFavorite(ball.ball_id, ball.core_weight);
+
+    if (isFavorited) {
+      this.toastService.showToast(`Added ${ball.ball_name} to favorites`, 'heart');
+    } else {
+      this.toastService.showToast(`Removed ${ball.ball_name} from favorites`, 'heart-outline');
+    }
+  }
+
+  async updateBallNote(ball: Ball, note?: string): Promise<void> {
+    try {
+      // Use provided note or existing ball note
+      const updatedNote = note !== undefined ? note : ball.note;
+      ball.note = updatedNote;
+      
+      // Find the ball in all balls and update it
+      const allBalls = this.storageService.allBalls();
+      const ballIndex = allBalls.findIndex(b => b.ball_id === ball.ball_id && b.core_weight === ball.core_weight);
+      if (ballIndex !== -1) {
+        allBalls[ballIndex].note = ball.note;
+      }
+
+      // Also update in arsenal if it exists there
+      const arsenalBalls = this.storageService.arsenal();
+      const arsenalIndex = arsenalBalls.findIndex(b => b.ball_id === ball.ball_id && b.core_weight === ball.core_weight);
+      if (arsenalIndex !== -1) {
+        arsenalBalls[arsenalIndex].note = ball.note;
+        await this.storageService.saveBallToArsenal(ball);
+      }
+
+      this.toastService.showToast(`Note updated for ${ball.ball_name}`, 'checkmark-outline');
+    } catch (error) {
+      console.error(`Error updating note for ball ${ball.ball_name}:`, error);
+      this.toastService.showToast(`Failed to update note for ${ball.ball_name}.`, 'bug', true);
     }
   }
 }

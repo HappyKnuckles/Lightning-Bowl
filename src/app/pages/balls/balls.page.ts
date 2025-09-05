@@ -28,12 +28,11 @@ import {
   IonItem,
   IonLabel,
   IonModal,
-  AlertController
 } from '@ionic/angular/standalone';
 import { Ball } from 'src/app/core/models/ball.model';
 import { addIcons } from 'ionicons';
 import { globeOutline, camera, addOutline, filterOutline, openOutline, closeCircle, heart, heartOutline, documentTextOutline, addCircleOutline, removeCircleOutline } from 'ionicons/icons';
-import { InfiniteScrollCustomEvent, ModalController, RefresherCustomEvent, SearchbarCustomEvent, AlertController as IonicAlertController } from '@ionic/angular';
+import { InfiniteScrollCustomEvent, ModalController, RefresherCustomEvent, SearchbarCustomEvent, AlertController } from '@ionic/angular';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
