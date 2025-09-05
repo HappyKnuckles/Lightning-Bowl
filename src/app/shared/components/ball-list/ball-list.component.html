@@ -8,7 +8,7 @@
 <ion-content [fullscreen]="true">
   <ion-list>
     @for (ball of balls; track ball.ball_id) {
-      <ion-item>
+      <ion-item (click)="onBallClick(ball)" button>
         <ion-avatar slot="start">
           <ion-img [src]="storageService.url + ball.thumbnail_image"></ion-img>
         </ion-avatar>

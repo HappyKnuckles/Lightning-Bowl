@@ -159,18 +159,18 @@
 
 <ion-modal [initialBreakpoint]="0.35" [breakpoints]="[0, 0.35, 0.5, 0.75]" #coverstock>
   <ng-template>
-    <app-ball-list [balls]="coverstockBalls" [isCoverstock]="true"></app-ball-list>
+    <app-ball-list [balls]="coverstockBalls" [isCoverstock]="true" (ballSelected)="onBallSelected($event, coverstockModal)"></app-ball-list>
   </ng-template>
 </ion-modal>
 
 <ion-modal [initialBreakpoint]="0.35" [breakpoints]="[0, 0.35, 0.5, 0.75]" #core>
   <ng-template>
-    <app-ball-list [balls]="coreBalls" [isCoverstock]="false"></app-ball-list>
+    <app-ball-list [balls]="coreBalls" [isCoverstock]="false" (ballSelected)="onBallSelected($event, coreModal)"></app-ball-list>
   </ng-template>
 </ion-modal>
 
 <ion-modal [initialBreakpoint]="0.35" [breakpoints]="[0, 0.35, 0.5, 0.75]" #movement>
   <ng-template>
-    <app-ball-list [balls]="movementBalls" [isCoverstock]="false" [title]="'Similar Movement Pattern'"></app-ball-list>
+    <app-ball-list [balls]="movementBalls" [isCoverstock]="false" [title]="'Similar Movement Pattern'" (ballSelected)="onBallSelected($event, movementModal)"></app-ball-list>
   </ng-template>
 </ion-modal>

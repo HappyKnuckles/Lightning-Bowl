@@ -96,6 +96,7 @@ export class BallsPage implements OnInit {
   @ViewChild('coverstock', { static: false }) coverstockModal!: IonModal;
   @ViewChild('movement', { static: false }) movementModal!: IonModal;
   @ViewChild(IonContent, { static: false }) content!: IonContent;
+  @ViewChild(IonSearchbar, { static: false }) searchbar!: IonSearchbar;
 
   ballFilterConfigs = BALL_FILTER_CONFIGS;
 
@@ -467,6 +468,29 @@ export class BallsPage implements OnInit {
   private saveFavoritesFirstSetting(value: boolean): void {
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem('balls-favorites-first', value.toString());
+    }
+  }
+
+  onBallSelected(ball: Ball, modal: IonModal): void {
+    // Close the modal
+    modal.dismiss();
+    
+    // Set the search term to the ball name
+    this.searchTerm.set(ball.ball_name);
+    
+    // Update the searchbar value
+    if (this.searchbar) {
+      this.searchbar.value = ball.ball_name;
+    }
+    
+    // Trigger search
+    this.searchSubject.next(ball.ball_name);
+    
+    // Scroll to top to show search results
+    if (this.content) {
+      setTimeout(() => {
+        this.content.scrollToTop(300);
+      }, 300);
     }
   }
 }
