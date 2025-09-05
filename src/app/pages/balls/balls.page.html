@@ -52,18 +52,9 @@
 
     <ng-template #content>
       @for (ball of displayedBalls; track ball.ball_id) {
-        <ion-card role="article" (click)="openBallDetails(ball)">
+        <ion-card role="article" appLongPress (longPressed)="showContextMenu($event, ball)" [id]="'ball-card-' + ball.ball_id + '-' + ball.core_weight">
           <ion-card-header>
-            <ion-card-title style="display: flex; align-items: center; justify-content: space-between">
-              <span>{{ ball.ball_name }}</span>
-              <ion-button fill="clear" size="default" (click)="toggleFavorite($event, ball)" style="margin: 0; height: auto; min-height: auto">
-                <ion-icon
-                  [name]="favoritesService.isBallFavorite(ball.ball_id, ball.core_weight) ? 'heart' : 'heart-outline'"
-                  slot="icon-only"
-                  style="color: var(--ion-color-primary); font-size: 24px">
-                </ion-icon>
-              </ion-button>
-            </ion-card-title>
+            <ion-card-title>{{ ball.ball_name }}</ion-card-title>
             <ion-card-subtitle>
               {{ ball.brand_name }} ({{ ball.release_date }})
               <ion-icon *ngIf="ball.us_int === 'Overseas'" name="globe-outline" style="vertical-align: text-top"></ion-icon>
@@ -71,6 +62,13 @@
           </ion-card-header>
           <ion-card-content>
             <ion-img [src]="storageService.url + ball.thumbnail_image" style="height: 15vmax" [alt]="'Image for' + ' ' + ball.ball_name"></ion-img>
+            
+            <!-- Personal Note Display -->
+            <div *ngIf="ball.note" class="personal-note">
+              <ion-icon name="document-text-outline" style="color: var(--ion-color-medium); margin-right: 4px;"></ion-icon>
+              <span>{{ ball.note }}</span>
+            </div>
+            
             <div class="ball-info">
               <ion-list lines="none" (click)="getSameCoreBalls($event, ball)" class="ion-activatable ion-ripple-parent list">
                 <div class="core">
@@ -96,8 +94,6 @@
               </ion-list>
             </div>
           </ion-card-content>
-          <ion-button *ngIf="isInArsenal(ball)" style="float: right" fill="clear" (click)="removeFromArsenal($event, ball)"> Remove from arsenal </ion-button>
-          <ion-button *ngIf="!isInArsenal(ball)" style="float: right" fill="clear" (click)="saveBallToArsenal($event, ball)"> Add to arsenal </ion-button>
         </ion-card>
       }
       <!-- Infinite Scroll -->
@@ -148,89 +144,27 @@
   }
 </ion-content>
 
-<ion-modal [initialBreakpoint]="0.35" [breakpoints]="[0, 0.35, 0.5, 0.75]" #ballDetails>
+<!-- Context Menu Popover -->
+<ion-popover #contextMenu [trigger]="selectedBallId" dismissOnSelect="true" alignment="center" side="bottom">
   <ng-template>
-    <ion-content *ngIf="selectedBall">
-      <ion-card>
-        <ion-card-header>
-          <ion-card-title>{{ selectedBall.ball_name }}</ion-card-title>
-          <ion-card-subtitle>{{ selectedBall.brand_name }} ({{ selectedBall.release_date }})</ion-card-subtitle>
-        </ion-card-header>
-        <ion-card-content>
-          <ion-img [src]="storageService.url + selectedBall.thumbnail_image" style="height: 20vmax" [alt]="'Image for' + ' ' + selectedBall.ball_name"></ion-img>
-        </ion-card-content>
-      </ion-card>
-
-      <ion-card>
-        <ion-card-header>
-          <ion-card-title>Coverstock</ion-card-title>
-        </ion-card-header>
-        <ion-card-content>
-          <ion-grid>
-            <ion-row>
-              <ion-col class="header">Type:</ion-col>
-              <ion-col>{{ selectedBall.coverstock_type }}</ion-col>
-            </ion-row>
-            <ion-row>
-              <ion-col class="header">Name:</ion-col>
-              <ion-col>{{ selectedBall.coverstock_name }}</ion-col>
-            </ion-row>
-            <ion-row>
-              <ion-col class="header">Finish:</ion-col>
-              <ion-col>{{ selectedBall.factory_finish }}</ion-col>
-            </ion-row>
-          </ion-grid>
-        </ion-card-content>
-      </ion-card>
-
-      <ion-card>
-        <ion-card-header>
-          <ion-card-title>Core</ion-card-title>
-        </ion-card-header>
-        <ion-card-content>
-          <ion-grid>
-            <ion-row>
-              <ion-col class="header">Name:</ion-col>
-              <ion-col>{{ selectedBall.core_name }}</ion-col>
-            </ion-row>
-            <ion-row>
-              <ion-col class="header">RG:</ion-col>
-              <ion-col>{{ selectedBall.core_rg }}</ion-col>
-            </ion-row>
-            <ion-row>
-              <ion-col class="header">Diff:</ion-col>
-              <ion-col>{{ selectedBall.core_diff }}</ion-col>
-            </ion-row>
-            <ion-row *ngIf="selectedBall.core_int_diff">
-              <ion-col class="header">Int. Diff:</ion-col>
-              <ion-col>{{ selectedBall.core_int_diff }}</ion-col>
-            </ion-row>
-            <ion-row>
-              <ion-col class="header">Type:</ion-col>
-              <ion-col>{{ selectedBall.core_type }}</ion-col>
-            </ion-row>
-          </ion-grid>
-        </ion-card-content>
-      </ion-card>
-
-      <ion-card>
-        <ion-card-header>
-          <ion-card-title>Personal Note</ion-card-title>
-        </ion-card-header>
-        <ion-card-content>
-          <ion-item lines="none">
-            <ion-textarea
-              placeholder="Add a personal note about this ball..."
-              [(ngModel)]="selectedBall.note"
-              [autoGrow]="true"
-              (ionBlur)="updateBallNote(selectedBall)">
-            </ion-textarea>
-          </ion-item>
-        </ion-card-content>
-      </ion-card>
-    </ion-content>
+    <ion-list>
+      <ion-item button (click)="addNoteToball()">
+        <ion-icon name="document-text-outline" slot="start"></ion-icon>
+        <ion-label>Add note to ball</ion-label>
+      </ion-item>
+      <ion-item button (click)="toggleArsenalFromContext()">
+        <ion-icon [name]="isSelectedBallInArsenal() ? 'remove-circle-outline' : 'add-circle-outline'" slot="start"></ion-icon>
+        <ion-label>{{ isSelectedBallInArsenal() ? 'Remove from arsenal' : 'Add to arsenal' }}</ion-label>
+      </ion-item>
+      <ion-item button (click)="toggleFavoriteFromContext()">
+        <ion-icon [name]="isSelectedBallFavorite() ? 'heart' : 'heart-outline'" slot="start"></ion-icon>
+        <ion-label>{{ isSelectedBallFavorite() ? 'Remove from favorites' : 'Add to favorites' }}</ion-label>
+      </ion-item>
+    </ion-list>
   </ng-template>
-</ion-modal>
+</ion-popover>
+
+<!-- Note Input Alert (will be created programmatically) -->
 
 <ion-modal [initialBreakpoint]="0.35" [breakpoints]="[0, 0.35, 0.5, 0.75]" #coverstock>
   <ng-template>
