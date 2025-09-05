@@ -33,6 +33,7 @@ import {
   IonSegmentButton,
   IonSegmentContent,
   IonSegmentView,
+  IonTextarea,
 } from '@ionic/angular/standalone';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { Ball } from 'src/app/core/models/ball.model';
@@ -94,6 +95,7 @@ import { ChartGenerationService } from 'src/app/core/services/chart/chart-genera
     GenericTypeaheadComponent,
     IonSegmentContent,
     IonSegmentView,
+    IonTextarea,
   ],
 })
 export class ArsenalPage implements OnInit {
@@ -211,6 +213,15 @@ export class ArsenalPage implements OnInit {
     } catch (error) {
       console.error('Error saving balls to arsenal:', error);
       this.toastService.showToast(ToastMessages.ballSaveError, 'bug', true);
+    }
+  }
+
+  async updateBallNote(ball: Ball): Promise<void> {
+    try {
+      await this.storageService.saveBallToArsenal(ball);
+    } catch (error) {
+      console.error(`Error updating note for ball ${ball.ball_name}:`, error);
+      this.toastService.showToast(`Failed to update note for ${ball.ball_name}.`, 'bug', true);
     }
   }
 
