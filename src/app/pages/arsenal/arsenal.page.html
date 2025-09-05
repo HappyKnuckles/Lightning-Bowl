@@ -176,22 +176,6 @@
           </ion-grid>
         </ion-card-content>
       </ion-card>
-
-      <ion-card>
-        <ion-card-header>
-          <ion-card-title>Personal Note</ion-card-title>
-        </ion-card-header>
-        <ion-card-content>
-          <ion-item lines="none">
-            <ion-textarea
-              placeholder="Add a personal note about this ball..."
-              [(ngModel)]="ball.note"
-              [autoGrow]="true"
-              (ionBlur)="updateBallNote(ball)">
-            </ion-textarea>
-          </ion-item>
-        </ion-card-content>
-      </ion-card>
     </ion-content>
   </ng-template>
 </ion-modal>

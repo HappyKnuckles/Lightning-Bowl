@@ -25,6 +25,11 @@ import {
   IonRefresherContent,
   IonRefresher,
   IonSkeletonText,
+  IonTextarea,
+  IonGrid,
+  IonRow,
+  IonCol,
+  IonItem,
 } from '@ionic/angular/standalone';
 import { Ball } from 'src/app/core/models/ball.model';
 import { addIcons } from 'ionicons';
@@ -88,15 +93,22 @@ import { FavoritesService } from 'src/app/core/services/favorites/favorites.serv
     GenericFilterActiveComponent,
     SearchBlurDirective,
     SortHeaderComponent,
+    IonTextarea,
+    IonGrid,
+    IonRow,
+    IonCol,
+    IonItem,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BallsPage implements OnInit {
   @ViewChild('core', { static: false }) coreModal!: IonModal;
   @ViewChild('coverstock', { static: false }) coverstockModal!: IonModal;
+  @ViewChild('ballDetails', { static: false }) ballDetailsModal!: IonModal;
   @ViewChild(IonContent, { static: false }) content!: IonContent;
 
   ballFilterConfigs = BALL_FILTER_CONFIGS;
+  selectedBall: Ball | null = null;
 
   get currentFilters(): Record<string, unknown> {
     return this.ballFilterService.filters() as unknown as Record<string, unknown>;
@@ -243,7 +255,8 @@ export class BallsPage implements OnInit {
     this.searchSubject.next(query);
   }
 
-  async removeFromArsenal(ball: Ball): Promise<void> {
+  async removeFromArsenal(event: Event, ball: Ball): Promise<void> {
+    event.stopPropagation();
     try {
       this.hapticService.vibrate(ImpactStyle.Light);
       await this.storageService.removeFromArsenal(ball);
@@ -254,7 +267,8 @@ export class BallsPage implements OnInit {
     }
   }
 
-  async saveBallToArsenal(ball: Ball): Promise<void> {
+  async saveBallToArsenal(event: Event, ball: Ball): Promise<void> {
+    event.stopPropagation();
     try {
       this.hapticService.vibrate(ImpactStyle.Light);
       await this.storageService.saveBallToArsenal(ball);
@@ -357,7 +371,8 @@ export class BallsPage implements OnInit {
     }
   }
 
-  async getSameCoreBalls(ball: Ball): Promise<void> {
+  async getSameCoreBalls(event: Event, ball: Ball): Promise<void> {
+    event.stopPropagation();
     try {
       this.hapticService.vibrate(ImpactStyle.Light);
       this.loadingService.setLoading(true);
@@ -375,7 +390,8 @@ export class BallsPage implements OnInit {
     }
   }
 
-  async getSameCoverstockBalls(ball: Ball): Promise<void> {
+  async getSameCoverstockBalls(event: Event, ball: Ball): Promise<void> {
+    event.stopPropagation();
     try {
       this.hapticService.vibrate(ImpactStyle.Light);
       this.loadingService.setLoading(true);
@@ -428,6 +444,41 @@ export class BallsPage implements OnInit {
       setTimeout(() => {
         this.content.scrollToTop(300);
       }, 100);
+    }
+  }
+
+  async openBallDetails(ball: Ball): Promise<void> {
+    try {
+      this.hapticService.vibrate(ImpactStyle.Light);
+      this.selectedBall = ball;
+      await this.ballDetailsModal.present();
+    } catch (error) {
+      console.error('Error opening ball details:', error);
+      this.toastService.showToast('Error opening ball details', 'bug', true);
+    }
+  }
+
+  async updateBallNote(ball: Ball): Promise<void> {
+    try {
+      // Find the ball in all balls and update it
+      const allBalls = this.storageService.allBalls();
+      const ballIndex = allBalls.findIndex(b => b.ball_id === ball.ball_id && b.core_weight === ball.core_weight);
+      if (ballIndex !== -1) {
+        allBalls[ballIndex].note = ball.note;
+      }
+
+      // Also update in arsenal if it exists there
+      const arsenalBalls = this.storageService.arsenal();
+      const arsenalIndex = arsenalBalls.findIndex(b => b.ball_id === ball.ball_id && b.core_weight === ball.core_weight);
+      if (arsenalIndex !== -1) {
+        arsenalBalls[arsenalIndex].note = ball.note;
+        await this.storageService.saveBallToArsenal(ball);
+      }
+
+      this.toastService.showToast(`Note updated for ${ball.ball_name}`, 'checkmark-outline');
+    } catch (error) {
+      console.error(`Error updating note for ball ${ball.ball_name}:`, error);
+      this.toastService.showToast(`Failed to update note for ${ball.ball_name}.`, 'bug', true);
     }
   }
 
