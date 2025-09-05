@@ -261,4 +261,59 @@ export class BallService {
       throw error;
     }
   }
+
+  async getBallsByMovementPattern(ball: Ball, allBalls: Ball[]): Promise<Ball[]> {
+    try {
+      const ballRg = parseFloat(ball.core_rg);
+      const ballDiff = parseFloat(ball.core_diff);
+
+      // If ball doesn't have valid RG or Diff values, return empty array
+      if (isNaN(ballRg) || isNaN(ballDiff)) {
+        return [];
+      }
+
+      // Define tolerance ranges for similarity
+      const rgTolerance = 0.03; // Within 0.03 for RG
+      const diffTolerance = 0.008; // Within 0.008 for Diff
+
+      const similarBalls = allBalls.filter((otherBall) => {
+        // Exclude the same ball
+        if (otherBall.ball_id === ball.ball_id && otherBall.core_weight === ball.core_weight) {
+          return false;
+        }
+
+        const otherRg = parseFloat(otherBall.core_rg);
+        const otherDiff = parseFloat(otherBall.core_diff);
+
+        // Skip balls without valid RG or Diff values
+        if (isNaN(otherRg) || isNaN(otherDiff)) {
+          return false;
+        }
+
+        // Check if both RG and Diff are within tolerance
+        const rgSimilar = Math.abs(ballRg - otherRg) <= rgTolerance;
+        const diffSimilar = Math.abs(ballDiff - otherDiff) <= diffTolerance;
+
+        return rgSimilar && diffSimilar;
+      });
+
+      // Sort by similarity (closer values first)
+      similarBalls.sort((a, b) => {
+        const aRg = parseFloat(a.core_rg);
+        const aDiff = parseFloat(a.core_diff);
+        const bRg = parseFloat(b.core_rg);
+        const bDiff = parseFloat(b.core_diff);
+
+        const aDistance = Math.sqrt(Math.pow(ballRg - aRg, 2) + Math.pow(ballDiff - aDiff, 2));
+        const bDistance = Math.sqrt(Math.pow(ballRg - bRg, 2) + Math.pow(ballDiff - bDiff, 2));
+
+        return aDistance - bDistance;
+      });
+
+      return similarBalls;
+    } catch (error) {
+      console.error(`Error finding balls with similar movement pattern for ball ID ${ball.ball_id}:`, error);
+      throw error;
+    }
+  }
 }

@@ -94,6 +94,15 @@
                 <p class="info">{{ ball.factory_finish }}</p>
                 <ion-ripple-effect></ion-ripple-effect>
               </ion-list>
+              <ion-list lines="none" (click)="getSimilarMovementBalls(ball)" class="ion-activatable ion-ripple-parent list movement-pattern">
+                <div class="movement">
+                  <h2 class="title">Movement Pattern:</h2>
+                  <ion-icon name="trending-up-outline"></ion-icon>
+                </div>
+                <p class="info">{{ getLengthPotential(ball) }} + {{ getFlarePotential(ball) }}</p>
+                <p class="info">Find similar ball motion</p>
+                <ion-ripple-effect></ion-ripple-effect>
+              </ion-list>
             </div>
           </ion-card-content>
           <ion-button *ngIf="isInArsenal(ball)" style="float: right" fill="clear" (click)="removeFromArsenal(ball)"> Remove from arsenal </ion-button>
@@ -157,5 +166,11 @@
 <ion-modal [initialBreakpoint]="0.35" [breakpoints]="[0, 0.35, 0.5, 0.75]" #core>
   <ng-template>
     <app-ball-list [balls]="coreBalls" [isCoverstock]="false"></app-ball-list>
+  </ng-template>
+</ion-modal>
+
+<ion-modal [initialBreakpoint]="0.35" [breakpoints]="[0, 0.35, 0.5, 0.75]" #movement>
+  <ng-template>
+    <app-ball-list [balls]="movementBalls" [isCoverstock]="false" [title]="'Similar Movement Pattern'"></app-ball-list>
   </ng-template>
 </ion-modal>

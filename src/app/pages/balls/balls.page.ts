@@ -28,7 +28,7 @@ import {
 } from '@ionic/angular/standalone';
 import { Ball } from 'src/app/core/models/ball.model';
 import { addIcons } from 'ionicons';
-import { globeOutline, camera, addOutline, filterOutline, openOutline, closeCircle, heart, heartOutline } from 'ionicons/icons';
+import { globeOutline, camera, addOutline, filterOutline, openOutline, closeCircle, heart, heartOutline, trendingUpOutline } from 'ionicons/icons';
 import { InfiniteScrollCustomEvent, ModalController, RefresherCustomEvent, SearchbarCustomEvent } from '@ionic/angular';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
@@ -94,6 +94,7 @@ import { FavoritesService } from 'src/app/core/services/favorites/favorites.serv
 export class BallsPage implements OnInit {
   @ViewChild('core', { static: false }) coreModal!: IonModal;
   @ViewChild('coverstock', { static: false }) coverstockModal!: IonModal;
+  @ViewChild('movement', { static: false }) movementModal!: IonModal;
   @ViewChild(IonContent, { static: false }) content!: IonContent;
 
   ballFilterConfigs = BALL_FILTER_CONFIGS;
@@ -109,6 +110,7 @@ export class BallsPage implements OnInit {
   balls = signal<Ball[]>([]);
   coreBalls: Ball[] = [];
   coverstockBalls: Ball[] = [];
+  movementBalls: Ball[] = [];
   searchSubject = new Subject<string>();
   searchTerm = signal('');
   favoritesFirst = signal(false);
@@ -188,7 +190,7 @@ export class BallsPage implements OnInit {
     private networkService: NetworkService,
     public favoritesService: FavoritesService,
   ) {
-    addIcons({ filterOutline, closeCircle, globeOutline, openOutline, addOutline, camera, heart, heartOutline });
+    addIcons({ filterOutline, closeCircle, globeOutline, openOutline, addOutline, camera, heart, heartOutline, trendingUpOutline });
     this.searchSubject.subscribe((query) => {
       this.searchTerm.set(query);
       if (this.content) {
@@ -388,6 +390,28 @@ export class BallsPage implements OnInit {
     } catch (error) {
       console.error('Error fetching coverstock balls:', error);
       this.toastService.showToast(`Error fetching balls for coverstock ${ball.coverstock_name}`, 'bug', true);
+    } finally {
+      this.loadingService.setLoading(false);
+    }
+  }
+
+  async getSimilarMovementBalls(ball: Ball): Promise<void> {
+    try {
+      this.hapticService.vibrate(ImpactStyle.Light);
+      this.loadingService.setLoading(true);
+      
+      // Use all available balls for comparison
+      const allBalls = this.storageService.allBalls();
+      this.movementBalls = await this.ballService.getBallsByMovementPattern(ball, allBalls);
+      
+      if (this.movementBalls.length > 0) {
+        await this.movementModal.present();
+      } else {
+        this.toastService.showToast(`No balls found with similar movement pattern to ${ball.ball_name}.`, 'information-circle-outline');
+      }
+    } catch (error) {
+      console.error('Error fetching movement pattern balls:', error);
+      this.toastService.showToast(`Error fetching balls with similar movement pattern`, 'bug', true);
     } finally {
       this.loadingService.setLoading(false);
     }

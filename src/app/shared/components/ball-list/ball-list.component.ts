@@ -14,6 +14,7 @@ import { StorageService } from 'src/app/core/services/storage/storage.service';
 export class BallListComponent {
   @Input() balls: Ball[] = [];
   @Input() isCoverstock = false;
+  @Input() title?: string;
 
   constructor(public storageService: StorageService) {}
 }

@@ -14,27 +14,23 @@ ion-header {
 
 .ball-info {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   margin-top: 8px;
+  gap: 8px;
 
   .list {
     background: none;
     border-radius: 7px;
-
-    &:first-child {
-      padding-left: 20px;
-    }
-
-    &:last-child {
-      padding-right: 20px;
-      text-align: right;
-    }
+    padding-left: 8px;
+    padding-right: 8px;
 
     .core,
-    .coverstock {
+    .coverstock,
+    .movement {
       display: flex;
       gap: 3px;
       position: relative;
+      align-items: center;
     }
 
     .coverstock {
@@ -43,6 +39,23 @@ ion-header {
       ion-icon {
         position: absolute;
         right: -18px;
+      }
+    }
+
+    .movement {
+      justify-content: center;
+      
+      ion-icon {
+        position: absolute;
+        right: -18px;
+      }
+    }
+
+    &.movement-pattern {
+      text-align: center;
+      
+      .info {
+        text-align: center;
       }
     }
 
