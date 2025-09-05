@@ -14,7 +14,7 @@ ion-header {
 
 .ball-info {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
   margin-top: 8px;
   gap: 8px;
 
@@ -25,8 +25,7 @@ ion-header {
     padding-right: 8px;
 
     .core,
-    .coverstock,
-    .movement {
+    .coverstock {
       display: flex;
       gap: 3px;
       position: relative;
@@ -39,23 +38,6 @@ ion-header {
       ion-icon {
         position: absolute;
         right: -18px;
-      }
-    }
-
-    .movement {
-      justify-content: center;
-      
-      ion-icon {
-        position: absolute;
-        right: -18px;
-      }
-    }
-
-    &.movement-pattern {
-      text-align: center;
-      
-      .info {
-        text-align: center;
       }
     }
 

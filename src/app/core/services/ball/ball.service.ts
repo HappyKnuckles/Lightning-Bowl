@@ -297,20 +297,14 @@ export class BallService {
         return rgSimilar && diffSimilar;
       });
 
-      // Sort by similarity (closer values first)
+      // Sort by release date (newest first) and limit to 10
       similarBalls.sort((a, b) => {
-        const aRg = parseFloat(a.core_rg);
-        const aDiff = parseFloat(a.core_diff);
-        const bRg = parseFloat(b.core_rg);
-        const bDiff = parseFloat(b.core_diff);
-
-        const aDistance = Math.sqrt(Math.pow(ballRg - aRg, 2) + Math.pow(ballDiff - aDiff, 2));
-        const bDistance = Math.sqrt(Math.pow(ballRg - bRg, 2) + Math.pow(ballDiff - bDiff, 2));
-
-        return aDistance - bDistance;
+        const dateA = new Date(a.release_date);
+        const dateB = new Date(b.release_date);
+        return dateB.getTime() - dateA.getTime();
       });
 
-      return similarBalls;
+      return similarBalls.slice(0, 10);
     } catch (error) {
       console.error(`Error finding balls with similar movement pattern for ball ID ${ball.ball_id}:`, error);
       throw error;

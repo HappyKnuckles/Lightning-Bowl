@@ -28,7 +28,7 @@ import {
 } from '@ionic/angular/standalone';
 import { Ball } from 'src/app/core/models/ball.model';
 import { addIcons } from 'ionicons';
-import { globeOutline, camera, addOutline, filterOutline, openOutline, closeCircle, heart, heartOutline, trendingUpOutline } from 'ionicons/icons';
+import { globeOutline, camera, addOutline, filterOutline, openOutline, closeCircle, heart, heartOutline } from 'ionicons/icons';
 import { InfiniteScrollCustomEvent, ModalController, RefresherCustomEvent, SearchbarCustomEvent } from '@ionic/angular';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
@@ -190,7 +190,7 @@ export class BallsPage implements OnInit {
     private networkService: NetworkService,
     public favoritesService: FavoritesService,
   ) {
-    addIcons({ filterOutline, closeCircle, globeOutline, openOutline, addOutline, camera, heart, heartOutline, trendingUpOutline });
+    addIcons({ filterOutline, closeCircle, globeOutline, openOutline, addOutline, camera, heart, heartOutline });
     this.searchSubject.subscribe((query) => {
       this.searchTerm.set(query);
       if (this.content) {
