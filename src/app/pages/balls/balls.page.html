@@ -55,7 +55,20 @@
         <ion-card role="article">
           <ion-card-header>
             <ion-card-title style="display: flex; align-items: center; justify-content: space-between">
-              <span>{{ ball.ball_name }}</span>
+              <span
+                (click)="getSimilarMovementBalls(ball)"
+                (keydown.enter)="getSimilarMovementBalls(ball)"
+                (keydown.space)="getSimilarMovementBalls(ball)"
+                tabindex="0"
+                role="button"
+                style="position: relative"
+                [attr.aria-label]="'Find balls with similar movement pattern to ' + ball.ball_name"
+                class="ion-activatable ripple-parent rounded-rectangle"
+                >{{ ball.ball_name }}
+                <ion-icon style="position: absolute; color: rgb(153, 153, 153); font-size: 1rem; right: -18px" name="open-outline"></ion-icon>
+                <ion-ripple-effect style="width: calc(100% + 45px); border-radius: 5px; margin-left: -20px"></ion-ripple-effect
+              ></span>
+
               <ion-button fill="clear" size="default" (click)="toggleFavorite($event, ball)" style="margin: 0; height: auto; min-height: auto">
                 <ion-icon
                   [name]="favoritesService.isBallFavorite(ball.ball_id, ball.core_weight) ? 'heart' : 'heart-outline'"
@@ -150,12 +163,23 @@
 
 <ion-modal [initialBreakpoint]="0.35" [breakpoints]="[0, 0.35, 0.5, 0.75]" #coverstock>
   <ng-template>
-    <app-ball-list [balls]="coverstockBalls" [isCoverstock]="true"></app-ball-list>
+    <app-ball-list [balls]="coverstockBalls" [isCoverstock]="true" (ballSelected)="onBallSelected($event)"></app-ball-list>
   </ng-template>
 </ion-modal>
 
 <ion-modal [initialBreakpoint]="0.35" [breakpoints]="[0, 0.35, 0.5, 0.75]" #core>
   <ng-template>
-    <app-ball-list [balls]="coreBalls" [isCoverstock]="false"></app-ball-list>
+    <app-ball-list [balls]="coreBalls" [isCoverstock]="false" (ballSelected)="onBallSelected($event)"></app-ball-list>
+  </ng-template>
+</ion-modal>
+
+<ion-modal [initialBreakpoint]="0.35" [breakpoints]="[0, 0.35, 0.5, 0.75]" #movement>
+  <ng-template>
+    <!--This is done so i dont have to programmtically create the modal and still have the title of the ball without it being inside the modal-->
+    <app-ball-list
+      [balls]="movementBalls.slice(1, 10)"
+      [isCoverstock]="false"
+      [title]="'Similar reaction to ' + movementBalls[0]!.ball_name"
+      (ballSelected)="onBallSelected($event)"></app-ball-list>
   </ng-template>
 </ion-modal>

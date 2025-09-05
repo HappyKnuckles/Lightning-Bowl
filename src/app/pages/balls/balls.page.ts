@@ -94,6 +94,7 @@ import { FavoritesService } from 'src/app/core/services/favorites/favorites.serv
 export class BallsPage implements OnInit {
   @ViewChild('core', { static: false }) coreModal!: IonModal;
   @ViewChild('coverstock', { static: false }) coverstockModal!: IonModal;
+  @ViewChild('movement', { static: false }) movementModal!: IonModal;
   @ViewChild(IonContent, { static: false }) content!: IonContent;
 
   ballFilterConfigs = BALL_FILTER_CONFIGS;
@@ -109,6 +110,7 @@ export class BallsPage implements OnInit {
   balls = signal<Ball[]>([]);
   coreBalls: Ball[] = [];
   coverstockBalls: Ball[] = [];
+  movementBalls: Ball[] = [];
   searchSubject = new Subject<string>();
   searchTerm = signal('');
   favoritesFirst = signal(false);
@@ -393,6 +395,28 @@ export class BallsPage implements OnInit {
     }
   }
 
+  async getSimilarMovementBalls(ball: Ball): Promise<void> {
+    try {
+      this.hapticService.vibrate(ImpactStyle.Light);
+      this.loadingService.setLoading(true);
+
+      // Use all available balls for comparison
+      const allBalls = this.storageService.allBalls();
+      this.movementBalls = await this.ballService.getBallsByMovementPattern(ball, allBalls);
+
+      if (this.movementBalls.length > 0) {
+        await this.movementModal.present();
+      } else {
+        this.toastService.showToast(`No balls found with similar reaction to ${ball.ball_name}.`, 'information-circle-outline');
+      }
+    } catch (error) {
+      console.error('Error fetching similar reaction balls:', error);
+      this.toastService.showToast(`Error fetching balls with similar reaction`, 'bug', true);
+    } finally {
+      this.loadingService.setLoading(false);
+    }
+  }
+
   isInArsenal(ball: Ball): boolean {
     return this.storageService.arsenal().some((b: Ball) => b.ball_id === ball.ball_id && b.core_weight === ball.core_weight);
   }
@@ -443,6 +467,24 @@ export class BallsPage implements OnInit {
   private saveFavoritesFirstSetting(value: boolean): void {
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem('balls-favorites-first', value.toString());
+    }
+  }
+
+  onBallSelected(ball: Ball): void {
+    // Close the modal
+    // modal.dismiss();
+
+    // Set the search term to the ball name
+    this.searchTerm.set(ball.ball_name);
+
+    // Trigger search
+    this.searchSubject.next(ball.ball_name);
+
+    // Scroll to top to show search results
+    if (this.content) {
+      setTimeout(() => {
+        this.content.scrollToTop(300);
+      }, 300);
     }
   }
 }

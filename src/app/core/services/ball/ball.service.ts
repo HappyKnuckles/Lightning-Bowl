@@ -261,4 +261,65 @@ export class BallService {
       throw error;
     }
   }
+
+  async getBallsByMovementPattern(ball: Ball, allBalls: Ball[]): Promise<Ball[]> {
+    try {
+      const ballRg = parseFloat(ball.core_rg);
+      const ballDiff = parseFloat(ball.core_diff);
+      const ballIntDiff = parseFloat(ball.core_int_diff);
+
+      if (isNaN(ballRg) || isNaN(ballDiff)) {
+        return [];
+      }
+
+      const rgTolerance = 0.03;
+      const diffTolerance = 0.008;
+      const intDiffTolerance = 0.005;
+
+      const similarBalls = allBalls.filter((otherBall) => {
+        if (otherBall.ball_id === ball.ball_id && otherBall.core_weight === ball.core_weight) {
+          return false;
+        }
+
+        if (ball.core_type !== otherBall.core_type) {
+          return false;
+        }
+
+        const otherRg = parseFloat(otherBall.core_rg);
+        const otherDiff = parseFloat(otherBall.core_diff);
+
+        if (isNaN(otherRg) || isNaN(otherDiff)) {
+          return false;
+        }
+
+        const rgSimilar = Math.abs(ballRg - otherRg) <= rgTolerance;
+        const diffSimilar = Math.abs(ballDiff - otherDiff) <= diffTolerance;
+
+        const coverstockSimilar = ball.coverstock_type === otherBall.coverstock_type;
+
+        let intDiffSimilar = true;
+        if (ball.core_type === 'Asymmetric') {
+          const otherIntDiff = parseFloat(otherBall.core_int_diff);
+          if (isNaN(ballIntDiff) || isNaN(otherIntDiff)) {
+            intDiffSimilar = false;
+          } else {
+            intDiffSimilar = Math.abs(ballIntDiff - otherIntDiff) <= intDiffTolerance;
+          }
+        }
+
+        return rgSimilar && diffSimilar && coverstockSimilar && intDiffSimilar;
+      });
+
+      similarBalls.sort((a, b) => {
+        const dateA = new Date(a.release_date);
+        const dateB = new Date(b.release_date);
+        return dateB.getTime() - dateA.getTime();
+      });
+      // add original ball back it to have a title for the modal at index 0 (workaround)
+      return [ball, ...similarBalls.slice(0, 10)];
+    } catch (error) {
+      console.error(`Error finding balls with similar movement pattern for ball ID ${ball.ball_id}:`, error);
+      throw error;
+    }
+  }
 }
