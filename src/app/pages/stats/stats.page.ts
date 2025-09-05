@@ -124,11 +124,13 @@ export class StatsPage implements OnInit, AfterViewInit {
 
     return this.statsService.calculateBowlingStats(filteredGames) as SessionStats;
   });
-  chartViewMode: 'week' | 'game' | 'monthly' = 'game';
+  chartViewMode: 'week' | 'game' | 'monthly' | 'yearly' = 'game';
+  averageChartViewMode: 'daily' | 'weekly' | 'monthly' | 'yearly' = 'monthly';
   selectedSegment = 'Overall';
   segments: string[] = ['Overall', 'Spares', 'Throws', 'Sessions'];
   // Viewchilds and Instances
   @ViewChild('scoreChart', { static: false }) scoreChart?: ElementRef;
+  @ViewChild('averageScoreChart', { static: false }) averageScoreChart?: ElementRef;
   @ViewChild('pinChart', { static: false }) pinChart?: ElementRef;
   @ViewChild('throwChart', { static: false }) throwChart?: ElementRef;
   @ViewChild('scoreDistributionChart', { static: false }) scoreDistributionChart?: ElementRef;
@@ -138,6 +140,7 @@ export class StatsPage implements OnInit, AfterViewInit {
   private pinChartInstance: Chart | null = null;
   private throwChartInstance: Chart | null = null;
   private scoreChartInstance: Chart | null = null;
+  private averageScoreChartInstance: Chart | null = null;
 
   gameFilterConfigs = GAME_FILTER_CONFIGS;
 
@@ -281,6 +284,7 @@ export class StatsPage implements OnInit, AfterViewInit {
     if (this.gameFilterService.filteredGames().length > 0) {
       if (this.selectedSegment === 'Overall') {
         this.generateScoreChart(isReload);
+        this.generateAverageScoreChart(isReload);
         this.generateScoreDistributionChart(isReload);
       } else if (this.selectedSegment === 'Spares') {
         this.generatePinChart(isReload);
@@ -314,11 +318,47 @@ export class StatsPage implements OnInit, AfterViewInit {
       this.chartViewMode = 'week';
     } else if (this.chartViewMode === 'week') {
       this.chartViewMode = 'monthly';
+    } else if (this.chartViewMode === 'monthly') {
+      this.chartViewMode = 'yearly';
     } else {
       this.chartViewMode = 'game';
     }
 
     this.generateScoreChart(true);
+  }
+
+  private toggleAverageChartView() {
+    if (this.averageChartViewMode === 'daily') {
+      this.averageChartViewMode = 'weekly';
+    } else if (this.averageChartViewMode === 'weekly') {
+      this.averageChartViewMode = 'monthly';
+    } else if (this.averageChartViewMode === 'monthly') {
+      this.averageChartViewMode = 'yearly';
+    } else {
+      this.averageChartViewMode = 'daily';
+    }
+
+    this.generateAverageScoreChart(true);
+  }
+
+  private generateAverageScoreChart(isReload?: boolean): void {
+    try {
+      if (!this.averageScoreChart) {
+        return;
+      }
+
+      this.averageScoreChartInstance = this.chartService.generateAverageScoreChart(
+        this.averageScoreChart,
+        this.sortUtilsService.sortGameHistoryByDate([...this.gameFilterService.filteredGames()], true),
+        this.averageScoreChartInstance!,
+        this.averageChartViewMode,
+        () => this.toggleAverageChartView(),
+        isReload,
+      );
+    } catch (error) {
+      this.toastService.showToast(ToastMessages.chartGenerationError, 'bug', true);
+      console.error('Error generating average score chart:', error);
+    }
   }
 
   private generateScoreDistributionChart(isReload?: boolean): void {
