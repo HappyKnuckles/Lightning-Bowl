@@ -16,20 +16,25 @@ ion-header {
   display: grid;
   grid-template-columns: 1fr 1fr;
   margin-top: 8px;
-  gap: 8px;
 
   .list {
     background: none;
     border-radius: 7px;
-    padding-left: 8px;
-    padding-right: 8px;
+
+    &:first-child {
+      padding-left: 20px;
+    }
+
+    &:last-child {
+      padding-right: 20px;
+      text-align: right;
+    }
 
     .core,
     .coverstock {
       display: flex;
       gap: 3px;
       position: relative;
-      align-items: center;
     }
 
     .coverstock {
