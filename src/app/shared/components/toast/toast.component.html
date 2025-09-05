@@ -12,7 +12,7 @@
     (click)="toastRef.dismiss()"
     swipeGesture="vertical"
     [ngStyle]="{
-      transform: 'translateY(-' + getToastOffset(i) + 'px)',
+      transform: 'translateY(-' + i * 80 + 'px)',
     }">
   </ion-toast>
 </ng-container>
