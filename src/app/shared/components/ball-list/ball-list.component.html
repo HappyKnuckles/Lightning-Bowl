@@ -8,6 +8,9 @@
 <ion-content [fullscreen]="true">
   <ion-list>
     @for (ball of balls; track ball.ball_id) {
+      <!-- Überlegen ob es nicht sinnvoller ist das mit router navigate und searchparams besser ist
+        Falls jemals nochmal gebraucht 
+      -->
       <ion-item (click)="onBallClick(ball)" button>
         <ion-avatar slot="start">
           <ion-img [src]="storageService.url + ball.thumbnail_image"></ion-img>

@@ -266,48 +266,57 @@ export class BallService {
     try {
       const ballRg = parseFloat(ball.core_rg);
       const ballDiff = parseFloat(ball.core_diff);
+      const ballIntDiff = parseFloat(ball.core_int_diff);
 
-      // If ball doesn't have valid RG or Diff values, return empty array
       if (isNaN(ballRg) || isNaN(ballDiff)) {
         return [];
       }
 
-      // Define tolerance ranges for similarity
-      const rgTolerance = 0.03; // Within 0.03 for RG
-      const diffTolerance = 0.008; // Within 0.008 for Diff
+      const rgTolerance = 0.03;
+      const diffTolerance = 0.008;
+      const intDiffTolerance = 0.005;
 
       const similarBalls = allBalls.filter((otherBall) => {
-        // Exclude the same ball
         if (otherBall.ball_id === ball.ball_id && otherBall.core_weight === ball.core_weight) {
+          return false;
+        }
+
+        if (ball.core_type !== otherBall.core_type) {
           return false;
         }
 
         const otherRg = parseFloat(otherBall.core_rg);
         const otherDiff = parseFloat(otherBall.core_diff);
 
-        // Skip balls without valid RG or Diff values
         if (isNaN(otherRg) || isNaN(otherDiff)) {
           return false;
         }
 
-        // Check if both RG and Diff are within tolerance
         const rgSimilar = Math.abs(ballRg - otherRg) <= rgTolerance;
         const diffSimilar = Math.abs(ballDiff - otherDiff) <= diffTolerance;
 
-        // Check if coverstock type matches
         const coverstockSimilar = ball.coverstock_type === otherBall.coverstock_type;
 
-        return rgSimilar && diffSimilar && coverstockSimilar;
+        let intDiffSimilar = true;
+        if (ball.core_type === 'Asymmetric') {
+          const otherIntDiff = parseFloat(otherBall.core_int_diff);
+          if (isNaN(ballIntDiff) || isNaN(otherIntDiff)) {
+            intDiffSimilar = false;
+          } else {
+            intDiffSimilar = Math.abs(ballIntDiff - otherIntDiff) <= intDiffTolerance;
+          }
+        }
+
+        return rgSimilar && diffSimilar && coverstockSimilar && intDiffSimilar;
       });
 
-      // Sort by release date (newest first) and limit to 10
       similarBalls.sort((a, b) => {
         const dateA = new Date(a.release_date);
         const dateB = new Date(b.release_date);
         return dateB.getTime() - dateA.getTime();
       });
-
-      return similarBalls.slice(0, 10);
+      // add original ball back it to have a title for the modal at index 0 (workaround)
+      return [ball, ...similarBalls.slice(0, 10)];
     } catch (error) {
       console.error(`Error finding balls with similar movement pattern for ball ID ${ball.ball_id}:`, error);
       throw error;

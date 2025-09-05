@@ -96,7 +96,6 @@ export class BallsPage implements OnInit {
   @ViewChild('coverstock', { static: false }) coverstockModal!: IonModal;
   @ViewChild('movement', { static: false }) movementModal!: IonModal;
   @ViewChild(IonContent, { static: false }) content!: IonContent;
-  @ViewChild(IonSearchbar, { static: false }) searchbar!: IonSearchbar;
 
   ballFilterConfigs = BALL_FILTER_CONFIGS;
 
@@ -400,19 +399,19 @@ export class BallsPage implements OnInit {
     try {
       this.hapticService.vibrate(ImpactStyle.Light);
       this.loadingService.setLoading(true);
-      
+
       // Use all available balls for comparison
       const allBalls = this.storageService.allBalls();
       this.movementBalls = await this.ballService.getBallsByMovementPattern(ball, allBalls);
-      
+
       if (this.movementBalls.length > 0) {
         await this.movementModal.present();
       } else {
-        this.toastService.showToast(`No balls found with similar movement pattern to ${ball.ball_name}.`, 'information-circle-outline');
+        this.toastService.showToast(`No balls found with similar reaction to ${ball.ball_name}.`, 'information-circle-outline');
       }
     } catch (error) {
-      console.error('Error fetching movement pattern balls:', error);
-      this.toastService.showToast(`Error fetching balls with similar movement pattern`, 'bug', true);
+      console.error('Error fetching similar reaction balls:', error);
+      this.toastService.showToast(`Error fetching balls with similar reaction`, 'bug', true);
     } finally {
       this.loadingService.setLoading(false);
     }
@@ -471,21 +470,16 @@ export class BallsPage implements OnInit {
     }
   }
 
-  onBallSelected(ball: Ball, modal: IonModal): void {
+  onBallSelected(ball: Ball): void {
     // Close the modal
-    modal.dismiss();
-    
+    // modal.dismiss();
+
     // Set the search term to the ball name
     this.searchTerm.set(ball.ball_name);
-    
-    // Update the searchbar value
-    if (this.searchbar) {
-      this.searchbar.value = ball.ball_name;
-    }
-    
+
     // Trigger search
     this.searchSubject.next(ball.ball_name);
-    
+
     // Scroll to top to show search results
     if (this.content) {
       setTimeout(() => {
