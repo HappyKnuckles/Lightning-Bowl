@@ -294,7 +294,10 @@ export class BallService {
         const rgSimilar = Math.abs(ballRg - otherRg) <= rgTolerance;
         const diffSimilar = Math.abs(ballDiff - otherDiff) <= diffTolerance;
 
-        return rgSimilar && diffSimilar;
+        // Check if coverstock type matches
+        const coverstockSimilar = ball.coverstock_type === otherBall.coverstock_type;
+
+        return rgSimilar && diffSimilar && coverstockSimilar;
       });
 
       // Sort by release date (newest first) and limit to 10
