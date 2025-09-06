@@ -152,7 +152,7 @@ export class ChartGenerationService {
     scoreChart: ElementRef,
     games: Game[],
     existingChartInstance: Chart | undefined,
-    viewMode?: 'week' | 'game' | 'monthly',
+    viewMode?: 'week' | 'game' | 'monthly' | 'yearly',
     onToggleView?: () => void,
     isReload?: boolean,
   ): Chart {
@@ -262,7 +262,7 @@ export class ChartGenerationService {
             labels: gameLabels,
             datasets: [
               {
-                label: 'Average',
+                label: 'Average over time',
                 data: overallAverages,
                 backgroundColor: 'rgba(75, 192, 192, 0.2)',
                 borderColor: 'rgba(75, 192, 192, 1)',
@@ -420,6 +420,146 @@ export class ChartGenerationService {
       }
     } catch (error) {
       console.error('Error generating score distribution chart:', error);
+      throw error;
+    }
+  }
+
+  generateAverageScoreChart(
+    scoreChart: ElementRef,
+    games: Game[],
+    existingChartInstance: Chart | undefined,
+    viewMode?: 'daily' | 'weekly' | 'monthly' | 'yearly',
+    onToggleView?: () => void,
+    isReload?: boolean,
+  ): Chart {
+    try {
+      const currentViewMode = viewMode || 'monthly';
+      const { gameLabels, averages, gamesPlayedDaily } = this.calculateAverageScoreChartData(games, currentViewMode);
+      const ctx = scoreChart.nativeElement;
+      let chartInstance: Chart;
+      if (isReload && existingChartInstance) {
+        existingChartInstance.destroy();
+      }
+
+      const plugins: Plugin<'line' | 'bar'>[] = [];
+      const options: ChartOptions<'line' | 'bar'> = {
+        scales: {
+          y: { beginAtZero: true, suggestedMax: 300, ticks: { font: { size: 14 } } },
+          y1: { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false }, ticks: { font: { size: 14 } } },
+        },
+        plugins: {
+          title: { display: true, text: `Average Score`, color: 'white', font: { size: 20 } },
+          legend: { display: true, labels: { font: { size: 15 } } },
+        },
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { intersect: false },
+      };
+
+      if (onToggleView) {
+        const toggleButtonPlugin: Plugin<'line' | 'bar'> = {
+          id: 'toggleButton',
+          afterDraw: (chart: Chart) => {
+            const { ctx } = chart;
+            const titleBlock = (chart as { titleBlock?: { top: number; height: number } }).titleBlock;
+
+            if (!titleBlock || !titleBlock.height) {
+              return;
+            }
+
+            const baseRatio = 35;
+            const minFontSize = 10;
+            const maxFontSize = 14;
+            const padding = 10;
+
+            const fontSize = Math.max(minFontSize, Math.min(maxFontSize, chart.width / baseRatio));
+            ctx.font = `bold ${fontSize}px Arial`;
+
+            const buttonText = `${
+              currentViewMode === 'daily' ? 'Weekly' : currentViewMode === 'weekly' ? 'Monthly' : currentViewMode === 'monthly' ? 'Yearly' : 'Daily'
+            }`;
+            const textMetrics = ctx.measureText(buttonText);
+
+            const button = {
+              width: textMetrics.width + padding * 2,
+              height: fontSize + padding,
+              x: chart.width - (textMetrics.width + padding * 2) - 10,
+              y: titleBlock.top + (titleBlock.height - (fontSize + padding)) / 2,
+            };
+
+            (chart as { toggleButtonBounds?: typeof button }).toggleButtonBounds = button;
+
+            ctx.save();
+            ctx.fillStyle = 'rgba(153, 102, 255, 0.8)';
+            ctx.strokeStyle = 'rgba(153, 102, 255, 1)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.roundRect(button.x, button.y, button.width, button.height, 5);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = 'white';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(buttonText, button.x + button.width / 2, button.y + button.height / 2);
+            ctx.restore();
+          },
+        };
+        plugins.push(toggleButtonPlugin);
+      }
+
+      if (existingChartInstance && !isReload) {
+        existingChartInstance.data.labels = gameLabels;
+        existingChartInstance.data.datasets[0].data = averages;
+        existingChartInstance.data.datasets[1].data = gamesPlayedDaily;
+        existingChartInstance.update();
+        return existingChartInstance;
+      } else {
+        chartInstance = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: gameLabels,
+            datasets: [
+              {
+                label: `Average Score`,
+                data: averages,
+                borderColor: 'rgba(75, 192, 192, 1)',
+                backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                borderWidth: 2,
+                fill: false,
+              },
+              {
+                label: 'Games Played',
+                data: gamesPlayedDaily,
+                type: 'bar',
+                backgroundColor: 'rgba(153, 102, 255, 0.1)',
+                borderColor: 'rgba(153, 102, 255, .5)',
+                borderWidth: 1,
+                yAxisID: 'y1',
+              },
+            ],
+          },
+          options: options,
+          plugins: plugins,
+        });
+
+        if (onToggleView) {
+          chartInstance.canvas.onclick = (event) => {
+            const rect = chartInstance.canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            const button = { x: chartInstance.width - 120, y: 10, width: 110, height: 30 };
+
+            if (x >= button.x && x <= button.x + button.width && y >= button.y && y <= button.y + button.height) {
+              onToggleView();
+            }
+          };
+        }
+      }
+
+      return chartInstance;
+    } catch (error) {
+      console.error('Error generating average score chart:', error);
       throw error;
     }
   }
@@ -1260,11 +1400,13 @@ export class ChartGenerationService {
     }
   }
 
-  public calculateScoreChartData(gameHistory: Game[], viewMode: 'week' | 'game' | 'monthly' = 'game') {
+  public calculateScoreChartData(gameHistory: Game[], viewMode: 'week' | 'game' | 'monthly' | 'yearly' = 'game') {
     if (viewMode === 'week') {
       return this.calculateWeeklyScoreChartData(gameHistory);
     } else if (viewMode === 'monthly') {
       return this.calculateMonthlyScoreChartData(gameHistory);
+    } else if (viewMode === 'yearly') {
+      return this.calculateYearlyScoreChartData(gameHistory);
     } else {
       return this.calculatePerGameScoreChartData(gameHistory);
     }
@@ -1465,5 +1607,207 @@ export class ChartGenerationService {
     const day = d.getDay();
     const diff = d.getDate() - (day === 0 ? 6 : day - 1);
     return new Date(d.setDate(diff));
+  }
+
+  private calculateYearlyScoreChartData(gameHistory: Game[]) {
+    try {
+      const scoresByYear: Record<string, number[]> = {};
+      gameHistory.forEach((game: Game) => {
+        const gameDate = new Date(game.date);
+        const yearKey = gameDate.getFullYear().toString();
+
+        if (!scoresByYear[yearKey]) {
+          scoresByYear[yearKey] = [];
+        }
+        scoresByYear[yearKey].push(game.totalScore);
+      });
+
+      const sortedYearKeys = Object.keys(scoresByYear).sort();
+
+      const gameLabels = sortedYearKeys;
+
+      let cumulativeSum = 0;
+      let cumulativeCount = 0;
+
+      const overallAverages = sortedYearKeys.map((yearKey) => {
+        cumulativeSum += scoresByYear[yearKey].reduce((sum, score) => sum + score, 0);
+        cumulativeCount += scoresByYear[yearKey].length;
+        return cumulativeSum / cumulativeCount;
+      });
+
+      const differences = sortedYearKeys.map((yearKey, index) => {
+        const yearlySum = scoresByYear[yearKey].reduce((sum, score) => sum + score, 0);
+        const yearlyAverage = yearlySum / scoresByYear[yearKey].length;
+        return yearlyAverage - overallAverages[index];
+      });
+
+      const formattedAverages = overallAverages.map((average) => parseFloat(new DecimalPipe('en').transform(average, '1.2-2')!));
+      const formattedDifferences = differences.map((difference) => parseFloat(new DecimalPipe('en').transform(difference, '1.2-2')!));
+      const gamesPlayedYearly = sortedYearKeys.map((yearKey) => scoresByYear[yearKey].length);
+
+      return { gameLabels, overallAverages: formattedAverages, differences: formattedDifferences, gamesPlayedDaily: gamesPlayedYearly };
+    } catch (error) {
+      console.error('Error calculating yearly score chart data:', error);
+      throw error;
+    }
+  }
+
+  public calculateAverageScoreChartData(gameHistory: Game[], viewMode: 'daily' | 'weekly' | 'monthly' | 'yearly' = 'monthly') {
+    if (viewMode === 'daily') {
+      return this.calculateDailyAverageScoreData(gameHistory);
+    } else if (viewMode === 'weekly') {
+      return this.calculateWeeklyAverageScoreData(gameHistory);
+    } else if (viewMode === 'monthly') {
+      return this.calculateMonthlyAverageScoreData(gameHistory);
+    } else {
+      return this.calculateYearlyAverageScoreData(gameHistory);
+    }
+  }
+
+  private calculateDailyAverageScoreData(gameHistory: Game[]) {
+    try {
+      const scoresByDate: Record<string, number[]> = {};
+      gameHistory.forEach((game: Game) => {
+        const date = new Date(game.date).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' });
+        if (!scoresByDate[date]) {
+          scoresByDate[date] = [];
+        }
+        scoresByDate[date].push(game.totalScore);
+      });
+
+      const sortedDates = Object.keys(scoresByDate).sort((a, b) => {
+        const [dayA, monthA, yearA] = a.split('.').map(Number);
+        const [dayB, monthB, yearB] = b.split('.').map(Number);
+        return new Date(2000 + yearA, monthA - 1, dayA).getTime() - new Date(2000 + yearB, monthB - 1, dayB).getTime();
+      });
+
+      const gameLabels = sortedDates;
+      const averages = sortedDates.map((date) => {
+        const dailySum = scoresByDate[date].reduce((sum, score) => sum + score, 0);
+        return dailySum / scoresByDate[date].length;
+      });
+
+      const formattedAverages = averages.map((average) => parseFloat(new DecimalPipe('en').transform(average, '1.2-2')!));
+      const gamesPlayedDaily = sortedDates.map((date) => scoresByDate[date].length);
+
+      return { gameLabels, averages: formattedAverages, gamesPlayedDaily };
+    } catch (error) {
+      console.error('Error calculating daily average score data:', error);
+      throw error;
+    }
+  }
+
+  private calculateWeeklyAverageScoreData(gameHistory: Game[]) {
+    try {
+      const scoresByWeek: Record<string, number[]> = {};
+      gameHistory.forEach((game: Game) => {
+        const gameDate = new Date(game.date);
+        const startOfWeek = this.getStartOfWeek(gameDate);
+        const weekKey = startOfWeek.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' });
+
+        if (!scoresByWeek[weekKey]) {
+          scoresByWeek[weekKey] = [];
+        }
+        scoresByWeek[weekKey].push(game.totalScore);
+      });
+
+      const sortedWeekKeys = Object.keys(scoresByWeek).sort((a, b) => {
+        const [dayA, monthA, yearA] = a.split('.').map(Number);
+        const [dayB, monthB, yearB] = b.split('.').map(Number);
+        return new Date(2000 + yearA, monthA - 1, dayA).getTime() - new Date(2000 + yearB, monthB - 1, dayB).getTime();
+      });
+
+      const gameLabels = sortedWeekKeys.map((weekKey) => {
+        const [day, month, year] = weekKey.split('.').map(Number);
+        const startDate = new Date(2000 + year, month - 1, day);
+        const endDate = new Date(startDate);
+        endDate.setDate(startDate.getDate() + 6);
+        return `${startDate.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })} - ${endDate.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })}`;
+      });
+
+      const averages = sortedWeekKeys.map((weekKey) => {
+        const weeklySum = scoresByWeek[weekKey].reduce((sum, score) => sum + score, 0);
+        return weeklySum / scoresByWeek[weekKey].length;
+      });
+
+      const formattedAverages = averages.map((average) => parseFloat(new DecimalPipe('en').transform(average, '1.2-2')!));
+      const gamesPlayedWeekly = sortedWeekKeys.map((weekKey) => scoresByWeek[weekKey].length);
+
+      return { gameLabels, averages: formattedAverages, gamesPlayedDaily: gamesPlayedWeekly };
+    } catch (error) {
+      console.error('Error calculating weekly average score data:', error);
+      throw error;
+    }
+  }
+
+  private calculateMonthlyAverageScoreData(gameHistory: Game[]) {
+    try {
+      const scoresByMonth: Record<string, number[]> = {};
+      gameHistory.forEach((game: Game) => {
+        const gameDate = new Date(game.date);
+        const monthKey = `${gameDate.getFullYear()}-${(gameDate.getMonth() + 1).toString().padStart(2, '0')}`;
+
+        if (!scoresByMonth[monthKey]) {
+          scoresByMonth[monthKey] = [];
+        }
+        scoresByMonth[monthKey].push(game.totalScore);
+      });
+
+      const sortedMonthKeys = Object.keys(scoresByMonth).sort();
+
+      const gameLabels = sortedMonthKeys.map((monthKey) => {
+        const [year, month] = monthKey.split('-').map(Number);
+        const date = new Date(year, month - 1, 1);
+        return date.toLocaleDateString(undefined, {
+          month: 'short',
+          year: 'numeric',
+        });
+      });
+
+      const averages = sortedMonthKeys.map((monthKey) => {
+        const monthlySum = scoresByMonth[monthKey].reduce((sum, score) => sum + score, 0);
+        return monthlySum / scoresByMonth[monthKey].length;
+      });
+
+      const formattedAverages = averages.map((average) => parseFloat(new DecimalPipe('en').transform(average, '1.2-2')!));
+      const gamesPlayedMonthly = sortedMonthKeys.map((monthKey) => scoresByMonth[monthKey].length);
+
+      return { gameLabels, averages: formattedAverages, gamesPlayedDaily: gamesPlayedMonthly };
+    } catch (error) {
+      console.error('Error calculating monthly average score data:', error);
+      throw error;
+    }
+  }
+
+  private calculateYearlyAverageScoreData(gameHistory: Game[]) {
+    try {
+      const scoresByYear: Record<string, number[]> = {};
+      gameHistory.forEach((game: Game) => {
+        const gameDate = new Date(game.date);
+        const yearKey = gameDate.getFullYear().toString();
+
+        if (!scoresByYear[yearKey]) {
+          scoresByYear[yearKey] = [];
+        }
+        scoresByYear[yearKey].push(game.totalScore);
+      });
+
+      const sortedYearKeys = Object.keys(scoresByYear).sort();
+
+      const gameLabels = sortedYearKeys;
+
+      const averages = sortedYearKeys.map((yearKey) => {
+        const yearlySum = scoresByYear[yearKey].reduce((sum, score) => sum + score, 0);
+        return yearlySum / scoresByYear[yearKey].length;
+      });
+
+      const formattedAverages = averages.map((average) => parseFloat(new DecimalPipe('en').transform(average, '1.2-2')!));
+      const gamesPlayedYearly = sortedYearKeys.map((yearKey) => scoresByYear[yearKey].length);
+
+      return { gameLabels, averages: formattedAverages, gamesPlayedDaily: gamesPlayedYearly };
+    } catch (error) {
+      console.error('Error calculating yearly average score data:', error);
+      throw error;
+    }
   }
 }
