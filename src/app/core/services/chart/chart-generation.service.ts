@@ -262,7 +262,7 @@ export class ChartGenerationService {
             labels: gameLabels,
             datasets: [
               {
-                label: 'Average',
+                label: 'Average over time',
                 data: overallAverages,
                 backgroundColor: 'rgba(75, 192, 192, 0.2)',
                 borderColor: 'rgba(75, 192, 192, 1)',
@@ -420,6 +420,146 @@ export class ChartGenerationService {
       }
     } catch (error) {
       console.error('Error generating score distribution chart:', error);
+      throw error;
+    }
+  }
+
+  generateAverageScoreChart(
+    scoreChart: ElementRef,
+    games: Game[],
+    existingChartInstance: Chart | undefined,
+    viewMode?: 'daily' | 'weekly' | 'monthly' | 'yearly',
+    onToggleView?: () => void,
+    isReload?: boolean,
+  ): Chart {
+    try {
+      const currentViewMode = viewMode || 'monthly';
+      const { gameLabels, averages, gamesPlayedDaily } = this.calculateAverageScoreChartData(games, currentViewMode);
+      const ctx = scoreChart.nativeElement;
+      let chartInstance: Chart;
+      if (isReload && existingChartInstance) {
+        existingChartInstance.destroy();
+      }
+
+      const plugins: Plugin<'line' | 'bar'>[] = [];
+      const options: ChartOptions<'line' | 'bar'> = {
+        scales: {
+          y: { beginAtZero: true, suggestedMax: 300, ticks: { font: { size: 14 } } },
+          y1: { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false }, ticks: { font: { size: 14 } } },
+        },
+        plugins: {
+          title: { display: true, text: `Average Score`, color: 'white', font: { size: 20 } },
+          legend: { display: true, labels: { font: { size: 15 } } },
+        },
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { intersect: false },
+      };
+
+      if (onToggleView) {
+        const toggleButtonPlugin: Plugin<'line' | 'bar'> = {
+          id: 'toggleButton',
+          afterDraw: (chart: Chart) => {
+            const { ctx } = chart;
+            const titleBlock = (chart as { titleBlock?: { top: number; height: number } }).titleBlock;
+
+            if (!titleBlock || !titleBlock.height) {
+              return;
+            }
+
+            const baseRatio = 35;
+            const minFontSize = 10;
+            const maxFontSize = 14;
+            const padding = 10;
+
+            const fontSize = Math.max(minFontSize, Math.min(maxFontSize, chart.width / baseRatio));
+            ctx.font = `bold ${fontSize}px Arial`;
+
+            const buttonText = `${
+              currentViewMode === 'daily' ? 'Weekly' : currentViewMode === 'weekly' ? 'Monthly' : currentViewMode === 'monthly' ? 'Yearly' : 'Daily'
+            }`;
+            const textMetrics = ctx.measureText(buttonText);
+
+            const button = {
+              width: textMetrics.width + padding * 2,
+              height: fontSize + padding,
+              x: chart.width - (textMetrics.width + padding * 2) - 10,
+              y: titleBlock.top + (titleBlock.height - (fontSize + padding)) / 2,
+            };
+
+            (chart as { toggleButtonBounds?: typeof button }).toggleButtonBounds = button;
+
+            ctx.save();
+            ctx.fillStyle = 'rgba(153, 102, 255, 0.8)';
+            ctx.strokeStyle = 'rgba(153, 102, 255, 1)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.roundRect(button.x, button.y, button.width, button.height, 5);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = 'white';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(buttonText, button.x + button.width / 2, button.y + button.height / 2);
+            ctx.restore();
+          },
+        };
+        plugins.push(toggleButtonPlugin);
+      }
+
+      if (existingChartInstance && !isReload) {
+        existingChartInstance.data.labels = gameLabels;
+        existingChartInstance.data.datasets[0].data = averages;
+        existingChartInstance.data.datasets[1].data = gamesPlayedDaily;
+        existingChartInstance.update();
+        return existingChartInstance;
+      } else {
+        chartInstance = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: gameLabels,
+            datasets: [
+              {
+                label: `Average Score`,
+                data: averages,
+                borderColor: 'rgba(75, 192, 192, 1)',
+                backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                borderWidth: 2,
+                fill: false,
+              },
+              {
+                label: 'Games Played',
+                data: gamesPlayedDaily,
+                type: 'bar',
+                backgroundColor: 'rgba(153, 102, 255, 0.1)',
+                borderColor: 'rgba(153, 102, 255, .5)',
+                borderWidth: 1,
+                yAxisID: 'y1',
+              },
+            ],
+          },
+          options: options,
+          plugins: plugins,
+        });
+
+        if (onToggleView) {
+          chartInstance.canvas.onclick = (event) => {
+            const rect = chartInstance.canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            const button = { x: chartInstance.width - 120, y: 10, width: 110, height: 30 };
+
+            if (x >= button.x && x <= button.x + button.width && y >= button.y && y <= button.y + button.height) {
+              onToggleView();
+            }
+          };
+        }
+      }
+
+      return chartInstance;
+    } catch (error) {
+      console.error('Error generating average score chart:', error);
       throw error;
     }
   }
@@ -1667,114 +1807,6 @@ export class ChartGenerationService {
       return { gameLabels, averages: formattedAverages, gamesPlayedDaily: gamesPlayedYearly };
     } catch (error) {
       console.error('Error calculating yearly average score data:', error);
-      throw error;
-    }
-  }
-
-  generateAverageScoreChart(
-    scoreChart: ElementRef,
-    games: Game[],
-    existingChartInstance: Chart | undefined,
-    viewMode?: 'daily' | 'weekly' | 'monthly' | 'yearly',
-    onToggleView?: () => void,
-    isReload?: boolean,
-  ): Chart {
-    try {
-      const currentViewMode = viewMode || 'monthly';
-      const { gameLabels, averages, gamesPlayedDaily } = this.calculateAverageScoreChartData(games, currentViewMode);
-      const ctx = scoreChart.nativeElement;
-      if (isReload && existingChartInstance) {
-        existingChartInstance.destroy();
-      }
-
-      const plugins: Plugin<'line' | 'bar'>[] = [];
-      const options: ChartOptions<'line' | 'bar'> = {
-        scales: {
-          y: { beginAtZero: true, suggestedMax: 300, ticks: { font: { size: 14 } } },
-          y1: { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false }, ticks: { font: { size: 14 } } },
-        },
-        plugins: {
-          title: { display: true, text: `Average Score by ${currentViewMode.charAt(0).toUpperCase() + currentViewMode.slice(1)}`, color: 'white', font: { size: 20 } },
-          legend: { display: true, labels: { color: 'white', font: { size: 16 } } },
-        },
-        responsive: true,
-        maintainAspectRatio: false,
-        interaction: { intersect: false },
-      };
-
-      if (onToggleView) {
-        const toggleButtonPlugin: Plugin<'line' | 'bar'> = {
-          id: 'toggleButton',
-          afterDraw: (chart) => {
-            const ctx = chart.ctx;
-            const button = { x: chart.width - 120, y: 10, width: 110, height: 30 };
-            const buttonText = `Switch to ${currentViewMode === 'daily' ? 'Weekly' : 
-                                             currentViewMode === 'weekly' ? 'Monthly' : 
-                                             currentViewMode === 'monthly' ? 'Yearly' : 'Daily'}`;
-
-            ctx.save();
-            ctx.fillStyle = 'rgba(153, 102, 255, 0.8)';
-            ctx.strokeStyle = 'rgba(153, 102, 255, 1)';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.roundRect(button.x, button.y, button.width, button.height, 5);
-            ctx.fill();
-            ctx.stroke();
-
-            ctx.fillStyle = 'white';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(buttonText, button.x + button.width / 2, button.y + button.height / 2);
-            ctx.restore();
-          },
-        };
-        plugins.push(toggleButtonPlugin);
-      }
-
-      const chartInstance = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: gameLabels,
-          datasets: [
-            {
-              label: `Average Score`,
-              data: averages,
-              borderColor: 'rgba(75, 192, 192, 1)',
-              backgroundColor: 'rgba(75, 192, 192, 0.6)',
-              borderWidth: 2,
-              fill: false,
-            },
-            {
-              label: 'Games Played',
-              data: gamesPlayedDaily,
-              type: 'bar',
-              backgroundColor: 'rgba(153, 102, 255, 0.1)',
-              borderColor: 'rgba(153, 102, 255, .5)',
-              borderWidth: 1,
-              yAxisID: 'y1',
-            },
-          ],
-        },
-        options: options,
-        plugins: plugins,
-      });
-
-      if (onToggleView) {
-        chartInstance.canvas.onclick = (event) => {
-          const rect = chartInstance.canvas.getBoundingClientRect();
-          const x = event.clientX - rect.left;
-          const y = event.clientY - rect.top;
-          const button = { x: chartInstance.width - 120, y: 10, width: 110, height: 30 };
-
-          if (x >= button.x && x <= button.x + button.width && y >= button.y && y <= button.y + button.height) {
-            onToggleView();
-          }
-        };
-      }
-
-      return chartInstance;
-    } catch (error) {
-      console.error('Error generating average score chart:', error);
       throw error;
     }
   }

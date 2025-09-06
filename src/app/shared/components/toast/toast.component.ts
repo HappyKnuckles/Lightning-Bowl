@@ -32,17 +32,10 @@ interface ToastData {
 })
 export class ToastComponent implements OnDestroy {
   activeToasts: ToastData[] = [];
-
-  /** Any additional toasts beyond 5 go into this queue */
   private toastQueue: ToastData[] = [];
-
   private nextId = 1;
   private toastSubscription: Subscription;
-
-  /** Maximum number of toasts shown at once */
   private readonly MAX_ACTIVE = 5;
-
-  /** How long each toast stays open (in ms) */
   readonly TOAST_DURATION = 3000;
 
   constructor(private toastService: ToastService) {
@@ -79,14 +72,16 @@ export class ToastComponent implements OnDestroy {
    * Remove the toast from activeToasts, then immediately pull one from the queue (if any).
    */
   onToastDidDismiss(dismissedId: number) {
-    // Remove that toast from the active list
     this.activeToasts = this.activeToasts.filter((t) => t.id !== dismissedId);
 
-    // If there’s something waiting in the queue, “activate” the next one
     if (this.toastQueue.length > 0) {
       const next = this.toastQueue.shift()!;
       this.activeToasts.push(next);
     }
+  }
+
+  getMarginAccordingToTextLength(message: string) {
+    return message.length > 60 ? 80 : 60;
   }
 
   ngOnDestroy(): void {
