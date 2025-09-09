@@ -172,6 +172,13 @@ Key Configuration Files:
 - **Import only required Ionic components** (tree-shaking optimization)
 - **Follow existing service injection patterns** from `src/app/core/services/`
 
+#### **Code Cleanup & Scope Management:**
+- **ALWAYS clean up your code after making changes** - remove any bloat or unnecessary modifications
+- **ONLY include necessary code to complete the issue** - avoid scope creep and unrelated changes
+- **Remove temporary files, debug code, and unused imports** before committing
+- **Revert any accidental changes** that don't directly address the specific issue
+- **Keep changes surgical and minimal** - prefer small, targeted modifications over large refactors
+
 #### **Example: Adding a New Page**
 ```typescript
 // 1. Create page in src/app/pages/my-feature/my-feature.page.ts
