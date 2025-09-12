@@ -19,6 +19,7 @@ import {
   IonModal,
   IonButtons,
   IonList,
+  IonSpinner,
 } from '@ionic/angular/standalone';
 import { FormsModule, NgForm, ReactiveFormsModule } from '@angular/forms';
 import { addIcons } from 'ionicons';
@@ -45,6 +46,8 @@ import { LeagueSelectorComponent } from 'src/app/shared/components/league-select
 import { SpareNamesComponent } from 'src/app/shared/components/spare-names/spare-names.component';
 import { GameStatsService } from 'src/app/core/services/game-stats/game-stats.service';
 import { AlertController, InputCustomEvent } from '@ionic/angular';
+import { GitHubService } from 'src/app/core/services/github/github.service';
+import { GitHubIssue } from 'src/app/core/models/github-issue.model';
 
 @Component({
   selector: 'app-settings',
@@ -71,6 +74,7 @@ import { AlertController, InputCustomEvent } from '@ionic/angular';
     IonHeader,
     IonSelect,
     IonSelectOption,
+    IonSpinner,
     NgClass,
     NgFor,
     FormsModule,
@@ -93,6 +97,8 @@ export class SettingsPage implements OnInit {
   userEmail = '';
   feedbackMessage = '';
   updateAvailable = false;
+  featureIssues: GitHubIssue[] = [];
+  loadingFeatureIssues = false;
   constructor(
     private userService: UserService,
     private toastService: ToastService,
@@ -100,6 +106,7 @@ export class SettingsPage implements OnInit {
     private themeService: ThemeChangerService,
     private statsService: GameStatsService,
     private alertCtrl: AlertController,
+    private gitHubService: GitHubService,
   ) {
     addIcons({
       personCircleOutline,
@@ -121,6 +128,20 @@ export class SettingsPage implements OnInit {
       this.username = username;
     });
     this.updateAvailable = localStorage.getItem('update') !== null ? true : false;
+    
+    this.loadFeatureIssues();
+  }
+
+  async loadFeatureIssues(): Promise<void> {
+    this.loadingFeatureIssues = true;
+    try {
+      this.featureIssues = await this.gitHubService.getFeatureIssues();
+    } catch (error) {
+      console.error('Failed to load feature issues:', error);
+      this.featureIssues = [];
+    } finally {
+      this.loadingFeatureIssues = false;
+    }
   }
 
   changeName(): void {

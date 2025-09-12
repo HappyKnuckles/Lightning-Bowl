@@ -60,6 +60,42 @@
       <ion-label>Feature/Bug overview</ion-label>
       <p class="link">Follow me</p>
     </ion-item>
+
+    <!-- Upcoming Features Section -->
+    <ion-item>
+      <ion-label>
+        <h2>Upcoming Features</h2>
+      </ion-label>
+    </ion-item>
+    
+    <div *ngIf="loadingFeatureIssues" style="text-align: center; padding: 20px;">
+      <ion-spinner></ion-spinner>
+      <p>Loading upcoming features...</p>
+    </div>
+
+    <div *ngIf="!loadingFeatureIssues && featureIssues.length === 0" style="text-align: center; padding: 20px;">
+      <p>No upcoming features found.</p>
+    </div>
+
+    <ion-card *ngFor="let issue of featureIssues" class="feature-card">
+      <ion-card-header>
+        <ion-card-title>{{ issue.title }}</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <p *ngIf="issue.body && issue.body.trim()">{{ issue.body }}</p>
+        <p *ngIf="!issue.body || !issue.body.trim()" style="font-style: italic; color: var(--ion-color-medium);">
+          No description provided.
+        </p>
+        <ion-button 
+          fill="clear" 
+          size="small" 
+          [href]="issue.html_url" 
+          target="_blank"
+          style="margin-top: 10px;">
+          View on GitHub
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
     <ion-item id="feedback-modal" class="ion-activatable ripple-parent rectangle">
       <ion-icon name="mail-outline" slot="start"></ion-icon>
       <ion-label>Feedback/Requests</ion-label>

@@ -34,3 +34,22 @@
   color: var(--ion-color-primary, #3880ff);
   cursor: pointer;
 }
+
+.feature-card {
+  margin: 8px 16px;
+  border-radius: 8px;
+  
+  ion-card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+
+  ion-card-content {
+    padding-top: 8px;
+    
+    p {
+      margin: 0 0 8px 0;
+      line-height: 1.4;
+    }
+  }
+}

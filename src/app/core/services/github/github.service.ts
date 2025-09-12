@@ -1,0 +1,36 @@
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
+import { GitHubIssue } from '../../models/github-issue.model';
+
+@Injectable({
+  providedIn: 'root',
+})
+export class GitHubService {
+  private readonly baseUrl = 'https://api.github.com';
+  private readonly repoOwner = 'HappyKnuckles';
+  private readonly repoName = 'Lightning-Bowl';
+
+  constructor(private http: HttpClient) {}
+
+  async getFeatureIssues(): Promise<GitHubIssue[]> {
+    try {
+      const url = `${this.baseUrl}/repos/${this.repoOwner}/${this.repoName}/issues`;
+      const params = {
+        labels: 'feature',
+        state: 'open',
+        sort: 'created',
+        direction: 'desc'
+      };
+
+      const response = await firstValueFrom(
+        this.http.get<GitHubIssue[]>(url, { params })
+      );
+
+      return response;
+    } catch (error) {
+      console.error('Error fetching GitHub issues:', error);
+      return [];
+    }
+  }
+}
