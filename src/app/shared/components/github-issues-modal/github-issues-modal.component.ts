@@ -17,7 +17,7 @@ import {
   IonChip,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { documentOutline, openOutline } from 'ionicons/icons';
+import { documentOutline, openOutline, warningOutline } from 'ionicons/icons';
 import { GitHubIssue } from 'src/app/core/models/github-issue.model';
 import { GitHubService } from 'src/app/core/services/github/github.service';
 
@@ -48,6 +48,7 @@ export class GithubIssuesModalComponent implements OnInit {
   issues: GitHubIssue[] = [];
   loading = false;
   selectedLabels: string[] = ['feature']; // Default to feature
+  error: string | null = null;
 
   constructor(
     private gitHubService: GitHubService,
@@ -55,6 +56,7 @@ export class GithubIssuesModalComponent implements OnInit {
     addIcons({
       documentOutline,
       openOutline,
+      warningOutline,
     });
   }
 
@@ -64,11 +66,13 @@ export class GithubIssuesModalComponent implements OnInit {
 
   async loadIssues(): Promise<void> {
     this.loading = true;
+    this.error = null;
     try {
       this.issues = await this.gitHubService.getIssues(this.selectedLabels);
     } catch (error) {
       console.error('Failed to load issues:', error);
       this.issues = [];
+      this.error = 'Unable to load issues. This may be due to network restrictions or API limitations. Please visit the GitHub repository directly for the latest issues.';
     } finally {
       this.loading = false;
     }
