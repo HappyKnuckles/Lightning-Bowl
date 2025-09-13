@@ -13,15 +13,18 @@ export class GitHubService {
 
   constructor(private http: HttpClient) {}
 
-  async getFeatureIssues(): Promise<GitHubIssue[]> {
+  async getIssues(labels: string[] = []): Promise<GitHubIssue[]> {
     try {
       const url = `${this.baseUrl}/repos/${this.repoOwner}/${this.repoName}/issues`;
-      const params = {
-        labels: 'feature',
+      const params: any = {
         state: 'open',
         sort: 'created',
         direction: 'desc'
       };
+
+      if (labels.length > 0) {
+        params.labels = labels.join(',');
+      }
 
       const response = await firstValueFrom(
         this.http.get<GitHubIssue[]>(url, { params })
@@ -32,5 +35,9 @@ export class GitHubService {
       console.error('Error fetching GitHub issues:', error);
       return [];
     }
+  }
+
+  async getFeatureIssues(): Promise<GitHubIssue[]> {
+    return this.getIssues(['feature']);
   }
 }
