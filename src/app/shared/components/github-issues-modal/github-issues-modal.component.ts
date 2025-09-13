@@ -1,13 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ModalController } from '@ionic/angular';
 import {
   IonContent,
-  IonHeader,
-  IonTitle,
-  IonButtons,
-  IonToolbar,
   IonItem,
   IonButton,
   IonSelect,
@@ -22,7 +17,7 @@ import {
   IonChip,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { chevronBack, documentOutline, openOutline } from 'ionicons/icons';
+import { documentOutline, openOutline } from 'ionicons/icons';
 import { GitHubIssue } from 'src/app/core/models/github-issue.model';
 import { GitHubService } from 'src/app/core/services/github/github.service';
 
@@ -45,10 +40,6 @@ import { GitHubService } from 'src/app/core/services/github/github.service';
     IonButton,
     IonItem,
     IonContent,
-    IonHeader,
-    IonTitle,
-    IonToolbar,
-    IonButtons,
     CommonModule,
     FormsModule,
   ],
@@ -59,11 +50,9 @@ export class GithubIssuesModalComponent implements OnInit {
   selectedLabels: string[] = ['feature']; // Default to feature
 
   constructor(
-    private modalCtrl: ModalController,
     private gitHubService: GitHubService,
   ) {
     addIcons({
-      chevronBack,
       documentOutline,
       openOutline,
     });
@@ -133,7 +122,5 @@ export class GithubIssuesModalComponent implements OnInit {
     return luminance > 0.5 ? '#000000' : '#ffffff';
   }
 
-  cancel(): Promise<boolean> {
-    return this.modalCtrl.dismiss(null, 'cancel');
-  }
+  // No need for cancel method since modal is controlled by parent
 }
