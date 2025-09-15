@@ -48,75 +48,15 @@
         <div class="screenshots-section">
           <h3>App Screenshots</h3>
           <div class="screenshots-carousel">
-            <div class="screenshot-container">
+            <div class="screenshot-container" *ngFor="let screenshot of screenshots">
               <button
                 type="button"
                 class="screenshot-button"
-                (click)="openImageModal('assets/screenshots/start.png', 'Start Page')"
-                (keyup.enter)="openImageModal('assets/screenshots/start.png', 'Start Page')">
-                <img src="assets/screenshots/start.png" alt="Start Page" class="screenshot" />
+                (click)="openImageModal(screenshot.src, screenshot.alt)"
+                (keyup.enter)="openImageModal(screenshot.src, screenshot.alt)">
+                <img [src]="screenshot.src" [alt]="screenshot.alt" class="screenshot" />
               </button>
-              <p class="screenshot-caption">Track your games</p>
-            </div>
-            <div class="screenshot-container">
-              <button
-                type="button"
-                class="screenshot-button"
-                (click)="openImageModal('assets/screenshots/stats.png', 'Statistics Page')"
-                (keyup.enter)="openImageModal('assets/screenshots/stats.png', 'Statistics Page')">
-                <img src="assets/screenshots/stats.png" alt="Statistics Page" class="screenshot" />
-              </button>
-              <p class="screenshot-caption">View detailed stats</p>
-            </div>
-            <div class="screenshot-container">
-              <button
-                type="button"
-                class="screenshot-button"
-                (click)="openImageModal('assets/screenshots/history.png', 'History Page')"
-                (keyup.enter)="openImageModal('assets/screenshots/history.png', 'History Page')">
-                <img src="assets/screenshots/history.png" alt="History Page" class="screenshot" />
-              </button>
-              <p class="screenshot-caption">Browse game history</p>
-            </div>
-            <div class="screenshot-container">
-              <button
-                type="button"
-                class="screenshot-button"
-                (click)="openImageModal('assets/screenshots/arsenal.png', 'Arsenal Page')"
-                (keyup.enter)="openImageModal('assets/screenshots/arsenal.png', 'Arsenal Page')">
-                <img src="assets/screenshots/arsenal.png" alt="Arsenal Page" class="screenshot" />
-              </button>
-              <p class="screenshot-caption">Manage your arsenals</p>
-            </div>
-            <div class="screenshot-container">
-              <button
-                type="button"
-                class="screenshot-button"
-                (click)="openImageModal('assets/screenshots/history.png', 'History Page')"
-                (keyup.enter)="openImageModal('assets/screenshots/history.png', 'History Page')">
-                <img src="assets/screenshots/history.png" alt="History Page" class="screenshot" />
-              </button>
-              <p class="screenshot-caption">Browse game history</p>
-            </div>
-            <div class="screenshot-container">
-              <button
-                type="button"
-                class="screenshot-button"
-                (click)="openImageModal('assets/screenshots/balls.png', 'Balls Page')"
-                (keyup.enter)="openImageModal('assets/screenshots/balls.png', 'Balls Page')">
-                <img src="assets/screenshots/balls.png" alt="Balls Page" class="screenshot" />
-              </button>
-              <p class="screenshot-caption">Browse balls</p>
-            </div>
-            <div class="screenshot-container">
-              <button
-                type="button"
-                class="screenshot-button"
-                (click)="openImageModal('assets/screenshots/pattern.png', 'Pattern Page')"
-                (keyup.enter)="openImageModal('assets/screenshots/pattern.png', 'Pattern Page')">
-                <img src="assets/screenshots/pattern.png" alt="Pattern Page" class="screenshot" />
-              </button>
-              <p class="screenshot-caption">Browse patterns</p>
+              <p class="screenshot-caption">{{ screenshot.caption }}</p>
             </div>
           </div>
         </div>
@@ -202,6 +142,60 @@
 
 <ion-modal [isOpen]="isImageModalOpen" (ionModalDidDismiss)="closeImageModal()" class="image-modal" [backdropDismiss]="true" [showBackdrop]="true">
   <ng-template>
-    <div style="background: url('{{ selectedImageSrc }}');" class="modal-image" role="img" [attr.aria-label]="selectedImageAlt"></div>
+    <div class="modal-container">
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>{{ getCurrentImage().alt }}</ion-title>
+          <ion-buttons slot="end">
+            <ion-button fill="clear" (click)="closeImageModal()">
+              <ion-icon name="close"></ion-icon>
+            </ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      
+      <ion-content class="modal-content">
+        <div class="image-container">
+          <!-- Navigation buttons -->
+          <button 
+            class="nav-button nav-button-left" 
+            (click)="previousImage()"
+            [disabled]="screenshots.length <= 1"
+            type="button">
+            <ion-icon name="chevron-back"></ion-icon>
+          </button>
+          
+          <!-- Image with swipe gestures -->
+          <div 
+            class="swipeable-image-wrapper"
+            (touchstart)="onTouchStart($event)"
+            (touchmove)="onTouchMove($event)"
+            (touchend)="onTouchEnd($event)">
+            <img 
+              [src]="getCurrentImage().src" 
+              [alt]="getCurrentImage().alt" 
+              class="modal-image" />
+          </div>
+          
+          <button 
+            class="nav-button nav-button-right" 
+            (click)="nextImage()"
+            [disabled]="screenshots.length <= 1"
+            type="button">
+            <ion-icon name="chevron-forward"></ion-icon>
+          </button>
+        </div>
+        
+        <!-- Image counter and caption -->
+        <div class="image-info">
+          <div class="image-counter">
+            {{ selectedImageIndex + 1 }} / {{ screenshots.length }}
+          </div>
+          <div class="image-caption">
+            {{ getCurrentImage().caption }}
+          </div>
+        </div>
+      </ion-content>
+    </div>
   </ng-template>
 </ion-modal>

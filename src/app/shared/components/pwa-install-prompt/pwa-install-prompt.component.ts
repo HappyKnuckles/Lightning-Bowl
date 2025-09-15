@@ -2,7 +2,7 @@ import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonModal, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonIcon, IonContent, IonFooter } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { close, flash, wifiOutline, notifications, phonePortrait, download, shareOutline, checkmark, add, checkmarkCircle } from 'ionicons/icons';
+import { close, flash, wifiOutline, notifications, phonePortrait, download, shareOutline, checkmark, add, checkmarkCircle, chevronBack, chevronForward } from 'ionicons/icons';
 
 @Component({
   selector: 'app-pwa-install-prompt',
@@ -21,10 +21,24 @@ export class PwaInstallPromptComponent implements OnInit {
   isChrome = false;
   isIOS = false;
 
-  // Image viewing functionality
+  // Image gallery functionality
   isImageModalOpen = false;
-  selectedImageSrc = '';
-  selectedImageAlt = '';
+  selectedImageIndex = 0;
+  screenshots = [
+    { src: 'assets/screenshots/start.png', alt: 'Start Page', caption: 'Track your games' },
+    { src: 'assets/screenshots/stats.png', alt: 'Statistics Page', caption: 'View detailed stats' },
+    { src: 'assets/screenshots/history.png', alt: 'History Page', caption: 'Browse game history' },
+    { src: 'assets/screenshots/arsenal.png', alt: 'Arsenal Page', caption: 'Manage your arsenals' },
+    { src: 'assets/screenshots/balls.png', alt: 'Balls Page', caption: 'Browse balls' },
+    { src: 'assets/screenshots/pattern.png', alt: 'Pattern Page', caption: 'Browse patterns' }
+  ];
+
+  // Touch gesture handling
+  private touchStartX = 0;
+  private touchStartY = 0;
+  private touchEndX = 0;
+  private touchEndY = 0;
+  private minSwipeDistance = 50;
 
   constructor() {
     addIcons({
@@ -38,6 +52,8 @@ export class PwaInstallPromptComponent implements OnInit {
       checkmark,
       add,
       checkmarkCircle,
+      chevronBack,
+      chevronForward,
     });
   }
 
@@ -65,15 +81,57 @@ export class PwaInstallPromptComponent implements OnInit {
     this.dismiss.emit();
   }
 
-  openImageModal(imageSrc: string, imageAlt: string): void {
-    this.selectedImageSrc = imageSrc;
-    this.selectedImageAlt = imageAlt;
+  openImageModal(imageSrc: string, _imageAlt: string): void {
+    // Find the index of the clicked image
+    const index = this.screenshots.findIndex(screenshot => screenshot.src === imageSrc);
+    this.selectedImageIndex = index >= 0 ? index : 0;
     this.isImageModalOpen = true;
   }
 
   closeImageModal(): void {
     this.isImageModalOpen = false;
-    this.selectedImageSrc = '';
-    this.selectedImageAlt = '';
+    this.selectedImageIndex = 0;
+  }
+
+  nextImage(): void {
+    this.selectedImageIndex = (this.selectedImageIndex + 1) % this.screenshots.length;
+  }
+
+  previousImage(): void {
+    this.selectedImageIndex = (this.selectedImageIndex - 1 + this.screenshots.length) % this.screenshots.length;
+  }
+
+  getCurrentImage() {
+    return this.screenshots[this.selectedImageIndex];
+  }
+
+  // Touch gesture handlers
+  onTouchStart(event: TouchEvent): void {
+    this.touchStartX = event.touches[0].clientX;
+    this.touchStartY = event.touches[0].clientY;
+  }
+
+  onTouchMove(event: TouchEvent): void {
+    // Prevent default behavior to avoid scrolling
+    event.preventDefault();
+  }
+
+  onTouchEnd(event: TouchEvent): void {
+    this.touchEndX = event.changedTouches[0].clientX;
+    this.touchEndY = event.changedTouches[0].clientY;
+    
+    const deltaX = this.touchEndX - this.touchStartX;
+    const deltaY = this.touchEndY - this.touchStartY;
+    
+    // Only process horizontal swipes that are longer than vertical swipes
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > this.minSwipeDistance) {
+      if (deltaX > 0) {
+        // Swiped right - go to previous image
+        this.previousImage();
+      } else {
+        // Swiped left - go to next image
+        this.nextImage();
+      }
+    }
   }
 }
