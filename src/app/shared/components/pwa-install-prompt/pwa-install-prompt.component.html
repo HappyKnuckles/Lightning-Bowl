@@ -149,6 +149,8 @@
       [attr.aria-label]="getCurrentImage().alt"
       (touchstart)="onTouchStart($event)"
       (touchmove)="onTouchMove($event)"
-      (touchend)="onTouchEnd($event)"></div>
+      (touchend)="onTouchEnd($event)">
+      <div class="image-indicator">{{ selectedImageIndex + 1 }}/{{ screenshots.length }}</div>
+    </div>
   </ng-template>
 </ion-modal>
