@@ -143,13 +143,19 @@
 <ion-modal [isOpen]="isImageModalOpen" (ionModalDidDismiss)="closeImageModal()" class="image-modal" [backdropDismiss]="true" [showBackdrop]="true">
   <ng-template>
     <div 
-      style="background: url('{{ getCurrentImage().src }}');" 
-      class="modal-image" 
-      role="img" 
-      [attr.aria-label]="getCurrentImage().alt"
+      class="carousel-container"
       (touchstart)="onTouchStart($event)"
       (touchmove)="onTouchMove($event)"
       (touchend)="onTouchEnd($event)">
+      <div class="carousel-track" [style.transform]="'translateX(' + carouselTransform + 'px)'">
+        <div 
+          *ngFor="let screenshot of getVisibleImages(); let i = index"
+          [style.background]="'url(' + screenshot.src + ')'"
+          class="modal-image" 
+          role="img" 
+          [attr.aria-label]="screenshot.alt">
+        </div>
+      </div>
       <div class="image-indicator">{{ selectedImageIndex + 1 }}/{{ screenshots.length }}</div>
     </div>
   </ng-template>

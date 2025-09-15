@@ -42,6 +42,12 @@ export class PwaInstallPromptComponent implements OnInit {
   
   // Animation state
   isAnimating = false;
+  
+  // Carousel properties
+  carouselTransform = 0;
+  private carouselWidth = 0;
+  private isDragging = false;
+  private startTransform = 0;
 
   constructor() {
     addIcons({
@@ -87,63 +93,81 @@ export class PwaInstallPromptComponent implements OnInit {
     const index = this.screenshots.findIndex(screenshot => screenshot.src === imageSrc);
     this.selectedImageIndex = index >= 0 ? index : 0;
     this.isImageModalOpen = true;
+    
+    // Initialize carousel position after modal opens
+    setTimeout(() => {
+      this.initializeCarousel();
+    }, 100);
   }
 
   closeImageModal(): void {
     this.isImageModalOpen = false;
     this.selectedImageIndex = 0;
+    this.carouselTransform = 0;
+    this.isDragging = false;
+    this.isAnimating = false;
+  }
+
+  private initializeCarousel(): void {
+    const container = document.querySelector('.carousel-container') as HTMLElement;
+    if (container) {
+      this.carouselWidth = container.offsetWidth;
+      // Position the carousel to show the current image (always at index 1 in the visible array)
+      this.carouselTransform = -this.carouselWidth;
+    }
+  }
+
+  getVisibleImages() {
+    // Return previous, current, and next images for smooth sliding
+    const result = [];
+    const totalImages = this.screenshots.length;
+    
+    // Previous image
+    const prevIndex = (this.selectedImageIndex - 1 + totalImages) % totalImages;
+    result.push(this.screenshots[prevIndex]);
+    
+    // Current image
+    result.push(this.screenshots[this.selectedImageIndex]);
+    
+    // Next image
+    const nextIndex = (this.selectedImageIndex + 1) % totalImages;
+    result.push(this.screenshots[nextIndex]);
+    
+    return result;
   }
 
   nextImage(): void {
     if (this.isAnimating) return;
-    this.animateSlideTransition('left');
+    this.isAnimating = true;
+    
+    this.selectedImageIndex = (this.selectedImageIndex + 1) % this.screenshots.length;
+    this.animateToCurrentImage();
   }
 
   previousImage(): void {
     if (this.isAnimating) return;
-    this.animateSlideTransition('right');
-  }
-
-  private animateSlideTransition(direction: 'left' | 'right'): void {
     this.isAnimating = true;
     
-    const modalImage = document.querySelector('.modal-image') as HTMLElement;
-    if (modalImage) {
-      // Slide current image out
-      const slideOutDirection = direction === 'left' ? '-100%' : '100%';
-      modalImage.style.transform = `translateX(${slideOutDirection})`;
+    this.selectedImageIndex = (this.selectedImageIndex - 1 + this.screenshots.length) % this.screenshots.length;
+    this.animateToCurrentImage();
+  }
+
+  private animateToCurrentImage(): void {
+    // The current image should always be at the center position (index 1)
+    const targetTransform = -this.carouselWidth;
+    const carouselTrack = document.querySelector('.carousel-track') as HTMLElement;
+    
+    if (carouselTrack) {
+      carouselTrack.style.transition = 'transform 0.3s ease-out';
+      this.carouselTransform = targetTransform;
       
       setTimeout(() => {
-        // Update image index
-        if (direction === 'left') {
-          this.selectedImageIndex = (this.selectedImageIndex + 1) % this.screenshots.length;
-        } else {
-          this.selectedImageIndex = (this.selectedImageIndex - 1 + this.screenshots.length) % this.screenshots.length;
+        this.isAnimating = false;
+        if (carouselTrack) {
+          carouselTrack.style.transition = '';
         }
-        
-        // Position new image off-screen on opposite side
-        const slideInDirection = direction === 'left' ? '100%' : '-100%';
-        modalImage.style.transform = `translateX(${slideInDirection})`;
-        modalImage.style.transition = 'none'; // Disable transition for instant positioning
-        
-        // Force browser to apply the transform immediately
-        modalImage.offsetHeight;
-        
-        // Re-enable transition and slide new image in
-        modalImage.style.transition = 'transform 0.3s ease-in-out';
-        modalImage.style.transform = 'translateX(0)';
-        
-        setTimeout(() => {
-          this.isAnimating = false;
-        }, 300);
       }, 300);
     } else {
-      // Fallback if no modal element found
-      if (direction === 'left') {
-        this.selectedImageIndex = (this.selectedImageIndex + 1) % this.screenshots.length;
-      } else {
-        this.selectedImageIndex = (this.selectedImageIndex - 1 + this.screenshots.length) % this.screenshots.length;
-      }
       this.isAnimating = false;
     }
   }
@@ -154,31 +178,71 @@ export class PwaInstallPromptComponent implements OnInit {
 
   // Touch gesture handlers
   onTouchStart(event: TouchEvent): void {
+    if (this.isAnimating) return;
+    
     this.touchStartX = event.touches[0].clientX;
     this.touchStartY = event.touches[0].clientY;
+    this.isDragging = true;
+    this.startTransform = this.carouselTransform;
+    
+    // Disable transitions during dragging
+    const carouselTrack = document.querySelector('.carousel-track') as HTMLElement;
+    if (carouselTrack) {
+      carouselTrack.style.transition = 'none';
+    }
   }
 
   onTouchMove(event: TouchEvent): void {
+    if (!this.isDragging || this.isAnimating) return;
+    
     // Prevent default behavior to avoid scrolling
     event.preventDefault();
+    
+    const currentX = event.touches[0].clientX;
+    const deltaX = currentX - this.touchStartX;
+    
+    // Update carousel position in real-time
+    this.carouselTransform = this.startTransform + deltaX;
   }
 
   onTouchEnd(event: TouchEvent): void {
+    if (!this.isDragging || this.isAnimating) return;
+    
+    this.isDragging = false;
     this.touchEndX = event.changedTouches[0].clientX;
     this.touchEndY = event.changedTouches[0].clientY;
     
     const deltaX = this.touchEndX - this.touchStartX;
     const deltaY = this.touchEndY - this.touchStartY;
     
+    // Re-enable transitions
+    const carouselTrack = document.querySelector('.carousel-track') as HTMLElement;
+    if (carouselTrack) {
+      carouselTrack.style.transition = 'transform 0.3s ease-out';
+    }
+    
     // Only process horizontal swipes that are longer than vertical swipes
     if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > this.minSwipeDistance) {
+      this.isAnimating = true;
+      
       if (deltaX > 0) {
         // Swiped right - go to previous image
-        this.previousImage();
+        this.selectedImageIndex = (this.selectedImageIndex - 1 + this.screenshots.length) % this.screenshots.length;
       } else {
         // Swiped left - go to next image
-        this.nextImage();
+        this.selectedImageIndex = (this.selectedImageIndex + 1) % this.screenshots.length;
       }
+      
+      this.animateToCurrentImage();
+    } else {
+      // Snap back to current position if swipe wasn't strong enough
+      this.carouselTransform = -this.carouselWidth;
+      
+      setTimeout(() => {
+        if (carouselTrack) {
+          carouselTrack.style.transition = '';
+        }
+      }, 300);
     }
   }
 }
