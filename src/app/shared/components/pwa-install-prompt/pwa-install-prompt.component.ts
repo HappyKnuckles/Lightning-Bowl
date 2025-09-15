@@ -96,38 +96,54 @@ export class PwaInstallPromptComponent implements OnInit {
 
   nextImage(): void {
     if (this.isAnimating) return;
-    this.animateImageTransition(() => {
-      this.selectedImageIndex = (this.selectedImageIndex + 1) % this.screenshots.length;
-    });
+    this.animateSlideTransition('left');
   }
 
   previousImage(): void {
     if (this.isAnimating) return;
-    this.animateImageTransition(() => {
-      this.selectedImageIndex = (this.selectedImageIndex - 1 + this.screenshots.length) % this.screenshots.length;
-    });
+    this.animateSlideTransition('right');
   }
 
-  private animateImageTransition(changeImage: () => void): void {
+  private animateSlideTransition(direction: 'left' | 'right'): void {
     this.isAnimating = true;
     
-    // Add animation class to trigger slide effect
     const modalImage = document.querySelector('.modal-image') as HTMLElement;
     if (modalImage) {
-      modalImage.style.opacity = '0.7';
-      modalImage.style.transform = 'scale(0.95)';
+      // Slide current image out
+      const slideOutDirection = direction === 'left' ? '-100%' : '100%';
+      modalImage.style.transform = `translateX(${slideOutDirection})`;
       
       setTimeout(() => {
-        changeImage();
-        modalImage.style.opacity = '1';
-        modalImage.style.transform = 'scale(1)';
+        // Update image index
+        if (direction === 'left') {
+          this.selectedImageIndex = (this.selectedImageIndex + 1) % this.screenshots.length;
+        } else {
+          this.selectedImageIndex = (this.selectedImageIndex - 1 + this.screenshots.length) % this.screenshots.length;
+        }
+        
+        // Position new image off-screen on opposite side
+        const slideInDirection = direction === 'left' ? '100%' : '-100%';
+        modalImage.style.transform = `translateX(${slideInDirection})`;
+        modalImage.style.transition = 'none'; // Disable transition for instant positioning
+        
+        // Force browser to apply the transform immediately
+        modalImage.offsetHeight;
+        
+        // Re-enable transition and slide new image in
+        modalImage.style.transition = 'transform 0.3s ease-in-out';
+        modalImage.style.transform = 'translateX(0)';
         
         setTimeout(() => {
           this.isAnimating = false;
         }, 300);
-      }, 150);
+      }, 300);
     } else {
-      changeImage();
+      // Fallback if no modal element found
+      if (direction === 'left') {
+        this.selectedImageIndex = (this.selectedImageIndex + 1) % this.screenshots.length;
+      } else {
+        this.selectedImageIndex = (this.selectedImageIndex - 1 + this.screenshots.length) % this.screenshots.length;
+      }
       this.isAnimating = false;
     }
   }

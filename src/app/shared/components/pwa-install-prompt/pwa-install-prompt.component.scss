@@ -263,7 +263,7 @@
     touch-action: pan-y; /* Allow vertical scrolling but capture horizontal swipes */
     user-select: none;
     position: relative;
-    transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+    transition: transform 0.3s ease-in-out;
 
     .image-indicator {
       position: absolute;
