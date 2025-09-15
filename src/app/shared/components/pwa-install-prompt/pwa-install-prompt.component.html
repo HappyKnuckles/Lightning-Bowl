@@ -142,60 +142,13 @@
 
 <ion-modal [isOpen]="isImageModalOpen" (ionModalDidDismiss)="closeImageModal()" class="image-modal" [backdropDismiss]="true" [showBackdrop]="true">
   <ng-template>
-    <div class="modal-container">
-      <ion-header>
-        <ion-toolbar>
-          <ion-title>{{ getCurrentImage().alt }}</ion-title>
-          <ion-buttons slot="end">
-            <ion-button fill="clear" (click)="closeImageModal()">
-              <ion-icon name="close"></ion-icon>
-            </ion-button>
-          </ion-buttons>
-        </ion-toolbar>
-      </ion-header>
-      
-      <ion-content class="modal-content">
-        <div class="image-container">
-          <!-- Navigation buttons -->
-          <button 
-            class="nav-button nav-button-left" 
-            (click)="previousImage()"
-            [disabled]="screenshots.length <= 1"
-            type="button">
-            <ion-icon name="chevron-back"></ion-icon>
-          </button>
-          
-          <!-- Image with swipe gestures -->
-          <div 
-            class="swipeable-image-wrapper"
-            (touchstart)="onTouchStart($event)"
-            (touchmove)="onTouchMove($event)"
-            (touchend)="onTouchEnd($event)">
-            <img 
-              [src]="getCurrentImage().src" 
-              [alt]="getCurrentImage().alt" 
-              class="modal-image" />
-          </div>
-          
-          <button 
-            class="nav-button nav-button-right" 
-            (click)="nextImage()"
-            [disabled]="screenshots.length <= 1"
-            type="button">
-            <ion-icon name="chevron-forward"></ion-icon>
-          </button>
-        </div>
-        
-        <!-- Image counter and caption -->
-        <div class="image-info">
-          <div class="image-counter">
-            {{ selectedImageIndex + 1 }} / {{ screenshots.length }}
-          </div>
-          <div class="image-caption">
-            {{ getCurrentImage().caption }}
-          </div>
-        </div>
-      </ion-content>
-    </div>
+    <div 
+      style="background: url('{{ getCurrentImage().src }}');" 
+      class="modal-image" 
+      role="img" 
+      [attr.aria-label]="getCurrentImage().alt"
+      (touchstart)="onTouchStart($event)"
+      (touchmove)="onTouchMove($event)"
+      (touchend)="onTouchEnd($event)"></div>
   </ng-template>
 </ion-modal>

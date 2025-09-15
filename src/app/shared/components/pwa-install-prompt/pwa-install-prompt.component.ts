@@ -2,7 +2,7 @@ import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonModal, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonIcon, IonContent, IonFooter } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { close, flash, wifiOutline, notifications, phonePortrait, download, shareOutline, checkmark, add, checkmarkCircle, chevronBack, chevronForward } from 'ionicons/icons';
+import { close, flash, wifiOutline, notifications, phonePortrait, download, shareOutline, checkmark, add, checkmarkCircle } from 'ionicons/icons';
 
 @Component({
   selector: 'app-pwa-install-prompt',
@@ -52,8 +52,6 @@ export class PwaInstallPromptComponent implements OnInit {
       checkmark,
       add,
       checkmarkCircle,
-      chevronBack,
-      chevronForward,
     });
   }
 
@@ -82,7 +80,7 @@ export class PwaInstallPromptComponent implements OnInit {
   }
 
   openImageModal(imageSrc: string, _imageAlt: string): void {
-    // Find the index of the clicked image
+    // Find the index of the clicked image to support swiping between all images
     const index = this.screenshots.findIndex(screenshot => screenshot.src === imageSrc);
     this.selectedImageIndex = index >= 0 ? index : 0;
     this.isImageModalOpen = true;
