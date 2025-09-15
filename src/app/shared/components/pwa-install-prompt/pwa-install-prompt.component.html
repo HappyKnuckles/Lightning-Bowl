@@ -52,8 +52,8 @@
               <button
                 type="button"
                 class="screenshot-button"
-                (click)="openImageModal(screenshot.src, screenshot.alt)"
-                (keyup.enter)="openImageModal(screenshot.src, screenshot.alt)">
+                (click)="openImageModal(screenshot.src)"
+                (keyup.enter)="openImageModal(screenshot.src)">
                 <img [src]="screenshot.src" [alt]="screenshot.alt" class="screenshot" />
               </button>
               <p class="screenshot-caption">{{ screenshot.caption }}</p>

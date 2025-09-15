@@ -39,6 +39,9 @@ export class PwaInstallPromptComponent implements OnInit {
   private touchEndX = 0;
   private touchEndY = 0;
   private minSwipeDistance = 50;
+  
+  // Animation state
+  isAnimating = false;
 
   constructor() {
     addIcons({
@@ -79,7 +82,7 @@ export class PwaInstallPromptComponent implements OnInit {
     this.dismiss.emit();
   }
 
-  openImageModal(imageSrc: string, _imageAlt: string): void {
+  openImageModal(imageSrc: string): void {
     // Find the index of the clicked image to support swiping between all images
     const index = this.screenshots.findIndex(screenshot => screenshot.src === imageSrc);
     this.selectedImageIndex = index >= 0 ? index : 0;
@@ -92,11 +95,41 @@ export class PwaInstallPromptComponent implements OnInit {
   }
 
   nextImage(): void {
-    this.selectedImageIndex = (this.selectedImageIndex + 1) % this.screenshots.length;
+    if (this.isAnimating) return;
+    this.animateImageTransition(() => {
+      this.selectedImageIndex = (this.selectedImageIndex + 1) % this.screenshots.length;
+    });
   }
 
   previousImage(): void {
-    this.selectedImageIndex = (this.selectedImageIndex - 1 + this.screenshots.length) % this.screenshots.length;
+    if (this.isAnimating) return;
+    this.animateImageTransition(() => {
+      this.selectedImageIndex = (this.selectedImageIndex - 1 + this.screenshots.length) % this.screenshots.length;
+    });
+  }
+
+  private animateImageTransition(changeImage: () => void): void {
+    this.isAnimating = true;
+    
+    // Add animation class to trigger slide effect
+    const modalImage = document.querySelector('.modal-image') as HTMLElement;
+    if (modalImage) {
+      modalImage.style.opacity = '0.7';
+      modalImage.style.transform = 'scale(0.95)';
+      
+      setTimeout(() => {
+        changeImage();
+        modalImage.style.opacity = '1';
+        modalImage.style.transform = 'scale(1)';
+        
+        setTimeout(() => {
+          this.isAnimating = false;
+        }, 300);
+      }, 150);
+    } else {
+      changeImage();
+      this.isAnimating = false;
+    }
   }
 
   getCurrentImage() {
