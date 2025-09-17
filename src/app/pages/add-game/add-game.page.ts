@@ -20,11 +20,16 @@ import {
   IonSegmentView,
   IonSegmentContent,
   IonCheckbox,
+  IonCard,
+  IonCardHeader,
+  IonCardTitle,
+  IonCardSubtitle,
+  IonCardContent,
 } from '@ionic/angular/standalone';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Game } from 'src/app/core/models/game.model';
 import { addIcons } from 'ionicons';
-import { add, chevronDown, chevronUp, cameraOutline, documentTextOutline, medalOutline } from 'ionicons/icons';
+import { add, chevronDown, chevronUp, cameraOutline, documentTextOutline, medalOutline, calculatorOutline, gridOutline } from 'ionicons/icons';
 import { NgIf, NgFor } from '@angular/common';
 import { ImpactStyle } from '@capacitor/haptics';
 import { AdService } from 'src/app/core/services/ad/ad.service';
@@ -41,6 +46,8 @@ import { GameDataTransformerService } from 'src/app/core/services/game-transform
 import { InputCustomEvent, ModalController } from '@ionic/angular';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { GameGridComponent } from 'src/app/shared/components/game-grid/game-grid.component';
+import { PinSetupComponent } from 'src/app/shared/components/pin-setup/pin-setup.component';
+import { PinData } from 'src/app/core/models/game.model';
 
 const enum SeriesMode {
   Single = 'Single',
@@ -75,9 +82,15 @@ defineCustomElements(window);
     IonSegment,
     IonSegmentContent,
     IonSegmentView,
+    IonCard,
+    IonCardHeader,
+    IonCardTitle,
+    IonCardSubtitle,
+    IonCardContent,
     NgIf,
     NgFor,
     GameGridComponent,
+    PinSetupComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
@@ -102,6 +115,14 @@ export class AddGamePage implements OnInit {
   selectedSegment = 'Game 1';
   segments: string[] = ['Game 1'];
   presentingElement!: HTMLElement;
+  // Pin setup properties
+  usePinInput = false;
+  isPinSetupModalOpen = false;
+  currentFrame = 1;
+  currentThrowIndex = 0;
+  currentGameIndex = 0;
+  availablePins = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+  pinInputFrames: any[][] = []; // Store frames with pin data
   private allowedDeviceIds = [
     '820fabe8-d29b-45c2-89b3-6bcc0e149f2b',
     '21330a3a-9cff-41ce-981a-00208c21d883',
@@ -122,7 +143,7 @@ export class AddGamePage implements OnInit {
     private hapticService: HapticService,
     private gameUtilsService: GameUtilsService,
   ) {
-    addIcons({ cameraOutline, chevronDown, chevronUp, medalOutline, documentTextOutline, add });
+    addIcons({ cameraOutline, chevronDown, chevronUp, medalOutline, documentTextOutline, add, calculatorOutline, gridOutline });
   }
 
   async ngOnInit(): Promise<void> {
@@ -241,10 +262,24 @@ export class AddGamePage implements OnInit {
     if (index !== undefined && index >= 0 && index < this.gameGrids.length) {
       // Clear frames for the specified index
       this.gameGrids.toArray()[index].clearFrames(false);
+      
+      // Also clear pin input data for this game if it exists
+      if (this.pinInputFrames[index]) {
+        this.pinInputFrames[index] = [];
+        this.totalScores[index] = 0;
+        this.maxScores[index] = 300;
+      }
     } else {
       // Clear frames for all components
-      this.gameGrids.forEach((trackGrid: GameGridComponent) => {
+      this.gameGrids.forEach((trackGrid: GameGridComponent, idx: number) => {
         trackGrid.clearFrames(false);
+        
+        // Also clear pin input data for each game
+        if (this.pinInputFrames[idx]) {
+          this.pinInputFrames[idx] = [];
+          this.totalScores[idx] = 0;
+          this.maxScores[idx] = 300;
+        }
       });
     }
     this.toastService.showToast(ToastMessages.gameResetSuccess, 'refresh-outline');
@@ -530,5 +565,350 @@ export class AddGamePage implements OnInit {
 
   private generateUniqueSeriesId(): string {
     return 'series-' + Math.random().toString(36).substring(2, 15);
+  }
+
+  // Pin setup methods
+  toggleInputMode(): void {
+    this.usePinInput = !this.usePinInput;
+    
+    // If switching away from pin input, clear pin input data to avoid conflicts
+    if (!this.usePinInput) {
+      this.pinInputFrames = [];
+      this.closePinSetupModal();
+    }
+  }
+
+  get currentThrowLabel(): string {
+    const labels = ['First Throw', 'Second Throw', 'Third Throw'];
+    return labels[this.currentThrowIndex] || 'Throw';
+  }
+
+  startPinInput(gameIndex: number): void {
+    this.currentGameIndex = gameIndex;
+    this.currentFrame = 1;
+    this.currentThrowIndex = 0;
+    this.availablePins = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    this.pinInputFrames[gameIndex] = [];
+    this.isPinSetupModalOpen = true;
+  }
+
+  closePinSetupModal(): void {
+    this.isPinSetupModalOpen = false;
+  }
+
+  skipPinSetup(): void {
+    this.closePinSetupModal();
+    // Fall back to numeric input for this game
+    this.usePinInput = false;
+  }
+
+  onPinThrowConfirmed(event: { score: number; pinData: PinData }): void {
+    const { score, pinData } = event;
+    
+    // Store the throw data
+    if (!this.pinInputFrames[this.currentGameIndex]) {
+      this.pinInputFrames[this.currentGameIndex] = [];
+    }
+    
+    if (!this.pinInputFrames[this.currentGameIndex][this.currentFrame - 1]) {
+      this.pinInputFrames[this.currentGameIndex][this.currentFrame - 1] = [];
+    }
+    
+    this.pinInputFrames[this.currentGameIndex][this.currentFrame - 1].push({
+      value: score,
+      throwIndex: this.currentThrowIndex,
+      pins: pinData
+    });
+
+    // Update scores in real-time
+    this.updatePinInputScores();
+
+    // Update available pins for next throw
+    this.availablePins = this.availablePins.filter(pin => !pinData.pinsKnocked.includes(pin));
+
+    // Move to next throw
+    this.advanceToNextThrow();
+  }
+
+  private updatePinInputScores(): void {
+    // Update the corresponding game grid with current data
+    const gameGrid = this.gameGrids.toArray()[this.currentGameIndex];
+    if (gameGrid && this.pinInputFrames[this.currentGameIndex]) {
+      const frames = this.convertPinInputToFrames(this.pinInputFrames[this.currentGameIndex]);
+      
+      // Update game frames using proper format expected by GameGridComponent
+      gameGrid.game().frames = frames;
+      
+      // Use the GameScoreCalculatorService to calculate scores properly
+      const { totalScore, frameScores } = this.gameScoreCalculatorService.calculateScore(frames);
+      gameGrid.game().totalScore = totalScore;
+      gameGrid.game().frameScores = frameScores;
+      
+      // Calculate max possible score
+      const maxScore = this.gameScoreCalculatorService.calculateMaxScore(frames, totalScore);
+      
+      // Update our local score tracking
+      this.totalScores[this.currentGameIndex] = totalScore;
+      this.maxScores[this.currentGameIndex] = maxScore;
+      
+      // Trigger game grid updates
+      gameGrid.updateScores();
+    }
+  }
+
+  private advanceToNextThrow(): void {
+    // Check if frame is complete
+    const currentFrameData = this.pinInputFrames[this.currentGameIndex][this.currentFrame - 1];
+    const totalPinsKnocked = currentFrameData.reduce((sum: number, throw_: any) => sum + throw_.value, 0);
+    const isStrike = currentFrameData.length === 1 && currentFrameData[0].value === 10;
+    const isSpare = currentFrameData.length === 2 && totalPinsKnocked === 10;
+    
+    // Handle 10th frame logic (special rules)
+    if (this.currentFrame === 10) {
+      const throwsCount = currentFrameData.length;
+      
+      // First throw in 10th frame
+      if (throwsCount === 1) {
+        if (isStrike) {
+          // Strike on first throw - reset pins for second throw
+          this.currentThrowIndex = 1;
+          this.availablePins = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        } else {
+          // Not a strike - continue with remaining pins
+          this.currentThrowIndex = 1;
+          this.availablePins = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].filter(pin => 
+            !currentFrameData[0].pins?.pinsKnocked.includes(pin) || false
+          );
+        }
+        return;
+      }
+      
+      // Second throw in 10th frame  
+      if (throwsCount === 2) {
+        const firstThrow = currentFrameData[0];
+        const secondThrow = currentFrameData[1];
+        
+        // Get a third throw if: first was strike OR total of first two is 10 (spare)
+        if (firstThrow.value === 10 || (firstThrow.value + secondThrow.value) === 10) {
+          this.currentThrowIndex = 2;
+          // For third throw, always reset pins
+          this.availablePins = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+          return;
+        } else {
+          // No third throw needed - game complete
+          this.completeFrameInput();
+          return;
+        }
+      }
+      
+      // Third throw in 10th frame - game complete
+      if (throwsCount === 3) {
+        this.completeFrameInput();
+        return;
+      }
+    }
+
+    // For frames 1-9, check if frame is complete
+    if (isStrike) {
+      // Strike - move to next frame immediately
+      this.moveToNextFrame();
+    } else if (currentFrameData.length === 1) {
+      // First throw complete, move to second throw
+      this.currentThrowIndex = 1;
+      this.availablePins = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].filter(pin => 
+        !currentFrameData[0].pins?.pinsKnocked.includes(pin) || false
+      );
+    } else if (currentFrameData.length === 2) {
+      // Both throws complete - move to next frame
+      this.moveToNextFrame();
+    }
+  }
+
+  private moveToNextFrame(): void {
+    this.currentFrame++;
+    this.currentThrowIndex = 0;
+    this.availablePins = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    
+    if (this.currentFrame > 10) {
+      this.completeFrameInput();
+    }
+  }
+
+  private completeFrameInput(): void {
+    // Convert pin input frames to regular game format and process
+    try {
+      const frames = this.convertPinInputToFrames(this.pinInputFrames[this.currentGameIndex]);
+      
+      // Update the corresponding game grid with the data
+      const gameGrid = this.gameGrids.toArray()[this.currentGameIndex];
+      if (gameGrid) {
+        // Update game frames using proper format expected by GameGridComponent
+        gameGrid.game().frames = frames;
+        
+        // Use the GameScoreCalculatorService to calculate final scores
+        const { totalScore, frameScores } = this.gameScoreCalculatorService.calculateScore(frames);
+        gameGrid.game().totalScore = totalScore;
+        gameGrid.game().frameScores = frameScores;
+        
+        // Calculate max possible score
+        const maxScore = this.gameScoreCalculatorService.calculateMaxScore(frames, totalScore);
+        
+        // Update our local score tracking
+        this.totalScores[this.currentGameIndex] = totalScore;
+        this.maxScores[this.currentGameIndex] = maxScore;
+        
+        // Trigger game grid updates
+        gameGrid.updateScores();
+      }
+
+      this.toastService.showToast('Pin input complete! Game ready for saving.', 'checkmark', false);
+      this.closePinSetupModal();
+    } catch (error) {
+      console.error('Error processing pin input:', error);
+      this.toastService.showToast('Error processing pin input. Please try again.', 'bug', true);
+    }
+  }
+
+  private convertPinInputToFrames(pinFrames: any[][]): number[][] {
+    return pinFrames.map(frame => 
+      frame.map((throw_: any) => throw_.value)
+    );
+  }
+
+  // Helper methods for pin input display
+  getPinInputFrameValue(gameIndex: number, frameIndex: number, throwIndex: number): string {
+    if (!this.pinInputFrames[gameIndex] || !this.pinInputFrames[gameIndex][frameIndex]) {
+      return '';
+    }
+    
+    const frameData = this.pinInputFrames[gameIndex][frameIndex];
+    const throwData = frameData.find((throw_: any) => throw_.throwIndex === throwIndex);
+    
+    if (!throwData) {
+      return '';
+    }
+    
+    const value = throwData.value;
+    
+    // Handle special display cases for 10th frame
+    if (frameIndex === 9) {
+      if (value === 10) {
+        return 'X'; // Strike
+      }
+      
+      // Check for spare in 10th frame (any two consecutive throws totaling 10)
+      if (throwIndex === 1 && frameData.length >= 2) {
+        const firstThrow = frameData[0];
+        if (firstThrow && firstThrow.value < 10 && firstThrow.value + value === 10) {
+          return '/'; // Spare
+        }
+      } else if (throwIndex === 2 && frameData.length === 3) {
+        const secondThrow = frameData[1];
+        if (secondThrow && secondThrow.value < 10 && secondThrow.value + value === 10) {
+          return '/'; // Spare
+        }
+      }
+      
+      return value === 0 ? '-' : value.toString();
+    }
+    
+    // Handle regular frames (1-9)
+    if (throwIndex === 0 && value === 10) {
+      return 'X'; // Strike
+    }
+    
+    if (throwIndex === 1 && frameData.length >= 2) {
+      const firstThrow = frameData.find((throw_: any) => throw_.throwIndex === 0);
+      if (firstThrow && firstThrow.value + value === 10) {
+        return '/'; // Spare
+      }
+    }
+    
+    return value === 0 ? '-' : value.toString();
+  }
+
+  getPinInputFrameScore(gameIndex: number, frameIndex: number): string {
+    if (!this.pinInputFrames[gameIndex] || !this.pinInputFrames[gameIndex][frameIndex]) {
+      return '0';
+    }
+    
+    // Convert to frames format and use the scoring service
+    try {
+      const frames = this.convertPinInputToFrames(this.pinInputFrames[gameIndex].slice(0, frameIndex + 1));
+      const { frameScores } = this.gameScoreCalculatorService.calculateScore(frames);
+      return frameScores[frameIndex]?.toString() || '0';
+    } catch (error) {
+      console.error('Error calculating frame score:', error);
+      return '0';
+    }
+  }
+
+  getCurrentPinFrame(gameIndex: number): number {
+    if (!this.pinInputFrames[gameIndex]) {
+      return 1;
+    }
+    
+    // Find the first incomplete frame
+    for (let i = 0; i < 10; i++) {
+      const frameData = this.pinInputFrames[gameIndex][i];
+      if (!frameData || frameData.length === 0) {
+        return i + 1;
+      }
+      
+      // Check if frame is complete
+      const frameTotal = frameData.reduce((sum: number, throw_: any) => sum + throw_.value, 0);
+      const isStrike = frameData.length === 1 && frameData[0].value === 10;
+      const isComplete = isStrike || frameData.length === 2 || (i === 9 && frameData.length === 3);
+      
+      if (!isComplete) {
+        return i + 1;
+      }
+    }
+    
+    return 10; // All frames complete
+  }
+
+  getCurrentPinThrow(gameIndex: number): string {
+    if (!this.pinInputFrames[gameIndex]) {
+      return 'First Throw';
+    }
+    
+    const currentFrame = this.getCurrentPinFrame(gameIndex) - 1;
+    const frameData = this.pinInputFrames[gameIndex][currentFrame];
+    
+    if (!frameData || frameData.length === 0) {
+      return 'First Throw';
+    }
+    
+    const labels = ['First Throw', 'Second Throw', 'Third Throw'];
+    return labels[frameData.length] || 'Complete';
+  }
+
+  isPinInputActive(gameIndex: number): boolean {
+    return this.pinInputFrames[gameIndex] && this.pinInputFrames[gameIndex].length > 0;
+  }
+
+  continuePinInput(gameIndex: number): void {
+    this.currentGameIndex = gameIndex;
+    this.currentFrame = this.getCurrentPinFrame(gameIndex);
+    
+    // Set up current throw state
+    const frameData = this.pinInputFrames[gameIndex][this.currentFrame - 1];
+    if (frameData && frameData.length > 0) {
+      this.currentThrowIndex = frameData.length;
+      // Update available pins based on previous throws in this frame
+      let knockedPins: number[] = [];
+      frameData.forEach((throw_: any) => {
+        if (throw_.pins && throw_.pins.pinsKnocked) {
+          knockedPins = knockedPins.concat(throw_.pins.pinsKnocked);
+        }
+      });
+      this.availablePins = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].filter(pin => !knockedPins.includes(pin));
+    } else {
+      this.currentThrowIndex = 0;
+      this.availablePins = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    }
+    
+    this.isPinSetupModalOpen = true;
   }
 }
