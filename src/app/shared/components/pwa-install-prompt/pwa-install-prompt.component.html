@@ -45,25 +45,43 @@
           </div>
         </div>
 
+        <!-- TODO Fix wrong image opening-->
+        <ion-modal [isOpen]="isModalOpen" (didDismiss)="isModalOpen = false" class="image-modal">
+          <ng-template>
+            <ion-header>
+              <ion-segment class="ion-hide" scrollable="true" [value]="selectedImage" (ionChange)="onSegmentChange($event)">
+                @for (image of images; track image.id) {
+                  <ion-segment-button [value]="image.id" [contentId]="image.id">
+                    <ion-label>{{ image.name }}</ion-label>
+                  </ion-segment-button>
+                }
+              </ion-segment>
+            </ion-header>
+            <ion-content class="ion-no-padding">
+              <div class="image-counter">{{ currentImageIndex + 1 }} / {{ images.length }}</div>
+
+              <ion-segment-view>
+                @for (image of images; track image.id; let i = $index) {
+                  <ion-segment-content [id]="image.id">
+                    <div style="background-image: url('{{ image.src }}');" class="modal-image" role="img" [attr.aria-label]="image.alt"></div>
+                  </ion-segment-content>
+                }
+              </ion-segment-view>
+            </ion-content>
+          </ng-template>
+        </ion-modal>
+
         <div class="screenshots-section">
           <h3>App Screenshots</h3>
           <div class="screenshots-carousel">
             <div class="screenshot-container">
-              <button
-                type="button"
-                class="screenshot-button"
-                (click)="openImageModal('assets/screenshots/start.png', 'Start Page')"
-                (keyup.enter)="openImageModal('assets/screenshots/start.png', 'Start Page')">
+              <button type="button" class="screenshot-button" (click)="openImageModal('start-screen')" (keyup.enter)="openImageModal('start-screen')">
                 <img src="assets/screenshots/start.png" alt="Start Page" class="screenshot" />
               </button>
               <p class="screenshot-caption">Track your games</p>
             </div>
             <div class="screenshot-container">
-              <button
-                type="button"
-                class="screenshot-button"
-                (click)="openImageModal('assets/screenshots/stats.png', 'Statistics Page')"
-                (keyup.enter)="openImageModal('assets/screenshots/stats.png', 'Statistics Page')">
+              <button type="button" class="screenshot-button" (click)="openImageModal('stats-screen')" (keyup.enter)="openImageModal('stats-screen')">
                 <img src="assets/screenshots/stats.png" alt="Statistics Page" class="screenshot" />
               </button>
               <p class="screenshot-caption">View detailed stats</p>
@@ -72,8 +90,8 @@
               <button
                 type="button"
                 class="screenshot-button"
-                (click)="openImageModal('assets/screenshots/history.png', 'History Page')"
-                (keyup.enter)="openImageModal('assets/screenshots/history.png', 'History Page')">
+                (click)="openImageModal('history-screen')"
+                (keyup.enter)="openImageModal('history-screen')">
                 <img src="assets/screenshots/history.png" alt="History Page" class="screenshot" />
               </button>
               <p class="screenshot-caption">Browse game history</p>
@@ -82,8 +100,8 @@
               <button
                 type="button"
                 class="screenshot-button"
-                (click)="openImageModal('assets/screenshots/arsenal.png', 'Arsenal Page')"
-                (keyup.enter)="openImageModal('assets/screenshots/arsenal.png', 'Arsenal Page')">
+                (click)="openImageModal('arsenal-screen')"
+                (keyup.enter)="openImageModal('arsenal-screen')">
                 <img src="assets/screenshots/arsenal.png" alt="Arsenal Page" class="screenshot" />
               </button>
               <p class="screenshot-caption">Manage your arsenals</p>
@@ -92,18 +110,14 @@
               <button
                 type="button"
                 class="screenshot-button"
-                (click)="openImageModal('assets/screenshots/history.png', 'History Page')"
-                (keyup.enter)="openImageModal('assets/screenshots/history.png', 'History Page')">
+                (click)="openImageModal('history-screen')"
+                (keyup.enter)="openImageModal('history-screen')">
                 <img src="assets/screenshots/history.png" alt="History Page" class="screenshot" />
               </button>
               <p class="screenshot-caption">Browse game history</p>
             </div>
             <div class="screenshot-container">
-              <button
-                type="button"
-                class="screenshot-button"
-                (click)="openImageModal('assets/screenshots/balls.png', 'Balls Page')"
-                (keyup.enter)="openImageModal('assets/screenshots/balls.png', 'Balls Page')">
+              <button type="button" class="screenshot-button" (click)="openImageModal('balls-screen')" (keyup.enter)="openImageModal('balls-screen')">
                 <img src="assets/screenshots/balls.png" alt="Balls Page" class="screenshot" />
               </button>
               <p class="screenshot-caption">Browse balls</p>
@@ -112,8 +126,8 @@
               <button
                 type="button"
                 class="screenshot-button"
-                (click)="openImageModal('assets/screenshots/pattern.png', 'Pattern Page')"
-                (keyup.enter)="openImageModal('assets/screenshots/pattern.png', 'Pattern Page')">
+                (click)="openImageModal('pattern-screen')"
+                (keyup.enter)="openImageModal('pattern-screen')">
                 <img src="assets/screenshots/pattern.png" alt="Pattern Page" class="screenshot" />
               </button>
               <p class="screenshot-caption">Browse patterns</p>
@@ -197,11 +211,5 @@
         </div>
       </div>
     </ion-content>
-  </ng-template>
-</ion-modal>
-
-<ion-modal [isOpen]="isImageModalOpen" (ionModalDidDismiss)="closeImageModal()" class="image-modal" [backdropDismiss]="true" [showBackdrop]="true">
-  <ng-template>
-    <div style="background: url('{{ selectedImageSrc }}');" class="modal-image" role="img" [attr.aria-label]="selectedImageAlt"></div>
   </ng-template>
 </ion-modal>

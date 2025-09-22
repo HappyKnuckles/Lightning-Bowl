@@ -1,6 +1,22 @@
 import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonModal, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonIcon, IonContent, IonFooter } from '@ionic/angular/standalone';
+import {
+  IonModal,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonSegmentContent,
+  IonSegmentView,
+  IonButtons,
+  IonButton,
+  IonIcon,
+  IonContent,
+  IonFooter,
+  IonSegment,
+  IonSegmentButton,
+  IonLabel,
+  IonImg,
+} from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { close, flash, wifiOutline, notifications, phonePortrait, download, shareOutline, checkmark, add, checkmarkCircle } from 'ionicons/icons';
 
@@ -9,7 +25,24 @@ import { close, flash, wifiOutline, notifications, phonePortrait, download, shar
   templateUrl: './pwa-install-prompt.component.html',
   styleUrls: ['./pwa-install-prompt.component.scss'],
   standalone: true,
-  imports: [CommonModule, IonModal, IonHeader, IonToolbar, IonTitle, IonButtons, IonButton, IonIcon, IonContent, IonFooter],
+  imports: [
+    IonImg,
+    IonLabel,
+    IonSegmentButton,
+    IonSegment,
+    CommonModule,
+    IonModal,
+    IonSegmentContent,
+    IonSegmentView,
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonButtons,
+    IonButton,
+    IonIcon,
+    IonContent,
+    IonFooter,
+  ],
 })
 export class PwaInstallPromptComponent implements OnInit {
   @Input() isOpen = false;
@@ -20,12 +53,17 @@ export class PwaInstallPromptComponent implements OnInit {
 
   isChrome = false;
   isIOS = false;
-
-  // Image viewing functionality
-  isImageModalOpen = false;
-  selectedImageSrc = '';
-  selectedImageAlt = '';
-
+  images = [
+    { src: 'assets/screenshots/start.png', alt: 'Start Screen', name: 'Start', id: 'start-screen', index: 0 },
+    { src: 'assets/screenshots/stats.png', alt: 'Stats Screen', name: 'Stats', id: 'stats-screen', index: 1 },
+    { src: 'assets/screenshots/history.png', alt: 'History Screen', name: 'History', id: 'history-screen', index: 2 },
+    { src: 'assets/screenshots/arsenal.png', alt: 'Arsenal Screen', name: 'Arsenal', id: 'arsenal-screen', index: 3 },
+    { src: 'assets/screenshots/balls.png', alt: 'Balls Screen', name: 'Balls', id: 'balls-screen', index: 4 },
+    { src: 'assets/screenshots/pattern.png', alt: 'Pattern Screen', name: 'Pattern', id: 'pattern-screen', index: 5 },
+  ];
+  selectedImage = 'start-screen';
+  currentImageIndex = 0;
+  isModalOpen = false;
   constructor() {
     addIcons({
       close,
@@ -65,15 +103,18 @@ export class PwaInstallPromptComponent implements OnInit {
     this.dismiss.emit();
   }
 
-  openImageModal(imageSrc: string, imageAlt: string): void {
-    this.selectedImageSrc = imageSrc;
-    this.selectedImageAlt = imageAlt;
-    this.isImageModalOpen = true;
+  onSegmentChange(event: any): void {
+    const selectedId = event.detail.value;
+    const selectedImage = this.images.find((image) => image.id === selectedId);
+    if (selectedImage) {
+      this.selectedImage = selectedImage.id;
+      this.currentImageIndex = selectedImage.index;
+    }
   }
 
-  closeImageModal(): void {
-    this.isImageModalOpen = false;
-    this.selectedImageSrc = '';
-    this.selectedImageAlt = '';
+  openImageModal(image: string): void {
+    this.selectedImage = image;
+    this.currentImageIndex = this.images.findIndex((img) => img.id === image);
+    this.isModalOpen = true;
   }
 }
