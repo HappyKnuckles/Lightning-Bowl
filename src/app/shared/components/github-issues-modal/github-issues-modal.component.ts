@@ -15,6 +15,8 @@ import {
   IonSpinner,
   IonIcon,
   IonChip,
+  IonAvatar,
+  IonImg,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { documentOutline, openOutline, warningOutline } from 'ionicons/icons';
@@ -27,6 +29,8 @@ import { GitHubService } from 'src/app/core/services/github/github.service';
   styleUrls: ['./github-issues-modal.component.scss'],
   standalone: true,
   imports: [
+    IonImg,
+    IonAvatar,
     IonChip,
     IonIcon,
     IonSpinner,
@@ -47,12 +51,10 @@ import { GitHubService } from 'src/app/core/services/github/github.service';
 export class GithubIssuesModalComponent implements OnInit {
   issues: GitHubIssue[] = [];
   loading = false;
-  selectedLabels: string[] = ['feature']; // Default to feature
+  selectedLabels: string[] = ['']; // Empty array to show all issues by default
   error: string | null = null;
 
-  constructor(
-    private gitHubService: GitHubService,
-  ) {
+  constructor(private gitHubService: GitHubService) {
     addIcons({
       documentOutline,
       openOutline,
@@ -72,7 +74,8 @@ export class GithubIssuesModalComponent implements OnInit {
     } catch (error) {
       console.error('Failed to load issues:', error);
       this.issues = [];
-      this.error = 'Unable to load issues. This may be due to network restrictions or API limitations. Please visit the GitHub repository directly for the latest issues.';
+      this.error =
+        'Unable to load issues. This may be due to network restrictions or API limitations. Please visit the GitHub repository directly for the latest issues.';
     } finally {
       this.loading = false;
     }
@@ -118,10 +121,10 @@ export class GithubIssuesModalComponent implements OnInit {
     const r = parseInt(backgroundColor.substring(0, 2), 16);
     const g = parseInt(backgroundColor.substring(2, 4), 16);
     const b = parseInt(backgroundColor.substring(4, 6), 16);
-    
+
     // Calculate luminance
     const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-    
+
     // Return black for light colors, white for dark colors
     return luminance > 0.5 ? '#000000' : '#ffffff';
   }

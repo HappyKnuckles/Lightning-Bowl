@@ -12,6 +12,7 @@ export interface GitHubIssue {
     login: string;
     avatar_url: string;
   };
+  pull_request?: string;
 }
 
 export interface GitHubLabel {

@@ -19,18 +19,16 @@ export class GitHubService {
       const params: any = {
         state: 'open',
         sort: 'created',
-        direction: 'desc'
+        direction: 'desc',
       };
 
       if (labels.length > 0) {
         params.labels = labels.join(',');
       }
 
-      const response = await firstValueFrom(
-        this.http.get<GitHubIssue[]>(url, { params })
-      );
+      const response = await firstValueFrom(this.http.get<GitHubIssue[]>(url, { params }));
 
-      return response;
+      return response.filter((issue) => !issue.pull_request);
     } catch (error) {
       console.error('Error fetching GitHub issues:', error);
       return [];

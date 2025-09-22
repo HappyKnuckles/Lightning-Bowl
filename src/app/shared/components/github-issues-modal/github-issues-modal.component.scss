@@ -1,11 +1,15 @@
 .issue-card {
   margin: 8px 0;
   border-radius: 8px;
-  
+
+  ion-card-header{
+    padding-top: 0;
+  }
+
   .issue-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     gap: 12px;
     
     ion-card-title {
@@ -26,31 +30,23 @@
   .labels-container {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px;
-    margin-top: 8px;
+    gap: 6px;
+    margin: 8px 0;
     
     .issue-label {
       font-size: 0.75rem;
       font-weight: 600;
-      height: 20px;
-      border-radius: 10px;
-      --background: transparent;
-      --color: inherit;
+      height: 16px;
       margin: 0;
       padding: 0 8px;
-      display: flex;
-      align-items: center;
     }
   }
   
   ion-card-content {
-    padding-top: 8px;
-    
-    p {
-      margin: 0 0 12px 0;
-      line-height: 1.4;
+    padding-bottom: 8px;
+    p{
+      color: lightgray;
     }
-    
     .issue-meta {
       display: flex;
       justify-content: space-between;
@@ -63,7 +59,6 @@
       }
       
       ion-button {
-        --padding-start: 0;
         --padding-end: 0;
         margin: 0;
       }
