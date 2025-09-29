@@ -7,6 +7,7 @@ export interface GitHubIssue {
   labels: GitHubLabel[];
   created_at: string;
   updated_at: string;
+  closed_at?: string;
   html_url: string;
   user: {
     login: string;

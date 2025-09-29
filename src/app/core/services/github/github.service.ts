@@ -13,17 +13,19 @@ export class GitHubService {
 
   constructor(private http: HttpClient) {}
 
-  async getIssues(labels: string[] = []): Promise<GitHubIssue[]> {
+  async getIssues(labels: string[] = [], state: 'open' | 'closed' | 'all' = 'open', page = 1, perPage = 30): Promise<GitHubIssue[]> {
     try {
       const url = `${this.baseUrl}/repos/${this.repoOwner}/${this.repoName}/issues`;
-      const params: any = {
-        state: 'open',
+      const params: Record<string, string | number> = {
+        state,
         sort: 'created',
         direction: 'desc',
+        page,
+        per_page: perPage,
       };
 
       if (labels.length > 0) {
-        params.labels = labels.join(',');
+        params['labels'] = labels.join(',');
       }
 
       const response = await firstValueFrom(this.http.get<GitHubIssue[]>(url, { params }));
@@ -37,5 +39,13 @@ export class GitHubService {
 
   async getFeatureIssues(): Promise<GitHubIssue[]> {
     return this.getIssues(['feature']);
+  }
+
+  async getClosedFeatures(labels: string[] = [], page = 1, perPage = 30): Promise<GitHubIssue[]> {
+    return this.getIssues(labels, 'closed', page, perPage);
+  }
+
+  async getOpenFeatures(labels: string[] = [], page = 1, perPage = 30): Promise<GitHubIssue[]> {
+    return this.getIssues(labels, 'open', page, perPage);
   }
 }

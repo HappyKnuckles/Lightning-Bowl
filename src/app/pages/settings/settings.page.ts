@@ -19,7 +19,6 @@ import {
   IonModal,
   IonButtons,
   IonList,
-  IonSpinner,
 } from '@ionic/angular/standalone';
 import { FormsModule, NgForm, ReactiveFormsModule } from '@angular/forms';
 import { addIcons } from 'ionicons';
@@ -74,7 +73,6 @@ import { GithubIssuesModalComponent } from 'src/app/shared/components/github-iss
     IonHeader,
     IonSelect,
     IonSelectOption,
-    IonSpinner,
     NgClass,
     NgFor,
     FormsModule,
@@ -82,7 +80,7 @@ import { GithubIssuesModalComponent } from 'src/app/shared/components/github-iss
     LeagueSelectorComponent,
     SpareNamesComponent,
     GithubIssuesModalComponent,
-    NgIf
+    NgIf,
   ],
 })
 export class SettingsPage implements OnInit {
