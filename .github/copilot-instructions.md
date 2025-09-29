@@ -7,11 +7,12 @@ Always reference these instructions first and fallback to search or bash command
 ## Working Effectively
 
 ### Bootstrap and Build the Repository:
+
 - **CRITICAL**: Node.js 20+ and npm 10+ are required (current: Node 20.19.4, npm 10.8.2)
 - `npm install` -- takes 60+ seconds. NEVER CANCEL. Set timeout to 300+ seconds.
 - `npm run build` -- takes 25+ seconds. NEVER CANCEL. Set timeout to 120+ seconds.
   - Builds to `www/` directory
-  - Uses Angular 18 application builder  
+  - Uses Angular 18 application builder
   - Produces ~1.8MB initial bundle + lazy chunks
   - Warnings about CommonJS modules (leaflet, exceljs) are expected
 - `npm test` -- **CAUTION**: Tests have compilation errors and will fail. DO NOT run unless specifically fixing test issues.
@@ -22,12 +23,14 @@ Always reference these instructions first and fallback to search or bash command
 - `npm run stylelint` -- takes 2+ seconds. Returns 110+ style warnings but succeeds
 
 ### Run the Development Server:
+
 - **Primary method**: `npm start` or `ng serve` -- serves on `http://localhost:4200/`
 - **Alternative method**: `npx ionic serve` -- serves on `http://localhost:8100/`
 - **NEVER CANCEL**: Development build takes 20+ seconds. Set timeout to 120+ seconds.
 - Both methods work identically (Ionic CLI delegates to Angular CLI)
 
 ### Mobile Development:
+
 - `npx cap sync` -- syncs web assets to native projects (takes 30+ seconds)
 - `npx cap open android` -- opens Android Studio (requires Android SDK)
 - `npx cap open ios` -- opens Xcode (requires macOS and Xcode)
@@ -36,7 +39,9 @@ Always reference these instructions first and fallback to search or bash command
 ## Validation
 
 ### ALWAYS run through complete user scenarios after making changes:
-1. **Add Game Workflow**: 
+
+1. **Add Game Workflow**:
+
    - Navigate to Add tab (default)
    - Enter scores in bowling frame inputs (e.g., "9" and "1" for spare)
    - Verify automatic score calculation
@@ -44,6 +49,7 @@ Always reference these instructions first and fallback to search or bash command
    - Verify PWA install dialog appears and can be dismissed
 
 2. **Navigation Testing**:
+
    - Test all 5 main tabs: New, Stats, History, Leagues, More
    - Stats tab shows "Start playing a few games to see your stats here!" when no data
    - All tabs should load without JavaScript errors
@@ -54,12 +60,14 @@ Always reference these instructions first and fallback to search or bash command
    - Shows app screenshots and installation instructions
 
 ### Build and Test Validation:
-- **ALWAYS build before committing**: `npm run build` 
+
+- **ALWAYS build before committing**: `npm run build`
 - **NEVER run unit tests** unless specifically fixing test infrastructure
 - **ALWAYS run linting**: `npm run lint && npm run stylelint`
 - Lint warnings are acceptable; lint errors must be fixed
 
 ### External API Dependencies:
+
 - App integrates with 3 main external APIs (configured in `src/environments/environment.ts`):
   - **Bowwwl.com** (`https://bowwwl.com`) - Bowling ball images and product details
   - **Bowwwl Proxy** (`https://bowwwl-proxy.vercel.app/api/`) - Bowling ball data, specifications, and search
@@ -73,11 +81,12 @@ Always reference these instructions first and fallback to search or bash command
 ## Common Tasks
 
 ### Key Directories and Files:
+
 ```
 src/app/
 ├── core/                    # Services, models, constants, directives
 │   ├── models/             # TypeScript interfaces (Game, Stats, Ball, etc.)
-│   ├── services/           # Business logic services  
+│   ├── services/           # Business logic services
 │   └── constants/          # App constants and configurations
 ├── pages/                  # Main application pages (REQUIRED for new pages)
 │   ├── add-game/          # Game entry form
@@ -99,7 +108,7 @@ Key Configuration Files:
 - app.routes.ts            # Route definitions (REQUIRED for new pages)
 - package.json             # Dependencies and scripts
 - angular.json             # Angular build configuration
-- ionic.config.json        # Ionic framework configuration  
+- ionic.config.json        # Ionic framework configuration
 - capacitor.config.ts      # Mobile deployment configuration
 - tsconfig.json            # TypeScript configuration
 - src/environments/        # API endpoints and environment-specific settings
@@ -107,9 +116,10 @@ Key Configuration Files:
 ```
 
 ### Architecture Overview:
+
 - **Framework**: Angular 18 + Ionic 8 + Capacitor 7
 - **Routing**: Uses Ionic tabs with Angular Router (`app.routes.ts` - standalone routing, no modules)
-- **Pages**: Lazy-loaded standalone components in `/pages/` directory  
+- **Pages**: Lazy-loaded standalone components in `/pages/` directory
 - **Navigation**: 5 main tabs (New, Stats, History, Leagues, More) + "More" modal with additional pages
 - **Storage**: **Offline-First with IndexedDB** - Ionic Storage provides IndexedDB/SQLite with automatic online/offline sync
 - **Charts**: Chart.js with zoom plugin
@@ -118,6 +128,7 @@ Key Configuration Files:
 - **Build**: Angular application builder (not webpack)
 
 ### Key Technologies and Libraries:
+
 - **UI Framework**: Ionic 8 with iOS/Android platform styling
 - **State Management**: Angular services with signals (no NgRx)
 - **Data Storage**: **IndexedDB-first architecture** with automatic cache management and network-aware synchronization
@@ -129,6 +140,7 @@ Key Configuration Files:
 - **Offline Support**: Comprehensive caching system with intelligent cache invalidation
 
 ### Working with the Codebase:
+
 - **Component Updates**: Most UI is in `src/app/shared/components/`
 - **Business Logic**: Core services in `src/app/core/services/`
 - **Styling**: SCSS files use Ionic CSS variables and themes
@@ -139,23 +151,28 @@ Key Configuration Files:
 ### Development Guidelines & Best Practices:
 
 #### **New Page Creation:**
+
 - **ALWAYS place new pages in the `src/app/pages/` directory**
 - **MUST register new pages in two locations:**
   1. **Route Configuration**: Add lazy-loaded route in `src/app/app.routes.ts`
   2. **Tab Navigation**: Update `src/app/tabs/tabs.page.ts` for tab access (either main tabs or "More" modal)
 - **Pages use Angular standalone components** with lazy loading via `loadComponent()`
+- **Try to follow latest Angular and Ionic patterns** (signals, standalone components, tree-shaking imports)
+- **Use Ionic components before you resort to custom HTML/CSS**
 
 #### **Component Naming Convention:**
+
 - **ALWAYS prefix components with the data structure they handle**
 - **Examples:**
   - `ball-filter` - filters bowling ball data
-  - `pattern-info` - displays oil pattern information  
+  - `pattern-info` - displays oil pattern information
   - `game-filter` - filters game data
   - `league-selector` - handles league selection
 - **Components go in `src/app/shared/components/[component-name]/`**
 - **Use kebab-case for component names and folders**
 
 #### **Design & Styling Requirements:**
+
 - **ALWAYS examine existing app styles before creating new components**
 - **MUST support all color themes defined in settings page:**
   - Red, Blue, Gray, Purple/Lila, Green (default)
@@ -166,6 +183,7 @@ Key Configuration Files:
 - **Follow existing component styling patterns from `src/app/shared/components/`**
 
 #### **Code Safety & Architecture:**
+
 - **ALWAYS follow Single Responsibility Principle** - one component, one purpose
 - **NEVER delete or modify existing code unrelated to your specific issue**
 - **Use Angular standalone components** (no NgModule declarations needed)
@@ -173,6 +191,7 @@ Key Configuration Files:
 - **Follow existing service injection patterns** from `src/app/core/services/`
 
 #### **Code Cleanup & Scope Management:**
+
 - **ALWAYS clean up your code after making changes** - remove any bloat or unnecessary modifications
 - **ONLY include necessary code to complete the issue** - avoid scope creep and unrelated changes
 - **Remove temporary files, debug code, and unused imports** before committing
@@ -180,6 +199,7 @@ Key Configuration Files:
 - **Keep changes surgical and minimal** - prefer small, targeted modifications over large refactors
 
 #### **Example: Adding a New Page**
+
 ```typescript
 // 1. Create page in src/app/pages/my-feature/my-feature.page.ts
 @Component({
@@ -201,15 +221,16 @@ readonly moreTabs = [..., '/tabs/my-feature'];
 ```
 
 #### **Example: Adding a New Component**
+
 ```typescript
 // Component name: ball-recommendations (handles ball data)
 // Location: src/app/shared/components/ball-recommendations/
 
 @Component({
-  selector: 'app-ball-recommendations', 
-  templateUrl: './ball-recommendations.component.html',
+  selector: "app-ball-recommendations",
+  templateUrl: "./ball-recommendations.component.html",
   standalone: true,
-  imports: [IonCard, IonButton, NgFor]
+  imports: [IonCard, IonButton, NgFor],
 })
 export class BallRecommendationsComponent {
   // Single responsibility: recommend bowling balls
@@ -217,6 +238,7 @@ export class BallRecommendationsComponent {
 ```
 
 ### Development Tips:
+
 - **Hot Reload**: Development server supports hot module replacement
 - **Debug Mode**: Angular runs in development mode with detailed logging
 - **Browser DevTools**: Use for debugging; check console for API failures
@@ -224,6 +246,7 @@ export class BallRecommendationsComponent {
 - **Mobile Testing**: Use browser device emulation or deploy to device via Capacitor
 
 ### Performance Considerations:
+
 - **Bundle Size**: Main bundle ~1.8MB with lazy loading for pages
 - **Build Time**: Production builds take 25+ seconds
 - **Memory Usage**: Large Angular + Ionic + Chart.js bundle
@@ -231,6 +254,7 @@ export class BallRecommendationsComponent {
 - **Network Awareness**: Automatic online/offline detection with intelligent cache fallbacks
 
 ### Deployment:
+
 - **Web**: Deploy `www/` directory after `npm run build`
 - **Android**: Use `npx cap open android` after `npx cap sync`
 - **iOS**: Use `npx cap open ios` after `npx cap sync` (requires macOS)
@@ -239,16 +263,17 @@ export class BallRecommendationsComponent {
 ## Quick Reference
 
 ### Common Commands & Timing
+
 ```bash
 # Development Setup
 npm install                    # 60+ seconds, timeout: 300+
-npm run build                  # 25+ seconds, timeout: 120+  
+npm run build                  # 25+ seconds, timeout: 120+
 npm start                      # 20+ seconds, timeout: 120+
 npx ionic serve                # Alternative dev server
 npm run lint                   # 4+ seconds
 npm run stylelint              # 2+ seconds
 
-# Mobile Development  
+# Mobile Development
 npx cap sync                   # 30+ seconds
 npx cap open android           # Opens Android Studio
 npx cap open ios               # Opens Xcode (macOS only)
@@ -259,6 +284,7 @@ http://localhost:8100/         # Ionic dev server
 ```
 
 ### File Structure Quick Access
+
 ```
 src/app/
 ├── pages/                     # New pages go here (REQUIRED)
@@ -277,6 +303,7 @@ Key Config Files:
 ```
 
 ### Essential Validation Workflow
+
 1. **Build**: `npm run build` (verify no errors)
 2. **Test Navigation**: All 5 tabs (New, Stats, History, Leagues, More)
 3. **Test Bowling Input**: Enter scores, verify auto-calculation
@@ -290,6 +317,7 @@ Lightning Bowl follows **Angular 18 + Ionic 8** modern patterns with emphasis on
 ### Angular Modern Patterns
 
 #### **Dependency Injection**
+
 ```typescript
 // ✅ Modern: inject() function
 import { inject } from '@angular/core';
@@ -311,22 +339,23 @@ export class MyComponent {
 ```
 
 #### **Signals (Primary State Management)**
-```typescript
-import { signal, computed, effect } from '@angular/core';
 
-@Injectable({ providedIn: 'root' })
+```typescript
+import { signal, computed, effect } from "@angular/core";
+
+@Injectable({ providedIn: "root" })
 export class MyService {
   // Private signal
   #isLoading = signal<boolean>(false);
-  
+
   // Public readonly getter
   get isLoading() {
     return this.#isLoading;
   }
-  
+
   // Computed signals
-  status = computed(() => this.#isLoading() ? 'Loading...' : 'Ready');
-  
+  status = computed(() => (this.#isLoading() ? "Loading..." : "Ready"));
+
   setLoading(loading: boolean): void {
     this.#isLoading.set(loading);
   }
@@ -334,72 +363,73 @@ export class MyService {
 ```
 
 #### **Component Input Signals**
+
 ```typescript
 @Component({...})
 export class MyComponent {
   // Required input
   data = input.required<MyData>();
-  
+
   // Optional input with default
   items = input<Item[]>([]);
-  
+
   // Computed from inputs
   displayItems = computed(() => this.items().slice(0, 10));
 }
 ```
 
 #### **Modern Control Flow (Template)**
+
 ```html
 <!-- ✅ Modern: @if, @for, @switch -->
 @if (isLoading()) {
-  <ion-spinner></ion-spinner>
+<ion-spinner></ion-spinner>
 } @else {
-  <ion-list>
-    @for (item of items(); track item.id) {
-      <ion-item>{{ item.name }}</ion-item>
-    } @empty {
-      <ion-text>No items found</ion-text>
-    }
-  </ion-list>
-}
-
-@switch (status()) {
-  @case ('loading') {
-    <ion-spinner></ion-spinner>
+<ion-list>
+  @for (item of items(); track item.id) {
+  <ion-item>{{ item.name }}</ion-item>
+  } @empty {
+  <ion-text>No items found</ion-text>
   }
-  @case ('error') {
-    <ion-text color="danger">Error occurred</ion-text>
-  }
-  @default {
-    <ion-content>Ready</ion-content>
-  }
-}
+</ion-list>
+} @switch (status()) { @case ('loading') {
+<ion-spinner></ion-spinner>
+} @case ('error') {
+<ion-text color="danger">Error occurred</ion-text>
+} @default {
+<ion-content>Ready</ion-content>
+} }
 ```
 
 ### Ionic Standalone Component Pattern
 
 #### **Component Structure**
+
 ```typescript
-import { Component } from '@angular/core';
-import { 
-  IonHeader, IonToolbar, IonTitle, IonContent,
-  IonButton, IonIcon, IonCard 
-} from '@ionic/angular/standalone';
-import { addIcons } from 'ionicons';
-import { heart, star } from 'ionicons/icons';
+import { Component } from "@angular/core";
+import { IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon, IonCard } from "@ionic/angular/standalone";
+import { addIcons } from "ionicons";
+import { heart, star } from "ionicons/icons";
 
 @Component({
-  selector: 'app-my-component',
-  templateUrl: './my-component.component.html',
-  styleUrls: ['./my-component.component.scss'],
+  selector: "app-my-component",
+  templateUrl: "./my-component.component.html",
+  styleUrls: ["./my-component.component.scss"],
   standalone: true,
   imports: [
     // Import only required Ionic components
-    IonHeader, IonToolbar, IonTitle, IonContent,
-    IonButton, IonIcon, IonCard,
+    IonHeader,
+    IonToolbar,
+    IonTitle,
+    IonContent,
+    IonButton,
+    IonIcon,
+    IonCard,
     // Angular common
-    NgIf, NgFor, DatePipe
-  ]
+    NgIf,
+    NgFor,
+    DatePipe,
+  ],
 })
 export class MyComponent {
   constructor() {
@@ -410,18 +440,19 @@ export class MyComponent {
 ```
 
 #### **Service Integration**
+
 ```typescript
 @Component({...})
 export class MyComponent {
   // Inject signals-based services
   private loadingService = inject(LoadingService);
   private gameService = inject(GameService);
-  
+
   // Access signals
   isLoading = this.loadingService.isLoading;
-  
+
   // Use computed for derived state
-  canSave = computed(() => 
+  canSave = computed(() =>
     !this.isLoading() && this.form.valid
   );
 }
@@ -430,6 +461,7 @@ export class MyComponent {
 ### Theme & Styling Patterns
 
 #### **Multi-Theme Support**
+
 ```scss
 // Use CSS custom properties from theme
 .my-component {
@@ -446,17 +478,19 @@ export class MyComponent {
 ```
 
 #### **Component Naming Convention**
+
 ```typescript
 // ✅ Prefix with data structure
-ball-filter.component.ts        // Handles Ball data
-pattern-info.component.ts       // Displays Pattern information
-game-stats.component.ts         // Shows Game statistics
-league-selector.component.ts    // Selects League data
+ball - filter.component.ts; // Handles Ball data
+pattern - info.component.ts; // Displays Pattern information
+game - stats.component.ts; // Shows Game statistics
+league - selector.component.ts; // Selects League data
 ```
 
 ### Page Creation Pattern
 
 #### **1. Create in pages/ folder**
+
 ```bash
 src/app/pages/my-feature/
 ├── my-feature.page.ts
@@ -466,29 +500,31 @@ src/app/pages/my-feature/
 ```
 
 #### **2. Register route (app.routes.ts)**
+
 ```typescript
 export const routes: Routes = [
   // ... existing routes
   {
-    path: 'my-feature',
-    loadComponent: () => import('./pages/my-feature/my-feature.page').then(m => m.MyFeaturePage)
-  }
+    path: "my-feature",
+    loadComponent: () => import("./pages/my-feature/my-feature.page").then((m) => m.MyFeaturePage),
+  },
 ];
 ```
 
 #### **3. Add to tabs navigation (tabs.page.ts)**
+
 ```typescript
 export class TabsPage {
   // For main tabs (replace existing)
   readonly tabs = [
-    { title: 'New', url: '/tabs/add-game', icon: 'add' },
-    { title: 'My Feature', url: '/tabs/my-feature', icon: 'star' }
+    { title: "New", url: "/tabs/add-game", icon: "add" },
+    { title: "My Feature", url: "/tabs/my-feature", icon: "star" },
   ];
-  
+
   // For "More" modal tabs
   readonly moreTabs = [
     // ... existing tabs
-    '/tabs/my-feature'
+    "/tabs/my-feature",
   ];
 }
 ```
@@ -496,29 +532,30 @@ export class TabsPage {
 ### IndexedDB & Offline Patterns
 
 #### **Service Pattern**
+
 ```typescript
-@Injectable({ providedIn: 'root' })
+@Injectable({ providedIn: "root" })
 export class DataService {
   private storage = inject(StorageService);
   private network = inject(NetworkService);
-  
+
   // Signal for offline-first data
   #data = signal<MyData[]>([]);
-  
+
   async loadData(): Promise<void> {
     // Always try local first
-    const localData = await this.storage.get('myData');
+    const localData = await this.storage.get("myData");
     this.#data.set(localData || []);
-    
+
     // Then sync with API if online
     if (this.network.isOnline()) {
       try {
         const apiData = await this.fetchFromApi();
-        await this.storage.set('myData', apiData);
+        await this.storage.set("myData", apiData);
         this.#data.set(apiData);
       } catch {
         // Graceful fallback to cached data
-        console.log('Using cached data');
+        console.log("Using cached data");
       }
     }
   }
@@ -526,6 +563,7 @@ export class DataService {
 ```
 
 ## Critical Reminders:
+
 - **NEVER CANCEL builds or long-running commands** - they may take 60+ seconds
 - **ALWAYS manually test after changes** - automated tests are not reliable
 - **API failures are expected** - external services may be unreachable
