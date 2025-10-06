@@ -46,6 +46,7 @@ import { BallFilterComponent } from 'src/app/shared/components/ball-filter/ball-
 import { BallListComponent } from 'src/app/shared/components/ball-list/ball-list.component';
 import { ActivatedRoute } from '@angular/router';
 import { SearchBlurDirective } from 'src/app/core/directives/search-blur/search-blur.directive';
+import { DoubleTapDirective } from 'src/app/core/directives/double-tap/double-tap.directive';
 import { SortHeaderComponent } from 'src/app/shared/components/sort-header/sort-header.component';
 import { SortService } from 'src/app/core/services/sort/sort.service';
 import { BallSortOption, BallSortField, SortDirection } from 'src/app/core/models/sort.model';
@@ -87,6 +88,7 @@ import { FavoritesService } from 'src/app/core/services/favorites/favorites.serv
     BallListComponent,
     GenericFilterActiveComponent,
     SearchBlurDirective,
+    DoubleTapDirective,
     SortHeaderComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -436,6 +438,16 @@ export class BallsPage implements OnInit {
 
   toggleFavorite(event: Event, ball: Ball): void {
     event.stopPropagation();
+    const isFavorited = this.favoritesService.toggleBallFavorite(ball.ball_id, ball.core_weight);
+
+    if (isFavorited) {
+      this.toastService.showToast(`Added ${ball.ball_name} to favorites`, 'heart');
+    } else {
+      this.toastService.showToast(`Removed ${ball.ball_name} from favorites`, 'heart-outline');
+    }
+  }
+
+  onDoubleTap(ball: Ball): void {
     const isFavorited = this.favoritesService.toggleBallFavorite(ball.ball_id, ball.core_weight);
 
     if (isFavorited) {
