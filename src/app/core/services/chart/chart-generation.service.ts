@@ -192,6 +192,9 @@ export class ChartGenerationService {
             },
           },
         },
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { intersect: false },
       };
 
       if (onToggleView && viewMode) {
@@ -415,6 +418,8 @@ export class ChartGenerationService {
               },
               legend: { display: false },
             },
+            responsive: true,
+            maintainAspectRatio: false,
           },
         });
       }
