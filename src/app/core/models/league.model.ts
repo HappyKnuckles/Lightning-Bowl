@@ -6,6 +6,9 @@ export interface League {
   event: EventType;
   isActive: boolean;
   isSanctioned: boolean;
+  startDate?: string;
+  endDate?: string;
+  note?: string;
 }
 
 // Type guard to check if a value is a League object
@@ -26,6 +29,9 @@ export function convertLegacyLeague(name: string): League {
     event: 'League',
     isActive: false,
     isSanctioned: true,
+    startDate: undefined,
+    endDate: undefined,
+    note: undefined,
   };
 }
 

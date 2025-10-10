@@ -58,6 +58,15 @@
         <ion-icon name="medal-outline" slot="start"></ion-icon>
         <ion-toggle [(ngModel)]="newLeagueIsSanctioned">Sanctioned</ion-toggle>
       </ion-item>
+      <ion-item>
+        <ion-input label="Start Date" type="date" placeholder="Select start date" [(ngModel)]="newLeagueStartDate"> </ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input label="End Date" type="date" placeholder="Select end date" [(ngModel)]="newLeagueEndDate"> </ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input label="Note" placeholder="Enter note (optional)" [(ngModel)]="newLeagueNote"> </ion-input>
+      </ion-item>
     </ion-content>
   </ng-template>
 </ion-modal>
@@ -109,6 +118,15 @@
         <ion-item>
           <ion-icon name="medal-outline" slot="start"></ion-icon>
           <ion-toggle [(ngModel)]="newLeagueIsSanctioned">Sanctioned</ion-toggle>
+        </ion-item>
+        <ion-item>
+          <ion-input label="Start Date" type="date" placeholder="Select start date" [(ngModel)]="newLeagueStartDate"> </ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-input label="End Date" type="date" placeholder="Select end date" [(ngModel)]="newLeagueEndDate"> </ion-input>
+        </ion-item>
+        <ion-item>
+          <ion-input label="Note" placeholder="Enter note (optional)" [(ngModel)]="newLeagueNote"> </ion-input>
         </ion-item>
       }
     </ion-content>

@@ -80,6 +80,9 @@ export class LeagueSelectorComponent {
   newLeagueEventType: EventType = 'League';
   newLeagueIsActive = false;
   newLeagueIsSanctioned = true;
+  newLeagueStartDate = '';
+  newLeagueEndDate = '';
+  newLeagueNote = '';
   leaguesToDelete: string[] = [];
   leagueToChange = '';
   isAddModalOpen = false;
@@ -226,15 +229,17 @@ export class LeagueSelectorComponent {
         name: this.newLeague,
         show: true,
         event: this.newLeagueEventType,
-        isActive: false,
-        isSanctioned: true,
+        isActive: this.newLeagueIsActive,
+        isSanctioned: this.newLeagueIsSanctioned,
+        startDate: this.newLeagueStartDate || undefined,
+        endDate: this.newLeagueEndDate || undefined,
+        note: this.newLeagueNote || undefined,
       };
 
       await this.storageService.addLeague(newLeagueObj);
       this.selectedLeague = newLeagueObj;
       this.leagueChanged.emit(newLeagueObj);
-      this.newLeague = '';
-      this.newLeagueEventType = 'League';
+      this.resetForm();
       this.toastService.showToast(ToastMessages.leagueSaveSuccess, 'add');
       this.isAddModalOpen = false;
     } catch (error) {
@@ -244,16 +249,25 @@ export class LeagueSelectorComponent {
   }
 
   cancelAdd(): void {
-    this.newLeague = '';
-    this.newLeagueEventType = 'League';
+    this.resetForm();
     this.selectedLeague = '';
     this.leagueChanged.emit('');
     this.isAddModalOpen = false;
   }
 
+  private resetForm(): void {
+    this.newLeague = '';
+    this.newLeagueEventType = 'League';
+    this.newLeagueIsActive = false;
+    this.newLeagueIsSanctioned = true;
+    this.newLeagueStartDate = '';
+    this.newLeagueEndDate = '';
+    this.newLeagueNote = '';
+  }
+
   cancelEdit(): void {
     this.leaguesToDelete = [];
-    this.newLeague = '';
+    this.resetForm();
     this.leagueToChange = '';
     this.selectedLeagueForEdit = null;
     this.isEditModalOpen = false;
@@ -266,6 +280,19 @@ export class LeagueSelectorComponent {
 
     if (this.selectedLeagueForEdit && isLeagueObject(this.selectedLeagueForEdit)) {
       this.newLeagueEventType = this.selectedLeagueForEdit.event;
+      this.newLeagueIsActive = this.selectedLeagueForEdit.isActive;
+      this.newLeagueIsSanctioned = this.selectedLeagueForEdit.isSanctioned;
+      this.newLeagueStartDate = this.selectedLeagueForEdit.startDate || '';
+      this.newLeagueEndDate = this.selectedLeagueForEdit.endDate || '';
+      this.newLeagueNote = this.selectedLeagueForEdit.note || '';
+    } else {
+      // Reset to defaults for legacy leagues
+      this.newLeagueEventType = 'League';
+      this.newLeagueIsActive = false;
+      this.newLeagueIsSanctioned = true;
+      this.newLeagueStartDate = '';
+      this.newLeagueEndDate = '';
+      this.newLeagueNote = '';
     }
   }
 
@@ -276,15 +303,29 @@ export class LeagueSelectorComponent {
           name: this.newLeague,
           show: this.selectedLeagueForEdit.show,
           event: this.newLeagueEventType,
-          isActive: this.selectedLeagueForEdit.isActive,
-          isSanctioned: this.selectedLeagueForEdit.isSanctioned,
+          isActive: this.newLeagueIsActive,
+          isSanctioned: this.newLeagueIsSanctioned,
+          startDate: this.newLeagueStartDate || undefined,
+          endDate: this.newLeagueEndDate || undefined,
+          note: this.newLeagueNote || undefined,
         };
         await this.storageService.editLeague(updatedLeague, this.selectedLeagueForEdit);
       } else {
-        await this.storageService.editLeague(this.newLeague, this.leagueToChange);
+        // Convert legacy league to full League object
+        const updatedLeague: League = {
+          name: this.newLeague,
+          show: true,
+          event: this.newLeagueEventType,
+          isActive: this.newLeagueIsActive,
+          isSanctioned: this.newLeagueIsSanctioned,
+          startDate: this.newLeagueStartDate || undefined,
+          endDate: this.newLeagueEndDate || undefined,
+          note: this.newLeagueNote || undefined,
+        };
+        await this.storageService.editLeague(updatedLeague, this.leagueToChange);
       }
 
-      this.newLeague = '';
+      this.resetForm();
       this.leagueToChange = '';
       this.selectedLeagueForEdit = null;
       this.toastService.showToast(ToastMessages.leagueEditSuccess, 'checkmark-outline');
@@ -404,8 +445,18 @@ export class LeagueSelectorComponent {
 
     if (isLeagueObject(league)) {
       this.newLeagueEventType = league.event;
+      this.newLeagueIsActive = league.isActive;
+      this.newLeagueIsSanctioned = league.isSanctioned;
+      this.newLeagueStartDate = league.startDate || '';
+      this.newLeagueEndDate = league.endDate || '';
+      this.newLeagueNote = league.note || '';
     } else {
       this.newLeagueEventType = 'League';
+      this.newLeagueIsActive = false;
+      this.newLeagueIsSanctioned = true;
+      this.newLeagueStartDate = '';
+      this.newLeagueEndDate = '';
+      this.newLeagueNote = '';
     }
 
     this.isEditModalOpen = true;
