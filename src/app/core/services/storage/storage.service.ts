@@ -12,6 +12,7 @@ import { HighScoreAlertService } from '../high-score-alert/high-score-alert.serv
 import { CacheService } from '../cache/cache.service';
 import { NetworkService } from '../network/network.service';
 import { DataProcessorService } from '../data-processor/data-processor.service';
+import { PerformanceMonitorService } from '../performance/performance-monitor.service';
 
 @Injectable({
   providedIn: 'root',
@@ -64,6 +65,7 @@ export class StorageService {
     private cacheService: CacheService,
     private networkService: NetworkService,
     private dataProcessorService: DataProcessorService,
+    private performanceMonitor: PerformanceMonitorService,
   ) {
     this.init();
     // this.highScoreAlertService.displayHighScoreAlert({ type: 'single_game', newRecord: 150, previousRecord: 110, details: { league: 'Monday Night', patterns: ['THS', 'Sport'], balls: ['Storm', 'Hammer'], date: '1/15/2025' }, gameOrSeries: []});
@@ -118,37 +120,41 @@ export class StorageService {
 
   async loadGameHistory(): Promise<Game[]> {
     this.loadingService.setLoading(true);
-    try {
-      const gameHistory = await this.loadData<Game>('game');
-      
-      // Offload heavy processing to Web Worker when available
-      let processedData: { games: Game[]; needsUpdate: boolean };
+    return this.performanceMonitor.measureAsync('loadGameHistory', async () => {
       try {
-        if (this.dataProcessorService.isWorkerAvailable()) {
-          processedData = await this.dataProcessorService.processGameHistoryAsync(gameHistory);
-        } else {
-          // Fallback: process on main thread
+        const gameHistory = await this.loadData<Game>('game');
+        
+        // Offload heavy processing to Web Worker when available
+        let processedData: { games: Game[]; needsUpdate: boolean };
+        try {
+          if (this.dataProcessorService.isWorkerAvailable()) {
+            processedData = await this.dataProcessorService.processGameHistoryAsync(gameHistory);
+          } else {
+            // Fallback: process on main thread
+            processedData = await this.processGameHistorySync(gameHistory);
+          }
+        } catch (error) {
+          console.warn('Worker processing failed, using main thread:', error);
           processedData = await this.processGameHistorySync(gameHistory);
         }
+
+        // Schedule non-critical storage save during idle time
+        if (processedData.needsUpdate) {
+          this.performanceMonitor.scheduleIdleTask(() => {
+            this.saveGamesToLocalStorage(processedData.games);
+          });
+        }
+
+        this.sortUtilsService.sortGameHistoryByDate(processedData.games, false);
+        this.games.set(processedData.games);
+        return processedData.games;
       } catch (error) {
-        console.warn('Worker processing failed, using main thread:', error);
-        processedData = await this.processGameHistorySync(gameHistory);
+        console.error('Error loading game history:', error);
+        throw error;
+      } finally {
+        this.loadingService.setLoading(false);
       }
-
-      // Save updated games back to storage if any changes were made
-      if (processedData.needsUpdate) {
-        await this.saveGamesToLocalStorage(processedData.games);
-      }
-
-      this.sortUtilsService.sortGameHistoryByDate(processedData.games, false);
-      this.games.set(processedData.games);
-      return processedData.games;
-    } catch (error) {
-      console.error('Error loading game history:', error);
-      throw error;
-    } finally {
-      this.loadingService.setLoading(false);
-    }
+    });
   }
 
   private async processGameHistorySync(gameHistory: Game[]): Promise<{ games: Game[]; needsUpdate: boolean }> {
