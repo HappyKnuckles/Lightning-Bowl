@@ -9,7 +9,11 @@
     <ion-buttons slot="start">
       <ion-button [href]="storageService.url">
         <div class="powered-by">powered by</div>
-        <img [src]="storageService.url + '/sites/default/files/logo/bowwwl-logo.svg'" alt="bowwwl" title="bowwwl.com" style="height: 1.5rem" />
+        <img
+          [src]="storageService.url + '/sites/default/files/logo/bowwwl-logo.svg'"
+          alt="bowwwl"
+          title="bowwwl.com"
+          style="height: 1.5rem; min-width: 80px" />
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
@@ -194,8 +198,8 @@
 
 <ion-modal [presentingElement]="presentingElement" trigger="addBall">
   <ng-template>
-    <app-generic-typeahead 
-      [items]="ballsWithoutArsenal()" 
+    <app-generic-typeahead
+      [items]="ballsWithoutArsenal()"
       [config]="ballTypeaheadConfig"
       (selectedItemsChange)="onBallSelectionChange($event)"
       [prevSelectedItems]="[]">

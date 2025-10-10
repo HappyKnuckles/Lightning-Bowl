@@ -4,7 +4,11 @@
     <ion-buttons slot="start">
       <ion-button [href]="storageService.url">
         <div class="powered-by">powered by</div>
-        <img [src]="storageService.url + '/sites/default/files/logo/bowwwl-logo.svg'" alt="bowwwl" title="bowwwl.com" style="height: 1.5rem" />
+        <img
+          [src]="storageService.url + '/sites/default/files/logo/bowwwl-logo.svg'"
+          alt="bowwwl"
+          title="bowwwl.com"
+          style="height: 1.5rem; min-width: 80px" />
       </ion-button>
     </ion-buttons>
     <ion-buttons slot="end" class="action-sheet">
