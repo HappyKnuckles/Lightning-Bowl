@@ -451,9 +451,6 @@ export class ChartGenerationService {
           title: { display: true, text: `Average Score`, color: 'white', font: { size: 20 } },
           legend: { display: true, labels: { font: { size: 15 } } },
         },
-        responsive: true,
-        maintainAspectRatio: false,
-        interaction: { intersect: false },
       };
 
       if (onToggleView) {
