@@ -90,7 +90,7 @@ export class AppComponent implements OnInit, OnDestroy {
               const commitMessages = newCommits.map((msg) => `<li>${msg}</li>`).join('');
               const sanitizedMessage = this.sanitizer.sanitize(
                 1,
-                `<div class="commit-message"><ul>${commitMessages}</ul><br><span class="load-text">Reload now?</span></div>`,
+                `<div class="commit-message"><ul>${commitMessages}</ul><br><span class="load-text">Load it?</span></div>`,
               );
 
               const alert = await this.alertController.create({
@@ -108,7 +108,7 @@ export class AppComponent implements OnInit, OnDestroy {
                     },
                   },
                   {
-                    text: 'Reload',
+                    text: 'Load',
                     handler: () => {
                       localStorage.setItem('lastCommitDate', new Date(data[0].commit.committer.date).toISOString());
                       window.location.reload();
@@ -124,7 +124,7 @@ export class AppComponent implements OnInit, OnDestroy {
             const alert = await this.alertController.create({
               backdropDismiss: false,
               header: 'New Version Available',
-              message: 'A new version is available. Reload now?',
+              message: 'A new version is available. Load it?',
               buttons: [
                 {
                   text: 'Cancel',
@@ -134,7 +134,7 @@ export class AppComponent implements OnInit, OnDestroy {
                   },
                 },
                 {
-                  text: 'Reload',
+                  text: 'Load',
                   handler: () => {
                     window.location.reload();
                   },

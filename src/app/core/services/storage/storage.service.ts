@@ -11,6 +11,7 @@ import { PatternService } from '../pattern/pattern.service';
 import { HighScoreAlertService } from '../high-score-alert/high-score-alert.service';
 import { CacheService } from '../cache/cache.service';
 import { NetworkService } from '../network/network.service';
+import { DataProcessorService } from '../data-processor/data-processor.service';
 
 @Injectable({
   providedIn: 'root',
@@ -62,6 +63,7 @@ export class StorageService {
     private highScoreAlertService: HighScoreAlertService,
     private cacheService: CacheService,
     private networkService: NetworkService,
+    private dataProcessorService: DataProcessorService,
   ) {
     this.init();
     // this.highScoreAlertService.displayHighScoreAlert({ type: 'single_game', newRecord: 150, previousRecord: 110, details: { league: 'Monday Night', patterns: ['THS', 'Sport'], balls: ['Storm', 'Hammer'], date: '1/15/2025' }, gameOrSeries: []});
@@ -118,57 +120,76 @@ export class StorageService {
     this.loadingService.setLoading(true);
     try {
       const gameHistory = await this.loadData<Game>('game');
-      let needsUpdate = false;
-
-      // Temporary transformation: convert legacy single pattern string to patterns array
-      gameHistory.forEach((game) => {
-        const legacyGame = game as Game & { pattern?: string };
-        if (legacyGame.pattern && !game.patterns) {
-          game.patterns = [legacyGame.pattern];
-          delete legacyGame.pattern;
-          needsUpdate = true;
-        } else if (!game.patterns) {
-          game.patterns = [];
-          needsUpdate = true;
+      
+      // Offload heavy processing to Web Worker when available
+      let processedData: { games: Game[]; needsUpdate: boolean };
+      try {
+        if (this.dataProcessorService.isWorkerAvailable()) {
+          processedData = await this.dataProcessorService.processGameHistoryAsync(gameHistory);
+        } else {
+          // Fallback: process on main thread
+          processedData = await this.processGameHistorySync(gameHistory);
         }
-
-        // Remove old pattern property if it still exists
-        if (legacyGame.pattern !== undefined) {
-          delete legacyGame.pattern;
-          needsUpdate = true;
-        }
-
-        // Sort patterns and balls arrays alphabetically and check if they were already sorted
-        if (game.patterns && Array.isArray(game.patterns)) {
-          const originalPatternsStr = JSON.stringify(game.patterns);
-          game.patterns.sort();
-          if (JSON.stringify(game.patterns) !== originalPatternsStr) {
-            needsUpdate = true;
-          }
-        }
-        if (game.balls && Array.isArray(game.balls)) {
-          const originalBallsStr = JSON.stringify(game.balls);
-          game.balls.sort();
-          if (JSON.stringify(game.balls) !== originalBallsStr) {
-            needsUpdate = true;
-          }
-        }
-      });
-
-      // Save updated games back to storage if any changes were made
-      if (needsUpdate) {
-        await this.saveGamesToLocalStorage(gameHistory);
+      } catch (error) {
+        console.warn('Worker processing failed, using main thread:', error);
+        processedData = await this.processGameHistorySync(gameHistory);
       }
 
-      this.sortUtilsService.sortGameHistoryByDate(gameHistory, false);
-      this.games.set(gameHistory);
-      return gameHistory;
+      // Save updated games back to storage if any changes were made
+      if (processedData.needsUpdate) {
+        await this.saveGamesToLocalStorage(processedData.games);
+      }
+
+      this.sortUtilsService.sortGameHistoryByDate(processedData.games, false);
+      this.games.set(processedData.games);
+      return processedData.games;
     } catch (error) {
       console.error('Error loading game history:', error);
       throw error;
     } finally {
       this.loadingService.setLoading(false);
     }
+  }
+
+  private async processGameHistorySync(gameHistory: Game[]): Promise<{ games: Game[]; needsUpdate: boolean }> {
+    let needsUpdate = false;
+
+    // Temporary transformation: convert legacy single pattern string to patterns array
+    gameHistory.forEach((game) => {
+      const legacyGame = game as Game & { pattern?: string };
+      if (legacyGame.pattern && !game.patterns) {
+        game.patterns = [legacyGame.pattern];
+        delete legacyGame.pattern;
+        needsUpdate = true;
+      } else if (!game.patterns) {
+        game.patterns = [];
+        needsUpdate = true;
+      }
+
+      // Remove old pattern property if it still exists
+      if (legacyGame.pattern !== undefined) {
+        delete legacyGame.pattern;
+        needsUpdate = true;
+      }
+
+      // Sort patterns and balls arrays alphabetically and check if they were already sorted
+      if (game.patterns && Array.isArray(game.patterns)) {
+        const originalPatternsStr = JSON.stringify(game.patterns);
+        game.patterns.sort();
+        if (JSON.stringify(game.patterns) !== originalPatternsStr) {
+          needsUpdate = true;
+        }
+      }
+      if (game.balls && Array.isArray(game.balls)) {
+        const originalBallsStr = JSON.stringify(game.balls);
+        game.balls.sort();
+        if (JSON.stringify(game.balls) !== originalBallsStr) {
+          needsUpdate = true;
+        }
+      }
+    });
+
+    return { games: gameHistory, needsUpdate };
   }
 
   async loadAllBalls(updated?: string, weight?: number, forceRefresh = false): Promise<void> {

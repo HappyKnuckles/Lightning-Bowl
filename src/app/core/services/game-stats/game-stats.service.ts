@@ -5,6 +5,7 @@ import { PrevStats } from 'src/app/core/models/stats.model';
 import { GameFilterService } from '../game-filter/game-filter.service';
 import { UtilsService } from '../utils/utils.service';
 import { StorageService } from '../storage/storage.service';
+import { StatsWorkerService } from '../stats-worker/stats-worker.service';
 
 const MAX_FRAMES = 10;
 @Injectable({
@@ -91,7 +92,40 @@ export class GameStatsService {
     private gameFilterService: GameFilterService,
     private utilsService: UtilsService,
     private storageService: StorageService,
+    private statsWorkerService: StatsWorkerService,
   ) {}
+
+  /**
+   * Calculates stats asynchronously using Web Worker when available.
+   * This offloads heavy computation from the main thread.
+   */
+  async calculateStatsAsync(games: Game[]): Promise<Stats | SessionStats> {
+    try {
+      if (this.statsWorkerService.isWorkerAvailable()) {
+        return await this.statsWorkerService.calculateStatsAsync(games);
+      }
+    } catch (error) {
+      console.warn('Worker calculation failed, falling back to main thread:', error);
+    }
+    // Fallback to synchronous calculation on main thread
+    return this.calculateBowlingStats(games);
+  }
+
+  /**
+   * Calculates ball stats asynchronously using Web Worker when available.
+   * This offloads heavy computation from the main thread.
+   */
+  async calculateBallStatsAsync(games: Game[]): Promise<Record<string, any>> {
+    try {
+      if (this.statsWorkerService.isWorkerAvailable()) {
+        return await this.statsWorkerService.calculateBallStatsAsync(games);
+      }
+    } catch (error) {
+      console.warn('Worker calculation failed, falling back to main thread:', error);
+    }
+    // Fallback to synchronous calculation on main thread
+    return this._calculateAllBallStats(games);
+  }
 
   calculateBestBallStats(gameHistory: Game[]): BestBallStats {
     const allBallStats = this._calculateAllBallStats(gameHistory);
