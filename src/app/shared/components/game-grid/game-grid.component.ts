@@ -147,9 +147,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
       this.game().frames = Array.from({ length: 10 }, () => []);
     }
     this.presentingElement = document.querySelector('.ion-page')!;
-    this.patternTypeaheadConfig = createPartialPatternTypeaheadConfig(
-      (searchTerm: string) => this.patternService.searchPattern(searchTerm)
-    );
+    this.patternTypeaheadConfig = createPartialPatternTypeaheadConfig((searchTerm: string) => this.patternService.searchPattern(searchTerm));
   }
 
   ngOnDestroy() {
@@ -325,11 +323,11 @@ export class GameGridComponent implements OnInit, OnDestroy {
     this.maxScoreChanged.emit(this.maxScore);
   }
 
-  async saveGameToLocalStorage(isSeries: boolean, seriesId: string): Promise<void> {
+  async saveGameToLocalStorage(isSeries: boolean, seriesId: string): Promise<Game | null> {
     try {
       if (this.game().league === 'New') {
         this.toastService.showToast(ToastMessages.selectLeague, 'bug', true);
-        return;
+        return null;
       }
       const gameData = this.transformGameService.transformGameData(
         this.game().frames,
@@ -350,8 +348,10 @@ export class GameGridComponent implements OnInit, OnDestroy {
       if (this.showMetadata()) {
         this.clearFrames(true);
       }
+      return gameData;
     } catch (error) {
       console.error('Error saving game to local storage:', error);
+      return null;
     }
   }
 

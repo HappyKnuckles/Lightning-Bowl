@@ -41,6 +41,8 @@ import { GameDataTransformerService } from 'src/app/core/services/game-transform
 import { InputCustomEvent, ModalController } from '@ionic/angular';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { GameGridComponent } from 'src/app/shared/components/game-grid/game-grid.component';
+import { HighScoreAlertService } from 'src/app/core/services/high-score-alert/high-score-alert.service';
+import { StorageService } from 'src/app/core/services/storage/storage.service';
 
 const enum SeriesMode {
   Single = 'Single',
@@ -121,6 +123,8 @@ export class AddGamePage implements OnInit {
     private adService: AdService,
     private hapticService: HapticService,
     private gameUtilsService: GameUtilsService,
+    private highScoreAlertService: HighScoreAlertService,
+    private storageService: StorageService,
   ) {
     addIcons({ cameraOutline, chevronDown, chevronUp, medalOutline, documentTextOutline, add });
   }
@@ -218,8 +222,14 @@ export class AddGamePage implements OnInit {
         this.toastService.showToast(ToastMessages.invalidInput, 'bug', true);
         return;
       } else {
-        // await this.storageService.saveGameToLocalStorage(this.gameData);
-        this.modalGrid.saveGameToLocalStorage(false, '');
+        const savedGame = await this.modalGrid.saveGameToLocalStorage(false, '');
+
+        // Check for high scores after the game is saved
+        if (savedGame) {
+          const allGames = this.storageService.games();
+          await this.highScoreAlertService.checkAndDisplayHighScoreAlerts(savedGame, allGames);
+        }
+
         this.toastService.showToast(ToastMessages.gameSaveSuccess, 'add');
         this.modal.dismiss(null, 'confirm');
       }
@@ -250,7 +260,7 @@ export class AddGamePage implements OnInit {
     this.toastService.showToast(ToastMessages.gameResetSuccess, 'refresh-outline');
   }
 
-  calculateScore(): void {
+  async calculateScore(): Promise<void> {
     const isSeries = this.seriesMode.some((mode, i) => mode && i !== 0);
     if (isSeries) {
       this.seriesId = this.generateUniqueSeriesId();
@@ -266,9 +276,15 @@ export class AddGamePage implements OnInit {
     try {
       const perfectGame = gameGridArray.some((grid: GameGridComponent) => grid.game().totalScore === 300);
 
-      gameGridArray.forEach((grid: GameGridComponent) => {
-        setTimeout(async () => await grid.saveGameToLocalStorage(isSeries, this.seriesId), 5);
-      });
+      const savePromises = gameGridArray.map((grid: GameGridComponent) => grid.saveGameToLocalStorage(isSeries, this.seriesId));
+      const savedGames = await Promise.all(savePromises);
+
+      const validSavedGames = savedGames.filter((game): game is Game => game !== null);
+
+      if (validSavedGames.length > 0) {
+        const allGames = this.storageService.games();
+        await this.highScoreAlertService.checkAndDisplayHighScoreAlertsForMultipleGames(validSavedGames, allGames);
+      }
 
       if (perfectGame) {
         this.is300 = true;

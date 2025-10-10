@@ -353,9 +353,6 @@ export class StorageService {
     try {
       const key = 'game' + gameData.gameId;
 
-      // Check if this is a new game (not an update)
-      const isNewGame = !this.games().find((game) => game.gameId === gameData.gameId);
-
       await this.save(key, gameData);
       this.games.update((games) => {
         const index = games.findIndex((game) => game.gameId === gameData.gameId);
@@ -365,11 +362,6 @@ export class StorageService {
           return [gameData, ...games];
         }
       });
-
-      // Check for high score achievements only for new games
-      if (isNewGame) {
-        await this.highScoreAlertService.checkAndDisplayHighScoreAlerts(gameData, this.games());
-      }
     } catch (error) {
       console.error('Error saving game to local storage:', error);
       throw error;
