@@ -160,7 +160,21 @@ export class AppComponent implements OnInit, OnDestroy {
       if (!this.username) {
         await this.showEnterNameAlert();
       } else {
-        this.presentGreetingAlert(this.username);
+        // Check if we should show the greeting based on last greeting time
+        const lastGreetingData = localStorage.getItem('lastGreeting');
+        let shouldShowGreeting = true;
+
+        if (lastGreetingData) {
+          const { expiration } = JSON.parse(lastGreetingData);
+          // Only show greeting if the expiration time has passed
+          if (new Date().getTime() < expiration) {
+            shouldShowGreeting = false;
+          }
+        }
+
+        if (shouldShowGreeting) {
+          this.presentGreetingAlert(this.username);
+        }
       }
     }
   }
@@ -231,5 +245,13 @@ export class AppComponent implements OnInit, OnDestroy {
     });
 
     await alert.present();
+
+    // Store the greeting timestamp with 7-day expiration
+    alert.onDidDismiss().then(() => {
+      const expirationDate = new Date();
+      expirationDate.setDate(expirationDate.getDate() + 7);
+      const greetingData = { expiration: expirationDate.getTime() };
+      localStorage.setItem('lastGreeting', JSON.stringify(greetingData));
+    });
   }
 }
