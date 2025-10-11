@@ -22,6 +22,10 @@ export class GameFilterService {
     endDate: '',
   };
 
+  // Cache for filtered results to avoid redundant filtering
+  private filterCache = new Map<string, { games: Game[]; timestamp: number }>();
+  private readonly FILTER_CACHE_TTL = 3000; // 3 seconds
+
   activeFilterCount: Signal<number> = computed(() => {
     return Object.keys(this.filters()).reduce((count, key) => {
       const filterValue = this.filters()[key as keyof GameFilter];
@@ -44,7 +48,7 @@ export class GameFilterService {
   #filteredGames = computed(() => {
     const games = this.storageService.games();
     const filters = this.filters();
-    return this.filterGames(games, filters);
+    return this.filterGamesOptimized(games, filters);
   });
   get filteredGames() {
     return this.#filteredGames;
@@ -60,6 +64,33 @@ export class GameFilterService {
     private storageService: StorageService,
   ) {
     this.setDefaultFilters();
+  }
+
+  /**
+   * Optimized filtering with caching
+   */
+  private filterGamesOptimized(games: Game[], filters: GameFilter): Game[] {
+    const cacheKey = this.generateFilterCacheKey(games, filters);
+    const cached = this.filterCache.get(cacheKey);
+
+    if (cached && Date.now() - cached.timestamp < this.FILTER_CACHE_TTL) {
+      return cached.games;
+    }
+
+    const filtered = this.filterGames(games, filters);
+    
+    // Clean old cache entries
+    if (this.filterCache.size > 10) {
+      const oldestKey = this.filterCache.keys().next().value;
+      this.filterCache.delete(oldestKey);
+    }
+
+    this.filterCache.set(cacheKey, { games: filtered, timestamp: Date.now() });
+    return filtered;
+  }
+
+  private generateFilterCacheKey(games: Game[], filters: GameFilter): string {
+    return `${games.length}_${JSON.stringify(filters)}`;
   }
 
   filterGames(games: Game[], filters: GameFilter): Game[] {

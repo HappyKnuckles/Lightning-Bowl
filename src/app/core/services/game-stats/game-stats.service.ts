@@ -5,6 +5,7 @@ import { PrevStats } from 'src/app/core/models/stats.model';
 import { GameFilterService } from '../game-filter/game-filter.service';
 import { UtilsService } from '../utils/utils.service';
 import { StorageService } from '../storage/storage.service';
+import { StatsWorkerService } from '../stats-worker/stats-worker.service';
 
 const MAX_FRAMES = 10;
 @Injectable({
@@ -87,13 +88,91 @@ export class GameStatsService {
 
   // TODO adjust and implement it completely
   seriesStats = {};
+  
+  // Cache for expensive calculations
+  private statsCache = new Map<string, { timestamp: number; result: any }>();
+  private readonly CACHE_TTL = 5000; // 5 seconds cache
+
   constructor(
     private gameFilterService: GameFilterService,
     private utilsService: UtilsService,
     private storageService: StorageService,
+    private statsWorkerService: StatsWorkerService,
   ) {}
 
+  /**
+   * Calculates stats asynchronously using Web Worker when available.
+   * This offloads heavy computation from the main thread.
+   */
+  async calculateStatsAsync(games: Game[]): Promise<Stats | SessionStats> {
+    // Check cache first
+    const cacheKey = `stats_${games.length}_${games[0]?.date || 0}`;
+    const cached = this.getCachedResult(cacheKey);
+    if (cached) return cached;
+
+    try {
+      if (this.statsWorkerService.isWorkerAvailable()) {
+        const result = await this.statsWorkerService.calculateStatsAsync(games);
+        this.setCachedResult(cacheKey, result);
+        return result;
+      }
+    } catch (error) {
+      console.warn('Worker calculation failed, falling back to main thread:', error);
+    }
+    // Fallback to synchronous calculation on main thread
+    const result = this.calculateBowlingStats(games);
+    this.setCachedResult(cacheKey, result);
+    return result;
+  }
+
+  /**
+   * Calculates ball stats asynchronously using Web Worker when available.
+   * This offloads heavy computation from the main thread.
+   */
+  async calculateBallStatsAsync(games: Game[]): Promise<Record<string, any>> {
+    const cacheKey = `ballStats_${games.length}_${games[0]?.date || 0}`;
+    const cached = this.getCachedResult(cacheKey);
+    if (cached) return cached;
+
+    try {
+      if (this.statsWorkerService.isWorkerAvailable()) {
+        const result = await this.statsWorkerService.calculateBallStatsAsync(games);
+        this.setCachedResult(cacheKey, result);
+        return result;
+      }
+    } catch (error) {
+      console.warn('Worker calculation failed, falling back to main thread:', error);
+    }
+    // Fallback to synchronous calculation on main thread
+    const result = this._calculateAllBallStats(games);
+    this.setCachedResult(cacheKey, result);
+    return result;
+  }
+
+  private getCachedResult(key: string): any | null {
+    const cached = this.statsCache.get(key);
+    if (cached && Date.now() - cached.timestamp < this.CACHE_TTL) {
+      return cached.result;
+    }
+    return null;
+  }
+
+  private setCachedResult(key: string, result: any): void {
+    this.statsCache.set(key, { timestamp: Date.now(), result });
+    
+    // Clean up old cache entries to prevent memory leaks
+    if (this.statsCache.size > 50) {
+      const oldestKeys = Array.from(this.statsCache.keys()).slice(0, 10);
+      oldestKeys.forEach((k) => this.statsCache.delete(k));
+    }
+  }
+
   calculateBestBallStats(gameHistory: Game[]): BestBallStats {
+    // Check cache to avoid recalculation
+    const cacheKey = `bestBall_${gameHistory.length}_${gameHistory[0]?.date || 0}`;
+    const cached = this.getCachedResult(cacheKey);
+    if (cached) return cached;
+
     const allBallStats = this._calculateAllBallStats(gameHistory);
     const ballNames = Object.keys(allBallStats);
     const defaultBall: BestBallStats = { ballName: '', ballImage: '', ballAvg: 0, ballHighestGame: 0, ballLowestGame: 0, gameCount: 0 };
@@ -102,9 +181,12 @@ export class GameStatsService {
       return defaultBall;
     }
 
-    return ballNames.reduce((best, currentBallName) => {
+    const result = ballNames.reduce((best, currentBallName) => {
       return allBallStats[currentBallName].ballAvg > best.ballAvg ? allBallStats[currentBallName] : best;
     }, defaultBall);
+
+    this.setCachedResult(cacheKey, result);
+    return result;
   }
 
   calculateMostPlayedBall(gameHistory: Game[]): BestBallStats {
