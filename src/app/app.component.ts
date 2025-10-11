@@ -165,10 +165,15 @@ export class AppComponent implements OnInit, OnDestroy {
         let shouldShowGreeting = true;
 
         if (lastGreetingData) {
-          const { expiration } = JSON.parse(lastGreetingData);
-          // Only show greeting if the expiration time has passed
-          if (new Date().getTime() < expiration) {
-            shouldShowGreeting = false;
+          try {
+            const { expiration } = JSON.parse(lastGreetingData);
+            // Only show greeting if the expiration time has passed
+            if (expiration && new Date().getTime() < expiration) {
+              shouldShowGreeting = false;
+            }
+          } catch {
+            // If data is corrupted, remove it and show greeting
+            localStorage.removeItem('lastGreeting');
           }
         }
 
@@ -249,7 +254,7 @@ export class AppComponent implements OnInit, OnDestroy {
     // Store the greeting timestamp with 7-day expiration
     alert.onDidDismiss().then(() => {
       const expirationDate = new Date();
-      expirationDate.setDate(expirationDate.getDate() + 7);
+      expirationDate.setTime(expirationDate.getTime() + 7 * 24 * 60 * 60 * 1000);
       const greetingData = { expiration: expirationDate.getTime() };
       localStorage.setItem('lastGreeting', JSON.stringify(greetingData));
     });
