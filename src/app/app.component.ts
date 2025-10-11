@@ -22,6 +22,7 @@ import { PwaInstallPromptComponent } from './shared/components/pwa-install-promp
   imports: [IonApp, NgIf, IonBackdrop, IonSpinner, IonRouterOutlet, ToastComponent, PwaInstallPromptComponent],
 })
 export class AppComponent implements OnInit, OnDestroy {
+  private readonly GREETING_THROTTLE_DURATION_MS = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
   private userNameSubscription: Subscription;
   private pwaInstallSubscription: Subscription;
   username = '';
@@ -254,7 +255,7 @@ export class AppComponent implements OnInit, OnDestroy {
     // Store the greeting timestamp with 7-day expiration
     alert.onDidDismiss().then(() => {
       const expirationDate = new Date();
-      expirationDate.setTime(expirationDate.getTime() + 7 * 24 * 60 * 60 * 1000);
+      expirationDate.setTime(expirationDate.getTime() + this.GREETING_THROTTLE_DURATION_MS);
       const greetingData = { expiration: expirationDate.getTime() };
       localStorage.setItem('lastGreeting', JSON.stringify(greetingData));
     });
