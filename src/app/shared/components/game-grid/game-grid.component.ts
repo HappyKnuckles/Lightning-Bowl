@@ -18,12 +18,11 @@ import { NgFor, NgIf, NgStyle } from '@angular/common';
 import {
   IonGrid,
   IonModal,
-  IonSelect,
-  IonSelectOption,
   IonRow,
   IonCol,
   IonInput,
   IonItem,
+  IonLabel,
   IonTextarea,
   IonCheckbox,
   IonList,
@@ -41,10 +40,11 @@ import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { UtilsService } from 'src/app/core/services/utils/utils.service';
 import { Game } from 'src/app/core/models/game.model';
 import { GenericTypeaheadComponent } from '../generic-typeahead/generic-typeahead.component';
-import { createPartialPatternTypeaheadConfig } from '../generic-typeahead/typeahead-configs';
+import { createPartialPatternTypeaheadConfig, createBallTypeaheadConfig } from '../generic-typeahead/typeahead-configs';
 import { TypeaheadConfig } from '../generic-typeahead/typeahead-config.interface';
 import { PatternService } from 'src/app/core/services/pattern/pattern.service';
 import { Pattern } from 'src/app/core/models/pattern.model';
+import { Ball } from 'src/app/core/models/ball.model';
 import { Keyboard } from '@capacitor/keyboard';
 
 @Component({
@@ -54,12 +54,11 @@ import { Keyboard } from '@capacitor/keyboard';
   providers: [GameScoreCalculatorService],
   standalone: true,
   imports: [
-    IonSelect,
     NgFor,
-    IonSelectOption,
     IonList,
     IonCheckbox,
     IonItem,
+    IonLabel,
     IonTextarea,
     IonGrid,
     IonRow,
@@ -102,6 +101,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
   maxScore = 300;
   presentingElement?: HTMLElement;
   patternTypeaheadConfig!: TypeaheadConfig<Partial<Pattern>>;
+  ballTypeaheadConfig!: TypeaheadConfig<Ball>;
 
   // Keyboard toolbar
   showButtonToolbar = false;
@@ -148,6 +148,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
     }
     this.presentingElement = document.querySelector('.ion-page')!;
     this.patternTypeaheadConfig = createPartialPatternTypeaheadConfig((searchTerm: string) => this.patternService.searchPattern(searchTerm));
+    this.ballTypeaheadConfig = createBallTypeaheadConfig(this.storageService);
   }
 
   ngOnDestroy() {
@@ -207,6 +208,21 @@ export class GameGridComponent implements OnInit, OnDestroy {
     }
     this.game().patterns = patterns;
     this.patternChanged.emit(patterns);
+  }
+
+  onBallsChanged(ballIds: string[]): void {
+    // Map ball_id back to ball_name for storage compatibility
+    const ballNames = this.storageService.arsenal()
+      .filter((ball) => ballIds.includes(ball.ball_id))
+      .map((ball) => ball.ball_name);
+    this.game().balls = ballNames;
+  }
+
+  getSelectedBallIds(): string[] {
+    const balls = this.game().balls || [];
+    return this.storageService.arsenal()
+      .filter((ball) => balls.includes(ball.ball_name))
+      .map((ball) => ball.ball_id);
   }
 
   getFrameValue(frameIndex: number, throwIndex: number): string {
