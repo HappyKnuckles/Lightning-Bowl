@@ -120,11 +120,48 @@
           </app-generic-typeahead>
         </ng-template>
       </ion-modal>
-      <ion-item [id]="'ball-selector-' + patternId()" button [disabled]="storageService.arsenal().length === 0">
+      <ion-item
+        [id]="'ball-selector-' + patternId()"
+        button
+        detailIcon="chevron-expand-outline"
+        [disabled]="storageService.arsenal().length === 0"
+        (click)="openBallModal()">
         <ion-label>Balls</ion-label>
-        <ion-note slot="end">{{ getSelectedBallsText() }}</ion-note>
+        <span class="ion-text-right">{{ getSelectedBallsText() }}</span>
       </ion-item>
-      <ion-popover [trigger]="'ball-selector-' + patternId()" size="auto" [dismissOnSelect]="false">
+      <ion-modal #modal trigger="ball-selector-{{ patternId() }}" class="ball-modal">
+        <ng-template>
+          <ion-header>
+            <ion-toolbar>
+              <ion-title>Select Balls</ion-title>
+            </ion-toolbar>
+          </ion-header>
+          <ion-content>
+            <ion-list>
+              @for (ball of storageService.arsenal(); track $index) {
+                <ion-item (click)="toggleBallSelection(ball.ball_name)">
+                  <ion-avatar slot="start">
+                    <ion-img [src]="storageService.url + ball.thumbnail_image"></ion-img>
+                  </ion-avatar>
+                  <ion-label>
+                    <h2>{{ ball.ball_name }}</h2>
+                    <p>{{ ball.brand_name }} ({{ ball.release_date }})</p>
+                  </ion-label>
+                  <ion-checkbox slot="end" [checked]="isBallSelected(ball.ball_name)" (ionChange)="$event.stopPropagation()"></ion-checkbox>
+                </ion-item>
+              }</ion-list
+          ></ion-content>
+          <ion-footer>
+            <ion-toolbar>
+              <ion-buttons slot="end" class="modal-buttons">
+                <ion-button (click)="cancelBallSelection(modal)" fill="clear" class="modal-button cancel-button">Cancel</ion-button>
+                <ion-button (click)="confirmBallSelection(modal)" fill="clear" class="modal-button ok-button">Ok</ion-button>
+              </ion-buttons>
+            </ion-toolbar>
+          </ion-footer>
+        </ng-template>
+      </ion-modal>
+      <!-- <ion-popover [trigger]="'ball-selector-' + patternId()" size="auto" [dismissOnSelect]="false">
         <ng-template>
           <ion-content class="ion-padding">
             <ion-list>
@@ -141,7 +178,7 @@
             </ion-list>
           </ion-content>
         </ng-template>
-      </ion-popover>
+      </ion-popover> -->
       <ion-item lines="none">
         <ion-textarea
           label="Note"

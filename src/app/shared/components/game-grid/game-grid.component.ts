@@ -52,6 +52,8 @@ import { TypeaheadConfig } from '../generic-typeahead/typeahead-config.interface
 import { PatternService } from 'src/app/core/services/pattern/pattern.service';
 import { Pattern } from 'src/app/core/models/pattern.model';
 import { Keyboard } from '@capacitor/keyboard';
+import { addIcons } from 'ionicons';
+import { chevronExpandOutline } from 'ionicons/icons';
 
 @Component({
   selector: 'app-game-grid',
@@ -127,6 +129,9 @@ export class GameGridComponent implements OnInit, OnDestroy {
   private usingVisualViewportListener = false;
   private resizeSubscription: Subscription | undefined;
 
+  // Add these properties
+  private tempSelectedBalls: string[] = [];
+
   constructor(
     private gameScoreCalculatorService: GameScoreCalculatorService,
     public storageService: StorageService,
@@ -139,6 +144,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
     private patternService: PatternService,
   ) {
     this.initializeKeyboardListeners();
+    addIcons({ chevronExpandOutline });
   }
 
   async ngOnInit(): Promise<void> {
@@ -221,21 +227,34 @@ export class GameGridComponent implements OnInit, OnDestroy {
     this.patternChanged.emit(patterns);
   }
 
+  openBallModal() {
+    // Store current selection as temporary when opening modal
+    this.tempSelectedBalls = [...(this.game().balls || [])];
+  }
+
   toggleBallSelection(ballName: string): void {
-    const balls = this.game().balls || [];
-    const index = balls.indexOf(ballName);
-    
+    const index = this.tempSelectedBalls.indexOf(ballName);
     if (index > -1) {
-      // Remove ball if already selected
-      this.game().balls = balls.filter(b => b !== ballName);
+      this.tempSelectedBalls.splice(index, 1);
     } else {
-      // Add ball if not selected
-      this.game().balls = [...balls, ballName];
+      this.tempSelectedBalls.push(ballName);
     }
   }
 
   isBallSelected(ballName: string): boolean {
-    return (this.game().balls || []).includes(ballName);
+    return this.tempSelectedBalls.includes(ballName);
+  }
+
+  confirmBallSelection(modal: any): void {
+    // Only commit changes when Ok is pressed
+    this.game().balls = [...this.tempSelectedBalls];
+    modal.dismiss();
+  }
+
+  cancelBallSelection(modal: any): void {
+    // Reset temporary selection to original state
+    this.tempSelectedBalls = [...(this.game().balls || [])];
+    modal.dismiss();
   }
 
   getSelectedBallsText(): string {
