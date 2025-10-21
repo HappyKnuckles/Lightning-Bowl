@@ -120,7 +120,7 @@
           </app-generic-typeahead>
         </ng-template>
       </ion-modal>
-      <ion-item [id]="'ball-selector'" button detailIcon="chevron-expand-outline" [disabled]="storageService.arsenal().length === 0">
+      <ion-item [id]="'ball-selector'" detail="true" detailIcon="chevron-expand-outline" [disabled]="storageService.arsenal().length === 0">
         <ion-label>Balls</ion-label>
         <span class="ion-text-right">{{ getSelectedBallsText() }}</span>
       </ion-item>
