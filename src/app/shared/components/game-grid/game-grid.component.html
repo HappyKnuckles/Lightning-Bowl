@@ -120,20 +120,28 @@
           </app-generic-typeahead>
         </ng-template>
       </ion-modal>
-      <ion-item [id]="'balls-' + patternId()" button [disabled]="storageService.arsenal().length === 0">
+      <ion-item [id]="'ball-selector-' + patternId()" button [disabled]="storageService.arsenal().length === 0">
         <ion-label>Balls</ion-label>
-        <span class="ion-text-right">{{ (game().balls || []).join(", ") || "None" }}</span>
+        <ion-note slot="end">{{ getSelectedBallsText() }}</ion-note>
       </ion-item>
-      <ion-modal [presentingElement]="presentingElement" [trigger]="'balls-' + patternId()">
+      <ion-popover [trigger]="'ball-selector-' + patternId()" size="auto" [dismissOnSelect]="false">
         <ng-template>
-          <app-generic-typeahead
-            [items]="storageService.arsenal()"
-            [config]="ballTypeaheadConfig"
-            [prevSelectedItems]="getSelectedBallIds()"
-            (selectedItemsChange)="onBallsChanged($event)">
-          </app-generic-typeahead>
+          <ion-content class="ion-padding">
+            <ion-list>
+              <ion-item *ngFor="let ball of storageService.arsenal()" button (click)="toggleBallSelection(ball.ball_name)">
+                <ion-avatar slot="start">
+                  <ion-img [src]="storageService.url + ball.thumbnail_image"></ion-img>
+                </ion-avatar>
+                <ion-label>
+                  <h2>{{ ball.ball_name }}</h2>
+                  <p>{{ ball.brand_name }} ({{ ball.release_date }})</p>
+                </ion-label>
+                <ion-checkbox slot="end" [checked]="isBallSelected(ball.ball_name)" (ionChange)="$event.stopPropagation()"></ion-checkbox>
+              </ion-item>
+            </ion-list>
+          </ion-content>
         </ng-template>
-      </ion-modal>
+      </ion-popover>
       <ion-item lines="none">
         <ion-textarea
           label="Note"

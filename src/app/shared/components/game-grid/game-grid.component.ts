@@ -18,14 +18,21 @@ import { NgFor, NgIf, NgStyle } from '@angular/common';
 import {
   IonGrid,
   IonModal,
+  IonSelect,
+  IonSelectOption,
   IonRow,
   IonCol,
   IonInput,
   IonItem,
-  IonLabel,
   IonTextarea,
   IonCheckbox,
   IonList,
+  IonPopover,
+  IonContent,
+  IonLabel,
+  IonNote,
+  IonAvatar,
+  IonImg,
 } from '@ionic/angular/standalone';
 import { FormsModule } from '@angular/forms';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
@@ -40,11 +47,10 @@ import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { UtilsService } from 'src/app/core/services/utils/utils.service';
 import { Game } from 'src/app/core/models/game.model';
 import { GenericTypeaheadComponent } from '../generic-typeahead/generic-typeahead.component';
-import { createPartialPatternTypeaheadConfig, createBallTypeaheadConfig } from '../generic-typeahead/typeahead-configs';
+import { createPartialPatternTypeaheadConfig } from '../generic-typeahead/typeahead-configs';
 import { TypeaheadConfig } from '../generic-typeahead/typeahead-config.interface';
 import { PatternService } from 'src/app/core/services/pattern/pattern.service';
 import { Pattern } from 'src/app/core/models/pattern.model';
-import { Ball } from 'src/app/core/models/ball.model';
 import { Keyboard } from '@capacitor/keyboard';
 
 @Component({
@@ -54,11 +60,12 @@ import { Keyboard } from '@capacitor/keyboard';
   providers: [GameScoreCalculatorService],
   standalone: true,
   imports: [
+    IonSelect,
     NgFor,
+    IonSelectOption,
     IonList,
     IonCheckbox,
     IonItem,
-    IonLabel,
     IonTextarea,
     IonGrid,
     IonRow,
@@ -70,6 +77,12 @@ import { Keyboard } from '@capacitor/keyboard';
     IonModal,
     GenericTypeaheadComponent,
     NgStyle,
+    IonPopover,
+    IonContent,
+    IonLabel,
+    IonNote,
+    IonAvatar,
+    IonImg,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
@@ -101,7 +114,6 @@ export class GameGridComponent implements OnInit, OnDestroy {
   maxScore = 300;
   presentingElement?: HTMLElement;
   patternTypeaheadConfig!: TypeaheadConfig<Partial<Pattern>>;
-  ballTypeaheadConfig!: TypeaheadConfig<Ball>;
 
   // Keyboard toolbar
   showButtonToolbar = false;
@@ -148,7 +160,6 @@ export class GameGridComponent implements OnInit, OnDestroy {
     }
     this.presentingElement = document.querySelector('.ion-page')!;
     this.patternTypeaheadConfig = createPartialPatternTypeaheadConfig((searchTerm: string) => this.patternService.searchPattern(searchTerm));
-    this.ballTypeaheadConfig = createBallTypeaheadConfig(this.storageService);
   }
 
   ngOnDestroy() {
@@ -210,19 +221,26 @@ export class GameGridComponent implements OnInit, OnDestroy {
     this.patternChanged.emit(patterns);
   }
 
-  onBallsChanged(ballIds: string[]): void {
-    // Map ball_id back to ball_name for storage compatibility
-    const ballNames = this.storageService.arsenal()
-      .filter((ball) => ballIds.includes(ball.ball_id))
-      .map((ball) => ball.ball_name);
-    this.game().balls = ballNames;
+  toggleBallSelection(ballName: string): void {
+    const balls = this.game().balls || [];
+    const index = balls.indexOf(ballName);
+    
+    if (index > -1) {
+      // Remove ball if already selected
+      this.game().balls = balls.filter(b => b !== ballName);
+    } else {
+      // Add ball if not selected
+      this.game().balls = [...balls, ballName];
+    }
   }
 
-  getSelectedBallIds(): string[] {
+  isBallSelected(ballName: string): boolean {
+    return (this.game().balls || []).includes(ballName);
+  }
+
+  getSelectedBallsText(): string {
     const balls = this.game().balls || [];
-    return this.storageService.arsenal()
-      .filter((ball) => balls.includes(ball.ball_name))
-      .map((ball) => ball.ball_id);
+    return balls.length > 0 ? balls.join(', ') : 'None';
   }
 
   getFrameValue(frameIndex: number, throwIndex: number): string {
