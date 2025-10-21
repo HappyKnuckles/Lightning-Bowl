@@ -23,9 +23,6 @@ import {
   IonButtons,
   IonButton,
   IonIcon,
-  IonCheckbox,
-  IonItem,
-  IonLabel,
   ModalController,
 } from '@ionic/angular/standalone';
 import { Pattern } from 'src/app/core/models/pattern.model';
@@ -55,9 +52,6 @@ import { FavoritesService } from 'src/app/core/services/favorites/favorites.serv
   styleUrls: ['./pattern.page.scss'],
   standalone: true,
   imports: [
-    IonLabel,
-    IonItem,
-    IonCheckbox,
     IonIcon,
     IonButton,
     IonButtons,
@@ -102,7 +96,7 @@ export class PatternPage implements OnInit {
 
   get displayedPatterns(): Pattern[] {
     let patterns: Pattern[];
-    
+
     // If there's a search term, return patterns without additional sorting to preserve relevance ranking
     if (this.searchTerm().trim() !== '') {
       patterns = this.patterns;
@@ -258,7 +252,7 @@ export class PatternPage implements OnInit {
   toggleFavorite(event: Event, pattern: Pattern): void {
     event.stopPropagation();
     const isFavorited = this.favoritesService.toggleFavorite(pattern.url);
-    
+
     if (isFavorited) {
       this.toastService.showToast(`Added ${pattern.title} to favorites`, 'heart');
     } else {
