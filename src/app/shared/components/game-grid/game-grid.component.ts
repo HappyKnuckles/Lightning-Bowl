@@ -15,25 +15,7 @@ import { Platform } from '@ionic/angular';
 import { Subscription } from 'rxjs';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { NgFor, NgIf, NgStyle } from '@angular/common';
-import {
-  IonGrid,
-  IonModal,
-  IonSelect,
-  IonSelectOption,
-  IonRow,
-  IonCol,
-  IonInput,
-  IonItem,
-  IonTextarea,
-  IonCheckbox,
-  IonList,
-  IonPopover,
-  IonContent,
-  IonLabel,
-  IonNote,
-  IonAvatar,
-  IonImg,
-} from '@ionic/angular/standalone';
+import { IonGrid, IonModal, IonRow, IonCol, IonInput, IonItem, IonTextarea, IonCheckbox, IonList, IonLabel } from '@ionic/angular/standalone';
 import { FormsModule } from '@angular/forms';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { ImpactStyle } from '@capacitor/haptics';
@@ -54,6 +36,7 @@ import { Pattern } from 'src/app/core/models/pattern.model';
 import { Keyboard } from '@capacitor/keyboard';
 import { addIcons } from 'ionicons';
 import { chevronExpandOutline } from 'ionicons/icons';
+import { BallSelectComponent } from '../ball-select/ball-select.component';
 
 @Component({
   selector: 'app-game-grid',
@@ -62,9 +45,7 @@ import { chevronExpandOutline } from 'ionicons/icons';
   providers: [GameScoreCalculatorService],
   standalone: true,
   imports: [
-    IonSelect,
     NgFor,
-    IonSelectOption,
     IonList,
     IonCheckbox,
     IonItem,
@@ -79,12 +60,8 @@ import { chevronExpandOutline } from 'ionicons/icons';
     IonModal,
     GenericTypeaheadComponent,
     NgStyle,
-    IonPopover,
-    IonContent,
     IonLabel,
-    IonNote,
-    IonAvatar,
-    IonImg,
+    BallSelectComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
@@ -227,34 +204,9 @@ export class GameGridComponent implements OnInit, OnDestroy {
     this.patternChanged.emit(patterns);
   }
 
-  openBallModal() {
-    // Store current selection as temporary when opening modal
-    this.tempSelectedBalls = [...(this.game().balls || [])];
-  }
-
-  toggleBallSelection(ballName: string): void {
-    const index = this.tempSelectedBalls.indexOf(ballName);
-    if (index > -1) {
-      this.tempSelectedBalls.splice(index, 1);
-    } else {
-      this.tempSelectedBalls.push(ballName);
-    }
-  }
-
-  isBallSelected(ballName: string): boolean {
-    return this.tempSelectedBalls.includes(ballName);
-  }
-
-  confirmBallSelection(modal: any): void {
-    // Only commit changes when Ok is pressed
-    this.game().balls = [...this.tempSelectedBalls];
+  onBallSelect(selectedBalls: string[], modal: IonModal): void {
     modal.dismiss();
-  }
-
-  cancelBallSelection(modal: any): void {
-    // Reset temporary selection to original state
-    this.tempSelectedBalls = [...(this.game().balls || [])];
-    modal.dismiss();
+    this.game().balls = selectedBalls;
   }
 
   getSelectedBallsText(): string {

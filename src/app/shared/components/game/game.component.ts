@@ -60,6 +60,7 @@ import { Pattern } from 'src/app/core/models/pattern.model';
 import { LongPressDirective } from 'src/app/core/directives/long-press/long-press.directive';
 import { Router } from '@angular/router';
 import { GameGridComponent } from '../game-grid/game-grid.component';
+import { BallSelectComponent } from '../ball-select/ball-select.component';
 
 @Component({
   selector: 'app-game',
@@ -105,6 +106,7 @@ import { GameGridComponent } from '../game-grid/game-grid.component';
     DatePipe,
     GameGridComponent,
     GenericTypeaheadComponent,
+    BallSelectComponent,
   ],
   standalone: true,
 })
@@ -188,9 +190,7 @@ export class GameComponent implements OnChanges, OnInit {
 
   ngOnInit(): void {
     this.presentingElement = document.querySelector('.ion-page')!;
-    this.patternTypeaheadConfig = createPartialPatternTypeaheadConfig(
-      (searchTerm: string) => this.patternService.searchPattern(searchTerm)
-    );
+    this.patternTypeaheadConfig = createPartialPatternTypeaheadConfig((searchTerm: string) => this.patternService.searchPattern(searchTerm));
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -248,7 +248,6 @@ export class GameComponent implements OnChanges, OnInit {
     else nativeEl.value = accordionId;
   }
 
-  /** LONG-PRESS or header click entry point */
   saveOriginalStateAndEnableEdit(game: Game): void {
     if (!this.isEditMode[game.gameId]) {
       this.originalGameState[game.gameId] = structuredClone(game);
@@ -266,6 +265,16 @@ export class GameComponent implements OnChanges, OnInit {
       this.openExpansionPanel(accordionId);
       this.delayedCloseMap[game.gameId] = true;
     }
+  }
+
+  onBallSelect(selectedBalls: string[], game: Game, modal: IonModal): void {
+    modal.dismiss();
+    game.balls = selectedBalls;
+  }
+
+  getSelectedBallsText(game: Game): string {
+    const balls = game.balls || [];
+    return balls.length > 0 ? balls.join(', ') : 'None';
   }
 
   cancelEdit(game: Game): void {

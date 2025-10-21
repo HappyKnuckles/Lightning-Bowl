@@ -1,44 +1,9 @@
-.ball-modal{
+.ball-modal {
   --width: fit-content;
-    --min-width: 250px;
-    --height: fit-content;
-    --border-radius: 6px;
-      --max-height: 45vh;
-
-    ion-content{
-      min-height: 35vh;
-    }
-
-    ion-title{
-      min-width: fit-content;
-      padding-inline-start: 60px;
-    }
-    ion-footer{
-      ion-toolbar{
-        padding-top: 0;
-        --padding-top: 0;
-        --padding-bottom: 0;
-      }
-    }
-        .modal-buttons {
-          width: 100%;
-          display: flex;
-    
-          .modal-button {
-            flex: 1;
-            margin: 0;
-            border-radius: 0;
-            height: 44px;
-    
-            &.cancel-button {
-              border-right: 0.55px solid rgba(255, 255, 255, 0.1);
-            }
-    
-            &.ok-button {
-              font-weight: 600;
-            }
-          }
-        }
+  --min-width: 250px;
+  --height: fit-content;
+  --border-radius: 13px;
+  --max-height: 50vh;
 }
 
 ion-input {
