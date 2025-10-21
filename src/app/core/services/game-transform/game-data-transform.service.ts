@@ -14,7 +14,7 @@ export class GameDataTransformerService {
     isSeries?: boolean,
     seriesId?: string,
     note?: string,
-    pattern?: string,
+    patterns?: string[],
     balls?: string[],
     existingGameId?: string,
     existingDate?: number,
@@ -46,8 +46,8 @@ export class GameDataTransformerService {
         league: league,
         isClean: isClean,
         isPerfect: isPerfect,
-        pattern: pattern!,
-        balls: balls,
+        patterns: patterns ? [...patterns].sort() : [],
+        balls: balls ? [...balls].sort() : undefined,
       };
     } catch (error) {
       throw new Error(`Error transforming game data: ${error}`);

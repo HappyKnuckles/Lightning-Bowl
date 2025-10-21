@@ -1,11 +1,19 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <!-- <ion-buttons slot="end">
-      <ion-button (click)="openAddPatternModal()" class="action-sheet">
-        <ion-icon name="add-outline" slot="icon-only"></ion-icon>
-      </ion-button>
-    </ion-buttons> -->
     <ion-title>Pattern Library</ion-title>
+    <ion-buttons slot="end" class="action-sheet">
+      <app-sort-header
+        #sortHeader
+        [id]="'pattern-sort-header'"
+        [sortOptions]="sortService.PATTERN_SORT_OPTIONS"
+        [selectedSort]="currentSortOption"
+        [storageKey]="'patterns-sort-option'"
+        [favoritesFirst]="favoritesFirst()"
+        [favoritesFirstStorageKey]="'patterns-favorites-first'"
+        (sortChanged)="onSortChanged($event)"
+        (favoritesFirstChanged)="onFavoritesFirstChange($event)">
+      </app-sort-header>
+    </ion-buttons>
   </ion-toolbar>
   <ion-toolbar>
     <ion-searchbar
@@ -21,12 +29,45 @@
   <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
-  @if (!loadingService.isLoading()) {
+  @if (isPageLoading()) {
+    @for (item of [1, 2, 3, 4, 5, 6, 7, 8]; track item) {
+      <ion-card>
+        <ion-skeleton-text style="width: 100%; height: 100px; margin: 0"></ion-skeleton-text>
+        <ion-card-header>
+          <ion-card-title>
+            <ion-skeleton-text [animated]="true" style="width: 80%; height: 20px; border-radius: 10px"></ion-skeleton-text>
+          </ion-card-title>
+          <ion-card-subtitle>
+            <ion-skeleton-text [animated]="true" style="width: 50%; border-radius: 10px"></ion-skeleton-text>
+          </ion-card-subtitle>
+        </ion-card-header>
+        <ion-card-content>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px">
+            <div style="display: inline-flex">
+              <ion-skeleton-text [animated]="true" style="width: 90px; height: 24px; border-radius: 10px"></ion-skeleton-text>
+            </div>
+            <div style="display: inline-flex">
+              <ion-skeleton-text [animated]="true" style="width: 70px; height: 24px; border-radius: 10px"></ion-skeleton-text>
+            </div>
+            <div style="display: inline-flex">
+              <ion-skeleton-text [animated]="true" style="width: 85px; height: 24px; border-radius: 10px"></ion-skeleton-text>
+            </div>
+            <div style="display: inline-flex">
+              <ion-skeleton-text [animated]="true" style="width: 100px; height: 24px; border-radius: 10px"></ion-skeleton-text>
+            </div>
+            <div style="display: inline-flex">
+              <ion-skeleton-text [animated]="true" style="width: 250px; height: 24px; border-radius: 10px"></ion-skeleton-text>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    }
+  } @else {
     <ng-container *ngIf="patterns.length <= 0; else allPatterns">
       <ion-text class="no-game-text"> No patterns found! </ion-text>
     </ng-container>
     <ng-template #allPatterns>
-      @for (pattern of patterns; track pattern.url) {
+      @for (pattern of displayedPatterns; track pattern.url) {
         <ion-card
           [ngClass]="{
             'red-card': getRatioValue(pattern.ratio ?? '0') >= 1 && getRatioValue(pattern.ratio ?? '0') < 4,
@@ -37,7 +78,16 @@
           id="{{ pattern.url }}">
           <img *ngIf="pattern.chartImageSrc" [src]="pattern.chartImageSrc" alt="{{ pattern.title }} Oil Pattern Chart" class="pattern-chart-image" />
           <ion-card-header>
-            <ion-card-title>{{ pattern.title }}</ion-card-title>
+            <ion-card-title style="display: flex; align-items: center; justify-content: space-between">
+              <span>{{ pattern.title }}</span>
+              <ion-button fill="clear" size="default" (click)="toggleFavorite($event, pattern)" style="margin: 0; height: auto; min-height: auto">
+                <ion-icon
+                  [name]="favoritesService.isFavorite(pattern.url) ? 'heart' : 'heart-outline'"
+                  slot="icon-only"
+                  style="color: var(--ion-color-primary); font-size: 24px">
+                </ion-icon>
+              </ion-button>
+            </ion-card-title>
             <ion-card-subtitle>{{ pattern.category }}</ion-card-subtitle>
           </ion-card-header>
           <ion-card-content>
@@ -74,44 +124,11 @@
     <ion-infinite-scroll threshold="100px" (ionInfinite)="loadPatterns($event)" *ngIf="hasMoreData">
       <ion-infinite-scroll-content loadingSpinner="crescent" loadingText="Loading more patterns..."></ion-infinite-scroll-content>
     </ion-infinite-scroll>
-  } @else {
-    @for (item of [1, 2, 3, 4, 5, 6, 7, 8]; track item) {
-      <ion-card>
-        <ion-skeleton-text style="width: 100%; height: 100px; margin: 0"></ion-skeleton-text>
-        <ion-card-header>
-          <ion-card-title>
-            <ion-skeleton-text [animated]="true" style="width: 80%; height: 20px; border-radius: 10px"></ion-skeleton-text>
-          </ion-card-title>
-          <ion-card-subtitle>
-            <ion-skeleton-text [animated]="true" style="width: 50%; border-radius: 10px"></ion-skeleton-text>
-          </ion-card-subtitle>
-        </ion-card-header>
-        <ion-card-content>
-          <div style="display: flex; flex-wrap: wrap; gap: 8px">
-            <div style="display: inline-flex">
-              <ion-skeleton-text [animated]="true" style="width: 90px; height: 24px; border-radius: 10px"></ion-skeleton-text>
-            </div>
-            <div style="display: inline-flex">
-              <ion-skeleton-text [animated]="true" style="width: 70px; height: 24px; border-radius: 10px"></ion-skeleton-text>
-            </div>
-            <div style="display: inline-flex">
-              <ion-skeleton-text [animated]="true" style="width: 85px; height: 24px; border-radius: 10px"></ion-skeleton-text>
-            </div>
-            <div style="display: inline-flex">
-              <ion-skeleton-text [animated]="true" style="width: 100px; height: 24px; border-radius: 10px"></ion-skeleton-text>
-            </div>
-            <div style="display: inline-flex">
-              <ion-skeleton-text [animated]="true" style="width: 250px; height: 24px; border-radius: 10px"></ion-skeleton-text>
-            </div>
-          </div>
-        </ion-card-content>
-      </ion-card>
-    }
   }
 </ion-content>
 
 @if (!loadingService.isLoading()) {
-  @for (pattern of patterns; track pattern.url) {
+  @for (pattern of displayedPatterns; track pattern.url) {
     <ion-modal trigger="{{ pattern.url }}" #modal>
       <ng-template>
         <ion-header translucent="true">

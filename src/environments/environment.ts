@@ -1,7 +1,7 @@
 export const environment = {
   production: false,
-  ocrEndpoint: 'https://bowling-ocr.vercel.app/api/server',
-  bowwwlEndpoint: 'https://bowwwl-proxy.vercel.app/api/',
+  ocrEndpoint: 'https://ocr.lightningbowl.de/api/server',
+  bowwwlEndpoint: 'https://proxy.lightningbowl.de/api/',
   emailTemplateID: 'template_qwl4l46',
   emailServiceID: 'service_4zwqeji',
   emailUserID: 'mkI2Kqg6m34U7GL8m',

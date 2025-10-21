@@ -40,7 +40,8 @@
     </ion-toolbar>
   }
   <ion-toolbar *ngIf="gameFilterService.activeFilterCount() !== 0" style="text-align: center">
-    <app-game-filter-active></app-game-filter-active>
+    <app-generic-filter-active [filters]="currentFilters" [defaultFilters]="defaultFilters" [filterConfigs]="gameFilterConfigs">
+    </app-generic-filter-active>
   </ion-toolbar>
 </ion-header>
 
@@ -48,6 +49,7 @@
   <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
+
   <ion-segment-view>
     <ion-segment-content id="Overall">
       <section class="tab" *ngIf="gameFilterService.filteredGames().length > 0">
@@ -69,6 +71,14 @@
           [currentStats]="statsService.currentStats()"
           [prevStats]="statsService.prevStats()">
         </app-stat-display>
+        <app-ball-stats
+          [title]="'Most used ball'"
+          [bestBall]="statsService.mostPlayedBallStats()"
+          [totalGames]="statsService.currentStats().totalGames"></app-ball-stats>
+        <app-ball-stats
+          [title]="'Best ball'"
+          [bestBall]="statsService.bestBallStats()"
+          [totalGames]="statsService.currentStats().totalGames"></app-ball-stats>
         <app-stat-display
           [title]="'Series Stats'"
           [statDefinitions]="seriesStatDefinitions"
@@ -79,6 +89,9 @@
           <canvas #scoreChart class="score" style="width: 300px; height: 400px; max-height: 700px"></canvas>
         </div>
         <div class="stat-container">
+          <canvas #averageScoreChart class="average-score" style="width: 300px; height: 400px; max-height: 700px"></canvas>
+        </div>
+        <div class="stat-container">
           <canvas #scoreDistributionChart style="width: 300px; height: 400px; max-height: 700px"></canvas>
         </div>
       </section>
@@ -86,6 +99,7 @@
 
     <ion-segment-content id="Spares">
       <section class="tab" *ngIf="gameFilterService.filteredGames().length > 0">
+        <ion-list-header style="margin-bottom: 4px">Spare Overview</ion-list-header>
         <app-spare-display [stats]="statsService.currentStats()" [prevStats]="statsService.prevStats()" id="overalSpareStats"></app-spare-display>
         <div class="stat-container">
           <canvas #pinChart class="spares" style="width: 300px; height: 400px; max-height: 700px"></canvas>

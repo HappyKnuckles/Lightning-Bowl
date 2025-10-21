@@ -1,0 +1,109 @@
+/* High Score Alert Styles */
+.high-score-alert .alert-wrapper {
+  border-radius: 20px;
+  /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+.high-score-alert .alert-head {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.high-score-alert .alert-title {
+  color: #fff;
+  font-weight: bold;
+  font-size: 1.3em;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.high-score-alert .alert-sub-title {
+  color: #f0f0f0;
+  font-weight: 600;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.high-score-alert .alert-message {
+  color: #fff;
+  background: transparent;
+  padding: 20px;
+}
+
+.high-score-alert .alert-button-group {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.high-score-alert .alert-button-confirm {
+  /* background: linear-gradient(135deg, #4CAF50, #45a049); */
+  background-color: var(--ion-color-tertiary);
+  color: white;
+  font-weight: bold;
+  font-size: 1.1em;
+  border-radius: 10px;
+  margin: 10px;
+  padding: 12px 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease;
+}
+
+.high-score-alert .alert-button-confirm:hover {
+  transform: scale(1.05);
+}
+
+/* Animation effects */
+.high-score-alert {
+  animation: celebrateEntry 0.6s ease-out;
+}
+
+@keyframes celebrateEntry {
+  0% {
+    transform: scale(0.3) rotate(-15deg);
+    opacity: 0;
+  }
+
+  50% {
+    transform: scale(1.1) rotate(5deg);
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+/* Confetti-like background effect */
+.high-score-alert::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 300%;
+  height: 200%;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(255, 215, 0, 0.2) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(255, 20, 147, 0.2) 0%, transparent 50%),
+    radial-gradient(circle at 40% 60%, rgba(0, 255, 255, 0.2) 0%, transparent 50%);
+  animation: confettiFloat 3s ease-in-out infinite;
+  pointer-events: none;
+  z-index: -1;
+}
+
+@keyframes confettiFloat {
+
+  0%,
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+
+  33% {
+    transform: rotate(120deg) scale(1.1);
+  }
+
+  66% {
+    transform: rotate(240deg) scale(0.9);
+  }
+}

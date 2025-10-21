@@ -3,11 +3,14 @@ import { Game } from 'src/app/core/models/game.model';
 import { Storage } from '@ionic/storage-angular';
 import { SortUtilsService } from '../sort-utils/sort-utils.service';
 import { Ball } from 'src/app/core/models/ball.model';
-import { signal } from '@angular/core';
+import { signal, computed } from '@angular/core';
 import { LoadingService } from '../loader/loading.service';
 import { BallService } from '../ball/ball.service';
 import { Pattern } from '../../models/pattern.model';
 import { PatternService } from '../pattern/pattern.service';
+import { HighScoreAlertService } from '../high-score-alert/high-score-alert.service';
+import { CacheService } from '../cache/cache.service';
+import { NetworkService } from '../network/network.service';
 
 @Injectable({
   providedIn: 'root',
@@ -19,6 +22,20 @@ export class StorageService {
   #arsenal = signal<Ball[]>([]);
   #allBalls = signal<Ball[]>([]);
   #allPatterns = signal<Partial<Pattern>[]>([]);
+
+  #isUsingCache = signal<boolean>(false);
+
+  get usingCacheStatus() {
+    return computed(() => ({
+      isOffline: this.networkService.isOffline,
+      isUsingCache: this.#isUsingCache(),
+      statusMessage: this.networkService.isOffline
+        ? 'Offline - Using cached data'
+        : this.#isUsingCache()
+          ? 'Using cached data'
+          : 'Online - Data up to date',
+    }));
+  }
 
   get leagues() {
     return this.#leagues;
@@ -42,8 +59,12 @@ export class StorageService {
     private loadingService: LoadingService,
     private ballService: BallService,
     private patternService: PatternService,
+    private highScoreAlertService: HighScoreAlertService,
+    private cacheService: CacheService,
+    private networkService: NetworkService,
   ) {
     this.init();
+    // this.highScoreAlertService.displayHighScoreAlert({ type: 'single_game', newRecord: 150, previousRecord: 110, details: { league: 'Monday Night', patterns: ['THS', 'Sport'], balls: ['Storm', 'Hammer'], date: '1/15/2025' }, gameOrSeries: []});
   }
 
   async init() {
@@ -68,7 +89,6 @@ export class StorageService {
       await this.loadInitialData(weight);
     } catch (error) {
       console.error('Error during StorageService init:', error);
-      // Optionally rethrow or handle further if needed
     }
   }
 
@@ -98,6 +118,48 @@ export class StorageService {
     this.loadingService.setLoading(true);
     try {
       const gameHistory = await this.loadData<Game>('game');
+      let needsUpdate = false;
+
+      // Temporary transformation: convert legacy single pattern string to patterns array
+      gameHistory.forEach((game) => {
+        const legacyGame = game as Game & { pattern?: string };
+        if (legacyGame.pattern && !game.patterns) {
+          game.patterns = [legacyGame.pattern];
+          delete legacyGame.pattern;
+          needsUpdate = true;
+        } else if (!game.patterns) {
+          game.patterns = [];
+          needsUpdate = true;
+        }
+
+        // Remove old pattern property if it still exists
+        if (legacyGame.pattern !== undefined) {
+          delete legacyGame.pattern;
+          needsUpdate = true;
+        }
+
+        // Sort patterns and balls arrays alphabetically and check if they were already sorted
+        if (game.patterns && Array.isArray(game.patterns)) {
+          const originalPatternsStr = JSON.stringify(game.patterns);
+          game.patterns.sort();
+          if (JSON.stringify(game.patterns) !== originalPatternsStr) {
+            needsUpdate = true;
+          }
+        }
+        if (game.balls && Array.isArray(game.balls)) {
+          const originalBallsStr = JSON.stringify(game.balls);
+          game.balls.sort();
+          if (JSON.stringify(game.balls) !== originalBallsStr) {
+            needsUpdate = true;
+          }
+        }
+      });
+
+      // Save updated games back to storage if any changes were made
+      if (needsUpdate) {
+        await this.saveGamesToLocalStorage(gameHistory);
+      }
+
       this.sortUtilsService.sortGameHistoryByDate(gameHistory, false);
       this.games.set(gameHistory);
       return gameHistory;
@@ -109,23 +171,117 @@ export class StorageService {
     }
   }
 
-  async loadAllBalls(updated?: string, weight?: number): Promise<void> {
+  async loadAllBalls(updated?: string, weight?: number, forceRefresh = false): Promise<void> {
+    const cacheKey = `all_balls_${weight || 'default'}`;
+
     try {
+      // Check if we should use cached data
+      if (!forceRefresh) {
+        const cachedBalls = await this.cacheService.get<Ball[]>(cacheKey);
+        const isCacheValid = await this.cacheService.isValid(cacheKey);
+
+        if (cachedBalls && (isCacheValid || this.networkService.isOffline)) {
+          this.allBalls.set(cachedBalls);
+          this.#isUsingCache.set(true);
+          if (this.networkService.isOnline && (await this.cacheService.isStale(cacheKey))) {
+            this.refreshBallsInBackground(updated, weight, cacheKey);
+          }
+          return;
+        }
+      }
+
+      // If no valid cache or force refresh, fetch from network
+      if (this.networkService.isOffline) {
+        console.warn('Cannot fetch balls: offline and no valid cache available');
+        return;
+      }
+
       const response = await this.ballService.loadAllBalls(updated, weight);
       this.allBalls.set(response);
+      this.#isUsingCache.set(false);
+
+      await this.cacheService.set(cacheKey, response);
     } catch (error) {
       console.error('Failed to load all balls:', error);
-      throw error;
+
+      // Try to use cached data as fallback
+      const cachedBalls = await this.cacheService.get<Ball[]>(cacheKey);
+      if (cachedBalls) {
+        this.allBalls.set(cachedBalls);
+        this.#isUsingCache.set(true);
+      } else {
+        throw error;
+      }
     }
   }
 
-  async loadAllPatterns(): Promise<void> {
+  private async refreshBallsInBackground(updated?: string, weight?: number, cacheKey?: string): Promise<void> {
     try {
+      const response = await this.ballService.loadAllBalls(updated, weight);
+      this.allBalls.set(response);
+      this.#isUsingCache.set(false);
+
+      if (cacheKey) {
+        await this.cacheService.set(cacheKey, response);
+      }
+    } catch (error) {
+      console.error('Background refresh failed for balls:', error);
+    }
+  }
+
+  async loadAllPatterns(forceRefresh = false): Promise<void> {
+    const cacheKey = 'all_patterns';
+
+    try {
+      // Check if we should use cached data
+      if (!forceRefresh) {
+        const cachedPatterns = await this.cacheService.get<Pattern[]>(cacheKey);
+        const isCacheValid = await this.cacheService.isValid(cacheKey);
+
+        if (cachedPatterns && (isCacheValid || this.networkService.isOffline)) {
+          this.allPatterns.set(cachedPatterns);
+          this.#isUsingCache.set(true);
+          if (this.networkService.isOnline && (await this.cacheService.isStale(cacheKey))) {
+            this.refreshPatternsInBackground(cacheKey);
+          }
+          return;
+        }
+      }
+
+      // If no valid cache or force refresh, fetch from network
+      if (this.networkService.isOffline) {
+        console.warn('Cannot fetch patterns: offline and no valid cache available');
+        return;
+      }
+
       const response = await this.patternService.getAllPatterns();
-      const patterns = response;
-      this.allPatterns.set(patterns);
+      this.allPatterns.set(response);
+      this.#isUsingCache.set(false);
+
+      await this.cacheService.set(cacheKey, response);
     } catch (error) {
       console.error('Error fetching patterns:', error);
+
+      // Try to use cached data as fallback
+      const cachedPatterns = await this.cacheService.get<Pattern[]>(cacheKey);
+      if (cachedPatterns) {
+        this.allPatterns.set(cachedPatterns);
+        this.#isUsingCache.set(true);
+      }
+    }
+  }
+
+  private async refreshPatternsInBackground(cacheKey?: string): Promise<void> {
+    try {
+      const response = await this.patternService.getAllPatterns();
+      this.allPatterns.set(response);
+      this.#isUsingCache.set(false);
+
+      if (cacheKey) {
+        await this.cacheService.set(cacheKey, response);
+      }
+    } catch (error) {
+      console.error('Background refresh failed for patterns:', error);
     }
   }
 
@@ -196,6 +352,7 @@ export class StorageService {
   async saveGameToLocalStorage(gameData: Game): Promise<void> {
     try {
       const key = 'game' + gameData.gameId;
+
       await this.save(key, gameData);
       this.games.update((games) => {
         const index = games.findIndex((game) => game.gameId === gameData.gameId);

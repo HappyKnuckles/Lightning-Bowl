@@ -25,6 +25,9 @@
 @import url("@ionic/angular/css/text-transformation.css");
 @import url("@ionic/angular/css/flex-utils.css");
 
+/* Custom styles */
+@import url("./app/core/styles/high-score-alert.scss");
+
 ion-segment-view {
   height: fit-content;
 }
@@ -46,8 +49,8 @@ canvas {
 }
 
 ion-input {
-  --highlight-color-focused: var(--ion-input-color) !important;
-}
+  --highlight-color-focused: color-contrast(var(--ion-input-background) vs var(--ion-color-primary),
+        var(--ion-color-primary-contrast)) !important;}
 
 .no-game-text {
   width: 60%;

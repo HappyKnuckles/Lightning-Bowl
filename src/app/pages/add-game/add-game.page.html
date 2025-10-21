@@ -59,10 +59,6 @@
           (isPracticeChanged)="onIsPracticeChange($event)"
           [patternId]="j.toString()"></app-game-grid>
         <ion-grid *ngIf="i !== 0">
-          <ion-row>
-            <ion-col class="middle count">Total: {{ totalScores[trackIndex] }}</ion-col>
-            <ion-col class="middle count">Max: {{ maxScores[trackIndex] }}</ion-col>
-          </ion-row>
           <ion-row class="button-row">
             <ion-col>
               <ion-button (click)="clearFrames(j)">Clear Score</ion-button>
@@ -73,10 +69,6 @@
     </ion-segment-view>
 
     <ion-grid *ngIf="i === 0">
-      <ion-row>
-        <ion-col class="middle count">Total: {{ totalScores[i] }}</ion-col>
-        <ion-col class="middle count">Max: {{ maxScores[i] }}</ion-col>
-      </ion-row>
       <ion-row class="button-row">
         <ion-col>
           <ion-button (click)="clearFrames()">Clear Score</ion-button>

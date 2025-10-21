@@ -4,10 +4,25 @@
     <ion-buttons slot="start">
       <ion-button [href]="storageService.url">
         <div class="powered-by">powered by</div>
-        <img [src]="storageService.url + '/sites/default/files/logo/bowwwl-logo.svg'" alt="bowwwl" title="bowwwl.com" style="height: 1.5rem" />
+        <img
+          [src]="storageService.url + '/sites/default/files/logo/bowwwl-logo.svg'"
+          alt="bowwwl"
+          title="bowwwl.com"
+          style="height: 1.5rem; min-width: 80px" />
       </ion-button>
     </ion-buttons>
     <ion-buttons slot="end" class="action-sheet">
+      <app-sort-header
+        #sortHeader
+        [id]="'ball-sort-header'"
+        [sortOptions]="sortService.BALL_SORT_OPTIONS"
+        [selectedSort]="currentSortOption"
+        [storageKey]="'balls-sort-option'"
+        [favoritesFirst]="favoritesFirst()"
+        [favoritesFirstStorageKey]="'balls-favorites-first'"
+        (sortChanged)="onSortChanged($event)"
+        (favoritesFirstChanged)="onFavoritesFirstChange($event)">
+      </app-sort-header>
       <ion-button fill="clear" (click)="openFilterModal()">
         <ion-icon slot="icon-only" name="filter-outline"></ion-icon>
         <ion-text class="filter-indicator" *ngIf="isFilterActive()">{{ ballFilterService.activeFilterCount() }}</ion-text>
@@ -23,8 +38,9 @@
       showCancelButton="focus"
       debounce="300"></ion-searchbar>
   </ion-toolbar>
-  <ion-toolbar style="text-align: center">
-    <app-ball-filter-active></app-ball-filter-active>
+  <ion-toolbar style="text-align: center" *ngIf="ballFilterService.activeFilterCount() !== 0">
+    <app-generic-filter-active [filters]="currentFilters" [defaultFilters]="defaultFilters" [filterConfigs]="ballFilterConfigs">
+    </app-generic-filter-active>
   </ion-toolbar>
 </ion-header>
 
@@ -33,7 +49,7 @@
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 
-  @if (!loadingService.isLoading() || componentLoading) {
+  @if (!isPageLoading()) {
     <ng-container *ngIf="displayedBalls.length <= 0; else content">
       <ion-text class="no-game-text"> No balls found. </ion-text>
     </ng-container>
@@ -42,7 +58,29 @@
       @for (ball of displayedBalls; track ball.ball_id) {
         <ion-card role="article">
           <ion-card-header>
-            <ion-card-title>{{ ball.ball_name }}</ion-card-title>
+            <ion-card-title style="display: flex; align-items: center; justify-content: space-between">
+              <span
+                (click)="getSimilarMovementBalls(ball)"
+                (keydown.enter)="getSimilarMovementBalls(ball)"
+                (keydown.space)="getSimilarMovementBalls(ball)"
+                tabindex="0"
+                role="button"
+                style="position: relative"
+                [attr.aria-label]="'Find balls with similar movement pattern to ' + ball.ball_name"
+                class="ion-activatable ripple-parent rounded-rectangle"
+                >{{ ball.ball_name }}
+                <ion-icon style="position: absolute; color: rgb(153, 153, 153); font-size: 1rem; right: -18px" name="open-outline"></ion-icon>
+                <ion-ripple-effect style="width: calc(100% + 45px); border-radius: 5px; margin-left: -20px"></ion-ripple-effect
+              ></span>
+
+              <ion-button fill="clear" size="default" (click)="toggleFavorite($event, ball)" style="margin: 0; height: auto; min-height: auto">
+                <ion-icon
+                  [name]="favoritesService.isBallFavorite(ball.ball_id, ball.core_weight) ? 'heart' : 'heart-outline'"
+                  slot="icon-only"
+                  style="color: var(--ion-color-primary); font-size: 24px">
+                </ion-icon>
+              </ion-button>
+            </ion-card-title>
             <ion-card-subtitle>
               {{ ball.brand_name }} ({{ ball.release_date }})
               <ion-icon *ngIf="ball.us_int === 'Overseas'" name="globe-outline" style="vertical-align: text-top"></ion-icon>
@@ -129,12 +167,23 @@
 
 <ion-modal [initialBreakpoint]="0.35" [breakpoints]="[0, 0.35, 0.5, 0.75]" #coverstock>
   <ng-template>
-    <app-ball-list [balls]="coverstockBalls" [isCoverstock]="true"></app-ball-list>
+    <app-ball-list [balls]="coverstockBalls" [isCoverstock]="true" (ballSelected)="onBallSelected($event)"></app-ball-list>
   </ng-template>
 </ion-modal>
 
 <ion-modal [initialBreakpoint]="0.35" [breakpoints]="[0, 0.35, 0.5, 0.75]" #core>
   <ng-template>
-    <app-ball-list [balls]="coreBalls" [isCoverstock]="false"></app-ball-list>
+    <app-ball-list [balls]="coreBalls" [isCoverstock]="false" (ballSelected)="onBallSelected($event)"></app-ball-list>
+  </ng-template>
+</ion-modal>
+
+<ion-modal [initialBreakpoint]="0.35" [breakpoints]="[0, 0.35, 0.5, 0.75]" #movement>
+  <ng-template>
+    <!--This is done so i dont have to programmtically create the modal and still have the title of the ball without it being inside the modal-->
+    <app-ball-list
+      [balls]="movementBalls.slice(1, 10)"
+      [isCoverstock]="false"
+      [title]="'Similar reaction to ' + movementBalls[0]!.ball_name"
+      (ballSelected)="onBallSelected($event)"></app-ball-list>
   </ng-template>
 </ion-modal>

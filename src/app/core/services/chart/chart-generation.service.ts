@@ -2,7 +2,16 @@ import { ElementRef, Injectable } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { Game } from 'src/app/core/models/game.model';
 import { Stats } from 'src/app/core/models/stats.model';
-import Chart, { ChartConfiguration, ScatterDataPoint, Plugin } from 'chart.js/auto';
+import Chart, {
+  ChartConfiguration,
+  ScatterDataPoint,
+  Plugin,
+  ChartEvent,
+  LegendItem,
+  ChartOptions,
+  LegendElement,
+  ChartDataset,
+} from 'chart.js/auto';
 import * as d3 from 'd3';
 import { Pattern, ForwardsData, ReverseData } from '../../models/pattern.model';
 import { Ball } from '../../models/ball.model';
@@ -139,16 +148,106 @@ const customAxisTitlesPlugin: Plugin<'scatter'> = {
   providedIn: 'root',
 })
 export class ChartGenerationService {
-  generateScoreChart(scoreChart: ElementRef, games: Game[], existingChartInstance: Chart | undefined, isReload?: boolean): Chart {
+  generateScoreChart(
+    scoreChart: ElementRef,
+    games: Game[],
+    existingChartInstance: Chart | undefined,
+    viewMode?: 'week' | 'game' | 'monthly' | 'yearly',
+    onToggleView?: () => void,
+    isReload?: boolean,
+  ): Chart {
     try {
-      const { gameLabels, overallAverages, differences, gamesPlayedDaily } = this.calculateScoreChartData(games);
+      const currentViewMode = viewMode || 'game';
+      const { gameLabels, overallAverages, differences, gamesPlayedDaily } = this.calculateScoreChartData(games, currentViewMode);
       const ctx = scoreChart.nativeElement;
       let chartInstance: Chart;
-
       if (isReload && existingChartInstance) {
         existingChartInstance.destroy();
       }
 
+      const plugins: Plugin<'line' | 'bar'>[] = [];
+      const options: ChartOptions<'line' | 'bar'> = {
+        scales: {
+          y: { beginAtZero: true, suggestedMax: 300, ticks: { font: { size: 14 } } },
+          y1: { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false }, ticks: { font: { size: 14 } } },
+        },
+        plugins: {
+          title: { display: true, text: 'Score Analysis', color: 'white', font: { size: 20 } },
+          legend: {
+            display: true,
+            labels: { font: { size: 15 } },
+            onClick: (e: ChartEvent, legendItem: LegendItem, legend: LegendElement<'line' | 'bar'>) => {
+              const index = legendItem.datasetIndex!;
+              const ci = legend.chart;
+              const meta = ci.getDatasetMeta(index);
+              meta.hidden = meta.hidden === null ? !ci.data.datasets[index].hidden : !meta.hidden;
+              const gamesPlayedIndex = ci.data.datasets.findIndex((dataset: ChartDataset) => dataset.label === 'Games played');
+              if (gamesPlayedIndex !== -1) {
+                const gamesPlayedMeta = ci.getDatasetMeta(gamesPlayedIndex);
+                if (ci.options.scales && ci.options.scales['y1']) {
+                  ci.options.scales['y1'].display = !gamesPlayedMeta.hidden;
+                }
+              }
+              ci.update();
+            },
+          },
+        },
+      };
+
+      if (onToggleView && viewMode) {
+        const toggleButtonPlugin = {
+          id: 'toggleButton',
+          afterDraw: (chart: Chart) => {
+            const { ctx } = chart;
+            const titleBlock = (chart as { titleBlock?: { top: number; height: number } }).titleBlock;
+
+            if (!titleBlock || !titleBlock.height) {
+              return;
+            }
+
+            const baseRatio = 35;
+            const minFontSize = 10;
+            const maxFontSize = 14;
+            const padding = 10;
+
+            const fontSize = Math.max(minFontSize, Math.min(maxFontSize, chart.width / baseRatio));
+            ctx.font = `bold ${fontSize}px Arial`;
+
+            const buttonTextMap: Record<string, string> = {
+              game: 'Weekly',
+              week: 'Monthly',
+              monthly: 'By Game',
+            };
+            const buttonText = buttonTextMap[viewMode] || 'By Game';
+            const textMetrics = ctx.measureText(buttonText);
+
+            const button = {
+              width: textMetrics.width + padding * 2,
+              height: fontSize + padding,
+              x: chart.width - (textMetrics.width + padding * 2) - 10,
+              y: titleBlock.top + (titleBlock.height - (fontSize + padding)) / 2,
+            };
+
+            (chart as { toggleButtonBounds?: typeof button }).toggleButtonBounds = button;
+
+            ctx.save();
+            ctx.fillStyle = 'rgba(153, 102, 255, 0.8)';
+            ctx.strokeStyle = 'rgba(153, 102, 255, 1)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.roundRect(button.x, button.y, button.width, button.height, 5);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = 'white';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(buttonText, button.x + button.width / 2, button.y + button.height / 2);
+            ctx.restore();
+          },
+        };
+        plugins.push(toggleButtonPlugin);
+      }
       if (existingChartInstance && !isReload) {
         existingChartInstance.data.labels = gameLabels;
         existingChartInstance.data.datasets[0].data = overallAverages;
@@ -163,7 +262,7 @@ export class ChartGenerationService {
             labels: gameLabels,
             datasets: [
               {
-                label: 'Average',
+                label: 'Average over time',
                 data: overallAverages,
                 backgroundColor: 'rgba(75, 192, 192, 0.2)',
                 borderColor: 'rgba(75, 192, 192, 1)',
@@ -189,71 +288,31 @@ export class ChartGenerationService {
               },
             ],
           },
-          options: {
-            scales: {
-              y: {
-                beginAtZero: true,
-                suggestedMax: 300,
-                ticks: {
-                  font: {
-                    size: 14,
-                  },
-                },
-              },
-              y1: {
-                beginAtZero: true,
-                position: 'right',
-                grid: {
-                  drawOnChartArea: false,
-                },
-                ticks: {
-                  font: {
-                    size: 14,
-                  },
-                },
-              },
-            },
-            plugins: {
-              title: {
-                display: true,
-                text: 'Score Analysis',
-                color: 'white',
-                font: {
-                  size: 20,
-                },
-              },
-              legend: {
-                display: true,
-                labels: {
-                  font: {
-                    size: 15,
-                  },
-                },
-                onClick: (e, legendItem) => {
-                  const index = legendItem.datasetIndex!;
-                  const ci = chartInstance;
-                  if (!ci) {
-                    console.error('Chart instance is not defined.');
-                    return;
-                  }
-                  const meta = ci.getDatasetMeta(index);
-                  meta.hidden = meta.hidden === null ? !ci.data.datasets[index].hidden : !meta.hidden;
-                  const gamesPlayedIndex = ci.data.datasets.findIndex((dataset) => dataset.label === 'Games played');
-                  if (gamesPlayedIndex !== -1) {
-                    const gamesPlayedMeta = ci.getDatasetMeta(gamesPlayedIndex);
-                    const isGamesPlayedHidden = gamesPlayedMeta.hidden;
-                    if (ci.options.scales && ci.options.scales['y1']) {
-                      ci.options.scales['y1'].display = !isGamesPlayedHidden;
-                    }
-                  }
-                  ci.update();
-                },
-              },
-            },
-          },
+          options: options,
+          plugins: plugins,
         });
-        return chartInstance;
+
+        if (onToggleView) {
+          chartInstance.canvas.onclick = (event) => {
+            const rect = chartInstance.canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            const buttonBounds = (chartInstance as { toggleButtonBounds?: { x: number; y: number; width: number; height: number } })
+              .toggleButtonBounds;
+            if (
+              buttonBounds &&
+              x >= buttonBounds.x &&
+              x <= buttonBounds.x + buttonBounds.width &&
+              y >= buttonBounds.y &&
+              y <= buttonBounds.y + buttonBounds.height
+            ) {
+              onToggleView();
+            }
+          };
+        }
       }
+
+      return chartInstance;
     } catch (error) {
       console.error('Error generating score chart:', error);
       throw error;
@@ -361,6 +420,143 @@ export class ChartGenerationService {
       }
     } catch (error) {
       console.error('Error generating score distribution chart:', error);
+      throw error;
+    }
+  }
+
+  generateAverageScoreChart(
+    scoreChart: ElementRef,
+    games: Game[],
+    existingChartInstance: Chart | undefined,
+    viewMode?: 'daily' | 'weekly' | 'monthly' | 'yearly',
+    onToggleView?: () => void,
+    isReload?: boolean,
+  ): Chart {
+    try {
+      const currentViewMode = viewMode || 'monthly';
+      const { gameLabels, averages, gamesPlayedDaily } = this.calculateAverageScoreChartData(games, currentViewMode);
+      const ctx = scoreChart.nativeElement;
+      let chartInstance: Chart;
+      if (isReload && existingChartInstance) {
+        existingChartInstance.destroy();
+      }
+
+      const plugins: Plugin<'line' | 'bar'>[] = [];
+      const options: ChartOptions<'line' | 'bar'> = {
+        scales: {
+          y: { beginAtZero: true, suggestedMax: 300, ticks: { font: { size: 14 } } },
+          y1: { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false }, ticks: { font: { size: 14 } } },
+        },
+        plugins: {
+          title: { display: true, text: `Average Score`, color: 'white', font: { size: 20 } },
+          legend: { display: true, labels: { font: { size: 15 } } },
+        },
+      };
+
+      if (onToggleView) {
+        const toggleButtonPlugin: Plugin<'line' | 'bar'> = {
+          id: 'toggleButton',
+          afterDraw: (chart: Chart) => {
+            const { ctx } = chart;
+            const titleBlock = (chart as { titleBlock?: { top: number; height: number } }).titleBlock;
+
+            if (!titleBlock || !titleBlock.height) {
+              return;
+            }
+
+            const baseRatio = 35;
+            const minFontSize = 10;
+            const maxFontSize = 14;
+            const padding = 10;
+
+            const fontSize = Math.max(minFontSize, Math.min(maxFontSize, chart.width / baseRatio));
+            ctx.font = `bold ${fontSize}px Arial`;
+
+            const buttonText = `${
+              currentViewMode === 'daily' ? 'Weekly' : currentViewMode === 'weekly' ? 'Monthly' : currentViewMode === 'monthly' ? 'Yearly' : 'Daily'
+            }`;
+            const textMetrics = ctx.measureText(buttonText);
+
+            const button = {
+              width: textMetrics.width + padding * 2,
+              height: fontSize + padding,
+              x: chart.width - (textMetrics.width + padding * 2) - 10,
+              y: titleBlock.top + (titleBlock.height - (fontSize + padding)) / 2,
+            };
+
+            (chart as { toggleButtonBounds?: typeof button }).toggleButtonBounds = button;
+
+            ctx.save();
+            ctx.fillStyle = 'rgba(153, 102, 255, 0.8)';
+            ctx.strokeStyle = 'rgba(153, 102, 255, 1)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.roundRect(button.x, button.y, button.width, button.height, 5);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = 'white';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(buttonText, button.x + button.width / 2, button.y + button.height / 2);
+            ctx.restore();
+          },
+        };
+        plugins.push(toggleButtonPlugin);
+      }
+
+      if (existingChartInstance && !isReload) {
+        existingChartInstance.data.labels = gameLabels;
+        existingChartInstance.data.datasets[0].data = averages;
+        existingChartInstance.data.datasets[1].data = gamesPlayedDaily;
+        existingChartInstance.update();
+        return existingChartInstance;
+      } else {
+        chartInstance = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: gameLabels,
+            datasets: [
+              {
+                label: `Average Score`,
+                data: averages,
+                borderColor: 'rgba(75, 192, 192, 1)',
+                backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                borderWidth: 2,
+                fill: false,
+              },
+              {
+                label: 'Games Played',
+                data: gamesPlayedDaily,
+                type: 'bar',
+                backgroundColor: 'rgba(153, 102, 255, 0.1)',
+                borderColor: 'rgba(153, 102, 255, .5)',
+                borderWidth: 1,
+                yAxisID: 'y1',
+              },
+            ],
+          },
+          options: options,
+          plugins: plugins,
+        });
+
+        if (onToggleView) {
+          chartInstance.canvas.onclick = (event) => {
+            const rect = chartInstance.canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            const button = { x: chartInstance.width - 120, y: 10, width: 110, height: 30 };
+
+            if (x >= button.x && x <= button.x + button.width && y >= button.y && y <= button.y + button.height) {
+              onToggleView();
+            }
+          };
+        }
+      }
+
+      return chartInstance;
+    } catch (error) {
+      console.error('Error generating average score chart:', error);
       throw error;
     }
   }
@@ -715,19 +911,27 @@ export class ChartGenerationService {
     arrowSize: number,
     horizontal = false,
   ): string {
-    // 1. Create a detached SVG element in memory
+    // determine color from ratio
+    const ratio = parseFloat(pattern.ratio!.split(':')[0]);
+    let color = 'blue';
+    if (ratio >= 1 && ratio < 4) {
+      color = 'red';
+    } else if (ratio >= 4 && ratio < 8) {
+      color = '#ed8e07';
+    } else if (ratio >= 8) {
+      color = 'green';
+    }
+
+    // 1. Create detached SVG in memory
     const tempSvgElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
 
-    // Set necessary attributes directly on the temporary SVG
     d3.select(tempSvgElement)
-      // Important for serialization
-      .attr('xmlns', 'http://www.w3.org/2000/svg') // This is critical!
+      .attr('xmlns', 'http://www.w3.org/2000/svg')
       .attr('preserveAspectRatio', 'xMidYMid slice')
       .attr('viewBox', `0 0 ${viewBoxWidth} ${viewBoxHeight}`)
-      .style('background-color', 'white'); // Background included in image
-    // Note: border-radius won't apply to the <img> tag itself via SVG style
+      .style('background-color', 'white');
 
-    // 2. Use D3 to draw onto the detached element
+    // margins and drawing area
     const margin = { top: 30, right: 10, bottom: 10, left: 30 };
     const width = horizontal ? svgWidth - margin.top - margin.bottom : svgWidth - margin.left - margin.right;
     const height = horizontal ? svgHeight - margin.left - margin.right : svgHeight - margin.top - margin.bottom;
@@ -740,13 +944,13 @@ export class ChartGenerationService {
       g.attr('transform', `translate(${margin.left}, ${margin.top - 10})`);
     }
 
-    const xScale = d3.scaleLinear().domain([0, LANE_WIDTH]).range([0, width]);
-    const yScale = d3.scaleLinear().domain([0, LANE_HEIGHT]).range([height, 0]);
+    // Ensure yScale domain includes 60 so yScale(60) is valid in grid/areas/ticks.
+    const yDomainMax = Math.max(LANE_HEIGHT, 60);
 
-    // --- ALL THE D3 DRAWING LOGIC GOES HERE ---
-    // (Exactly the same drawing calls as before, targeting 'g')
-    // e.g., Grid lines, rects, axis, pins, arrows...
-    // Add vertical grid lines for x-axis, but only up to y=60.
+    const xScale = d3.scaleLinear().domain([0, LANE_WIDTH]).range([0, width]);
+    const yScale = d3.scaleLinear().domain([0, yDomainMax]).range([height, 0]);
+
+    // vertical grid lines (x)
     g.selectAll('.grid-line-x')
       .data(d3.range(0, LANE_WIDTH + 1, 1))
       .enter()
@@ -754,14 +958,14 @@ export class ChartGenerationService {
       .attr('class', 'grid-line-x')
       .attr('x1', (d) => xScale(d))
       .attr('x2', (d) => xScale(d))
-      .attr('y1', yScale(0)) // Bottom of chart.
-      .attr('y2', yScale(60)) // Only up to y=60.
+      .attr('y1', yScale(0))
+      .attr('y2', yScale(60)) // now valid because yScale domain includes 60
       .attr('stroke', 'lightgray')
       .attr('stroke-width', 0.5);
 
-    // Add horizontal grid lines for y-axis, ending at 60 instead of yMax.
+    // horizontal grid lines up to 60
     g.selectAll('.grid-line-y')
-      .data(d3.range(0, 61, 10)) // Grid lines up to 60 in steps of 10.
+      .data(d3.range(0, 61, 10))
       .enter()
       .append('line')
       .attr('class', 'grid-line-y')
@@ -772,7 +976,6 @@ export class ChartGenerationService {
       .attr('stroke', 'lightgray')
       .attr('stroke-width', 0.5);
 
-    // Helper function to parse x coordinates from string values like "2L" or "2R".
     const parseX = (value: string): number => {
       const num = parseFloat(value);
       if (value.toUpperCase().endsWith('L')) {
@@ -783,117 +986,94 @@ export class ChartGenerationService {
       return num;
     };
 
-    // Function to compute rectangle dimensions from a data entry.
+    // computeRect: compute pixel width/height robustly via scaled positions
     const computeRect = (data: ForwardsData | ReverseData) => {
-      // Parse x coordinates from the start and stop strings.
       const xStart = parseX(data.start);
       const xEnd = parseX(data.stop);
       const rectX = Math.min(xStart, xEnd);
-      const rectWidth = Math.abs(xEnd - xStart);
+      const rectX2 = Math.max(xStart, xEnd);
 
       const yStartVal = parseFloat(data.distance_start);
       const yEndVal = parseFloat(data.distance_end);
+      const rectYVal = Math.min(yStartVal, yEndVal);
+      const rectYVal2 = Math.max(yStartVal, yEndVal);
 
-      const y1 = yScale(yStartVal);
-      const y2 = yScale(yEndVal);
-      const rectY = Math.min(y1, y2);
-      const rectHeight = Math.abs(y2 - y1);
+      const x1px = xScale(rectX);
+      const x2px = xScale(rectX2);
+      const y1px = yScale(rectYVal);
+      const y2px = yScale(rectYVal2);
 
       return {
-        x: xScale(rectX),
-        y: rectY,
-        width: xScale(rectWidth),
-        height: rectHeight,
+        x: x1px,
+        y: Math.min(y1px, y2px),
+        width: Math.abs(x2px - x1px),
+        height: Math.abs(y2px - y1px),
       };
     };
 
-    // ----- Draw Rectangles for Forwards and Reverse Data -----
-    // Now, each entry is checked for its total_oil value.
-    // Compute all total_oil values from both forwards and reverse data
-    // let totalOil = 0;
+    // parse oil numbers (unchanged)
     const parseOilValue = (oilStr: string): number => {
       if (oilStr.includes('.')) {
         const parts = oilStr.split('.');
-        // Determine the factor based on the number of digits after the decimal.
         const factor = Math.pow(10, parts[1].length);
         return parseFloat(oilStr) * factor;
       }
       return parseFloat(oilStr);
     };
+
     const allOilValues: number[] = [];
     if (pattern.forwards_data) {
       pattern.forwards_data.forEach((d: ForwardsData) => {
         const oilVal = parseOilValue(d.total_oil);
-        if (oilVal !== 0) {
-          allOilValues.push(oilVal);
-          // totalOil += oilVal;
-        }
+        if (oilVal !== 0) allOilValues.push(oilVal);
       });
     }
     if (pattern.reverse_data) {
       pattern.reverse_data.forEach((d: ReverseData) => {
         const oilVal = parseOilValue(d.total_oil);
-        if (oilVal !== 0) {
-          allOilValues.push(oilVal);
-          // totalOil += oilVal;
-        }
+        if (oilVal !== 0) allOilValues.push(oilVal);
       });
     }
 
-    // Determine min and max oil values with fallback values to prevent undefined
-    // const oilMin = d3.min(allOilValues) ?? 0;
-    // const oilMax = d3.max(allOilValues) ?? 1;
-
-    // Create a color scale. Adjust the color range as needed.
-    // const colorScale = d3.scaleLinear<string>().domain([0, totalOil]).range(['#ff8888', '#990000']); // From light red to dark red
-
-    // Draw rectangles for forwards_data with color based on total_oil
+    // Draw forwards_data rects
     if (pattern.forwards_data) {
       pattern.forwards_data.forEach((d: ForwardsData) => {
         if (parseInt(d.total_oil) !== 0) {
           const rect = computeRect(d);
-          // const oilVal = parseOilValue(d.total_oil);
           g.append('rect')
             .attr('x', rect.x)
             .attr('y', rect.y)
             .attr('width', rect.width)
             .attr('height', rect.height)
-            // Use the color scale to set the fill
-            .attr('fill', 'red')
+            .attr('fill', color)
             .attr('fill-opacity', 0.5);
         }
       });
     }
 
-    // Draw rectangles for reverse_data with color based on total_oil
+    // Draw reverse_data rects
     if (pattern.reverse_data) {
       pattern.reverse_data.forEach((d: ReverseData) => {
-        if (parseInt(d.total_oil) !== 0) {
+        if (parseInt(d.total_oil) !== 0 || parseFloat(d.distance_end) === 0) {
           const rect = computeRect(d);
-          // const oilVal = parseOilValue(d.total_oil);
           g.append('rect')
             .attr('x', rect.x)
             .attr('y', rect.y)
             .attr('width', rect.width)
             .attr('height', rect.height)
-            .attr('fill', 'red')
+            .attr('fill', color)
             .attr('fill-opacity', 0.3);
         }
       });
     }
 
-    // Create and append the y-axis.
-    const yAxisScale = d3
-      .scaleLinear()
-      .domain([0, 60])
-      .range([height, yScale(60)]);
-    const yAxis = d3.axisLeft(yAxisScale).tickValues(d3.range(0, 61, 5));
-    // Added smaller stroke width
+    // Use the same yScale for axis that was used for drawing
+    const yAxis = d3.axisLeft(yScale).tickValues(d3.range(0, 61, 5));
+    const yAxisG = g.append('g').call(yAxis);
+    yAxisG.selectAll('line, path').attr('stroke', 'lightgray').attr('stroke-width', 0.5);
+    yAxisG.selectAll('text').attr('fill', 'black').attr('stroke-width', 0.5);
 
-    g.append('g').call(yAxis).selectAll('line, path').attr('stroke', 'lightgray').attr('stroke-width', 0.5); // Added smaller stroke width
-
-    g.append('g').call(yAxis).selectAll('text').attr('fill', 'black').attr('stroke-width', 0.5);
-
+    // compute forward/reverse maxima for area backgrounds
     let forwardsMaxDistance = 0;
     let reverseMaxDistance = 0;
 
@@ -912,54 +1092,41 @@ export class ChartGenerationService {
         reverseMaxDistance = Math.max(reverseMaxDistance, distanceStart, distanceEnd);
       });
     }
-    // Draw forwards area background (lighter)
-    // Draw reverse area background (slightly darker)
-    if (reverseMaxDistance != forwardsMaxDistance) {
+
+    if (reverseMaxDistance !== forwardsMaxDistance) {
       g.append('rect')
-        .attr('x', xScale(1)) // Start at board 1
+        .attr('x', xScale(1))
         .attr('y', yScale(forwardsMaxDistance))
-        .attr('width', xScale(LANE_WIDTH - 1) - xScale(1)) // Width from board 1 to board 38
+        .attr('width', xScale(LANE_WIDTH - 1) - xScale(1))
         .attr('height', yScale(0) - yScale(forwardsMaxDistance))
-        .attr('fill', 'red')
+        .attr('fill', color)
         .attr('fill-opacity', 0.05);
     }
 
     g.append('rect')
-      .attr('x', xScale(1)) // Start at board 1
+      .attr('x', xScale(1))
       .attr('y', yScale(reverseMaxDistance))
-      .attr('width', xScale(LANE_WIDTH - 1) - xScale(1)) // Width from board 1 to board 38
+      .attr('width', xScale(LANE_WIDTH - 1) - xScale(1))
       .attr('height', yScale(0) - yScale(reverseMaxDistance))
-      .attr('fill', 'red')
-      .attr('fill-opacity', 0.1); // Higher opacity
+      .attr('fill', color)
+      .attr('fill-opacity', 0.1);
 
-    // Bowling Pins
-    // ----- Add Bowling Pins in the Specified Formation -----
-    // The formation should appear as:
-    //    7  8  9 10
-    //      4  5  6
-    //        2  3
-    //          1
-    // where pin 1 is centered at y = 60.
+    // Pins (unchanged positions but using yScale consistently)
     const centerX = LANE_WIDTH / 2;
-    const baseY = 60; // Row 1 (pin 1)
-    const rowSpacing = 3; // Vertical spacing between rows (data units)
-    const offset = 11; // Base horizontal offset for positioning pins
+    const baseY = 60;
+    const rowSpacing = 3;
+    const offset = 11;
 
-    // Row definitions (data coordinates):
-    // Row 1: one pin (number 1)
     const row1 = [{ number: 1, x: centerX, y: baseY }];
-    // Row 2: two pins (numbers 2 and 3)
     const row2 = [
       { number: 2, x: centerX - offset / 2, y: baseY + rowSpacing },
       { number: 3, x: centerX + offset / 2, y: baseY + rowSpacing },
     ];
-    // Row 3: three pins (numbers 4, 5, 6)
     const row3 = [
       { number: 4, x: centerX - offset, y: baseY + 2 * rowSpacing },
       { number: 5, x: centerX, y: baseY + 2 * rowSpacing },
       { number: 6, x: centerX + offset, y: baseY + 2 * rowSpacing },
     ];
-    // Row 4: four pins (numbers 7, 8, 9, 10)
     const row4 = [
       { number: 7, x: centerX - 1.5 * offset, y: baseY + 3 * rowSpacing },
       { number: 8, x: centerX - 0.5 * offset, y: baseY + 3 * rowSpacing },
@@ -967,16 +1134,10 @@ export class ChartGenerationService {
       { number: 10, x: centerX + 1.5 * offset, y: baseY + 3 * rowSpacing },
     ];
 
-    // Concatenate rows so that row4 appears at the top.
     const pins = [...row4, ...row3, ...row2, ...row1];
 
-    // Define the pin radius in pixels.
-    // const pinRadius = pinWidth;
-
-    // Add a group for pins so they are drawn on top.
     const pinsGroup = g.append('g').attr('class', 'pins-group');
 
-    // Draw each bowling pin as a circle.
     pinsGroup
       .selectAll('.pin')
       .data(pins)
@@ -990,6 +1151,7 @@ export class ChartGenerationService {
       .attr('stroke', 'black')
       .attr('stroke-width', pinStrokeWidth);
 
+    // arrows
     const arrowPositions = [
       { board: 4, distance: 12.5 },
       { board: 9, distance: 13.5 },
@@ -1000,36 +1162,23 @@ export class ChartGenerationService {
       { board: 34, distance: 12.5 },
     ];
 
-    // Create arrow shape as an upward-pointing triangle
     const arrowShape = d3
       .symbol()
       .type(d3.symbolTriangle)
       .size(arrowSize * arrowSize);
 
-    // Add arrows at their respective positions with vertical stretch
     g.selectAll('.lane-arrow')
       .data(arrowPositions)
       .enter()
       .append('path')
       .attr('class', 'lane-arrow')
       .attr('d', arrowShape)
-      .attr('transform', (d) => {
-        // Apply both translation and scaling in one transform
-        // Scale factor 1 for x (no horizontal stretch) and 1.7 for y (vertical stretch)
-        return `translate(${xScale(d.board)}, ${yScale(d.distance)}) scale(1, 2.5)`;
-      })
+      .attr('transform', (d) => `translate(${xScale(d.board)}, ${yScale(d.distance)}) scale(1, 2.5)`)
       .attr('fill', 'black')
       .attr('stroke', 'none');
 
-    // --- END OF D3 DRAWING LOGIC ---
-
-    // 3. Serialize the SVG to string
     const svgString = tempSvgElement.outerHTML;
-
-    // 4. Encode the SVG string using Base64
-    const encodedString = btoa(unescape(encodeURIComponent(svgString))); // Handles UTF-8 chars better
-
-    // 5. Return the Data URI
+    const encodedString = btoa(unescape(encodeURIComponent(svgString)));
     return 'data:image/svg+xml;base64,' + encodedString;
   }
 
@@ -1133,11 +1282,11 @@ export class ChartGenerationService {
               padding: 10,
               displayColors: false,
               callbacks: {
-                title: (items) => (items[0]?.raw as any).name || '',
+                title: (items) => (items[0]?.raw as { name: string }).name || '',
                 label: (context) => {
-                  const dp = context.raw as any;
-                  const x = dp.x as number;
-                  const y = dp.y as number;
+                  const dp = context.raw as ScatterDataPoint & { cover: string };
+                  const x = dp.x;
+                  const y = dp.y;
 
                   let rollCat: string;
                   if (y < 2.52) {
@@ -1201,43 +1350,164 @@ export class ChartGenerationService {
     }
   }
 
-  private calculateScoreChartData(gameHistory: Game[]) {
+  public calculateScoreChartData(gameHistory: Game[], viewMode: 'week' | 'game' | 'monthly' | 'yearly' = 'game') {
+    if (viewMode === 'week') {
+      return this.calculateWeeklyScoreChartData(gameHistory);
+    } else if (viewMode === 'monthly') {
+      return this.calculateMonthlyScoreChartData(gameHistory);
+    } else if (viewMode === 'yearly') {
+      return this.calculateYearlyScoreChartData(gameHistory);
+    } else {
+      return this.calculatePerGameScoreChartData(gameHistory);
+    }
+  }
+
+  private calculatePerGameScoreChartData(gameHistory: Game[]) {
+    const scoresByDate: Record<string, number[]> = {};
+    gameHistory.forEach((game: Game) => {
+      const date = new Date(game.date).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' });
+      if (!scoresByDate[date]) {
+        scoresByDate[date] = [];
+      }
+      scoresByDate[date].push(game.totalScore);
+    });
+
+    const sortedDates = Object.keys(scoresByDate).sort((a, b) => {
+      const [dayA, monthA, yearA] = a.split('.').map(Number);
+      const [dayB, monthB, yearB] = b.split('.').map(Number);
+      return new Date(2000 + yearA, monthA - 1, dayA).getTime() - new Date(2000 + yearB, monthB - 1, dayB).getTime();
+    });
+
+    const gameLabels = sortedDates;
+    let cumulativeSum = 0;
+    let cumulativeCount = 0;
+
+    const overallAverages = gameLabels.map((date) => {
+      cumulativeSum += scoresByDate[date].reduce((sum, score) => sum + score, 0);
+      cumulativeCount += scoresByDate[date].length;
+      return cumulativeSum / cumulativeCount;
+    });
+
+    const differences = gameLabels.map((date, index) => {
+      const dailySum = scoresByDate[date].reduce((sum, score) => sum + score, 0);
+      const dailyAverage = dailySum / scoresByDate[date].length;
+      return dailyAverage - overallAverages[index];
+    });
+
+    const formattedAverages = overallAverages.map((average) => parseFloat(new DecimalPipe('en').transform(average, '1.2-2')!));
+    const formattedDifferences = differences.map((difference) => parseFloat(new DecimalPipe('en').transform(difference, '1.2-2')!));
+    const gamesPlayedDaily = gameLabels.map((date) => scoresByDate[date].length);
+
+    return { gameLabels, overallAverages: formattedAverages, differences: formattedDifferences, gamesPlayedDaily };
+  }
+
+  private calculateWeeklyScoreChartData(gameHistory: Game[]) {
     try {
-      const scoresByDate: Record<string, number[]> = {};
+      const scoresByWeek: Record<string, number[]> = {};
       gameHistory.forEach((game: Game) => {
-        const date = new Date(game.date).toLocaleDateString('de-DE', {
+        const startOfWeek = this.getStartOfWeek(new Date(game.date));
+        const weekKey = startOfWeek.toISOString().split('T')[0];
+
+        if (!scoresByWeek[weekKey]) {
+          scoresByWeek[weekKey] = [];
+        }
+        scoresByWeek[weekKey].push(game.totalScore);
+      });
+
+      const sortedWeekKeys = Object.keys(scoresByWeek).sort();
+
+      const gameLabels = sortedWeekKeys.map((weekKey) => {
+        const startDate = new Date(weekKey);
+        const endDate = new Date(startDate);
+        endDate.setDate(startDate.getDate() + 6);
+
+        const startDateFormatted = startDate.toLocaleDateString(undefined, {
+          day: '2-digit',
+          month: '2-digit',
+        });
+
+        const endDateFormatted = endDate.toLocaleDateString(undefined, {
           day: '2-digit',
           month: '2-digit',
           year: '2-digit',
         });
-        if (!scoresByDate[date]) {
-          scoresByDate[date] = [];
-        }
-        scoresByDate[date].push(game.totalScore);
+
+        return `${startDateFormatted} - ${endDateFormatted}`;
       });
 
-      const gameLabels = Object.keys(scoresByDate).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
       let cumulativeSum = 0;
       let cumulativeCount = 0;
 
-      const overallAverages = gameLabels.map((date) => {
-        cumulativeSum += scoresByDate[date].reduce((sum, score) => sum + score, 0);
-        cumulativeCount += scoresByDate[date].length;
+      const overallAverages = sortedWeekKeys.map((weekKey) => {
+        cumulativeSum += scoresByWeek[weekKey].reduce((sum, score) => sum + score, 0);
+        cumulativeCount += scoresByWeek[weekKey].length;
         return cumulativeSum / cumulativeCount;
       });
-      overallAverages.map((average) => parseFloat(new DecimalPipe('en').transform(average, '1.2-2')!));
 
-      const differences = gameLabels.map((date, index) => {
-        const dailySum = scoresByDate[date].reduce((sum, score) => sum + score, 0);
-        const dailyAverage = dailySum / scoresByDate[date].length;
-        return dailyAverage - overallAverages[index];
+      const differences = sortedWeekKeys.map((weekKey, index) => {
+        const weeklySum = scoresByWeek[weekKey].reduce((sum, score) => sum + score, 0);
+        const weeklyAverage = weeklySum / scoresByWeek[weekKey].length;
+        return weeklyAverage - overallAverages[index];
       });
-      differences.map((difference) => parseFloat(new DecimalPipe('en').transform(difference, '1.2-2')!));
 
-      const gamesPlayedDaily = gameLabels.map((date) => scoresByDate[date].length);
-      return { gameLabels, overallAverages, differences, gamesPlayedDaily };
+      const formattedAverages = overallAverages.map((average) => parseFloat(new DecimalPipe('en').transform(average, '1.2-2')!));
+      const formattedDifferences = differences.map((difference) => parseFloat(new DecimalPipe('en').transform(difference, '1.2-2')!));
+
+      const gamesPlayedWeekly = sortedWeekKeys.map((weekKey) => scoresByWeek[weekKey].length);
+
+      return { gameLabels, overallAverages: formattedAverages, differences: formattedDifferences, gamesPlayedDaily: gamesPlayedWeekly };
     } catch (error) {
       console.error('Error calculating score chart data:', error);
+      throw error;
+    }
+  }
+
+  private calculateMonthlyScoreChartData(gameHistory: Game[]) {
+    try {
+      const scoresByMonth: Record<string, number[]> = {};
+      gameHistory.forEach((game: Game) => {
+        const gameDate = new Date(game.date);
+        const monthKey = `${gameDate.getFullYear()}-${(gameDate.getMonth() + 1).toString().padStart(2, '0')}`;
+
+        if (!scoresByMonth[monthKey]) {
+          scoresByMonth[monthKey] = [];
+        }
+        scoresByMonth[monthKey].push(game.totalScore);
+      });
+
+      const sortedMonthKeys = Object.keys(scoresByMonth).sort();
+
+      const gameLabels = sortedMonthKeys.map((monthKey) => {
+        const [year, month] = monthKey.split('-').map(Number);
+        const date = new Date(year, month - 1, 1);
+        return date.toLocaleDateString(undefined, {
+          month: 'short',
+          year: 'numeric',
+        });
+      });
+
+      let cumulativeSum = 0;
+      let cumulativeCount = 0;
+
+      const overallAverages = sortedMonthKeys.map((monthKey) => {
+        cumulativeSum += scoresByMonth[monthKey].reduce((sum, score) => sum + score, 0);
+        cumulativeCount += scoresByMonth[monthKey].length;
+        return cumulativeSum / cumulativeCount;
+      });
+
+      const differences = sortedMonthKeys.map((monthKey, index) => {
+        const monthlySum = scoresByMonth[monthKey].reduce((sum, score) => sum + score, 0);
+        const monthlyAverage = monthlySum / scoresByMonth[monthKey].length;
+        return monthlyAverage - overallAverages[index];
+      });
+
+      const formattedAverages = overallAverages.map((average) => parseFloat(new DecimalPipe('en').transform(average, '1.2-2')!));
+      const formattedDifferences = differences.map((difference) => parseFloat(new DecimalPipe('en').transform(difference, '1.2-2')!));
+      const gamesPlayedMonthly = sortedMonthKeys.map((monthKey) => scoresByMonth[monthKey].length);
+
+      return { gameLabels, overallAverages: formattedAverages, differences: formattedDifferences, gamesPlayedDaily: gamesPlayedMonthly };
+    } catch (error) {
+      console.error('Error calculating monthly score chart data:', error);
       throw error;
     }
   }
@@ -1277,6 +1547,216 @@ export class ChartGenerationService {
       return (converted / (converted + missed)) * 100;
     } catch (error) {
       console.error('Error calculating rate:', error);
+      throw error;
+    }
+  }
+
+  private getStartOfWeek(date: Date): Date {
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    const day = d.getDay();
+    const diff = d.getDate() - (day === 0 ? 6 : day - 1);
+    return new Date(d.setDate(diff));
+  }
+
+  private calculateYearlyScoreChartData(gameHistory: Game[]) {
+    try {
+      const scoresByYear: Record<string, number[]> = {};
+      gameHistory.forEach((game: Game) => {
+        const gameDate = new Date(game.date);
+        const yearKey = gameDate.getFullYear().toString();
+
+        if (!scoresByYear[yearKey]) {
+          scoresByYear[yearKey] = [];
+        }
+        scoresByYear[yearKey].push(game.totalScore);
+      });
+
+      const sortedYearKeys = Object.keys(scoresByYear).sort();
+
+      const gameLabels = sortedYearKeys;
+
+      let cumulativeSum = 0;
+      let cumulativeCount = 0;
+
+      const overallAverages = sortedYearKeys.map((yearKey) => {
+        cumulativeSum += scoresByYear[yearKey].reduce((sum, score) => sum + score, 0);
+        cumulativeCount += scoresByYear[yearKey].length;
+        return cumulativeSum / cumulativeCount;
+      });
+
+      const differences = sortedYearKeys.map((yearKey, index) => {
+        const yearlySum = scoresByYear[yearKey].reduce((sum, score) => sum + score, 0);
+        const yearlyAverage = yearlySum / scoresByYear[yearKey].length;
+        return yearlyAverage - overallAverages[index];
+      });
+
+      const formattedAverages = overallAverages.map((average) => parseFloat(new DecimalPipe('en').transform(average, '1.2-2')!));
+      const formattedDifferences = differences.map((difference) => parseFloat(new DecimalPipe('en').transform(difference, '1.2-2')!));
+      const gamesPlayedYearly = sortedYearKeys.map((yearKey) => scoresByYear[yearKey].length);
+
+      return { gameLabels, overallAverages: formattedAverages, differences: formattedDifferences, gamesPlayedDaily: gamesPlayedYearly };
+    } catch (error) {
+      console.error('Error calculating yearly score chart data:', error);
+      throw error;
+    }
+  }
+
+  public calculateAverageScoreChartData(gameHistory: Game[], viewMode: 'daily' | 'weekly' | 'monthly' | 'yearly' = 'monthly') {
+    if (viewMode === 'daily') {
+      return this.calculateDailyAverageScoreData(gameHistory);
+    } else if (viewMode === 'weekly') {
+      return this.calculateWeeklyAverageScoreData(gameHistory);
+    } else if (viewMode === 'monthly') {
+      return this.calculateMonthlyAverageScoreData(gameHistory);
+    } else {
+      return this.calculateYearlyAverageScoreData(gameHistory);
+    }
+  }
+
+  private calculateDailyAverageScoreData(gameHistory: Game[]) {
+    try {
+      const scoresByDate: Record<string, number[]> = {};
+      gameHistory.forEach((game: Game) => {
+        const date = new Date(game.date).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' });
+        if (!scoresByDate[date]) {
+          scoresByDate[date] = [];
+        }
+        scoresByDate[date].push(game.totalScore);
+      });
+
+      const sortedDates = Object.keys(scoresByDate).sort((a, b) => {
+        const [dayA, monthA, yearA] = a.split('.').map(Number);
+        const [dayB, monthB, yearB] = b.split('.').map(Number);
+        return new Date(2000 + yearA, monthA - 1, dayA).getTime() - new Date(2000 + yearB, monthB - 1, dayB).getTime();
+      });
+
+      const gameLabels = sortedDates;
+      const averages = sortedDates.map((date) => {
+        const dailySum = scoresByDate[date].reduce((sum, score) => sum + score, 0);
+        return dailySum / scoresByDate[date].length;
+      });
+
+      const formattedAverages = averages.map((average) => parseFloat(new DecimalPipe('en').transform(average, '1.2-2')!));
+      const gamesPlayedDaily = sortedDates.map((date) => scoresByDate[date].length);
+
+      return { gameLabels, averages: formattedAverages, gamesPlayedDaily };
+    } catch (error) {
+      console.error('Error calculating daily average score data:', error);
+      throw error;
+    }
+  }
+
+  private calculateWeeklyAverageScoreData(gameHistory: Game[]) {
+    try {
+      const scoresByWeek: Record<string, number[]> = {};
+      gameHistory.forEach((game: Game) => {
+        const gameDate = new Date(game.date);
+        const startOfWeek = this.getStartOfWeek(gameDate);
+        const weekKey = startOfWeek.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' });
+
+        if (!scoresByWeek[weekKey]) {
+          scoresByWeek[weekKey] = [];
+        }
+        scoresByWeek[weekKey].push(game.totalScore);
+      });
+
+      const sortedWeekKeys = Object.keys(scoresByWeek).sort((a, b) => {
+        const [dayA, monthA, yearA] = a.split('.').map(Number);
+        const [dayB, monthB, yearB] = b.split('.').map(Number);
+        return new Date(2000 + yearA, monthA - 1, dayA).getTime() - new Date(2000 + yearB, monthB - 1, dayB).getTime();
+      });
+
+      const gameLabels = sortedWeekKeys.map((weekKey) => {
+        const [day, month, year] = weekKey.split('.').map(Number);
+        const startDate = new Date(2000 + year, month - 1, day);
+        const endDate = new Date(startDate);
+        endDate.setDate(startDate.getDate() + 6);
+        return `${startDate.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })} - ${endDate.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })}`;
+      });
+
+      const averages = sortedWeekKeys.map((weekKey) => {
+        const weeklySum = scoresByWeek[weekKey].reduce((sum, score) => sum + score, 0);
+        return weeklySum / scoresByWeek[weekKey].length;
+      });
+
+      const formattedAverages = averages.map((average) => parseFloat(new DecimalPipe('en').transform(average, '1.2-2')!));
+      const gamesPlayedWeekly = sortedWeekKeys.map((weekKey) => scoresByWeek[weekKey].length);
+
+      return { gameLabels, averages: formattedAverages, gamesPlayedDaily: gamesPlayedWeekly };
+    } catch (error) {
+      console.error('Error calculating weekly average score data:', error);
+      throw error;
+    }
+  }
+
+  private calculateMonthlyAverageScoreData(gameHistory: Game[]) {
+    try {
+      const scoresByMonth: Record<string, number[]> = {};
+      gameHistory.forEach((game: Game) => {
+        const gameDate = new Date(game.date);
+        const monthKey = `${gameDate.getFullYear()}-${(gameDate.getMonth() + 1).toString().padStart(2, '0')}`;
+
+        if (!scoresByMonth[monthKey]) {
+          scoresByMonth[monthKey] = [];
+        }
+        scoresByMonth[monthKey].push(game.totalScore);
+      });
+
+      const sortedMonthKeys = Object.keys(scoresByMonth).sort();
+
+      const gameLabels = sortedMonthKeys.map((monthKey) => {
+        const [year, month] = monthKey.split('-').map(Number);
+        const date = new Date(year, month - 1, 1);
+        return date.toLocaleDateString(undefined, {
+          month: 'short',
+          year: 'numeric',
+        });
+      });
+
+      const averages = sortedMonthKeys.map((monthKey) => {
+        const monthlySum = scoresByMonth[monthKey].reduce((sum, score) => sum + score, 0);
+        return monthlySum / scoresByMonth[monthKey].length;
+      });
+
+      const formattedAverages = averages.map((average) => parseFloat(new DecimalPipe('en').transform(average, '1.2-2')!));
+      const gamesPlayedMonthly = sortedMonthKeys.map((monthKey) => scoresByMonth[monthKey].length);
+
+      return { gameLabels, averages: formattedAverages, gamesPlayedDaily: gamesPlayedMonthly };
+    } catch (error) {
+      console.error('Error calculating monthly average score data:', error);
+      throw error;
+    }
+  }
+
+  private calculateYearlyAverageScoreData(gameHistory: Game[]) {
+    try {
+      const scoresByYear: Record<string, number[]> = {};
+      gameHistory.forEach((game: Game) => {
+        const gameDate = new Date(game.date);
+        const yearKey = gameDate.getFullYear().toString();
+
+        if (!scoresByYear[yearKey]) {
+          scoresByYear[yearKey] = [];
+        }
+        scoresByYear[yearKey].push(game.totalScore);
+      });
+
+      const sortedYearKeys = Object.keys(scoresByYear).sort();
+
+      const gameLabels = sortedYearKeys;
+
+      const averages = sortedYearKeys.map((yearKey) => {
+        const yearlySum = scoresByYear[yearKey].reduce((sum, score) => sum + score, 0);
+        return yearlySum / scoresByYear[yearKey].length;
+      });
+
+      const formattedAverages = averages.map((average) => parseFloat(new DecimalPipe('en').transform(average, '1.2-2')!));
+      const gamesPlayedYearly = sortedYearKeys.map((yearKey) => scoresByYear[yearKey].length);
+
+      return { gameLabels, averages: formattedAverages, gamesPlayedDaily: gamesPlayedYearly };
+    } catch (error) {
+      console.error('Error calculating yearly average score data:', error);
       throw error;
     }
   }

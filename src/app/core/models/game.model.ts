@@ -1,7 +1,7 @@
 export interface Game {
   gameId: string;
   date: number;
-  frames: any; // Replace 'any' with the appropriate type if known
+  frames: any;
   totalScore: number;
   frameScores: number[];
   isClean: boolean;
@@ -11,7 +11,7 @@ export interface Game {
   seriesId?: string;
   note?: string;
   league?: string;
-  pattern: string;
+  patterns: string[];
   balls?: string[];
 }
 

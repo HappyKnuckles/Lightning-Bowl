@@ -136,18 +136,22 @@
 
 <ion-modal [presentingElement]="presentingElement" trigger="select-cores">
   <ng-template>
-    <app-ball-core-typeahead
-      [cores]="ballService.cores()"
-      (selectedCoresChange)="updateFilter('cores', $event)"
-      [prevSelectedCores]="ballFilterService.filters().cores"></app-ball-core-typeahead>
+    <app-generic-typeahead
+      [items]="ballService.cores()"
+      [config]="coreTypeaheadConfig"
+      (selectedItemsChange)="updateFilter('cores', $event)"
+      [prevSelectedItems]="ballFilterService.filters().cores">
+    </app-generic-typeahead>
   </ng-template>
 </ion-modal>
 
 <ion-modal [presentingElement]="presentingElement" trigger="select-coverstocks">
   <ng-template>
-    <app-ball-coverstock-typeahead
-      [coverstocks]="ballService.coverstocks()"
-      (selectedCoverstocksChange)="updateFilter('coverstocks', $event)"
-      [prevSelectedCoverstocks]="ballFilterService.filters().coverstocks"></app-ball-coverstock-typeahead>
+    <app-generic-typeahead
+      [items]="ballService.coverstocks()"
+      [config]="coverstockTypeaheadConfig"
+      (selectedItemsChange)="updateFilter('coverstocks', $event)"
+      [prevSelectedItems]="ballFilterService.filters().coverstocks">
+    </app-generic-typeahead>
   </ng-template>
 </ion-modal>

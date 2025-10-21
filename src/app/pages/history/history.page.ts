@@ -25,6 +25,7 @@ import {
   documentTextOutline,
   filterOutline,
   medalOutline,
+  swapVertical,
 } from 'ionicons/icons';
 import { NgIf, DatePipe } from '@angular/common';
 import { ImpactStyle } from '@capacitor/haptics';
@@ -37,7 +38,8 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ExcelService } from 'src/app/core/services/excel/excel.service';
 import { GameFilterService } from 'src/app/core/services/game-filter/game-filter.service';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
-import { GameFilterActiveComponent } from 'src/app/shared/components/game-filter-active/game-filter-active.component';
+import { GenericFilterActiveComponent } from 'src/app/shared/components/generic-filter-active/generic-filter-active.component';
+import { GAME_FILTER_CONFIGS } from 'src/app/shared/components/filter-configs/filter-configs';
 import { GameFilterComponent } from 'src/app/shared/components/game-filter/game-filter.component';
 import { GameComponent } from 'src/app/shared/components/game/game.component';
 
@@ -61,13 +63,36 @@ import { GameComponent } from 'src/app/shared/components/game/game.component';
     NgIf,
     IonText,
     ReactiveFormsModule,
+    ReactiveFormsModule,
     FormsModule,
     GameComponent,
-    GameFilterActiveComponent,
+    GenericFilterActiveComponent,
   ],
 })
 export class HistoryPage {
   @ViewChild('accordionGroup') accordionGroup!: IonAccordionGroup;
+  @ViewChild(IonContent, { static: false }) content!: IonContent;
+
+  gameFilterConfigs = GAME_FILTER_CONFIGS;
+
+  get currentFilters(): Record<string, unknown> {
+    return this.gameFilterService.filters() as unknown as Record<string, unknown>;
+  }
+
+  get defaultFilters(): Record<string, unknown> {
+    return this.gameFilterService.defaultFilters as unknown as Record<string, unknown>;
+  }
+
+  // currentSortOption: GameSortOption = {
+  //   field: GameSortField.DATE,
+  //   direction: SortDirection.DESC,
+  //   label: 'Date (Newest First)'
+  // };
+
+  // get displayedGames() {
+  //   return this.sortService.sortGames(this.gameFilterService.filteredGames(), this.currentSortOption);
+  // }
+
   constructor(
     private alertController: AlertController,
     private toastService: ToastService,
@@ -77,6 +102,7 @@ export class HistoryPage {
     private modalCtrl: ModalController,
     public gameFilterService: GameFilterService,
     private excelService: ExcelService,
+    // public sortService: SortService,
   ) {
     addIcons({
       cloudUploadOutline,
@@ -87,8 +113,18 @@ export class HistoryPage {
       shareOutline,
       documentTextOutline,
       medalOutline,
+      swapVertical,
     });
   }
+
+  //  onSortChanged(sortOption: any): void {
+  //     this.currentSortOption = sortOption as GameSortOption;
+  //     if (this.content) {
+  //       setTimeout(() => {
+  //         this.content.scrollToTop(300);
+  //       }, 100);
+  //     }
+  //   }
 
   async openFilterModal() {
     const modal = await this.modalCtrl.create({

@@ -15,6 +15,7 @@ export interface Stats {
   averageStrikesPerGame: number;
   averageSparesPerGame: number;
   averageOpensPerGame: number;
+  markPercentage: number;
   strikePercentage: number;
   sparePercentage: number;
   openPercentage: number;
@@ -76,6 +77,7 @@ export interface OverallSeriesStats {
 }
 export interface PrevStats {
   cleanGamePercentage: number;
+  markPercentage: number;
   strikePercentage: number;
   sparePercentage: number;
   openPercentage: number;
@@ -95,6 +97,17 @@ export interface PrevStats {
   high4Series?: number;
   average5SeriesScore?: number;
   [key: string]: StatValue | undefined;
+}
+
+export interface BestBallStats {
+  ballName: string;
+  ballImage: string;
+  ballAvg: number;
+  ballHighestGame: number;
+  ballLowestGame: number;
+  gameCount: number;
+  strikeRate?: number;
+  cleanGameCount?: number;
 }
 
 export type GameStats = Stats | SessionStats | SeriesStats | PrevStats;

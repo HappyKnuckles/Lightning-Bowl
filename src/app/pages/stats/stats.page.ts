@@ -55,10 +55,12 @@ import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { ExcelService } from 'src/app/core/services/excel/excel.service';
 import { Filesystem } from '@capacitor/filesystem';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
-import { GameFilterActiveComponent } from 'src/app/shared/components/game-filter-active/game-filter-active.component';
+import { GenericFilterActiveComponent } from 'src/app/shared/components/generic-filter-active/generic-filter-active.component';
+import { GAME_FILTER_CONFIGS } from 'src/app/shared/components/filter-configs/filter-configs';
 import { GameFilterComponent } from 'src/app/shared/components/game-filter/game-filter.component';
 import { SpareDisplayComponent } from 'src/app/shared/components/spare-display/spare-display.component';
 import { StatDisplayComponent } from 'src/app/shared/components/stat-display/stat-display.component';
+import { BallStatsComponent } from '../../shared/components/ball-stats/ball-stats.component';
 
 @Component({
   selector: 'app-stats',
@@ -87,7 +89,8 @@ import { StatDisplayComponent } from 'src/app/shared/components/stat-display/sta
     DatePipe,
     StatDisplayComponent,
     SpareDisplayComponent,
-    GameFilterActiveComponent,
+    GenericFilterActiveComponent,
+    BallStatsComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -121,10 +124,13 @@ export class StatsPage implements OnInit, AfterViewInit {
 
     return this.statsService.calculateBowlingStats(filteredGames) as SessionStats;
   });
+  chartViewMode: 'week' | 'game' | 'monthly' | 'yearly' = 'game';
+  averageChartViewMode: 'daily' | 'weekly' | 'monthly' | 'yearly' = 'monthly';
   selectedSegment = 'Overall';
   segments: string[] = ['Overall', 'Spares', 'Throws', 'Sessions'];
   // Viewchilds and Instances
   @ViewChild('scoreChart', { static: false }) scoreChart?: ElementRef;
+  @ViewChild('averageScoreChart', { static: false }) averageScoreChart?: ElementRef;
   @ViewChild('pinChart', { static: false }) pinChart?: ElementRef;
   @ViewChild('throwChart', { static: false }) throwChart?: ElementRef;
   @ViewChild('scoreDistributionChart', { static: false }) scoreDistributionChart?: ElementRef;
@@ -134,6 +140,9 @@ export class StatsPage implements OnInit, AfterViewInit {
   private pinChartInstance: Chart | null = null;
   private throwChartInstance: Chart | null = null;
   private scoreChartInstance: Chart | null = null;
+  private averageScoreChartInstance: Chart | null = null;
+
+  gameFilterConfigs = GAME_FILTER_CONFIGS;
 
   constructor(
     public loadingService: LoadingService,
@@ -275,6 +284,7 @@ export class StatsPage implements OnInit, AfterViewInit {
     if (this.gameFilterService.filteredGames().length > 0) {
       if (this.selectedSegment === 'Overall') {
         this.generateScoreChart(isReload);
+        this.generateAverageScoreChart(isReload);
         this.generateScoreDistributionChart(isReload);
       } else if (this.selectedSegment === 'Spares') {
         this.generatePinChart(isReload);
@@ -284,7 +294,6 @@ export class StatsPage implements OnInit, AfterViewInit {
       }
     }
   }
-
   private generateScoreChart(isReload?: boolean): void {
     try {
       if (!this.scoreChart) {
@@ -295,11 +304,60 @@ export class StatsPage implements OnInit, AfterViewInit {
         this.scoreChart,
         this.sortUtilsService.sortGameHistoryByDate([...this.gameFilterService.filteredGames()], true),
         this.scoreChartInstance!,
+        this.chartViewMode,
+        () => this.toggleChartView(),
         isReload,
       );
     } catch (error) {
       this.toastService.showToast(ToastMessages.chartGenerationError, 'bug', true);
       console.error('Error generating score chart:', error);
+    }
+  }
+  private toggleChartView() {
+    if (this.chartViewMode === 'game') {
+      this.chartViewMode = 'week';
+    } else if (this.chartViewMode === 'week') {
+      this.chartViewMode = 'monthly';
+    } else if (this.chartViewMode === 'monthly') {
+      this.chartViewMode = 'yearly';
+    } else {
+      this.chartViewMode = 'game';
+    }
+
+    this.generateScoreChart(true);
+  }
+
+  private toggleAverageChartView() {
+    if (this.averageChartViewMode === 'daily') {
+      this.averageChartViewMode = 'weekly';
+    } else if (this.averageChartViewMode === 'weekly') {
+      this.averageChartViewMode = 'monthly';
+    } else if (this.averageChartViewMode === 'monthly') {
+      this.averageChartViewMode = 'yearly';
+    } else {
+      this.averageChartViewMode = 'daily';
+    }
+
+    this.generateAverageScoreChart(true);
+  }
+
+  private generateAverageScoreChart(isReload?: boolean): void {
+    try {
+      if (!this.averageScoreChart) {
+        return;
+      }
+
+      this.averageScoreChartInstance = this.chartService.generateAverageScoreChart(
+        this.averageScoreChart,
+        this.sortUtilsService.sortGameHistoryByDate([...this.gameFilterService.filteredGames()], true),
+        this.averageScoreChartInstance!,
+        this.averageChartViewMode,
+        () => this.toggleAverageChartView(),
+        isReload,
+      );
+    } catch (error) {
+      this.toastService.showToast(ToastMessages.chartGenerationError, 'bug', true);
+      console.error('Error generating average score chart:', error);
     }
   }
 
@@ -368,5 +426,13 @@ export class StatsPage implements OnInit, AfterViewInit {
       this.toastService.showToast(ToastMessages.chartGenerationError, 'bug', true);
       console.error('Error generating throw chart:', error);
     }
+  }
+
+  get currentFilters(): Record<string, unknown> {
+    return this.gameFilterService.filters() as unknown as Record<string, unknown>;
+  }
+
+  get defaultFilters(): Record<string, unknown> {
+    return this.gameFilterService.defaultFilters as unknown as Record<string, unknown>;
   }
 }

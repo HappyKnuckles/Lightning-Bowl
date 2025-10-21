@@ -40,7 +40,7 @@ import { Game } from 'src/app/core/models/game.model';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { AlertController, RefresherCustomEvent, SegmentCustomEvent } from '@ionic/angular';
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
-import { Stats } from 'src/app/core/models/stats.model';
+import { BestBallStats, Stats } from 'src/app/core/models/stats.model';
 import { GameStatsService } from 'src/app/core/services/game-stats/game-stats.service';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { ImpactStyle } from '@capacitor/haptics';
@@ -54,6 +54,7 @@ import { SpareDisplayComponent } from 'src/app/shared/components/spare-display/s
 import { StatDisplayComponent } from 'src/app/shared/components/stat-display/stat-display.component';
 import { LongPressDirective } from 'src/app/core/directives/long-press/long-press.directive';
 import { HiddenLeagueSelectionService } from 'src/app/core/services/hidden-league/hidden-league.service';
+import { BallStatsComponent } from '../../shared/components/ball-stats/ball-stats.component';
 
 @Component({
   selector: 'app-league',
@@ -88,6 +89,7 @@ import { HiddenLeagueSelectionService } from 'src/app/core/services/hidden-leagu
     IonSegmentView,
     IonSegmentContent,
     LongPressDirective,
+    BallStatsComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
@@ -130,6 +132,25 @@ export class LeaguePage {
 
     return statsByLeague;
   });
+
+  bestBallsByLeague: Signal<Record<string, BestBallStats>> = computed(() => {
+    const gamesByLeague = this.gamesByLeague();
+    const bestBallsByLeague: Record<string, BestBallStats> = {};
+    Object.keys(gamesByLeague).forEach((league) => {
+      bestBallsByLeague[league] = this.statService.calculateBestBallStats(gamesByLeague[league] || []);
+    });
+    return bestBallsByLeague;
+  });
+
+  mostPlayedBallsByLeague: Signal<Record<string, BestBallStats>> = computed(() => {
+    const gamesByLeague = this.gamesByLeague();
+    const mostUsedBallsByLeague: Record<string, BestBallStats> = {};
+    Object.keys(gamesByLeague).forEach((league) => {
+      mostUsedBallsByLeague[league] = this.statService.calculateMostPlayedBall(gamesByLeague[league] || []);
+    });
+    return mostUsedBallsByLeague;
+  });
+
   statDefinitions = leagueStatDefinitions;
   private scoreChartInstances: Record<string, Chart> = {};
   private pinChartInstances: Record<string, Chart> = {};
@@ -389,6 +410,8 @@ export class LeaguePage {
         this.scoreChart,
         this.gamesByLeagueReverse()[league],
         this.scoreChartInstances[league]!,
+        undefined,
+        undefined,
         isReload,
       );
     } catch (error) {

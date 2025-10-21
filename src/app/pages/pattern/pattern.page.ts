@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -35,11 +35,16 @@ import { ImpactStyle } from '@capacitor/haptics';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { PatternInfoComponent } from 'src/app/shared/components/pattern-info/pattern-info.component';
 import { addIcons } from 'ionicons';
-import { chevronBack, add, addOutline, arrowUpOutline, arrowDownOutline } from 'ionicons/icons';
+import { chevronBack, add, addOutline, arrowUpOutline, arrowDownOutline, heart, heartOutline } from 'ionicons/icons';
 import { ChartGenerationService } from 'src/app/core/services/chart/chart-generation.service';
 import { DomSanitizer } from '@angular/platform-browser';
 import { PatternFormComponent } from '../../shared/components/pattern-form/pattern-form.component';
 import { SearchBlurDirective } from 'src/app/core/directives/search-blur/search-blur.directive';
+import { SortHeaderComponent } from 'src/app/shared/components/sort-header/sort-header.component';
+import { SortService } from 'src/app/core/services/sort/sort.service';
+import { PatternSortOption, PatternSortField, SortDirection } from 'src/app/core/models/sort.model';
+import { NetworkService } from 'src/app/core/services/network/network.service';
+import { FavoritesService } from 'src/app/core/services/favorites/favorites.service';
 
 @Component({
   selector: 'app-pattern',
@@ -72,6 +77,7 @@ import { SearchBlurDirective } from 'src/app/core/directives/search-blur/search-
     FormsModule,
     PatternInfoComponent,
     SearchBlurDirective,
+    SortHeaderComponent,
   ],
 })
 export class PatternPage implements OnInit {
@@ -79,7 +85,31 @@ export class PatternPage implements OnInit {
   patterns: Pattern[] = [];
   currentPage = 1;
   hasMoreData = true;
+  isPageLoading = signal(false);
+  searchTerm = signal('');
+  favoritesFirst = signal(false);
+  currentSortOption: PatternSortOption = {
+    field: PatternSortField.TITLE,
+    direction: SortDirection.ASC,
+    label: 'Title (A-Z)',
+  };
 
+  get displayedPatterns(): Pattern[] {
+    let patterns: Pattern[];
+
+    // If there's a search term, return patterns without additional sorting to preserve relevance ranking
+    if (this.searchTerm().trim() !== '') {
+      patterns = this.patterns;
+    } else {
+      // Apply sorting only when not searching
+      patterns = this.sortService.sortPatterns(this.patterns, this.currentSortOption, this.favoritesFirst());
+    }
+
+    return patterns;
+  }
+
+  private lastLoadTime = 0;
+  private debounceMs = 300;
   constructor(
     private patternService: PatternService,
     private hapticService: HapticService,
@@ -88,10 +118,14 @@ export class PatternPage implements OnInit {
     private chartService: ChartGenerationService,
     private sanitizer: DomSanitizer,
     private modalCtrl: ModalController,
+    public sortService: SortService,
+    private networkService: NetworkService,
+    public favoritesService: FavoritesService,
   ) {
-    addIcons({ addOutline, arrowUpOutline, arrowDownOutline, chevronBack, add });
+    addIcons({ addOutline, arrowUpOutline, arrowDownOutline, chevronBack, add, heart, heartOutline });
   }
   async ngOnInit() {
+    this.loadFavoritesFirstSetting();
     await this.loadPatterns();
     this.generateChartImages();
     // this.renderCharts();
@@ -100,30 +134,39 @@ export class PatternPage implements OnInit {
   async handleRefresh(event: RefresherCustomEvent): Promise<void> {
     try {
       this.hapticService.vibrate(ImpactStyle.Medium);
-      this.loadingService.setLoading(true);
+      this.isPageLoading.set(true);
       this.currentPage = 1;
       this.hasMoreData = true;
       this.patterns = [];
+      this.searchTerm.set(''); // Clear search term on refresh
       await this.loadPatterns();
     } catch (error) {
       console.error(error);
       this.toastService.showToast(ToastMessages.ballLoadError, 'bug', true);
     } finally {
       event.target.complete();
-      this.loadingService.setLoading(false);
+      this.isPageLoading.set(false);
     }
   }
 
   async loadPatterns(event?: InfiniteScrollCustomEvent): Promise<void> {
+    const now = Date.now();
+    if (now - this.lastLoadTime < this.debounceMs) {
+      if (event) event.target.complete();
+      return;
+    }
+    this.lastLoadTime = now;
     try {
       if (!event) {
-        this.loadingService.setLoading(true);
+        this.isPageLoading.set(true);
       }
       const response = await this.patternService.getPatterns(this.currentPage);
       const patterns = response.patterns;
       if (response.total > 0) {
         this.patterns = [...this.patterns, ...patterns];
         this.currentPage++;
+      } else if (this.networkService.isOffline) {
+        this.toastService.showToast('You are offline and no cached data is available.', 'information-circle-outline', true);
       } else {
         this.hasMoreData = false;
       }
@@ -132,7 +175,7 @@ export class PatternPage implements OnInit {
       this.toastService.showToast(ToastMessages.patternLoadError, 'bug', true);
     } finally {
       if (!event) {
-        this.loadingService.setLoading(false);
+        this.isPageLoading.set(false);
       }
       if (event) {
         event.target.complete();
@@ -144,13 +187,16 @@ export class PatternPage implements OnInit {
   async searchPatterns(event: CustomEvent): Promise<void> {
     try {
       this.loadingService.setLoading(true);
-      if (event.detail.value === '') {
+      const searchValue = event.detail.value || '';
+      this.searchTerm.set(searchValue);
+
+      if (searchValue === '') {
         this.hasMoreData = true;
         const response = await this.patternService.getPatterns(this.currentPage);
         this.patterns = response.patterns;
         this.currentPage++;
       } else {
-        const response = await this.patternService.searchPattern(event.detail.value);
+        const response = await this.patternService.searchPattern(searchValue);
         this.patterns = response.patterns;
         this.hasMoreData = false;
         this.currentPage = 1;
@@ -192,5 +238,50 @@ export class PatternPage implements OnInit {
         }
       }
     });
+  }
+
+  onSortChanged(sortOption: unknown): void {
+    this.currentSortOption = sortOption as PatternSortOption;
+    if (this.content) {
+      setTimeout(() => {
+        this.content.scrollToTop(300);
+      }, 100);
+    }
+  }
+
+  toggleFavorite(event: Event, pattern: Pattern): void {
+    event.stopPropagation();
+    const isFavorited = this.favoritesService.toggleFavorite(pattern.url);
+
+    if (isFavorited) {
+      this.toastService.showToast(`Added ${pattern.title} to favorites`, 'heart');
+    } else {
+      this.toastService.showToast(`Removed ${pattern.title} from favorites`, 'heart-outline');
+    }
+  }
+
+  onFavoritesFirstChange(checked: boolean): void {
+    this.favoritesFirst.set(checked);
+    this.saveFavoritesFirstSetting(checked);
+    if (this.content) {
+      setTimeout(() => {
+        this.content.scrollToTop(300);
+      }, 100);
+    }
+  }
+
+  private loadFavoritesFirstSetting(): void {
+    if (typeof localStorage !== 'undefined') {
+      const saved = localStorage.getItem('patterns-favorites-first');
+      if (saved !== null) {
+        this.favoritesFirst.set(saved === 'true');
+      }
+    }
+  }
+
+  private saveFavoritesFirstSetting(value: boolean): void {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('patterns-favorites-first', value.toString());
+    }
   }
 }

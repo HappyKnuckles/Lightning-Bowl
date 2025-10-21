@@ -40,7 +40,7 @@
                 <p>{{ game.date | date: "MM.dd.yyyy" }}</p>
                 <h2 class="title">Game {{ gameCount! - $index }}</h2>
                 <p class="score" *ngIf="game.league && !isLeaguePage">League/Tournament: {{ game.league }}</p>
-                <p class="score" *ngIf="game.pattern">Pattern: {{ game.pattern }}</p>
+                <p class="score" *ngIf="game.patterns && game.patterns.length > 0">Patterns: {{ game.patterns.join(", ") }}</p>
                 <p class="score">Score: {{ game.totalScore }}</p>
                 <!-- <div class="score">{{game.date | date}}</div> -->
               </ion-label>
@@ -157,25 +157,34 @@
                 </ion-item>
                 <ion-item class="pattern" button [id]="'selectPatternHistory' + $index">
                   <ion-icon src="assets/svg/lane.svg" slot="start"></ion-icon>
-                  <ion-label>Pattern</ion-label>
-                  {{ game.pattern }}
+                  <ion-label>Patterns</ion-label>
+                  <span class="ion-text-right"> {{ game.patterns.join(", ") || "None" }}</span>
                 </ion-item>
                 <ion-modal [presentingElement]="presentingElement" [trigger]="'selectPatternHistory' + $index">
                   <ng-template>
-                    <app-pattern-typeahead
-                      [patterns]="storageService.allPatterns()"
-                      [prevSelectedPattern]="game.pattern"
-                      (selectedPatternsChange)="game.pattern = $event; updateSeries(game, undefined, game.pattern)"></app-pattern-typeahead>
+                    <app-generic-typeahead
+                      [items]="storageService.allPatterns()"
+                      [config]="patternTypeaheadConfig"
+                      [prevSelectedItems]="game.patterns"
+                      (selectedItemsChange)="game.patterns = $event; updateSeries(game, undefined, game.patterns)">
+                    </app-generic-typeahead>
                   </ng-template>
                 </ion-modal>
-                <ion-item class="arsenal">
+                <ion-item class="arsenal" id="ball-selector-game" button detailIcon="chevron-expand-outline">
                   <ion-icon name="bowling-ball-outline" slot="start"></ion-icon>
-                  <ion-select [(ngModel)]="game.balls" multiple="true" name="balls" label="Balls">
+                  <!-- <ion-select [(ngModel)]="game.balls" multiple="true" name="balls" label="Balls">
                     <ion-select-option *ngFor="let ball of storageService.arsenal()" [value]="ball.ball_name">
                       {{ ball.ball_name }}
                     </ion-select-option>
-                  </ion-select>
+                  </ion-select> -->
+                  <ion-label>Balls</ion-label>
+                  <span class="ion-text-right">{{ getSelectedBallsText(game) }}</span>
                 </ion-item>
+                <ion-modal #modal trigger="ball-selector-game" class="ball-modal">
+                  <ng-template>
+                    <app-ball-select (ballSelect)="onBallSelect($event, game, modal)" [selectedBalls]="game.balls"></app-ball-select>
+                  </ng-template>
+                </ion-modal>
                 <ion-item class="note" lines="none">
                   <ion-icon name="document-text-outline" slot="start"> </ion-icon>
                   <ion-textarea type="text" [(ngModel)]="game.note" [autoGrow]="true"></ion-textarea>

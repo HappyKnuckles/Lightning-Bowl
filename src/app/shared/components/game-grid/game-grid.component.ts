@@ -15,19 +15,7 @@ import { Platform } from '@ionic/angular';
 import { Subscription } from 'rxjs';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { NgFor, NgIf, NgStyle } from '@angular/common';
-import {
-  IonGrid,
-  IonModal,
-  IonSelect,
-  IonSelectOption,
-  IonRow,
-  IonCol,
-  IonInput,
-  IonItem,
-  IonTextarea,
-  IonCheckbox,
-  IonList,
-} from '@ionic/angular/standalone';
+import { IonGrid, IonModal, IonRow, IonCol, IonInput, IonItem, IonTextarea, IonCheckbox, IonList, IonLabel } from '@ionic/angular/standalone';
 import { FormsModule } from '@angular/forms';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { ImpactStyle } from '@capacitor/haptics';
@@ -40,8 +28,15 @@ import { InputCustomEvent } from '@ionic/angular';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { UtilsService } from 'src/app/core/services/utils/utils.service';
 import { Game } from 'src/app/core/models/game.model';
-import { PatternTypeaheadComponent } from '../pattern-typeahead/pattern-typeahead.component';
+import { GenericTypeaheadComponent } from '../generic-typeahead/generic-typeahead.component';
+import { createPartialPatternTypeaheadConfig } from '../generic-typeahead/typeahead-configs';
+import { TypeaheadConfig } from '../generic-typeahead/typeahead-config.interface';
+import { PatternService } from 'src/app/core/services/pattern/pattern.service';
+import { Pattern } from 'src/app/core/models/pattern.model';
 import { Keyboard } from '@capacitor/keyboard';
+import { addIcons } from 'ionicons';
+import { chevronExpandOutline } from 'ionicons/icons';
+import { BallSelectComponent } from '../ball-select/ball-select.component';
 
 @Component({
   selector: 'app-game-grid',
@@ -50,9 +45,7 @@ import { Keyboard } from '@capacitor/keyboard';
   providers: [GameScoreCalculatorService],
   standalone: true,
   imports: [
-    IonSelect,
     NgFor,
-    IonSelectOption,
     IonList,
     IonCheckbox,
     IonItem,
@@ -65,8 +58,10 @@ import { Keyboard } from '@capacitor/keyboard';
     NgIf,
     LeagueSelectorComponent,
     IonModal,
-    PatternTypeaheadComponent,
+    GenericTypeaheadComponent,
     NgStyle,
+    IonLabel,
+    BallSelectComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
@@ -75,7 +70,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
   @Output() totalScoreChanged = new EventEmitter<number>();
   @Output() leagueChanged = new EventEmitter<string>();
   @Output() isPracticeChanged = new EventEmitter<boolean>();
-  patternChanged = output<string>();
+  patternChanged = output<string[]>();
   @ViewChildren(IonInput) inputs!: QueryList<IonInput>;
   @ViewChild('leagueSelector') leagueSelector!: LeagueSelectorComponent;
   @ViewChild('checkbox') checkbox!: IonCheckbox;
@@ -86,7 +81,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
     totalScore: 0,
     note: '',
     balls: [],
-    pattern: '',
+    patterns: [],
     league: '',
     isPractice: true,
     gameId: '',
@@ -97,6 +92,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
   });
   maxScore = 300;
   presentingElement?: HTMLElement;
+  patternTypeaheadConfig!: TypeaheadConfig<Partial<Pattern>>;
 
   // Keyboard toolbar
   showButtonToolbar = false;
@@ -110,6 +106,9 @@ export class GameGridComponent implements OnInit, OnDestroy {
   private usingVisualViewportListener = false;
   private resizeSubscription: Subscription | undefined;
 
+  // Add these properties
+  private tempSelectedBalls: string[] = [];
+
   constructor(
     private gameScoreCalculatorService: GameScoreCalculatorService,
     public storageService: StorageService,
@@ -119,8 +118,10 @@ export class GameGridComponent implements OnInit, OnDestroy {
     private gameUtilsService: GameUtilsService,
     private utilsService: UtilsService,
     private platform: Platform,
+    private patternService: PatternService,
   ) {
     this.initializeKeyboardListeners();
+    addIcons({ chevronExpandOutline });
   }
 
   async ngOnInit(): Promise<void> {
@@ -141,6 +142,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
       this.game().frames = Array.from({ length: 10 }, () => []);
     }
     this.presentingElement = document.querySelector('.ion-page')!;
+    this.patternTypeaheadConfig = createPartialPatternTypeaheadConfig((searchTerm: string) => this.patternService.searchPattern(searchTerm));
   }
 
   ngOnDestroy() {
@@ -194,14 +196,66 @@ export class GameGridComponent implements OnInit, OnDestroy {
     this.leagueChanged.emit(league);
   }
 
-  onPatternChanged(pattern: string): void {
-    this.game().pattern = pattern;
-    this.patternChanged.emit(pattern);
+  onPatternChanged(patterns: string[]): void {
+    if (patterns.length > 2) {
+      patterns = patterns.slice(-2);
+    }
+    this.game().patterns = patterns;
+    this.patternChanged.emit(patterns);
   }
 
-  getFrameValue(frameIndex: number, inputIndex: number): string {
-    const val = this.game().frames[frameIndex][inputIndex];
-    return val !== undefined ? val.toString() : '';
+  onBallSelect(selectedBalls: string[], modal: IonModal): void {
+    modal.dismiss();
+    this.game().balls = selectedBalls;
+  }
+
+  getSelectedBallsText(): string {
+    const balls = this.game().balls || [];
+    return balls.length > 0 ? balls.join(', ') : 'None';
+  }
+
+  getFrameValue(frameIndex: number, throwIndex: number): string {
+    const frame = this.game().frames[frameIndex];
+    const val = frame[throwIndex];
+
+    if (val === undefined || val === null) {
+      return '';
+    }
+
+    const firstBall = frame[0];
+    const isTenth = frameIndex === 9;
+
+    if (throwIndex === 0) {
+      return val === 10 ? 'X' : val.toString();
+    }
+
+    if (!isTenth) {
+      if (firstBall !== undefined && firstBall !== 10 && firstBall + val === 10) {
+        return '/';
+      }
+      return val.toString();
+    }
+
+    const secondBall = frame[1];
+
+    if (throwIndex === 1) {
+      if (firstBall !== undefined && firstBall !== 10 && firstBall + val === 10) {
+        return '/';
+      }
+      return val === 10 ? 'X' : val.toString();
+    }
+
+    if (throwIndex === 2) {
+      if (firstBall === 10) {
+        if (secondBall === 10) {
+          return val === 10 ? 'X' : val.toString();
+        }
+        return secondBall !== undefined && secondBall + val === 10 ? '/' : val.toString();
+      }
+      return val === 10 ? 'X' : val.toString();
+    }
+
+    return val.toString();
   }
 
   selectSpecialScore(char: string) {
@@ -254,7 +308,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
       this.game().note = '';
       this.game().league = '';
       this.leagueSelector.selectedLeague = '';
-      this.game().pattern = '';
+      this.game().patterns = [];
       this.game().isPractice = true;
       this.game().balls = [];
     }
@@ -274,11 +328,11 @@ export class GameGridComponent implements OnInit, OnDestroy {
     this.maxScoreChanged.emit(this.maxScore);
   }
 
-  async saveGameToLocalStorage(isSeries: boolean, seriesId: string): Promise<void> {
+  async saveGameToLocalStorage(isSeries: boolean, seriesId: string): Promise<Game | null> {
     try {
       if (this.game().league === 'New') {
         this.toastService.showToast(ToastMessages.selectLeague, 'bug', true);
-        return;
+        return null;
       }
       const gameData = this.transformGameService.transformGameData(
         this.game().frames,
@@ -289,7 +343,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
         isSeries,
         seriesId,
         this.game().note,
-        this.game().pattern,
+        this.game().patterns,
         this.game().balls,
         this.game().gameId,
         this.game().date,
@@ -299,8 +353,10 @@ export class GameGridComponent implements OnInit, OnDestroy {
       if (this.showMetadata()) {
         this.clearFrames(true);
       }
+      return gameData;
     } catch (error) {
       console.error('Error saving game to local storage:', error);
+      return null;
     }
   }
 

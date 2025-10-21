@@ -65,7 +65,8 @@ export class GameFilterComponent implements OnInit {
   patterns = computed<string[]>(() => {
     return this.storageService
       .games()
-      .map((game) => game.pattern)
+      .map((game) => game.patterns)
+      .flat()
       .filter((pattern, index, self) => pattern && self.indexOf(pattern) === index);
   });
 
