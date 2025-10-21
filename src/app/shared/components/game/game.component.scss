@@ -1,3 +1,11 @@
+.ball-modal {
+  --width: fit-content;
+  --min-width: 250px;
+  --height: fit-content;
+  --border-radius: 13px;
+  --max-height: 50vh;
+}
+
 .input-col {
   --ion-grid-column-padding: 0;
 

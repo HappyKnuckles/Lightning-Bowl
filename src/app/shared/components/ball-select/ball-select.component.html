@@ -1,0 +1,30 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Balls</ion-title>
+  </ion-toolbar>
+</ion-header>
+<ion-content>
+  <ion-list>
+    @for (ball of storageService.arsenal(); track $index) {
+      <ion-item [lines]="$last ? 'none' : ''">
+        <ion-avatar slot="start">
+          <ion-img [src]="storageService.url + ball.thumbnail_image"></ion-img>
+        </ion-avatar>
+        <ion-checkbox justify="space-between" [checked]="isBallSelected(ball.ball_name)" (ionChange)="toggleBallSelection(ball.ball_name)">
+          <ion-label>
+            <h2>{{ ball.ball_name }} {{ ball.core_weight }}lbs</h2>
+            <p>{{ ball.brand_name }}</p>
+          </ion-label>
+          </ion-checkbox>
+      </ion-item>
+    }
+  </ion-list>
+</ion-content>
+<ion-footer>
+  <ion-toolbar>
+    <ion-buttons slot="end" class="modal-buttons">
+      <ion-button (click)="cancelBallSelection()" fill="clear" class="modal-button cancel-button">Cancel</ion-button>
+      <ion-button (click)="confirmBallSelection()" fill="clear" class="modal-button ok-button">OK</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-footer>

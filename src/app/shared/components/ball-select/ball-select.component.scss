@@ -1,0 +1,43 @@
+ ion-content {
+   min-height: 30vh;
+
+   h2 {
+     font-size: .875rem;
+   }
+   p{
+     font-size: .625rem;
+   }
+ }
+
+ ion-title {
+   min-width: fit-content;
+ }
+
+ ion-footer {
+   ion-toolbar {
+     padding-top: 0 !important;
+     --padding-top: 0;
+     --padding-bottom: 0 !important;
+     height: 44px !important;
+   }
+ }
+
+ .modal-buttons {
+   width: 100%;
+   display: flex;
+
+   .modal-button {
+     flex: 1;
+     margin: 0;
+     border-radius: 0;
+     height: 44px;
+
+     &.cancel-button {
+       border-right: 0.55px solid rgba(255, 255, 255, 0.1);
+     }
+
+     &.ok-button {
+       font-weight: 600;
+     }
+   }
+ }

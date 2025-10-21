@@ -15,19 +15,7 @@ import { Platform } from '@ionic/angular';
 import { Subscription } from 'rxjs';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { NgFor, NgIf, NgStyle } from '@angular/common';
-import {
-  IonGrid,
-  IonModal,
-  IonSelect,
-  IonSelectOption,
-  IonRow,
-  IonCol,
-  IonInput,
-  IonItem,
-  IonTextarea,
-  IonCheckbox,
-  IonList,
-} from '@ionic/angular/standalone';
+import { IonGrid, IonModal, IonRow, IonCol, IonInput, IonItem, IonTextarea, IonCheckbox, IonList, IonLabel } from '@ionic/angular/standalone';
 import { FormsModule } from '@angular/forms';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { ImpactStyle } from '@capacitor/haptics';
@@ -46,6 +34,9 @@ import { TypeaheadConfig } from '../generic-typeahead/typeahead-config.interface
 import { PatternService } from 'src/app/core/services/pattern/pattern.service';
 import { Pattern } from 'src/app/core/models/pattern.model';
 import { Keyboard } from '@capacitor/keyboard';
+import { addIcons } from 'ionicons';
+import { chevronExpandOutline } from 'ionicons/icons';
+import { BallSelectComponent } from '../ball-select/ball-select.component';
 
 @Component({
   selector: 'app-game-grid',
@@ -54,9 +45,7 @@ import { Keyboard } from '@capacitor/keyboard';
   providers: [GameScoreCalculatorService],
   standalone: true,
   imports: [
-    IonSelect,
     NgFor,
-    IonSelectOption,
     IonList,
     IonCheckbox,
     IonItem,
@@ -71,6 +60,8 @@ import { Keyboard } from '@capacitor/keyboard';
     IonModal,
     GenericTypeaheadComponent,
     NgStyle,
+    IonLabel,
+    BallSelectComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
@@ -115,6 +106,9 @@ export class GameGridComponent implements OnInit, OnDestroy {
   private usingVisualViewportListener = false;
   private resizeSubscription: Subscription | undefined;
 
+  // Add these properties
+  private tempSelectedBalls: string[] = [];
+
   constructor(
     private gameScoreCalculatorService: GameScoreCalculatorService,
     public storageService: StorageService,
@@ -127,6 +121,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
     private patternService: PatternService,
   ) {
     this.initializeKeyboardListeners();
+    addIcons({ chevronExpandOutline });
   }
 
   async ngOnInit(): Promise<void> {
@@ -207,6 +202,16 @@ export class GameGridComponent implements OnInit, OnDestroy {
     }
     this.game().patterns = patterns;
     this.patternChanged.emit(patterns);
+  }
+
+  onBallSelect(selectedBalls: string[], modal: IonModal): void {
+    modal.dismiss();
+    this.game().balls = selectedBalls;
+  }
+
+  getSelectedBallsText(): string {
+    const balls = this.game().balls || [];
+    return balls.length > 0 ? balls.join(', ') : 'None';
   }
 
   getFrameValue(frameIndex: number, throwIndex: number): string {
