@@ -7,15 +7,15 @@
   <ion-list>
     @for (ball of storageService.arsenal(); track $index) {
       <ion-item [lines]="$last ? 'none' : ''">
-        <ion-avatar slot="start">
-          <ion-img [src]="storageService.url + ball.thumbnail_image"></ion-img>
+        <ion-avatar slot="start" (click)="toggleBallSelection(ball.ball_name)">
+          <img [src]="storageService.url + ball.thumbnail_image" [alt]="ball.ball_name + 'image'" />
         </ion-avatar>
         <ion-checkbox justify="space-between" [checked]="isBallSelected(ball.ball_name)" (ionChange)="toggleBallSelection(ball.ball_name)">
           <ion-label>
             <h2>{{ ball.ball_name }} {{ ball.core_weight }}lbs</h2>
             <p>{{ ball.brand_name }}</p>
           </ion-label>
-          </ion-checkbox>
+        </ion-checkbox>
       </ion-item>
     }
   </ion-list>

@@ -124,7 +124,7 @@
         <ion-label>Balls</ion-label>
         <span class="ion-text-right">{{ getSelectedBallsText() }}</span>
       </ion-item>
-      <ion-modal #modal trigger="ball-selector" class="ball-modal">
+      <ion-modal [enterAnimation]="enterAnimation" [leaveAnimation]="leaveAnimation" #modal trigger="ball-selector" class="ball-modal">
         <ng-template>
           <app-ball-select (ballSelect)="onBallSelect($event, modal)" [selectedBalls]="game().balls"></app-ball-select>
         </ng-template>

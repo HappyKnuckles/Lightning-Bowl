@@ -61,6 +61,7 @@ import { LongPressDirective } from 'src/app/core/directives/long-press/long-pres
 import { Router } from '@angular/router';
 import { GameGridComponent } from '../game-grid/game-grid.component';
 import { BallSelectComponent } from '../ball-select/ball-select.component';
+import { alertEnterAnimation, alertLeaveAnimation } from '../../animations/alert.animation';
 
 @Component({
   selector: 'app-game',
@@ -111,6 +112,7 @@ import { BallSelectComponent } from '../ball-select/ball-select.component';
   standalone: true,
 })
 export class GameComponent implements OnChanges, OnInit {
+  @ViewChild('modal', { static: false }) modal!: IonModal;
   @Input() games!: Game[];
   @Input() isLeaguePage?: boolean = false;
   @Input() gameCount?: number;
@@ -159,7 +161,8 @@ export class GameComponent implements OnChanges, OnInit {
   public delayedCloseMap: Record<string, boolean> = {};
   private originalGameState: Record<string, Game> = {};
   patternTypeaheadConfig!: TypeaheadConfig<Partial<Pattern>>;
-
+  enterAnimation = alertEnterAnimation;
+  leaveAnimation = alertLeaveAnimation;
   constructor(
     private alertController: AlertController,
     private toastService: ToastService,

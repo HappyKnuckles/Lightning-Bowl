@@ -37,6 +37,7 @@ import { Keyboard } from '@capacitor/keyboard';
 import { addIcons } from 'ionicons';
 import { chevronExpandOutline } from 'ionicons/icons';
 import { BallSelectComponent } from '../ball-select/ball-select.component';
+import { alertEnterAnimation, alertLeaveAnimation } from '../../animations/alert.animation';
 
 @Component({
   selector: 'app-game-grid',
@@ -74,6 +75,8 @@ export class GameGridComponent implements OnInit, OnDestroy {
   @ViewChildren(IonInput) inputs!: QueryList<IonInput>;
   @ViewChild('leagueSelector') leagueSelector!: LeagueSelectorComponent;
   @ViewChild('checkbox') checkbox!: IonCheckbox;
+  enterAnimation = alertEnterAnimation;
+  leaveAnimation = alertLeaveAnimation;
   showMetadata = input<boolean>(true);
   patternId = input.required<string>();
   game = input<Game>({
@@ -105,9 +108,6 @@ export class GameGridComponent implements OnInit, OnDestroy {
   private keyboardHideSubscription: Subscription | undefined;
   private usingVisualViewportListener = false;
   private resizeSubscription: Subscription | undefined;
-
-  // Add these properties
-  private tempSelectedBalls: string[] = [];
 
   constructor(
     private gameScoreCalculatorService: GameScoreCalculatorService,
