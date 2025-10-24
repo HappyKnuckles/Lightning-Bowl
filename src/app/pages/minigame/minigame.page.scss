@@ -110,22 +110,6 @@
       margin: 8px 0;
       color: #555;
       line-height: 1.4;
-
-      &::marker {
-        content: '';
-      }
-
-      &:before {
-        content: '';
-        display: inline-block;
-        width: 6px;
-        height: 6px;
-        background: #007bff;
-        border-radius: 50%;
-        margin-right: 8px;
-        position: relative;
-        top: -2px;
-      }
     }
   }
 }

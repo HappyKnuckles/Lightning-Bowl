@@ -56,7 +56,7 @@ import { ExcelService } from 'src/app/core/services/excel/excel.service';
 import { Filesystem } from '@capacitor/filesystem';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { GenericFilterActiveComponent } from 'src/app/shared/components/generic-filter-active/generic-filter-active.component';
-import { GAME_FILTER_CONFIGS } from 'src/app/shared/components/filter-configs/filter-configs';
+import { GAME_FILTER_CONFIGS } from 'src/app/core/configs/filter-configs';
 import { GameFilterComponent } from 'src/app/shared/components/game-filter/game-filter.component';
 import { SpareDisplayComponent } from 'src/app/shared/components/spare-display/spare-display.component';
 import { StatDisplayComponent } from 'src/app/shared/components/stat-display/stat-display.component';

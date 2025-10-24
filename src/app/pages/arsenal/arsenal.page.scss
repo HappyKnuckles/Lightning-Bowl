@@ -79,3 +79,52 @@ ion-img::part(image) {
   height: 100%;
   max-height: 70dvh;
 }
+
+
+
+
+.ball-info-list {
+  height: calc(100dvh - 44px);
+  display: flex;
+  flex-direction: column;
+
+  .core-container,
+  .coverstock-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    .core-image,
+    .coverstock-image {
+      margin-bottom: 12px;
+
+      ion-img {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+      }
+    }
+
+    ion-item {
+      width: 100%;
+      --padding-start: 16px;
+      --padding-end: 16px;
+      pointer-events: none;
+
+    }
+  }
+
+  .coverstock-section,
+  .core-section {
+    position: relative;
+
+    ion-ripple-effect {
+      z-index: 1000;
+    }
+  }
+
+  .core-section {
+    margin-top: auto;
+    margin-bottom: 64px;
+  }
+}

@@ -41,7 +41,7 @@ import { BallService } from 'src/app/core/services/ball/ball.service';
 import { BallFilterService } from 'src/app/core/services/ball-filter/ball-filter.service';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { GenericFilterActiveComponent } from 'src/app/shared/components/generic-filter-active/generic-filter-active.component';
-import { BALL_FILTER_CONFIGS } from 'src/app/shared/components/filter-configs/filter-configs';
+import { BALL_FILTER_CONFIGS } from 'src/app/core/configs/filter-configs';
 import { BallFilterComponent } from 'src/app/shared/components/ball-filter/ball-filter.component';
 import { BallListComponent } from 'src/app/shared/components/ball-list/ball-list.component';
 import { ActivatedRoute } from '@angular/router';

@@ -33,6 +33,9 @@ import {
   IonSegmentButton,
   IonSegmentContent,
   IonSegmentView,
+  IonAvatar,
+  IonListHeader,
+  IonRippleEffect,
 } from '@ionic/angular/standalone';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { Ball } from 'src/app/core/models/ball.model';
@@ -59,6 +62,9 @@ import { ChartGenerationService } from 'src/app/core/services/chart/chart-genera
   standalone: true,
   providers: [ModalController],
   imports: [
+    IonRippleEffect,
+    IonListHeader,
+    IonAvatar,
     IonSegmentButton,
     IonSegment,
     IonReorder,
@@ -215,7 +221,7 @@ export class ArsenalPage implements OnInit {
   }
 
   onBallSelectionChange(ballIds: string[]): void {
-    const selectedBalls = this.ballsWithoutArsenal().filter(ball => ballIds.includes(ball.ball_id));
+    const selectedBalls = this.ballsWithoutArsenal().filter((ball) => ballIds.includes(ball.ball_id));
     this.saveBallToArsenal(selectedBalls);
   }
 

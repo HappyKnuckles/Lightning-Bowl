@@ -1,4 +1,4 @@
-import { FilterConfig } from '../generic-filter-active/generic-filter-active.component';
+import { FilterConfig } from '../../shared/components/generic-filter-active/generic-filter-active.component';
 import { Market, CoreType } from 'src/app/core/models/filter.model';
 
 export const GAME_FILTER_CONFIGS: FilterConfig[] = [
