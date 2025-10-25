@@ -121,31 +121,6 @@
       </ion-toolbar>
     </ion-header>
     <ion-content [fullscreen]="true">
-      <!-- <ion-card button (click)="getSameCoverstockBalls(ball)">
-        <ion-card-header>
-          <ion-img [src]="storageService.url + ball.thumbnail_image" style="height: 15vh"></ion-img>
-          <ion-card-title
-            >Coverstock
-            <ion-icon name="open-outline" class="ion-float-right"></ion-icon>
-          </ion-card-title>
-        </ion-card-header>
-        <ion-card-content class="card-content">
-          <ion-grid>
-            <ion-row>
-              <ion-col class="header">Type:</ion-col>
-              <ion-col>{{ ball.coverstock_type }}</ion-col>
-            </ion-row>
-            <ion-row>
-              <ion-col class="header">Name:</ion-col>
-              <ion-col>{{ ball.coverstock_name }}</ion-col>
-            </ion-row>
-            <ion-row>
-              <ion-col class="header">Factory Finish:</ion-col>
-              <ion-col>{{ ball.factory_finish }}</ion-col>
-            </ion-row>
-          </ion-grid>
-        </ion-card-content>
-      </ion-card> -->
       <ion-list class="ball-info-list">
         <div
           class="coverstock-section ion-activatable ripple-parent"
@@ -201,42 +176,6 @@
           </div>
         </div>
       </ion-list>
-
-      <!-- Original core card implementation
-      <ion-card button (click)="getSameCoreBalls(ball)">
-        <ion-card-header>
-          <ion-img [src]="storageService.url + ball.core_image" style="height: 15vh; width: 15vh; margin: 0 auto"></ion-img>
-          <ion-card-title
-            >Core
-            <ion-icon name="open-outline" class="ion-float-right"></ion-icon>
-          </ion-card-title>
-        </ion-card-header>
-        <ion-card-content class="card-content">
-          <ion-grid>
-            <ion-row>
-              <ion-col class="header">Name:</ion-col>
-              <ion-col>{{ ball.core_name }}</ion-col>
-            </ion-row>
-            <ion-row>
-              <ion-col class="header">RG:</ion-col>
-              <ion-col>{{ ball.core_rg }}</ion-col>
-            </ion-row>
-            <ion-row>
-              <ion-col class="header">Diff:</ion-col>
-              <ion-col>{{ ball.core_diff }}</ion-col>
-            </ion-row>
-            <ion-row *ngIf="ball.core_int_diff">
-              <ion-col class="header">Int. Diff:</ion-col>
-              <ion-col>{{ ball.core_int_diff }}</ion-col>
-            </ion-row>
-            <ion-row>
-              <ion-col class="header">Type:</ion-col>
-              <ion-col>{{ ball.core_type }}</ion-col>
-            </ion-row>
-          </ion-grid>
-        </ion-card-content>
-      </ion-card>
-      -->
     </ion-content>
   </ng-template>
 </ion-modal>
