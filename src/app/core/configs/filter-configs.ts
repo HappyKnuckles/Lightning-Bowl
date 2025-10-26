@@ -36,20 +36,18 @@ export const GAME_FILTER_CONFIGS: FilterConfig[] = [
       if (leagues.length === 0 || (leagues.length === 1 && leagues[0] === '')) {
         return 'No Leagues';
       }
-      return `Leagues: ${leagues.join(', ')}`;
+      return `${leagues.join(', ')}`;
     },
   },
   {
     key: 'balls',
     label: 'Balls',
     type: 'array',
-    prefix: 'Balls: ',
   },
   {
     key: 'patterns',
     label: 'Patterns',
     type: 'array',
-    prefix: 'Patterns: ',
   },
   {
     key: 'dateRange',
@@ -98,26 +96,23 @@ export const BALL_FILTER_CONFIGS: FilterConfig[] = [
   },
   {
     key: 'inArsenal',
-    label: 'Arsenal only',
+    label: 'Only Arsenal Balls',
     type: 'boolean',
   },
   {
     key: 'brands',
     label: 'Brands',
     type: 'array',
-    prefix: 'Brands: ',
   },
   {
     key: 'coverstocks',
     label: 'Coverstocks',
     type: 'array',
-    prefix: 'Coverstocks: ',
   },
   {
     key: 'coverstockTypes',
     label: 'Coverstock Types',
     type: 'array',
-    prefix: 'Coverstock Types: ',
     displayValue: (value: unknown) => {
       const types = Array.isArray(value) ? value : [];
       return types.join(', ');
@@ -127,7 +122,6 @@ export const BALL_FILTER_CONFIGS: FilterConfig[] = [
     key: 'cores',
     label: 'Cores',
     type: 'array',
-    prefix: 'Cores: ',
   },
   {
     key: 'rg',

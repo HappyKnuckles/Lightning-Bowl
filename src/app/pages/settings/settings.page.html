@@ -101,19 +101,7 @@
 
 <ion-modal trigger="github-issues-modal" #githubIssuesModal>
   <ng-template>
-    <ion-header [translucent]="true">
-      <ion-toolbar>
-        <ion-buttons slot="start">
-          <ion-button color="medium" (click)="githubIssuesModal.dismiss()">
-            <ion-icon name="chevron-back"></ion-icon>
-          </ion-button>
-        </ion-buttons>
-        <ion-title>Issues & Features</ion-title>
-      </ion-toolbar>
-    </ion-header>
-    <ion-content [fullscreen]="true">
-      <app-github-issues-modal></app-github-issues-modal>
-    </ion-content>
+    <app-github-issues-modal [modal]="githubIssuesModal"></app-github-issues-modal>
   </ng-template>
 </ion-modal>
 

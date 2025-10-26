@@ -1,21 +1,28 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button color="medium" (click)="modal().dismiss()">
+        <ion-icon name="chevron-back"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Issues & Features</ion-title>
+    <!-- Filter Section -->
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-select
+      label="Filter by Labels"
+      multiple="true"
+      [(ngModel)]="selectedLabels"
+      (ionChange)="onLabelFilterChange()"
+      placeholder="Select labels to filter">
+      <ion-select-option value="">All</ion-select-option>
+      <ion-select-option value="feature">Feature</ion-select-option>
+      <ion-select-option value="bug">Bug</ion-select-option>
+      <ion-select-option value="enhancement">Enhancement</ion-select-option>
+    </ion-select>
+  </ion-toolbar>
+</ion-header>
 <ion-content [fullscreen]="true">
-  <!-- Filter Section -->
-  <ion-list lines="full">
-    <ion-item>
-      <ion-select
-        label="Filter by Labels"
-        multiple="true"
-        [(ngModel)]="selectedLabels"
-        (ionChange)="onLabelFilterChange()"
-        placeholder="Select labels to filter">
-        <ion-select-option value="">All</ion-select-option>
-        <ion-select-option value="feature">Feature</ion-select-option>
-        <ion-select-option value="bug">Bug</ion-select-option>
-        <ion-select-option value="enhancement">Enhancement</ion-select-option>
-      </ion-select>
-    </ion-item>
-  </ion-list>
-
   <!-- Loading State -->
   <div *ngIf="loading" style="text-align: center; padding: 40px">
     <ion-spinner></ion-spinner>
@@ -58,7 +65,7 @@
             [style.color]="getTextColor(label.color)">
             {{ label.name }}
           </ion-chip>
-          <ion-avatar style="margin-left: auto; height: 30px; width: 30px; --border-radius: 0">
+          <ion-avatar style="margin-left: auto; height: 32px; width: 32px; --border-radius: 0">
             <img [src]="issue.user.avatar_url" alt="User Avatar" />
           </ion-avatar>
         </div>

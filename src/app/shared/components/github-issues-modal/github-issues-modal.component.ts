@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, input, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { IonModal } from '@ionic/angular';
 import {
   IonContent,
   IonItem,
@@ -17,6 +18,10 @@ import {
   IonChip,
   IonAvatar,
   IonImg,
+  IonButtons,
+  IonToolbar,
+  IonHeader,
+  IonTitle,
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { documentOutline, openOutline, warningOutline } from 'ionicons/icons';
@@ -29,6 +34,10 @@ import { GitHubService } from 'src/app/core/services/github/github.service';
   styleUrls: ['./github-issues-modal.component.scss'],
   standalone: true,
   imports: [
+    IonTitle,
+    IonHeader,
+    IonToolbar,
+    IonButtons,
     IonImg,
     IonAvatar,
     IonChip,
@@ -49,6 +58,7 @@ import { GitHubService } from 'src/app/core/services/github/github.service';
   ],
 })
 export class GithubIssuesModalComponent implements OnInit {
+  modal = input.required<IonModal>();
   issues: GitHubIssue[] = [];
   loading = false;
   selectedLabels: string[] = ['']; // Empty array to show all issues by default
