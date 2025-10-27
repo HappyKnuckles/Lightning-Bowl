@@ -18,3 +18,27 @@
   @extend %card;
   border-left-color: green;
 }
+
+.item-header-image {
+  width: 100%;
+  margin-bottom: 8px;
+
+  img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 4px;
+  }
+}
+
+ion-list{
+  background: #0d0e0d;}
+
+ion-item {
+  --inner-padding-end: 0;
+
+  &::part(native) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

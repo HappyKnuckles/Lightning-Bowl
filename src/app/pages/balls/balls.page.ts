@@ -51,6 +51,7 @@ import { SortService } from 'src/app/core/services/sort/sort.service';
 import { BallSortOption, BallSortField, SortDirection } from 'src/app/core/models/sort.model';
 import { NetworkService } from 'src/app/core/services/network/network.service';
 import { FavoritesService } from 'src/app/core/services/favorites/favorites.service';
+import { BallSwipeCardComponent } from 'src/app/shared/components/ball-swipe-card/ball-swipe-card.component';
 
 @Component({
   selector: 'app-balls',
@@ -85,6 +86,7 @@ import { FavoritesService } from 'src/app/core/services/favorites/favorites.serv
     CommonModule,
     FormsModule,
     BallListComponent,
+    BallSwipeCardComponent,
     GenericFilterActiveComponent,
     SearchBlurDirective,
     SortHeaderComponent,

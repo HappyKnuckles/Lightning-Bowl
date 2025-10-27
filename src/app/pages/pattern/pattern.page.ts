@@ -23,7 +23,11 @@ import {
   IonButtons,
   IonButton,
   IonIcon,
+  IonThumbnail,
   ModalController,
+  IonList,
+  IonLabel,
+  IonItem,
 } from '@ionic/angular/standalone';
 import { Pattern } from 'src/app/core/models/pattern.model';
 import { PatternService } from 'src/app/core/services/pattern/pattern.service';
@@ -52,6 +56,9 @@ import { FavoritesService } from 'src/app/core/services/favorites/favorites.serv
   styleUrls: ['./pattern.page.scss'],
   standalone: true,
   imports: [
+    IonItem,
+    IonLabel,
+    IonList,
     IonIcon,
     IonButton,
     IonButtons,
@@ -78,6 +85,7 @@ import { FavoritesService } from 'src/app/core/services/favorites/favorites.serv
     PatternInfoComponent,
     SearchBlurDirective,
     SortHeaderComponent,
+    IonThumbnail,
   ],
 })
 export class PatternPage implements OnInit {

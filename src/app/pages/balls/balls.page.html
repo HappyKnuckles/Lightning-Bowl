@@ -56,66 +56,16 @@
 
     <ng-template #content>
       @for (ball of displayedBalls; track ball.ball_id) {
-        <ion-card role="article">
-          <ion-card-header>
-            <ion-card-title style="display: flex; align-items: center; justify-content: space-between">
-              <span
-                (click)="getSimilarMovementBalls(ball)"
-                (keydown.enter)="getSimilarMovementBalls(ball)"
-                (keydown.space)="getSimilarMovementBalls(ball)"
-                tabindex="0"
-                role="button"
-                style="position: relative"
-                [attr.aria-label]="'Find balls with similar movement pattern to ' + ball.ball_name"
-                class="ion-activatable ripple-parent rounded-rectangle"
-                >{{ ball.ball_name }}
-                <ion-icon style="position: absolute; color: rgb(153, 153, 153); font-size: 1rem; right: -18px" name="open-outline"></ion-icon>
-                <ion-ripple-effect style="width: calc(100% + 45px); border-radius: 5px; margin-left: -20px"></ion-ripple-effect
-              ></span>
-
-              <ion-button fill="clear" size="default" (click)="toggleFavorite($event, ball)" style="margin: 0; height: auto; min-height: auto">
-                <ion-icon
-                  [name]="favoritesService.isBallFavorite(ball.ball_id, ball.core_weight) ? 'heart' : 'heart-outline'"
-                  slot="icon-only"
-                  style="color: var(--ion-color-primary); font-size: 24px">
-                </ion-icon>
-              </ion-button>
-            </ion-card-title>
-            <ion-card-subtitle>
-              {{ ball.brand_name }} ({{ ball.release_date }})
-              <ion-icon *ngIf="ball.us_int === 'Overseas'" name="globe-outline" style="vertical-align: text-top"></ion-icon>
-            </ion-card-subtitle>
-          </ion-card-header>
-          <ion-card-content>
-            <ion-img [src]="storageService.url + ball.thumbnail_image" style="height: 15vmax" [alt]="'Image for' + ' ' + ball.ball_name"></ion-img>
-            <div class="ball-info">
-              <ion-list lines="none" (click)="getSameCoreBalls(ball)" class="ion-activatable ion-ripple-parent list">
-                <div class="core">
-                  <h2 class="title">Core:</h2>
-                  <ion-icon name="open-outline"></ion-icon>
-                </div>
-                <p class="info">{{ ball.core_name }}</p>
-                <p class="info">RG: {{ ball.core_rg }} ({{ getLengthPotential(ball) }})</p>
-                <p class="info">Diff: {{ ball.core_diff }} ({{ getFlarePotential(ball) }})</p>
-                <p class="info" *ngIf="ball.core_int_diff">Int. Diff: {{ ball.core_int_diff }}</p>
-                <p class="info">{{ ball.core_type }}</p>
-                <ion-ripple-effect></ion-ripple-effect>
-              </ion-list>
-              <ion-list lines="none" (click)="getSameCoverstockBalls(ball)" class="ion-activatable ion-ripple-parent list">
-                <div class="coverstock">
-                  <h2 class="title">Coverstock:</h2>
-                  <ion-icon name="open-outline"></ion-icon>
-                </div>
-                <p class="info">{{ ball.coverstock_type }}</p>
-                <p class="info">{{ ball.coverstock_name }}</p>
-                <p class="info">{{ ball.factory_finish }}</p>
-                <ion-ripple-effect></ion-ripple-effect>
-              </ion-list>
-            </div>
-          </ion-card-content>
-          <ion-button *ngIf="isInArsenal(ball)" style="float: right" fill="clear" (click)="removeFromArsenal(ball)"> Remove from arsenal </ion-button>
-          <ion-button *ngIf="!isInArsenal(ball)" style="float: right" fill="clear" (click)="saveBallToArsenal(ball)"> Add to arsenal </ion-button>
-        </ion-card>
+        <app-ball-swipe-card
+          [ball]="ball"
+          [inArsenal]="isInArsenal(ball)"
+          (similarMovement)="getSimilarMovementBalls($event)"
+          (similarCore)="getSameCoreBalls($event)"
+          (similarCoverstock)="getSameCoverstockBalls($event)"
+          (favoriteToggle)="toggleFavorite($event.event, $event.ball)"
+          (addToArsenal)="saveBallToArsenal($event)"
+          (removeFromArsenal)="removeFromArsenal($event)">
+        </app-ball-swipe-card>
       }
       <!-- Infinite Scroll -->
       <ion-infinite-scroll threshold="100px" (ionInfinite)="loadBalls($event)" *ngIf="hasMoreData">

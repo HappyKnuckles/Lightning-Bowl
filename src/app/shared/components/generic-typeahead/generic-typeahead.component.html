@@ -27,9 +27,16 @@
     <ion-list>
       @for (item of displayedItems(); track getItemIdentifier(item)) {
         <ion-item role="article" [ngClass]="getCustomDisplayLogic(item).cssClass" lines="none">
-          <ion-avatar slot="start" *ngIf="config().showImages">
-            <ion-img [src]="getImageUrl(item)"></ion-img>
-          </ion-avatar>
+          @if (hasChartImage(item)) {
+            <div class="item-header-image">
+              <img [src]="getChartImageSrc(item)" alt="Pattern Chart" loading="lazy" />
+            </div>
+          }
+          @if (!hasChartImage(item)) {
+            <ion-avatar slot="start" *ngIf="config().showImages">
+              <ion-img [src]="getImageUrl(item)"></ion-img>
+            </ion-avatar>
+          }
 
           <ion-checkbox
             [value]="getItemValue(item)"

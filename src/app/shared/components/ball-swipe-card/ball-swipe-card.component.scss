@@ -1,0 +1,83 @@
+// Image transition container
+.image-transition-container {
+  position: relative;
+  height: 15vmax;
+  width: 15vmax;
+  margin: 0 auto 16px;
+  overflow: hidden;
+  border-radius: 100%; // Clip to circular boundary
+}
+
+.transition-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transition: transform var(--transition-duration, 0.3s) ease-in-out;
+  // z-index controlled dynamically in template
+}
+
+ion-img::part(image) {
+  border-radius: 100%;
+}
+
+.list {
+  background: none;
+  border-radius: 7px;
+  width: 90%;
+  position: relative;
+  margin: 8px auto 0; // Space for the icon on the right
+  padding-right: 35px;
+  position: relative; // For absolute positioning of icon
+
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 1rem;
+    margin-bottom: 4px;
+
+    .label {
+      color: white;
+      font-weight: 500;
+    }
+
+    .value {
+      color: lightgray;
+      text-align: left;
+    }
+  }
+
+  .core,
+  .coverstock {
+    display: flex;
+    gap: 3px;
+  }
+
+  .info {
+    font-size: 1rem;
+    color: lightgray;
+  }
+
+  .title {
+    color: white;
+    font-size: 1.125rem;
+    font-weight: 600;
+  }
+}
+
+ion-img::part(image) {
+  border-radius: 100%;
+}
+
+ion-card {
+  margin-top: 12px;
+
+  ion-card-title {
+    font-size: 1.375rem;
+  }
+
+  ion-card-content {
+    padding: 12px 0 0;
+  }
+}

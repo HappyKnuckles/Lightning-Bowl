@@ -1,4 +1,4 @@
-import { Component, computed, EventEmitter, input, Output, signal, ViewChild, OnInit, OnDestroy } from '@angular/core';
+import { Component, computed, EventEmitter, input, Output, signal, ViewChild, OnInit, OnDestroy, effect } from '@angular/core';
 import { InfiniteScrollCustomEvent, ModalController } from '@ionic/angular';
 import Fuse from 'fuse.js';
 import {
@@ -23,6 +23,9 @@ import { NgClass, NgIf } from '@angular/common';
 import { SearchBlurDirective } from 'src/app/core/directives/search-blur/search-blur.directive';
 import { TypeaheadConfig } from './typeahead-config.interface';
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
+import { ChartGenerationService } from 'src/app/core/services/chart/chart-generation.service';
+import { DomSanitizer } from '@angular/platform-browser';
+import { Pattern } from 'src/app/core/models/pattern.model';
 
 @Component({
   selector: 'app-generic-typeahead',
@@ -70,7 +73,13 @@ export class GenericTypeaheadComponent<T> implements OnInit, OnDestroy {
   constructor(
     private modalCtrl: ModalController,
     private loadingService: LoadingService,
-  ) {}
+    private chartService: ChartGenerationService,
+    private sanitizer: DomSanitizer,
+  ) {
+    effect(() => {
+      this.generatePatternCharts(this.items());
+    });
+  }
 
   ngOnInit() {
     this.filteredItems.set([...this.items()]);
@@ -130,6 +139,8 @@ export class GenericTypeaheadComponent<T> implements OnInit, OnDestroy {
           if (apiSearchFn) {
             const response = await apiSearchFn(searchTerm);
             this.filteredItems.set(response.items);
+            // Generate chart images for patterns after API search
+            // this.generatePatternCharts(response.items);
           }
         }
       } catch (error) {
@@ -228,6 +239,14 @@ export class GenericTypeaheadComponent<T> implements OnInit, OnDestroy {
     return this.config().customDisplayLogic?.(item) || {};
   }
 
+  getChartImageSrc(item: T): unknown {
+    return (item as Record<string, unknown>)['chartImageSrc'] || null;
+  }
+
+  hasChartImage(item: T): boolean {
+    return !!(item as Record<string, unknown>)['chartImageSrc'];
+  }
+
   private reorderItemsForSelected(): void {
     if (this.selectedItems.length === 0) return;
 
@@ -236,6 +255,30 @@ export class GenericTypeaheadComponent<T> implements OnInit, OnDestroy {
     const unselectedItems = this.filteredItems().filter((item) => !selectedIdentifiers.includes(this.getItemIdentifier(item)));
 
     this.filteredItems.set([...selectedItemObjects, ...unselectedItems]);
+  }
+
+  private generatePatternCharts(items: T[]): void {
+    // Check if items are patterns by looking for pattern-specific properties
+    if (items.length === 0) return;
+
+    const firstItem = items[0] as Record<string, unknown>;
+    // Only generate charts if items have pattern-like properties
+    if (!('ratio' in firstItem) && !('reverse' in firstItem)) {
+      return;
+    }
+
+    // Generate chart images for patterns
+    items.forEach((item) => {
+      const pattern = item as unknown as Pattern;
+      if (!pattern.chartImageSrc) {
+        try {
+          const svgDataUri = this.chartService.generatePatternChartDataUri(pattern, 325, 1300, 1300, 400, 20, 1, 7, true);
+          pattern.chartImageSrc = this.sanitizer.bypassSecurityTrustUrl(svgDataUri);
+        } catch (error) {
+          console.error(`Error generating chart for pattern ${pattern.title}:`, error);
+        }
+      }
+    });
   }
 
   ngOnDestroy(): void {

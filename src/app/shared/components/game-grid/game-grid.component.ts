@@ -15,7 +15,20 @@ import { Platform } from '@ionic/angular';
 import { Subscription } from 'rxjs';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { NgFor, NgIf, NgStyle } from '@angular/common';
-import { IonGrid, IonModal, IonRow, IonCol, IonInput, IonItem, IonTextarea, IonCheckbox, IonList, IonLabel } from '@ionic/angular/standalone';
+import {
+  IonGrid,
+  IonModal,
+  IonRow,
+  IonCol,
+  IonInput,
+  IonItem,
+  IonTextarea,
+  IonCheckbox,
+  IonList,
+  IonLabel,
+  IonAccordion,
+  IonAccordionGroup,
+} from '@ionic/angular/standalone';
 import { FormsModule } from '@angular/forms';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { ImpactStyle } from '@capacitor/haptics';
@@ -63,6 +76,8 @@ import { alertEnterAnimation, alertLeaveAnimation } from '../../animations/alert
     NgStyle,
     IonLabel,
     BallSelectComponent,
+    IonAccordion,
+    IonAccordionGroup,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })

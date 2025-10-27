@@ -1,0 +1,134 @@
+<ion-card role="article">
+  <ion-card-header
+    (click)="onSimilarMovement($event)"
+    (keydown.enter)="onSimilarMovement($event)"
+    (keydown.space)="onSimilarMovement($event)"
+    class="ion-activatable ripple-parent rounded-rectangle">
+    <ion-card-title style="display: flex; align-items: center; justify-content: space-between">
+      <span
+        tabindex="0"
+        role="button"
+        style="position: relative"
+        [attr.aria-label]="'Find balls with similar movement pattern to ' + ball().ball_name"
+        >{{ ball().ball_name }}
+        <ion-icon style="position: absolute; color: rgb(153, 153, 153); font-size: 1rem; right: -18px" name="open-outline"></ion-icon>
+      </span>
+
+      <ion-button
+        fill="clear"
+        size="default"
+        (click)="onToggleFavorite($event); $event.stopPropagation()"
+        style="margin: 0; height: auto; min-height: auto">
+        <ion-icon
+          [name]="favoritesService.isBallFavorite(ball().ball_id, ball().core_weight) ? 'heart' : 'heart-outline'"
+          slot="icon-only"
+          style="color: var(--ion-color-primary); font-size: 24px">
+        </ion-icon>
+      </ion-button>
+    </ion-card-title>
+    <ion-card-subtitle style="display: flex; align-items: center; gap: 12px">
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <div>
+          {{ ball().brand_name }}
+          <ion-icon *ngIf="ball().us_int === 'Overseas'" name="globe-outline"></ion-icon>
+        </div>
+        <div>{{ ball().release_date }}</div>
+      </div>
+      <ion-segment
+        #segment
+        [value]="currentSegment()"
+        (click)="$event.stopPropagation()"
+        (ionChange)="changeImage($event)"
+        style="width: fit-content; margin-left: auto; font-size: 0.75rem; --min-height: 24px; text-transform: none">
+        <ion-segment-button
+          value="coverstock"
+          [contentId]="'coverstock' + ball().ball_id"
+          style="--padding-start: 8px; --padding-end: 8px; min-height: 24px">
+          <ion-label style="font-size: 0.75rem; margin: 0">Coverstock</ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="core" [contentId]="'core' + ball().ball_id" style="--padding-start: 8px; --padding-end: 8px; min-height: 24px">
+          <ion-label style="font-size: 0.75rem; margin: 0">Core</ion-label>
+        </ion-segment-button>
+      </ion-segment>
+    </ion-card-subtitle>
+    <ion-ripple-effect></ion-ripple-effect>
+  </ion-card-header>
+
+  <ion-card-content>
+    <!-- Image container with bidirectional sliding wipe transition -->
+
+    <div class="image-transition-container">
+      <!-- Coverstock image (slides in from left when returning from core) -->
+      <ion-img
+        [src]="storageService.url + ball().thumbnail_image"
+        class="transition-image coverstock-image"
+        [ngStyle]="{
+          transform: 'translateX(' + coverstockSlidePosition() + '%)',
+          zIndex: currentSegment() === 'coverstock' ? 2 : 1,
+        }"
+        [alt]="'Coverstock image for ' + ball().ball_name"></ion-img>
+
+      <!-- Core image (slides in from right when switching to core) -->
+      <img
+        [src]="storageService.url + ball().core_image"
+        class="transition-image core-image"
+        [ngStyle]="{
+          transform: 'translateX(' + coreSlidePosition() + '%)',
+          zIndex: currentSegment() === 'core' ? 2 : 1,
+        }"
+        [alt]="'Core image for ' + ball().ball_name" />
+    </div>
+
+    <ion-segment-view>
+      <ion-segment-content id="coverstock{{ ball().ball_id }}">
+        <ion-list lines="none" (click)="onSimilarCoverstock($event)" class="ion-activatable ion-ripple-parent list">
+          <div class="info-row">
+            <span class="label">Name:</span>
+            <span class="value">{{ ball().coverstock_name }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Type:</span>
+            <span class="value">{{ ball().coverstock_type }}</span>
+          </div>
+
+          <div class="info-row">
+            <span class="label">Finish:</span>
+            <span class="value">{{ ball().factory_finish }}</span>
+          </div>
+          <ion-icon name="open-outline" style="position: absolute; right: 10px; top: 10px; transform: translateY(-50%)"></ion-icon>
+          <ion-ripple-effect></ion-ripple-effect>
+        </ion-list>
+      </ion-segment-content>
+
+      <ion-segment-content id="core{{ ball().ball_id }}">
+        <ion-list lines="none" (click)="onSimilarCore($event)" class="ion-activatable ion-ripple-parent list">
+          <div class="info-row">
+            <span class="label">Name:</span>
+            <span class="value">{{ ball().core_name }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">RG:</span>
+            <span class="value">{{ ball().core_rg }} ({{ getLengthPotential(ball()) }})</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Diff:</span>
+            <span class="value">{{ ball().core_diff }} ({{ getFlarePotential(ball()) }})</span>
+          </div>
+          <div class="info-row" *ngIf="ball().core_int_diff">
+            <span class="label">Int. Diff:</span>
+            <span class="value">{{ ball().core_int_diff }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Type:</span>
+            <span class="value">{{ ball().core_type }}</span>
+          </div>
+          <ion-icon name="open-outline" style="position: absolute; right: 10px; top: 10px; transform: translateY(-50%)"></ion-icon>
+          <ion-ripple-effect></ion-ripple-effect>
+        </ion-list>
+      </ion-segment-content>
+    </ion-segment-view>
+  </ion-card-content>
+
+  <ion-button *ngIf="isInArsenal()" style="float: right" fill="clear" (click)="onRemoveFromArsenal($event)"> Remove from arsenal </ion-button>
+  <ion-button *ngIf="!isInArsenal()" style="float: right" fill="clear" (click)="onAddToArsenal($event)"> Add to arsenal </ion-button>
+</ion-card>

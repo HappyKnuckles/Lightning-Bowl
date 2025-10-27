@@ -97,47 +97,61 @@
 </div>
 
 @if (showMetadata()) {
-  <div style="margin: 0 5px">
-    <ion-list lines="full" style="border-radius: 7px">
-      <ion-item>
-        <ion-checkbox [(ngModel)]="game().isPractice" name="isPractice" #checkbox (ionChange)="isPracticeChanged.emit(game().isPractice)"
-          >Practice</ion-checkbox
-        >
+  <ion-accordion-group>
+    <ion-accordion style="border-radius: 7px">
+      <ion-item slot="header">
+        <ion-label
+          >Game Details
+          <p>{{ game().isPractice ? "Practice" : "Regular" }}</p>
+          <p *ngIf="game().league">{{ game().league }}</p>
+          <p *ngIf="game().balls">{{ game().balls!.join(", ") }}</p>
+          <p *ngIf="game().patterns">{{ game().patterns.join(", ") }}</p>
+        </ion-label>
       </ion-item>
-      <!-- TODO make this reset on save-->
-      <app-league-selector [isAddPage]="true" (leagueChanged)="onLeagueChanged($event)" #leagueSelector></app-league-selector>
-      <ion-item [id]="patternId()" button [disabled]="storageService.allPatterns().length === 0">
-        <ion-label>Patterns</ion-label>
-        <span class="ion-text-right">{{ game().patterns.join(", ") || "None" }}</span>
-      </ion-item>
-      <ion-modal [presentingElement]="presentingElement" [trigger]="patternId()">
-        <ng-template>
-          <app-generic-typeahead
-            [items]="storageService.allPatterns()"
-            [config]="patternTypeaheadConfig"
-            [prevSelectedItems]="game().patterns"
-            (selectedItemsChange)="onPatternChanged($event)">
-          </app-generic-typeahead>
-        </ng-template>
-      </ion-modal>
-      <ion-item [id]="'ball-selector'" detail="true" detailIcon="chevron-expand-outline" [disabled]="storageService.arsenal().length === 0">
-        <ion-label>Balls</ion-label>
-        <span class="ion-text-right">{{ getSelectedBallsText() }}</span>
-      </ion-item>
-      <ion-modal [enterAnimation]="enterAnimation" [leaveAnimation]="leaveAnimation" #modal trigger="ball-selector" class="ball-modal">
-        <ng-template>
-          <app-ball-select (ballSelect)="onBallSelect($event, modal)" [selectedBalls]="game().balls"></app-ball-select>
-        </ng-template>
-      </ion-modal>
-      <ion-item lines="none">
-        <ion-textarea
-          label="Note"
-          type="text"
-          [(ngModel)]="game().note"
-          name="note"
-          [autoGrow]="true"
-          placeholder="today knee pain, lanes dry af, i fucking suck today"></ion-textarea>
-      </ion-item>
-    </ion-list>
-  </div>
+
+      <div slot="content">
+        <ion-list lines="full">
+          <ion-item>
+            <ion-checkbox [(ngModel)]="game().isPractice" name="isPractice" #checkbox (ionChange)="isPracticeChanged.emit(game().isPractice)"
+              >Practice</ion-checkbox
+            >
+          </ion-item>
+          <!-- TODO make this reset on save-->
+          <app-league-selector [isAddPage]="true" (leagueChanged)="onLeagueChanged($event)" #leagueSelector></app-league-selector>
+          <ion-item [id]="patternId()" button [disabled]="storageService.allPatterns().length === 0">
+            <ion-label>Patterns</ion-label>
+            <span class="ion-text-right">{{ game().patterns.join(", ") || "None" }}</span>
+          </ion-item>
+          <ion-modal [presentingElement]="presentingElement" [trigger]="patternId()">
+            <ng-template>
+              <app-generic-typeahead
+                [items]="storageService.allPatterns()"
+                [config]="patternTypeaheadConfig"
+                [prevSelectedItems]="game().patterns"
+                (selectedItemsChange)="onPatternChanged($event)">
+              </app-generic-typeahead>
+            </ng-template>
+          </ion-modal>
+          <ion-item [id]="'ball-selector'" detail="true" detailIcon="chevron-expand-outline" [disabled]="storageService.arsenal().length === 0">
+            <ion-label>Balls</ion-label>
+            <span class="ion-text-right">{{ getSelectedBallsText() }}</span>
+          </ion-item>
+          <ion-modal [enterAnimation]="enterAnimation" [leaveAnimation]="leaveAnimation" #modal trigger="ball-selector" class="ball-modal">
+            <ng-template>
+              <app-ball-select (ballSelect)="onBallSelect($event, modal)" [selectedBalls]="game().balls"></app-ball-select>
+            </ng-template>
+          </ion-modal>
+          <ion-item lines="none">
+            <ion-textarea
+              label="Note"
+              type="text"
+              [(ngModel)]="game().note"
+              name="note"
+              [autoGrow]="true"
+              placeholder="today knee pain, lanes dry af, i fucking suck today"></ion-textarea>
+          </ion-item>
+        </ion-list>
+      </div>
+    </ion-accordion>
+  </ion-accordion-group>
 }
