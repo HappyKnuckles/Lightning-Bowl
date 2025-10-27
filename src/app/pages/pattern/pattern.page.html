@@ -75,7 +75,9 @@
             'green-card': getRatioValue(pattern.ratio ?? '0') >= 8,
           }"
           button
-          id="{{ pattern.url }}">
+          id="{{ pattern.url }}"
+          appDoubleTap
+          (doubleTapped)="onDoubleTap(pattern)">
           <img *ngIf="pattern.chartImageSrc" [src]="pattern.chartImageSrc" alt="{{ pattern.title }} Oil Pattern Chart" class="pattern-chart-image" />
           <ion-card-header>
             <ion-card-title style="display: flex; align-items: center; justify-content: space-between">

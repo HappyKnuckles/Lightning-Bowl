@@ -56,7 +56,7 @@
 
     <ng-template #content>
       @for (ball of displayedBalls; track ball.ball_id) {
-        <ion-card role="article">
+        <ion-card role="article" appDoubleTap (doubleTapped)="onDoubleTap(ball)">
           <ion-card-header>
             <ion-card-title style="display: flex; align-items: center; justify-content: space-between">
               <span
