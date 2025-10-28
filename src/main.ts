@@ -21,9 +21,9 @@ if (environment.production) {
     (window as any).__APP_STARTUP_TIME__ = appStartTime;
   }
   enableProdMode();
+  injectSpeedInsights();
+  inject();
 }
-injectSpeedInsights();
-inject();
 
 bootstrapApplication(AppComponent, {
   providers: [

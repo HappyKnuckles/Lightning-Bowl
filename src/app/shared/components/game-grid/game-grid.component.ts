@@ -38,6 +38,7 @@ import { addIcons } from 'ionicons';
 import { chevronExpandOutline } from 'ionicons/icons';
 import { BallSelectComponent } from '../ball-select/ball-select.component';
 import { alertEnterAnimation, alertLeaveAnimation } from '../../animations/alert.animation';
+import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
 
 @Component({
   selector: 'app-game-grid',
@@ -71,6 +72,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
   @Output() totalScoreChanged = new EventEmitter<number>();
   @Output() leagueChanged = new EventEmitter<string>();
   @Output() isPracticeChanged = new EventEmitter<boolean>();
+  ballSelectorId = input<string>();
   patternChanged = output<string[]>();
   @ViewChildren(IonInput) inputs!: QueryList<IonInput>;
   @ViewChild('leagueSelector') leagueSelector!: LeagueSelectorComponent;
@@ -119,6 +121,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
     private utilsService: UtilsService,
     private platform: Platform,
     private patternService: PatternService,
+    private analyticsService: AnalyticsService,
   ) {
     this.initializeKeyboardListeners();
     addIcons({ chevronExpandOutline });
@@ -353,9 +356,13 @@ export class GameGridComponent implements OnInit, OnDestroy {
       if (this.showMetadata()) {
         this.clearFrames(true);
       }
+      this.analyticsService.trackGameSaved({ score: gameData.totalScore });
+
       return gameData;
     } catch (error) {
       console.error('Error saving game to local storage:', error);
+      this.analyticsService.trackError('game_calculate_score_error', error instanceof Error ? error.message : String(error));
+
       return null;
     }
   }

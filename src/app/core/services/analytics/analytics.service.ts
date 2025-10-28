@@ -225,10 +225,6 @@ export class AnalyticsService {
       }
     }
 
-    await this.trackEvent('app_launched', {
-      startup_duration_ms: startupDuration ? Math.round(startupDuration) : undefined,
-    });
-
     // Track as performance metric if available
     if (startupDuration) {
       await this.trackPerformanceMetric('app_startup', startupDuration);

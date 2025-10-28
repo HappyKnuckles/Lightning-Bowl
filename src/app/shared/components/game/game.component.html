@@ -170,7 +170,7 @@
                     </app-generic-typeahead>
                   </ng-template>
                 </ion-modal>
-                <ion-item class="arsenal" id="ball-selector-game" button detailIcon="chevron-expand-outline">
+                <ion-item class="arsenal" id="ball-selector-{{ game.gameId }}" button detailIcon="chevron-expand-outline">
                   <ion-icon name="bowling-ball-outline" slot="start"></ion-icon>
                   <!-- <ion-select [(ngModel)]="game.balls" multiple="true" name="balls" label="Balls">
                     <ion-select-option *ngFor="let ball of storageService.arsenal()" [value]="ball.ball_name">
@@ -180,7 +180,12 @@
                   <ion-label>Balls</ion-label>
                   <span class="ion-text-right">{{ getSelectedBallsText(game) }}</span>
                 </ion-item>
-                <ion-modal [enterAnimation]="enterAnimation" [leaveAnimation]="leaveAnimation" #modal trigger="ball-selector-game" class="ball-modal">
+                <ion-modal
+                  [enterAnimation]="enterAnimation"
+                  [leaveAnimation]="leaveAnimation"
+                  #modal
+                  trigger="ball-selector-{{ game.gameId }}"
+                  class="ball-modal">
                   <ng-template>
                     <app-ball-select (ballSelect)="onBallSelect($event, game, modal)" [selectedBalls]="game.balls"></app-ball-select>
                   </ng-template>

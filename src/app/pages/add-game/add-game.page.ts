@@ -294,10 +294,6 @@ export class AddGamePage implements OnInit {
       if (validSavedGames.length > 0) {
         const allGames = this.storageService.games();
         await this.highScoreAlertService.checkAndDisplayHighScoreAlertsForMultipleGames(validSavedGames, allGames);
-
-        for (const game of validSavedGames) {
-          await this.analyticsService.trackGameSaved({ score: game.totalScore });
-        }
       }
 
       if (perfectGame) {
@@ -310,7 +306,6 @@ export class AddGamePage implements OnInit {
     } catch (error) {
       console.error(error);
       this.toastService.showToast(ToastMessages.gameSaveError, 'bug', true);
-      await this.analyticsService.trackError('game_calculate_score_error', error instanceof Error ? error.message : String(error));
     }
   }
 

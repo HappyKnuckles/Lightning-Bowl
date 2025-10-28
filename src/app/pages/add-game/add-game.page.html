@@ -57,7 +57,8 @@
           (leagueChanged)="onLeagueChange($event)"
           (patternChanged)="onPatternChange($event)"
           (isPracticeChanged)="onIsPracticeChange($event)"
-          [patternId]="j.toString()"></app-game-grid>
+          [patternId]="j.toString()"
+          [ballSelectorId]="'modal-ball-selector' + j"></app-game-grid>
         <ion-grid *ngIf="i !== 0">
           <ion-row class="button-row">
             <ion-col>
@@ -113,6 +114,7 @@
       <h2 class="ion-text-center">Edit wrong game data</h2>
       <app-game-grid
         #modalGrid
+        [ballSelectorId]="gameData.gameId + '-modal-ball-selector'"
         (leagueChanged)="onLeagueChange($event)"
         (isPracticeChanged)="onIsPracticeChange($event)"
         [game]="gameData"
