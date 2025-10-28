@@ -14,6 +14,12 @@ import { routes } from './app/app.routes';
 import { StorageService } from './app/core/services/storage/storage.service';
 
 if (environment.production) {
+  // Track app start time
+  const appStartTime = performance.now();
+
+  if (typeof window !== 'undefined') {
+    (window as any).__APP_STARTUP_TIME__ = appStartTime;
+  }
   enableProdMode();
 }
 injectSpeedInsights();

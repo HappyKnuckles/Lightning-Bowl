@@ -43,6 +43,7 @@ import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { GameGridComponent } from 'src/app/shared/components/game-grid/game-grid.component';
 import { HighScoreAlertService } from 'src/app/core/services/high-score-alert/high-score-alert.service';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
+import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
 
 const enum SeriesMode {
   Single = 'Single',
@@ -125,6 +126,7 @@ export class AddGamePage implements OnInit {
     private gameUtilsService: GameUtilsService,
     private highScoreAlertService: HighScoreAlertService,
     private storageService: StorageService,
+    private analyticsService: AnalyticsService,
   ) {
     addIcons({ cameraOutline, chevronDown, chevronUp, medalOutline, documentTextOutline, add });
   }
@@ -159,12 +161,15 @@ export class AddGamePage implements OnInit {
             this.loadingService.setLoading(true);
             const gameText = await this.imageProcessingService.performOCR(imageUrl);
             this.parseBowlingScores(gameText!);
+
+            await this.analyticsService.trackOCRUsed(!!gameText);
           } else {
             this.toastService.showToast(ToastMessages.noImage, 'bug', true);
           }
         } catch (error) {
           this.toastService.showToast(ToastMessages.imageUploadError, 'bug', true);
           console.error(error);
+          await this.analyticsService.trackError('ocr_error', error instanceof Error ? error.message : String(error));
         } finally {
           this.loadingService.setLoading(false);
         }
@@ -228,6 +233,10 @@ export class AddGamePage implements OnInit {
         if (savedGame) {
           const allGames = this.storageService.games();
           await this.highScoreAlertService.checkAndDisplayHighScoreAlerts(savedGame, allGames);
+
+          await this.analyticsService.trackGameSaved({
+            score: savedGame.totalScore,
+          });
         }
 
         this.toastService.showToast(ToastMessages.gameSaveSuccess, 'add');
@@ -236,6 +245,7 @@ export class AddGamePage implements OnInit {
     } catch (error) {
       this.toastService.showToast(ToastMessages.gameSaveError, 'bug', true);
       console.error(error);
+      await this.analyticsService.trackError('game_save_confirm_error', error instanceof Error ? error.message : String(error));
     }
   }
 
@@ -284,6 +294,10 @@ export class AddGamePage implements OnInit {
       if (validSavedGames.length > 0) {
         const allGames = this.storageService.games();
         await this.highScoreAlertService.checkAndDisplayHighScoreAlertsForMultipleGames(validSavedGames, allGames);
+
+        for (const game of validSavedGames) {
+          await this.analyticsService.trackGameSaved({ score: game.totalScore });
+        }
       }
 
       if (perfectGame) {
@@ -296,6 +310,7 @@ export class AddGamePage implements OnInit {
     } catch (error) {
       console.error(error);
       this.toastService.showToast(ToastMessages.gameSaveError, 'bug', true);
+      await this.analyticsService.trackError('game_calculate_score_error', error instanceof Error ? error.message : String(error));
     }
   }
 

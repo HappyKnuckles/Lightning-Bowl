@@ -5,6 +5,8 @@ import { NgIf } from '@angular/common';
 import { SwUpdate } from '@angular/service-worker';
 import { HttpClient } from '@angular/common/http';
 import { DomSanitizer } from '@angular/platform-browser';
+import { Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { LoadingService } from './core/services/loader/loading.service';
 import { ToastService } from './core/services/toast/toast.service';
@@ -13,6 +15,7 @@ import { ToastComponent } from './shared/components/toast/toast.component';
 import { ThemeChangerService } from './core/services/theme-changer/theme-changer.service';
 import { PwaInstallService } from './core/services/pwa-install/pwa-install.service';
 import { PwaInstallPromptComponent } from './shared/components/pwa-install-prompt/pwa-install-prompt.component';
+import { AnalyticsService } from './core/services/analytics/analytics.service';
 
 @Component({
   selector: 'app-root',
@@ -40,6 +43,8 @@ export class AppComponent implements OnInit, OnDestroy {
     private http: HttpClient,
     private sanitizer: DomSanitizer,
     private pwaInstallService: PwaInstallService,
+    private analyticsService: AnalyticsService,
+    private router: Router,
   ) {
     this.initializeApp();
     const currentTheme = this.themeService.getCurrentTheme();
@@ -56,6 +61,12 @@ export class AppComponent implements OnInit, OnDestroy {
 
   async ngOnInit(): Promise<void> {
     this.greetUser();
+
+    await this.analyticsService.trackAppLaunched();
+
+    this.router.events.pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd)).subscribe((event) => {
+      void this.analyticsService.trackRouteChange(event.urlAfterRedirects);
+    });
   }
 
   ngOnDestroy(): void {

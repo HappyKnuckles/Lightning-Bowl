@@ -42,6 +42,7 @@ import { GenericFilterActiveComponent } from 'src/app/shared/components/generic-
 import { GAME_FILTER_CONFIGS } from 'src/app/core/configs/filter-configs';
 import { GameFilterComponent } from 'src/app/shared/components/game-filter/game-filter.component';
 import { GameComponent } from 'src/app/shared/components/game/game.component';
+import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
 
 @Component({
   selector: 'app-history',
@@ -102,6 +103,7 @@ export class HistoryPage {
     private modalCtrl: ModalController,
     public gameFilterService: GameFilterService,
     private excelService: ExcelService,
+    private analyticsService: AnalyticsService,
     // public sortService: SortService,
   ) {
     addIcons({
@@ -177,12 +179,14 @@ export class HistoryPage {
       const gotPermission = await this.excelService.exportToExcel();
       if (gotPermission) {
         this.toastService.showToast(ToastMessages.excelFileDownloadSuccess, 'checkmark-outline');
+        await this.analyticsService.trackExport('excel');
       } else {
         await this.showPermissionDeniedAlert();
       }
     } catch (error) {
       this.toastService.showToast(ToastMessages.excelFileDownloadError, 'bug', true);
       console.error('Error exporting to Excel:', error);
+      await this.analyticsService.trackError('excel_export_error', error instanceof Error ? error.message : String(error));
     }
   }
 

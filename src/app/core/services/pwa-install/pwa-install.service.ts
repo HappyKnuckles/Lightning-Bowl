@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { AnalyticsService } from '../analytics/analytics.service';
 
 @Injectable({
   providedIn: 'root',
@@ -8,7 +9,7 @@ export class PwaInstallService {
   private deferredPrompt: any = null;
   private showInstallPromptSubject = new BehaviorSubject<boolean>(false);
 
-  constructor() {
+  constructor(private analyticsService: AnalyticsService) {
     this.initializeInstallPrompt();
   }
 
@@ -65,6 +66,8 @@ export class PwaInstallService {
       this.deferredPrompt = null;
       this.showInstallPromptSubject.next(false);
       sessionStorage.removeItem('pwa-install-dismissed');
+
+      void this.analyticsService.trackAppInstalled();
     });
 
     if (this.isIOSSafari() && this.isPWAInstallable()) {

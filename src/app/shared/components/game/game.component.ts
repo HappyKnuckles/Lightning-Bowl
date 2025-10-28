@@ -62,6 +62,7 @@ import { Router } from '@angular/router';
 import { GameGridComponent } from '../game-grid/game-grid.component';
 import { BallSelectComponent } from '../ball-select/ball-select.component';
 import { alertEnterAnimation, alertLeaveAnimation } from '../../animations/alert.animation';
+import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
 
 @Component({
   selector: 'app-game',
@@ -176,6 +177,7 @@ export class GameComponent implements OnChanges, OnInit {
     private router: Router,
     private modalCtrl: ModalController,
     private patternService: PatternService,
+    private analyticsService: AnalyticsService,
   ) {
     addIcons({
       trashOutline,
@@ -369,6 +371,7 @@ export class GameComponent implements OnChanges, OnInit {
       const wasOpen = this.delayedCloseMap[game.gameId];
       this.openExpansionPanel(wasOpen ? game.gameId : undefined);
 
+      this.analyticsService.trackGameEdited();
       delete this.originalGameState[game.gameId];
       delete this.delayedCloseMap[game.gameId];
     } catch (error) {

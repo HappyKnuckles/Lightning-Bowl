@@ -47,6 +47,7 @@ import { SpareNamesComponent } from 'src/app/shared/components/spare-names/spare
 import { GameStatsService } from 'src/app/core/services/game-stats/game-stats.service';
 import { AlertController, InputCustomEvent } from '@ionic/angular';
 import { GithubIssuesModalComponent } from 'src/app/shared/components/github-issues-modal/github-issues-modal.component';
+import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
 
 @Component({
   selector: 'app-settings',
@@ -103,6 +104,7 @@ export class SettingsPage implements OnInit {
     private themeService: ThemeChangerService,
     private statsService: GameStatsService,
     private alertCtrl: AlertController,
+    private analyticsService: AnalyticsService,
   ) {
     addIcons({
       personCircleOutline,
@@ -169,6 +171,8 @@ export class SettingsPage implements OnInit {
   changeColor(): void {
     this.themeService.saveColorTheme(this.currentColor!);
     this.toastService.showToast(`Changed theme to ${this.currentColor}.`, 'checkmark-outline');
+
+    void this.analyticsService.trackThemeChanged(this.currentColor!);
   }
 
   updateApp(): void {

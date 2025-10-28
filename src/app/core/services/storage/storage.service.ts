@@ -11,6 +11,7 @@ import { PatternService } from '../pattern/pattern.service';
 import { HighScoreAlertService } from '../high-score-alert/high-score-alert.service';
 import { CacheService } from '../cache/cache.service';
 import { NetworkService } from '../network/network.service';
+import { AnalyticsService } from '../analytics/analytics.service';
 
 @Injectable({
   providedIn: 'root',
@@ -62,6 +63,7 @@ export class StorageService {
     private highScoreAlertService: HighScoreAlertService,
     private cacheService: CacheService,
     private networkService: NetworkService,
+    private analyticsService: AnalyticsService,
   ) {
     this.init();
     // this.highScoreAlertService.displayHighScoreAlert({ type: 'single_game', newRecord: 150, previousRecord: 110, details: { league: 'Monday Night', patterns: ['THS', 'Sport'], balls: ['Storm', 'Hammer'], date: '1/15/2025' }, gameOrSeries: []});
@@ -296,6 +298,11 @@ export class StorageService {
         }
         return balls;
       });
+
+      this.analyticsService.trackBallAdded({
+        brand: ball.brand_name,
+        name: ball.ball_name,
+      });
     } catch (error) {
       console.error('Error saving ball to arsenal:', error);
       throw error;
@@ -384,6 +391,7 @@ export class StorageService {
     try {
       const key = 'league' + '_' + league;
       await this.storage.remove(key);
+      this.analyticsService.trackLeagueDeleted();
       this.leagues.update((leagues) => leagues.filter((l) => l !== key.replace('league_', '')));
     } catch (error) {
       console.error('Error deleting league:', error);
@@ -416,7 +424,7 @@ export class StorageService {
         }
         return game;
       });
-
+      this.analyticsService.trackLeagueEdited();
       await this.saveGamesToLocalStorage(updatedGames);
       this.games.set(updatedGames);
     } catch (error) {

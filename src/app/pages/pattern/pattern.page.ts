@@ -45,6 +45,7 @@ import { SortService } from 'src/app/core/services/sort/sort.service';
 import { PatternSortOption, PatternSortField, SortDirection } from 'src/app/core/models/sort.model';
 import { NetworkService } from 'src/app/core/services/network/network.service';
 import { FavoritesService } from 'src/app/core/services/favorites/favorites.service';
+import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
 
 @Component({
   selector: 'app-pattern',
@@ -121,6 +122,7 @@ export class PatternPage implements OnInit {
     public sortService: SortService,
     private networkService: NetworkService,
     public favoritesService: FavoritesService,
+    private analyticsService: AnalyticsService,
   ) {
     addIcons({ addOutline, arrowUpOutline, arrowDownOutline, chevronBack, add, heart, heartOutline });
   }
@@ -200,6 +202,8 @@ export class PatternPage implements OnInit {
         this.patterns = response.patterns;
         this.hasMoreData = false;
         this.currentPage = 1;
+
+        void this.analyticsService.trackPatternLookup(searchValue);
       }
       setTimeout(() => {
         this.content.scrollToTop(300);
@@ -247,6 +251,12 @@ export class PatternPage implements OnInit {
         this.content.scrollToTop(300);
       }, 100);
     }
+
+    void this.analyticsService.trackEvent('patterns_sorted', {
+      sort_field: this.currentSortOption.field,
+      sort_direction: this.currentSortOption.direction,
+      sort_label: this.currentSortOption.label,
+    });
   }
 
   toggleFavorite(event: Event, pattern: Pattern): void {
@@ -255,8 +265,20 @@ export class PatternPage implements OnInit {
 
     if (isFavorited) {
       this.toastService.showToast(`Added ${pattern.title} to favorites`, 'heart');
+
+      void this.analyticsService.trackEvent('pattern_favorited', {
+        pattern_title: pattern.title,
+        pattern_category: pattern.category,
+        pattern_url: pattern.url,
+      });
     } else {
       this.toastService.showToast(`Removed ${pattern.title} from favorites`, 'heart-outline');
+
+      void this.analyticsService.trackEvent('pattern_unfavorited', {
+        pattern_title: pattern.title,
+        pattern_category: pattern.category,
+        pattern_url: pattern.url,
+      });
     }
   }
 

@@ -55,6 +55,7 @@ import { StatDisplayComponent } from 'src/app/shared/components/stat-display/sta
 import { LongPressDirective } from 'src/app/core/directives/long-press/long-press.directive';
 import { HiddenLeagueSelectionService } from 'src/app/core/services/hidden-league/hidden-league.service';
 import { BallStatsComponent } from '../../shared/components/ball-stats/ball-stats.component';
+import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
 
 @Component({
   selector: 'app-league',
@@ -177,6 +178,7 @@ export class LeaguePage {
     private toastService: ToastService,
     private chartService: ChartGenerationService,
     private hiddenLeagueSelectionService: HiddenLeagueSelectionService,
+    private analyticsService: AnalyticsService,
   ) {
     addIcons({
       addOutline,
@@ -322,6 +324,8 @@ export class LeaguePage {
             try {
               await this.storageService.addLeague(data.league);
               this.toastService.showToast(ToastMessages.leagueSaveSuccess, 'add');
+
+              void this.analyticsService.trackLeagueCreated({ name: data.league });
             } catch (error) {
               this.toastService.showToast(ToastMessages.leagueSaveError, 'bug', true);
               console.error('Error saving league:', error);

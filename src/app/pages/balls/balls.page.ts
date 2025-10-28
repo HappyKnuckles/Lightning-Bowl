@@ -51,6 +51,7 @@ import { SortService } from 'src/app/core/services/sort/sort.service';
 import { BallSortOption, BallSortField, SortDirection } from 'src/app/core/models/sort.model';
 import { NetworkService } from 'src/app/core/services/network/network.service';
 import { FavoritesService } from 'src/app/core/services/favorites/favorites.service';
+import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
 
 @Component({
   selector: 'app-balls',
@@ -189,6 +190,7 @@ export class BallsPage implements OnInit {
     public sortService: SortService,
     private networkService: NetworkService,
     public favoritesService: FavoritesService,
+    private analyticsService: AnalyticsService,
   ) {
     addIcons({ filterOutline, closeCircle, globeOutline, openOutline, addOutline, camera, heart, heartOutline });
     this.searchSubject.subscribe((query) => {
@@ -243,6 +245,7 @@ export class BallsPage implements OnInit {
   searchBalls(event: SearchbarCustomEvent): void {
     const query = event.detail.value!.toLowerCase();
     this.searchSubject.next(query);
+    this.analyticsService.trackBallSearch(query);
   }
 
   async removeFromArsenal(ball: Ball): Promise<void> {
@@ -406,6 +409,12 @@ export class BallsPage implements OnInit {
 
       if (this.movementBalls.length > 0) {
         await this.movementModal.present();
+
+        void this.analyticsService.trackEvent('ball_similar_movement_viewed', {
+          ball_name: ball.ball_name,
+          brand: ball.brand_name,
+          similar_count: this.movementBalls.length,
+        });
       } else {
         this.toastService.showToast(`No balls found with similar reaction to ${ball.ball_name}.`, 'information-circle-outline');
       }
@@ -432,6 +441,13 @@ export class BallsPage implements OnInit {
         this.content.scrollToTop(300);
       }, 100);
     }
+
+    // Track sort change
+    void this.analyticsService.trackEvent('balls_sorted', {
+      sort_field: this.currentSortOption.field,
+      sort_direction: this.currentSortOption.direction,
+      sort_label: this.currentSortOption.label,
+    });
   }
 
   toggleFavorite(event: Event, ball: Ball): void {
@@ -440,8 +456,20 @@ export class BallsPage implements OnInit {
 
     if (isFavorited) {
       this.toastService.showToast(`Added ${ball.ball_name} to favorites`, 'heart');
+
+      void this.analyticsService.trackEvent('ball_favorited', {
+        ball_name: ball.ball_name,
+        brand: ball.brand_name,
+        ball_id: ball.ball_id,
+      });
     } else {
       this.toastService.showToast(`Removed ${ball.ball_name} from favorites`, 'heart-outline');
+
+      void this.analyticsService.trackEvent('ball_unfavorited', {
+        ball_name: ball.ball_name,
+        brand: ball.brand_name,
+        ball_id: ball.ball_id,
+      });
     }
   }
 

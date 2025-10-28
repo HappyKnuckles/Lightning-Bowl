@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { IonToolbar, IonHeader, IonContent, IonSearchbar, IonTitle } from '@ionic/angular/standalone';
 import * as L from 'leaflet';
 import { SearchbarCustomEvent } from '@ionic/angular';
+import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
 
 // Type definitions for Overpass API
 interface OverpassTags {
@@ -74,7 +75,10 @@ export class AlleyMapPage implements OnInit, OnDestroy {
   private readonly overpassUrl = 'https://overpass-api.de/api/interpreter';
   private readonly nominatimUrl = 'https://nominatim.openstreetmap.org/search';
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private analyticsService: AnalyticsService,
+  ) {}
 
   async ngOnInit(): Promise<void> {
     this.initializeMapAndAttemptGeolocation();
@@ -86,6 +90,9 @@ export class AlleyMapPage implements OnInit, OnDestroy {
       this.resetToInitialLocation();
       return;
     }
+
+    void this.analyticsService.trackAlleySearch(query);
+
     try {
       const url = `${this.nominatimUrl}?q=${encodeURIComponent(query)}&format=json&limit=1`;
       const results: NominatimResult[] = (await this.http.get<NominatimResult[]>(url).toPromise()) || [];
