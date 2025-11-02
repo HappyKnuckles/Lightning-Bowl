@@ -40,6 +40,7 @@ import { ChartGenerationService } from 'src/app/core/services/chart/chart-genera
 import { DomSanitizer } from '@angular/platform-browser';
 import { PatternFormComponent } from '../../shared/components/pattern-form/pattern-form.component';
 import { SearchBlurDirective } from 'src/app/core/directives/search-blur/search-blur.directive';
+import { DoubleTapDirective } from 'src/app/core/directives/double-tap/double-tap.directive';
 import { SortHeaderComponent } from 'src/app/shared/components/sort-header/sort-header.component';
 import { SortService } from 'src/app/core/services/sort/sort.service';
 import { PatternSortOption, PatternSortField, SortDirection } from 'src/app/core/models/sort.model';
@@ -78,6 +79,7 @@ import { AnalyticsService } from 'src/app/core/services/analytics/analytics.serv
     FormsModule,
     PatternInfoComponent,
     SearchBlurDirective,
+    DoubleTapDirective,
     SortHeaderComponent,
   ],
 })
@@ -279,6 +281,16 @@ export class PatternPage implements OnInit {
         pattern_category: pattern.category,
         pattern_url: pattern.url,
       });
+    }
+  }
+
+  onDoubleTap(pattern: Pattern): void {
+    const isFavorited = this.favoritesService.toggleFavorite(pattern.url);
+    
+    if (isFavorited) {
+      this.toastService.showToast(`Added ${pattern.title} to favorites`, 'heart');
+    } else {
+      this.toastService.showToast(`Removed ${pattern.title} from favorites`, 'heart-outline');
     }
   }
 
