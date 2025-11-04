@@ -1,16 +1,4 @@
-import {
-  Component,
-  OnInit,
-  OnDestroy,
-  QueryList,
-  ViewChildren,
-  ViewChild,
-  CUSTOM_ELEMENTS_SCHEMA,
-  input,
-  output,
-  OnChanges,
-  SimpleChanges,
-} from '@angular/core';
+import { Component, OnInit, OnDestroy, QueryList, ViewChildren, ViewChild, CUSTOM_ELEMENTS_SCHEMA, input, output, effect } from '@angular/core';
 import { Platform } from '@ionic/angular';
 import { Subscription } from 'rxjs';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
@@ -69,7 +57,7 @@ import { PinInputComponent, PinThrowEvent } from '../pin-input/pin-input.compone
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
-export class GameGridComponent implements OnInit, OnDestroy, OnChanges {
+export class GameGridComponent implements OnInit, OnDestroy {
   // Input signals
   ballSelectorId = input<string>();
   showMetadata = input<boolean>(true);
@@ -140,6 +128,12 @@ export class GameGridComponent implements OnInit, OnDestroy, OnChanges {
   ) {
     this.initializeKeyboardListeners();
     addIcons({ chevronExpandOutline });
+
+    effect(() => {
+      if (this.isPinMode()) {
+        this.updateCurrentThrow();
+      }
+    });
   }
 
   async ngOnInit(): Promise<void> {
@@ -222,10 +216,8 @@ export class GameGridComponent implements OnInit, OnDestroy, OnChanges {
 
     const frame = this.game().frames[this.currentFrameIndex];
 
-    // Simple strike validation: only first throw or 10th frame
     const canStrike = this.currentRollIndex === 0 || this.currentFrameIndex === 9;
 
-    // Simple spare validation: second throw with pins remaining
     const canSpare = this.currentRollIndex > 0 && frame[this.currentRollIndex - 1] !== undefined && frame[this.currentRollIndex - 1] < 10;
 
     this.toolbarDisabledState.emit({ strikeDisabled: !canStrike, spareDisabled: !canSpare });
@@ -241,10 +233,8 @@ export class GameGridComponent implements OnInit, OnDestroy, OnChanges {
 
     if (char === 'X' || char === '/') {
       if (char === 'X') {
-        // Strike
         value = 10;
       } else {
-        // Spare
         const previousRoll = this.currentRollIndex > 0 ? frame[this.currentRollIndex - 1] : undefined;
         if (previousRoll === undefined || previousRoll >= 10) {
           return;
@@ -255,17 +245,9 @@ export class GameGridComponent implements OnInit, OnDestroy, OnChanges {
       this.game().frames[this.currentFrameIndex][this.currentRollIndex] = value;
       this.updateScores();
 
-      // Move to next input
       this.focusNextInput(this.currentFrameIndex, this.currentRollIndex);
 
       this.emitToolbarDisabledState();
-    }
-  }
-
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['isPinMode'] && changes['isPinMode'].currentValue) {
-      // Entering pin mode
-      this.updateCurrentThrow();
     }
   }
 
@@ -291,17 +273,56 @@ export class GameGridComponent implements OnInit, OnDestroy, OnChanges {
     return balls.length > 0 ? balls.join(', ') : 'None';
   }
 
-  getFrameValue(frameIndex: number, inputIndex: number): string {
-    const val = this.game().frames[frameIndex][inputIndex];
-    return val !== undefined ? val.toString() : '';
+  getFrameValue(frameIndex: number, throwIndex: number): string {
+    const frame = this.game().frames[frameIndex];
+    const val = frame[throwIndex];
+
+    if (val === undefined || val === null) {
+      return '';
+    }
+
+    const firstBall = frame[0];
+    const isTenth = frameIndex === 9;
+
+    if (throwIndex === 0) {
+      return val === 10 ? 'X' : val.toString();
+    }
+
+    if (!isTenth) {
+      if (firstBall !== undefined && firstBall !== 10 && firstBall + val === 10) {
+        return '/';
+      }
+      return val.toString();
+    }
+
+    const secondBall = frame[1];
+
+    if (throwIndex === 1) {
+      if (firstBall !== undefined && firstBall !== 10 && firstBall + val === 10) {
+        return '/';
+      }
+      return val === 10 ? 'X' : val.toString();
+    }
+
+    if (throwIndex === 2) {
+      if (firstBall === 10) {
+        if (secondBall === 10) {
+          return val === 10 ? 'X' : val.toString();
+        }
+        return secondBall !== undefined && secondBall + val === 10 ? '/' : val.toString();
+      }
+      return val === 10 ? 'X' : val.toString();
+    }
+
+    return val.toString();
   }
+
   simulateScore(event: InputCustomEvent, frameIndex: number, inputIndex: number): void {
     const inputValue = event.detail.value!;
     const parsedValue = this.gameUtilsService.parseInputValue(inputValue, frameIndex, inputIndex, this.game().frames);
 
     if (inputValue.length === 0) {
       this.game().frames[frameIndex].splice(inputIndex, 1);
-      // Clear corresponding throw data
       if (this.throwsData[frameIndex]) {
         this.throwsData[frameIndex].splice(inputIndex, 1);
       }
@@ -324,7 +345,6 @@ export class GameGridComponent implements OnInit, OnDestroy, OnChanges {
     this.updateScores();
     this.focusNextInput(frameIndex, inputIndex);
 
-    // Update pin mode if active
     if (this.isPinMode()) {
       this.updateCurrentThrow();
     }
@@ -430,14 +450,10 @@ export class GameGridComponent implements OnInit, OnDestroy, OnChanges {
 
     switch (rollIndex) {
       case 0:
-        return false; // Always allowed on first
+        return false;
       case 1:
-        return first !== 10; // Only allowed if first was strike
+        return first !== 10;
       case 2:
-        // Allow if:
-        // - first and second are both strikes
-        // - OR first + second == 10 (i.e. spare), but neither is 10
-        // - OR second is 10 (i.e. second strike after first miss)
         return !((first === 10 && second === 10) || (first + second === 10 && first !== 10 && second !== 10) || (first !== 10 && second === 10));
       default:
         return true;
@@ -460,13 +476,10 @@ export class GameGridComponent implements OnInit, OnDestroy, OnChanges {
 
     switch (rollIndex) {
       case 0:
-        return true; // Never allowed on first
+        return true;
       case 1:
-        return first === 10; // Not allowed if first was strike
+        return first === 10;
       case 2:
-        // Disable if:
-        // 1. First two balls were strikes (e.g., X, X, then this throw)
-        // 2. First two balls formed a spare (e.g., 5, /, then this throw)
         return (first === 10 && second === 10) || (first !== 10 && first + second === 10);
       default:
         return true;
@@ -483,7 +496,6 @@ export class GameGridComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   private onViewportResize = () => {
-    // Fallback for web/PWA keyboard detection using visualViewport
     if (!window.visualViewport) return;
 
     const viewportHeight = window.visualViewport.height;
@@ -513,10 +525,8 @@ export class GameGridComponent implements OnInit, OnDestroy, OnChanges {
   private async focusNextInput(frameIndex: number, inputIndex: number) {
     await new Promise((resolve) => setTimeout(resolve, 50));
     const inputArray = this.inputs.toArray();
-    // Calculate the current index in the linear array of inputs.
     const currentInputPosition = frameIndex * 2 + inputIndex;
 
-    // Find the next input element that is not disabled.
     for (let i = currentInputPosition + 1; i < inputArray.length; i++) {
       const nextInput = inputArray[i];
       const nextInputElement = await nextInput.getInputElement();
@@ -530,7 +540,6 @@ export class GameGridComponent implements OnInit, OnDestroy, OnChanges {
 
   // Pin mode event handlers
   onPinThrowConfirmed(event: PinThrowEvent): void {
-    // Save throw data with value and pins left standing
     if (!this.throwsData[event.frameIndex]) {
       this.throwsData[event.frameIndex] = [];
     }
@@ -539,27 +548,21 @@ export class GameGridComponent implements OnInit, OnDestroy, OnChanges {
       pinsLeftStanding: event.pinsLeftStanding,
     };
 
-    // Update the frame with the score
     this.game().frames[event.frameIndex][event.throwIndex] = event.pinsKnockedDown;
 
-    // Move to next throw
     this.advanceToNextThrow();
 
-    // Update scores
     this.updateScores();
   }
 
   onPinThrowUndone(): void {
-    // Find the last recorded throw
     let lastFrameIndex = -1;
     let lastThrowIndex = -1;
 
-    // Search backwards through frames
     for (let frameIndex = 9; frameIndex >= 0; frameIndex--) {
       const frame = this.game().frames[frameIndex];
 
       if (frameIndex === 9) {
-        // 10th frame - check all three throws
         if (frame[2] !== undefined) {
           lastFrameIndex = frameIndex;
           lastThrowIndex = 2;
@@ -574,7 +577,6 @@ export class GameGridComponent implements OnInit, OnDestroy, OnChanges {
           break;
         }
       } else {
-        // Frames 1-9 - check two throws
         if (frame[1] !== undefined) {
           lastFrameIndex = frameIndex;
           lastThrowIndex = 1;
@@ -587,34 +589,27 @@ export class GameGridComponent implements OnInit, OnDestroy, OnChanges {
       }
     }
 
-    // If no throws found, nothing to undo
     if (lastFrameIndex === -1) {
       return;
     }
 
-    // Remove the last throw
     delete this.game().frames[lastFrameIndex][lastThrowIndex];
 
-    // Remove the throw data
     if (this.throwsData[lastFrameIndex] && this.throwsData[lastFrameIndex][lastThrowIndex]) {
       this.throwsData[lastFrameIndex].splice(lastThrowIndex, 1);
     }
 
-    // Update current throw position
     this.currentFrameIndex = lastFrameIndex;
     this.currentThrowIndex = lastThrowIndex;
 
-    // Update scores
     this.updateScores();
   }
 
   private updateCurrentThrow(): void {
-    // Find the next throw that needs input
     for (let frameIndex = 0; frameIndex < 10; frameIndex++) {
       const frame = this.game().frames[frameIndex];
 
       if (frameIndex < 9) {
-        // Frames 1-9
         if (frame[0] === undefined) {
           this.currentFrameIndex = frameIndex;
           this.currentThrowIndex = 0;
@@ -625,7 +620,6 @@ export class GameGridComponent implements OnInit, OnDestroy, OnChanges {
           return;
         }
       } else {
-        // Frame 10
         if (frame[0] === undefined) {
           this.currentFrameIndex = frameIndex;
           this.currentThrowIndex = 0;
@@ -642,7 +636,6 @@ export class GameGridComponent implements OnInit, OnDestroy, OnChanges {
       }
     }
 
-    // All throws complete
     this.currentFrameIndex = 9;
     this.currentThrowIndex = 2;
   }
@@ -653,49 +646,28 @@ export class GameGridComponent implements OnInit, OnDestroy, OnChanges {
     const frame = this.game().frames[this.currentFrameIndex];
 
     if (this.currentFrameIndex < 9) {
-      // Frames 1-9
       if (this.currentThrowIndex === 0) {
         if (frame[0] === 10) {
-          // Strike - move to next frame
           this.currentFrameIndex++;
           this.currentThrowIndex = 0;
         } else {
-          // Move to second throw
           this.currentThrowIndex = 1;
         }
       } else {
-        // After second throw, move to next frame
         this.currentFrameIndex++;
         this.currentThrowIndex = 0;
       }
     } else {
-      // Frame 10 - handle all valid combinations
       const firstThrow = frame[0];
       const secondThrow = frame[1];
 
       if (this.currentThrowIndex === 0) {
-        // After first throw, always go to second
         this.currentThrowIndex = 1;
       } else if (this.currentThrowIndex === 1) {
-        // After second throw
         if (firstThrow === 10 || firstThrow + secondThrow === 10) {
-          // Strike or spare - get third throw
           this.currentThrowIndex = 2;
         }
       }
     }
-  }
-
-  getPinsLeftStandingForThrow(frameIndex: number, throwIndex: number): number[] {
-    if (this.throwsData[frameIndex] && this.throwsData[frameIndex][throwIndex]) {
-      return this.throwsData[frameIndex][throwIndex].pinsLeftStanding;
-    }
-    return [];
-  }
-
-  loadThrowsData(throwsData: { value: number; pinsLeftStanding: number[] }[][]): void {
-    this.throwsData = throwsData || Array.from({ length: 10 }, () => []);
-    // Sync frames with throws data
-    this.game().frames = this.throwsData.map((frameThrows) => frameThrows.map((throwData) => throwData.value));
   }
 }

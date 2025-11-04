@@ -7,14 +7,7 @@
       <ion-row>
         <ion-col class="input-col" *ngIf="i !== 10"></ion-col>
         <ion-col class="input-col" [class.current-throw]="frameIndex === currentFrameIndex && currentThrowIndex === 0">
-          <ion-input
-            type="text"
-            clearOnEdit="true"
-            inputmode="numeric"
-            autocapitalize="on"
-            debounce="1000"
-            [value]="getFrameValue(frameIndex, 0)"
-            (ionInput)="simulateScore($event, frameIndex, 0)">
+          <ion-input type="text" clearOnEdit="true" inputmode="numeric" autocapitalize="on" readonly="true" [value]="getFrameValue(frameIndex, 0)">
           </ion-input>
         </ion-col>
         <ion-col class="input-col" *ngIf="i !== 10" [class.current-throw]="frameIndex === currentFrameIndex && currentThrowIndex === 1">
@@ -23,10 +16,9 @@
             clearOnEdit="true"
             inputmode="numeric"
             autocapitalize="on"
-            debounce="1000"
+            readonly="true"
             [disabled]="game().frames[frameIndex][0] === 10 && i !== 10"
-            [value]="getFrameValue(frameIndex, 1)"
-            (ionInput)="simulateScore($event, frameIndex, 1)">
+            [value]="getFrameValue(frameIndex, 1)">
           </ion-input>
         </ion-col>
         <ion-col class="input-col" *ngIf="i === 10" [class.current-throw]="frameIndex === currentFrameIndex && currentThrowIndex === 1">
@@ -35,10 +27,9 @@
             clearOnEdit="true"
             inputmode="numeric"
             autocapitalize="on"
-            debounce="1000"
+            readonly="true"
             [disabled]="game().frames[frameIndex][0] === 10 && i !== 10"
-            [value]="getFrameValue(frameIndex, 1)"
-            (ionInput)="simulateScore($event, frameIndex, 1)">
+            [value]="getFrameValue(frameIndex, 1)">
           </ion-input>
         </ion-col>
         <ion-col class="input-col" *ngIf="i === 10" [class.current-throw]="frameIndex === currentFrameIndex && currentThrowIndex === 2">
@@ -47,10 +38,9 @@
             clearOnEdit="true"
             inputmode="numeric"
             autocapitalize="on"
-            debounce="1000"
+            readonly="true"
             [value]="getFrameValue(frameIndex, 2)"
-            [disabled]="game().frames[frameIndex][0] !== 10 && game().frames[frameIndex][0] + (game().frames[frameIndex][1] || 0) !== 10"
-            (ionInput)="simulateScore($event, frameIndex, 2)">
+            [disabled]="game().frames[frameIndex][0] !== 10 && game().frames[frameIndex][0] + (game().frames[frameIndex][1] || 0) !== 10">
           </ion-input>
         </ion-col>
       </ion-row>
@@ -84,6 +74,7 @@
     [currentThrowIndex]="currentThrowIndex"
     (throwConfirmed)="onPinThrowConfirmed($event)"
     (throwUndone)="onPinThrowUndone()"></app-pin-input>
+
   <div style="margin: 0 5px">
     <ion-list lines="full" style="border-radius: 7px">
       <ion-item>

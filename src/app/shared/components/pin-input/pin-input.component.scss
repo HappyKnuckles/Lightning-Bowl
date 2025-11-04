@@ -18,9 +18,9 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 70px;
+  width: 50px;
   min-height: 0;
-  height: 70px;
+  height: 50px;
   --background: rgb(226, 226, 226);
   --background-activated: var(--ion-color-quartiary);
   --padding-top: 0;
@@ -31,7 +31,7 @@
   cursor: pointer;
   transition: color 0.3s ease, background-color 0.3s ease;
   color: black;
-  font-size: 28px;
+  font-size: 1.25rem;
   margin: 0;
 
   &.active {

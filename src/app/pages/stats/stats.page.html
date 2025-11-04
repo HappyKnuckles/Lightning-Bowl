@@ -30,7 +30,7 @@
   </ion-toolbar>
   @if (!((gameFilterService.filteredGames().length <= 0 && !loadingService.isLoading()) || gameFilterService.filteredGames().length <= 0)) {
     <ion-toolbar>
-      <ion-segment [value]="selectedSegment" (ionChange)="onSegmentChanged($event)">
+      <ion-segment [value]="selectedSegment" (ionChange)="onSegmentChanged($event)" scrollable="true">
         @for (segment of segments; track segment) {
           <ion-segment-button [value]="segment" [contentId]="segment">
             <ion-label class="segment-label">{{ segment }}</ion-label>
@@ -94,6 +94,14 @@
         <div class="stat-container">
           <canvas #scoreDistributionChart style="width: 300px; height: 400px; max-height: 700px"></canvas>
         </div>
+      </section>
+    </ion-segment-content>
+
+    <ion-segment-content id="Pins">
+      <section class="tab" *ngIf="gameFilterService.filteredGames().length > 0">
+        Coming Soon...
+        <!-- <app-pin-deck [activePins]="[1, 5, 6, 10]"></app-pin-deck>
+        <app-pin-deck [activePins]="[2, 7, 4]"></app-pin-deck> -->
       </section>
     </ion-segment-content>
 

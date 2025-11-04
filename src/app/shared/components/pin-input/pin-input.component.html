@@ -99,11 +99,11 @@
   </div>
 
   <div class="quick-actions">
-    <ion-button expand="block" (click)="recordStrike()" [disabled]="!canRecordStrike()"> X </ion-button>
-    <ion-button expand="block" (click)="recordSpare()" [disabled]="!canRecordSpare()"> / </ion-button>
-    <ion-button expand="block" (click)="undoLastThrow()" [disabled]="!canUndoLastThrow()">
-      <ion-icon name="arrow-undo" slot="start"></ion-icon>
+    <ion-button size="small" (click)="recordStrike()" [disabled]="!canRecordStrike()"> X </ion-button>
+    <ion-button size="small" (click)="recordSpare()" [disabled]="!canRecordSpare()"> / </ion-button>
+    <ion-button size="small" (click)="undoLastThrow()" [disabled]="!canUndoLastThrow()">
+      <ion-icon slot="icon-only" name="arrow-undo"></ion-icon>
     </ion-button>
-    <ion-button expand="block" (click)="confirmPinThrow()"> Confirm ({{ selectedPins.length }} pins) </ion-button>
+    <ion-button size="small" (click)="confirmPinThrow()"> Confirm ({{ selectedPins.length }} pins) </ion-button>
   </div>
 </div>
