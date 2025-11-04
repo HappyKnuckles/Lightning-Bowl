@@ -63,8 +63,65 @@ ion-img::part(image) {
     margin-left: 0;
     margin-right: 4px;
     font-size: 0.75rem;
+
     &:last-child {
       margin: 0;
     }
+  }
+}
+
+.arsenal-chart-container {
+  border: 1px solid #2b2828;
+  margin: 12px 16px 12px;
+  border-radius: 7px;
+  background-color: #141414;
+  padding: 0 0 12px 12px;
+  height: 100%;
+  max-height: 70dvh;
+}
+
+.ball-info-list {
+  min-height: fit-content;
+  height: calc(100dvh - 44px);
+  display: flex;
+  flex-direction: column;
+
+  .core-container,
+  .coverstock-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    .core-image,
+    .coverstock-image {
+      margin-bottom: 12px;
+
+      ion-img {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+      }
+    }
+
+    ion-item {
+      width: 100%;
+      --padding-start: 16px;
+      --padding-end: 16px;
+      pointer-events: none;
+    }
+  }
+
+  .coverstock-section,
+  .core-section {
+    position: relative;
+
+    ion-ripple-effect {
+      z-index: 1000;
+    }
+  }
+
+  .core-section {
+    margin-top: auto;
+    margin-bottom: 15dvh;
   }
 }

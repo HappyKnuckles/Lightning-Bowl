@@ -1,0 +1,215 @@
+<ion-modal [isOpen]="isOpen" (ionModalDidDismiss)="onDismiss()" [presentingElement]="presentingElement">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar>
+        <ion-title>Install Lightning Bowl</ion-title>
+        <ion-buttons slot="start">
+          <ion-button fill="clear" type="reset" (click)="onDismiss()"> Cancel </ion-button>
+        </ion-buttons>
+        <ion-buttons slot="end">
+          <ion-button *ngIf="!isIOS" strong="true" (click)="onInstall()" [disabled]="!canInstall"> Install! </ion-button>
+          <ion-button *ngIf="isIOS" strong="true" type="submit" (click)="onDismiss()"> Got it! </ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+
+    <ion-content class="ion-padding">
+      <div class="install-content">
+        <div class="app-header">
+          <img src="assets/icons/android/android-launchericon-192-192.png" alt="Lightning Bowl Icon" class="app-icon" />
+          <div class="app-info">
+            <h2>Lightning Bowl</h2>
+            <p>Your ultimate bowling companion</p>
+          </div>
+        </div>
+
+        <div class="benefits-section">
+          <h3>Why install Lightning Bowl?</h3>
+          <div class="benefits-grid">
+            <div class="benefit-item">
+              <ion-icon name="flash" color="primary"></ion-icon>
+              <span>Quick Access</span>
+            </div>
+            <div class="benefit-item">
+              <ion-icon name="wifi-outline" color="primary"></ion-icon>
+              <span>Works Offline</span>
+            </div>
+            <div class="benefit-item">
+              <ion-icon name="notifications" color="primary"></ion-icon>
+              <span>Push Notifications</span>
+            </div>
+            <div class="benefit-item">
+              <ion-icon name="phone-portrait" color="primary"></ion-icon>
+              <span>Native Experience</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- TODO Fix wrong image opening-->
+        <ion-modal [isOpen]="isModalOpen" (didDismiss)="isModalOpen = false" class="image-modal">
+          <ng-template>
+            <ion-header>
+              <ion-segment class="ion-hide" scrollable="true" [value]="selectedImage" (ionChange)="onSegmentChange($event)">
+                @for (image of images; track image.id) {
+                  <ion-segment-button [value]="image.id" [contentId]="image.id">
+                    <ion-label>{{ image.name }}</ion-label>
+                  </ion-segment-button>
+                }
+              </ion-segment>
+            </ion-header>
+            <ion-content class="ion-no-padding">
+              <div class="image-counter">{{ currentImageIndex + 1 }} / {{ images.length }}</div>
+
+              <ion-segment-view>
+                @for (image of images; track image.id; let i = $index) {
+                  <ion-segment-content [id]="image.id">
+                    <div style="background-image: url('{{ image.src }}');" class="modal-image" role="img" [attr.aria-label]="image.alt"></div>
+                  </ion-segment-content>
+                }
+              </ion-segment-view>
+            </ion-content>
+          </ng-template>
+        </ion-modal>
+
+        <div class="screenshots-section">
+          <h3>App Screenshots</h3>
+          <div class="screenshots-carousel">
+            <div class="screenshot-container">
+              <button type="button" class="screenshot-button" (click)="openImageModal('start-screen')" (keyup.enter)="openImageModal('start-screen')">
+                <img src="assets/screenshots/start.png" alt="Start Page" class="screenshot" />
+              </button>
+              <p class="screenshot-caption">Track your games</p>
+            </div>
+            <div class="screenshot-container">
+              <button type="button" class="screenshot-button" (click)="openImageModal('stats-screen')" (keyup.enter)="openImageModal('stats-screen')">
+                <img src="assets/screenshots/stats.png" alt="Statistics Page" class="screenshot" />
+              </button>
+              <p class="screenshot-caption">View detailed stats</p>
+            </div>
+            <div class="screenshot-container">
+              <button
+                type="button"
+                class="screenshot-button"
+                (click)="openImageModal('history-screen')"
+                (keyup.enter)="openImageModal('history-screen')">
+                <img src="assets/screenshots/history.png" alt="History Page" class="screenshot" />
+              </button>
+              <p class="screenshot-caption">Browse game history</p>
+            </div>
+            <div class="screenshot-container">
+              <button
+                type="button"
+                class="screenshot-button"
+                (click)="openImageModal('arsenal-screen')"
+                (keyup.enter)="openImageModal('arsenal-screen')">
+                <img src="assets/screenshots/arsenal.png" alt="Arsenal Page" class="screenshot" />
+              </button>
+              <p class="screenshot-caption">Manage your arsenals</p>
+            </div>
+            <div class="screenshot-container">
+              <button
+                type="button"
+                class="screenshot-button"
+                (click)="openImageModal('history-screen')"
+                (keyup.enter)="openImageModal('history-screen')">
+                <img src="assets/screenshots/history.png" alt="History Page" class="screenshot" />
+              </button>
+              <p class="screenshot-caption">Browse game history</p>
+            </div>
+            <div class="screenshot-container">
+              <button type="button" class="screenshot-button" (click)="openImageModal('balls-screen')" (keyup.enter)="openImageModal('balls-screen')">
+                <img src="assets/screenshots/balls.png" alt="Balls Page" class="screenshot" />
+              </button>
+              <p class="screenshot-caption">Browse balls</p>
+            </div>
+            <div class="screenshot-container">
+              <button
+                type="button"
+                class="screenshot-button"
+                (click)="openImageModal('pattern-screen')"
+                (keyup.enter)="openImageModal('pattern-screen')">
+                <img src="assets/screenshots/pattern.png" alt="Pattern Page" class="screenshot" />
+              </button>
+              <p class="screenshot-caption">Browse patterns</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="instructions-section">
+          <div *ngIf="!isIOS">
+            <h3>How to install:</h3>
+            <div class="install-steps">
+              <div class="step">
+                <span class="step-number">1</span>
+                <p>Tap "Install" in the upper right corner</p>
+              </div>
+              <div class="step">
+                <span class="step-number">2</span>
+                <p>Confirm installation in the popup</p>
+              </div>
+              <div class="step">
+                <span class="step-number">3</span>
+                <p>Find the app on your home screen</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="instruction-section" *ngIf="isIOS">
+            <div class="ios-header">
+              <ion-icon name="phone-portrait" color="primary" class="ios-icon"></ion-icon>
+              <h3>Install on iOS Safari</h3>
+            </div>
+            <p class="ios-description">Follow these simple steps to add Lightning Bowl to your home screen for the best mobile experience:</p>
+
+            <div class="install-steps">
+              <div class="step">
+                <div class="step-visual">
+                  <span class="step-number">1</span>
+                  <ion-icon name="share-outline" class="step-icon"></ion-icon>
+                </div>
+                <div class="step-content">
+                  <h4>Find the Share Button</h4>
+                  <p>Tap the <strong>Share</strong> button at the bottom of your Safari browser</p>
+                </div>
+              </div>
+
+              <div class="step">
+                <div class="step-visual">
+                  <span class="step-number">2</span>
+                  <ion-icon
+                    name="add"
+                    class="step-icon"
+                    style="border: 1px solid var(--ion-color-primary); border-radius: 4px; font-size: 1.2rem"></ion-icon>
+                </div>
+                <div class="step-content">
+                  <h4>Add to Home Screen</h4>
+                  <p>Scroll down in the share menu and tap <strong>"Add to Home Screen"</strong></p>
+                </div>
+              </div>
+
+              <div class="step">
+                <div class="step-visual">
+                  <span class="step-number">3</span>
+                </div>
+                <div class="step-content">
+                  <h4>Complete Installation</h4>
+                  <p>Tap <strong>"Add"</strong> in the top right corner to finish installing</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="ios-benefits">
+              <h4>After installation, you'll enjoy:</h4>
+              <ul>
+                <li>App icon on your home screen</li>
+                <li>Full-screen experience without Safari UI</li>
+                <li>Faster loading and better performance</li>
+                <li>Works offline</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ion-content>
+  </ng-template>
+</ion-modal>

@@ -1,11 +1,18 @@
-<ion-toast
-  [isOpen]="isOpen"
-  [message]="message"
-  [duration]="3000"
-  (willDismiss)="onToastDismiss()"
-  class="custom-toast"
-  icon="{{ icon }}"
-  [class.error]="isError"
-  swipeGesture="vertical"
-  (click)="isOpen = false">
-</ion-toast>
+<ng-container *ngFor="let toast of activeToasts; let i = index">
+  <ion-toast
+    #toastRef
+    class="custom-toast"
+    [isOpen]="true"
+    [message]="toast.message"
+    [icon]="toast.icon"
+    [color]="toast.isError ? 'danger' : 'primary'"
+    [duration]="TOAST_DURATION"
+    position="bottom"
+    (didDismiss)="onToastDidDismiss(toast.id)"
+    (click)="toastRef.dismiss()"
+    swipeGesture="vertical"
+    [ngStyle]="{
+      transform: 'translateY(-' + i * getMarginAccordingToTextLength(toast.message) + 'px)',
+    }">
+  </ion-toast>
+</ng-container>

@@ -83,9 +83,9 @@
         [ngModel]="ballFilterService.filters().minRg"
         name="minRg"
         clearOnEdit="true"
-        inputmode="numeric"
+        inputmode="decimal"
         label="RG range"
-        (ionChange)="updateFilter('minRg', $event.detail.value)"></ion-input>
+        (ionChange)="updateFilter('minRg', $event.detail.value?.replace(',', '.'))"></ion-input>
       <!-- <ion-label class="ion-text-center" style="margin-inline-end: 8px">-</ion-label> -->
       <ion-input
         label="-"
@@ -94,8 +94,8 @@
         [ngModel]="ballFilterService.filters().maxRg"
         name="maxRg"
         clearOnEdit="true"
-        inputmode="numeric"
-        (ionChange)="updateFilter('maxRg', $event.detail.value)"></ion-input>
+        inputmode="decimal"
+        (ionChange)="updateFilter('maxRg', $event.detail.value?.replace(',', '.'))"></ion-input>
     </ion-item>
     <ion-item>
       <ion-input
@@ -103,9 +103,9 @@
         [ngModel]="ballFilterService.filters().minDiff"
         name="minDiff"
         clearOnEdit="true"
-        inputmode="numeric"
+        inputmode="decimal"
         label="Diff range"
-        (ionChange)="updateFilter('minDiff', $event.detail.value)"></ion-input>
+        (ionChange)="updateFilter('minDiff', $event.detail.value?.replace(',', '.'))"></ion-input>
       <!-- <ion-label class="ion-text-center" style="margin-inline-end: 8px">-</ion-label> -->
       <ion-input
         label="-"
@@ -114,8 +114,8 @@
         [ngModel]="ballFilterService.filters().maxDiff"
         name="maxDiff"
         clearOnEdit="true"
-        inputmode="numeric"
-        (ionChange)="updateFilter('maxDiff', $event.detail.value)"></ion-input>
+        inputmode="decimal"
+        (ionChange)="updateFilter('maxDiff', $event.detail.value?.replace(',', '.'))"></ion-input>
     </ion-item>
     <ion-item>
       <ion-toggle [ngModel]="ballFilterService.filters().inArsenal" (ionChange)="updateFilter('inArsenal', $event.detail.checked)"
@@ -136,18 +136,22 @@
 
 <ion-modal [presentingElement]="presentingElement" trigger="select-cores">
   <ng-template>
-    <app-ball-core-typeahead
-      [cores]="ballService.cores()"
-      (selectedCoresChange)="updateFilter('cores', $event)"
-      [prevSelectedCores]="ballFilterService.filters().cores"></app-ball-core-typeahead>
+    <app-generic-typeahead
+      [items]="ballService.cores()"
+      [config]="coreTypeaheadConfig"
+      (selectedItemsChange)="updateFilter('cores', $event)"
+      [prevSelectedItems]="ballFilterService.filters().cores">
+    </app-generic-typeahead>
   </ng-template>
 </ion-modal>
 
 <ion-modal [presentingElement]="presentingElement" trigger="select-coverstocks">
   <ng-template>
-    <app-ball-coverstock-typeahead
-      [coverstocks]="ballService.coverstocks()"
-      (selectedCoverstocksChange)="updateFilter('coverstocks', $event)"
-      [prevSelectedCoverstocks]="ballFilterService.filters().coverstocks"></app-ball-coverstock-typeahead>
+    <app-generic-typeahead
+      [items]="ballService.coverstocks()"
+      [config]="coverstockTypeaheadConfig"
+      (selectedItemsChange)="updateFilter('coverstocks', $event)"
+      [prevSelectedItems]="ballFilterService.filters().coverstocks">
+    </app-generic-typeahead>
   </ng-template>
 </ion-modal>

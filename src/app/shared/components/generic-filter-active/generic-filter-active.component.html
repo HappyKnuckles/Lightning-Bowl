@@ -1,0 +1,26 @@
+<div class="filter-info">
+  <h6 *ngIf="title" class="filter-title">{{ title }}</h6>
+
+  <ng-container *ngFor="let config of filterConfigs">
+    <!-- Simple filters (boolean, string, number, enum) -->
+    <ion-chip *ngIf="shouldShowFilter(config) && !config.isRange && config.type !== 'date'">
+      {{ getFilterLabel(config) }}
+      <span *ngIf="config.type !== 'boolean'">: {{ getDisplayValue(config) }}</span>
+    </ion-chip>
+
+    <!-- Date filters (single date) -->
+    <ion-chip *ngIf="shouldShowFilter(config) && config.type === 'date' && !config.isRange">
+      {{ getFilterLabel(config) }}: {{ getDisplayValue(config) | date }}
+    </ion-chip>
+
+    <!-- Date range filters -->
+    <ion-chip *ngIf="shouldShowFilter(config) && config.type === 'date' && config.isRange">
+      {{ getFilterLabel(config) }}: {{ getDateRangeDisplay(config) }}
+    </ion-chip>
+
+    <!-- Other range filters (non-date) -->
+    <ion-chip *ngIf="shouldShowFilter(config) && config.isRange && config.type !== 'date'">
+      {{ getFilterLabel(config) }}: {{ getDisplayValue(config) }}
+    </ion-chip>
+  </ng-container>
+</div>

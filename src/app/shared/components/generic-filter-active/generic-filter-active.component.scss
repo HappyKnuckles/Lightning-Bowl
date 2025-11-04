@@ -1,0 +1,17 @@
+.filter-info {
+  margin: 0 12px;
+  overflow: auto;
+  white-space: nowrap;
+  scrollbar-width: none;
+
+  .filter-title {
+    margin: 0;
+    margin-right: 8px;
+    font-weight: 500;
+    color: var(--ion-color-medium);
+  }
+
+  ion-chip {
+    margin: 2px;
+  }
+}

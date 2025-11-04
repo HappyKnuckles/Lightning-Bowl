@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -28,7 +28,7 @@ import {
 } from '@ionic/angular/standalone';
 import { Ball } from 'src/app/core/models/ball.model';
 import { addIcons } from 'ionicons';
-import { globeOutline, camera, addOutline, filterOutline, openOutline, closeCircle } from 'ionicons/icons';
+import { globeOutline, camera, addOutline, filterOutline, openOutline, closeCircle, heart, heartOutline } from 'ionicons/icons';
 import { InfiniteScrollCustomEvent, ModalController, RefresherCustomEvent, SearchbarCustomEvent } from '@ionic/angular';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
@@ -40,9 +40,18 @@ import { ImpactStyle } from '@capacitor/haptics';
 import { BallService } from 'src/app/core/services/ball/ball.service';
 import { BallFilterService } from 'src/app/core/services/ball-filter/ball-filter.service';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
-import { BallFilterActiveComponent } from 'src/app/shared/components/ball-filter-active/ball-filter-active.component';
+import { GenericFilterActiveComponent } from 'src/app/shared/components/generic-filter-active/generic-filter-active.component';
+import { BALL_FILTER_CONFIGS } from 'src/app/core/configs/filter-configs';
 import { BallFilterComponent } from 'src/app/shared/components/ball-filter/ball-filter.component';
 import { BallListComponent } from 'src/app/shared/components/ball-list/ball-list.component';
+import { ActivatedRoute } from '@angular/router';
+import { SearchBlurDirective } from 'src/app/core/directives/search-blur/search-blur.directive';
+import { SortHeaderComponent } from 'src/app/shared/components/sort-header/sort-header.component';
+import { SortService } from 'src/app/core/services/sort/sort.service';
+import { BallSortOption, BallSortField, SortDirection } from 'src/app/core/models/sort.model';
+import { NetworkService } from 'src/app/core/services/network/network.service';
+import { FavoritesService } from 'src/app/core/services/favorites/favorites.service';
+import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
 
 @Component({
   selector: 'app-balls',
@@ -77,31 +86,51 @@ import { BallListComponent } from 'src/app/shared/components/ball-list/ball-list
     CommonModule,
     FormsModule,
     BallListComponent,
-    BallFilterActiveComponent,
+    GenericFilterActiveComponent,
+    SearchBlurDirective,
+    SortHeaderComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BallsPage implements OnInit {
   @ViewChild('core', { static: false }) coreModal!: IonModal;
   @ViewChild('coverstock', { static: false }) coverstockModal!: IonModal;
+  @ViewChild('movement', { static: false }) movementModal!: IonModal;
   @ViewChild(IonContent, { static: false }) content!: IonContent;
 
-  balls: Ball[] = [];
+  ballFilterConfigs = BALL_FILTER_CONFIGS;
+
+  get currentFilters(): Record<string, unknown> {
+    return this.ballFilterService.filters() as unknown as Record<string, unknown>;
+  }
+
+  get defaultFilters(): Record<string, unknown> {
+    return this.ballFilterService.defaultFilters as unknown as Record<string, unknown>;
+  }
+
+  balls = signal<Ball[]>([]);
   coreBalls: Ball[] = [];
   coverstockBalls: Ball[] = [];
+  movementBalls: Ball[] = [];
   searchSubject = new Subject<string>();
-  searchTerm = '';
+  searchTerm = signal('');
+  favoritesFirst = signal(false);
   currentPage = 0;
-  componentLoading = false;
+  isPageLoading = signal(false);
   hasMoreData = true;
   filterDisplayCount = 100;
-
+  currentSortOption: BallSortOption = {
+    field: BallSortField.RELEASE_DATE,
+    direction: SortDirection.DESC,
+    label: 'Newest First',
+  };
   // Computed getter for displayed balls.
-  // • If a search term exists, we build a Fuse instance over the correct data source.
+  // • If a search term exists, we build a Fuse instance over the correct data source and return results sorted by relevance.
   // • If filters are active and no search term exists, we display only a slice (up to filterDisplayCount) of the filtered list.
   // • Otherwise, we display the paged API-loaded balls.
   get displayedBalls(): Ball[] {
     let result: Ball[];
-    if (this.searchTerm.trim() !== '') {
+    if (this.searchTerm().trim() !== '') {
       this.hasMoreData = false;
       const options = {
         keys: [
@@ -111,25 +140,43 @@ export class BallsPage implements OnInit {
           { name: 'coverstock_name', weight: 0.7 },
           { name: 'factory_finish', weight: 0.5 },
         ],
-        threshold: 0.3,
+        threshold: 0.2,
         ignoreLocation: true,
         minMatchCharLength: 3,
-        includeMatches: true,
-        includeScore: true,
+        includeMatches: false,
+        includeScore: false,
         shouldSort: true,
         useExtendedSearch: false,
       };
+
       const baseArray = this.isFilterActive() ? this.ballFilterService.filteredBalls() : this.storageService.allBalls();
+
       const fuseInstance = new Fuse(baseArray, options);
-      result = fuseInstance.search(this.searchTerm).map((result) => result.item);
+
+      // Split the search term by commas and trim each term
+      const searchTerms = this.searchTerm()
+        .split(',')
+        .map((term) => term.trim());
+
+      // Collect results for each search term
+      result = searchTerms.flatMap((term) => fuseInstance.search(term).map((result) => result.item));
+
+      // Return search results without additional sorting to preserve relevance ranking
+      return result;
     } else {
-      result = this.isFilterActive() ? this.ballFilterService.filteredBalls() : this.balls;
+      result = this.isFilterActive() ? this.ballFilterService.filteredBalls() : this.balls();
       if (this.isFilterActive()) {
         result = result.slice(0, this.filterDisplayCount);
       }
+      this.hasMoreData = true;
     }
-    return result.slice().sort((a, b) => new Date(b.release_date).getTime() - new Date(a.release_date).getTime());
+
+    // Apply sorting only when not searching
+    return this.sortService.sortBalls(result, this.currentSortOption, this.favoritesFirst());
   }
+
+  private lastLoadTime = 0;
+  private debounceMs = 300;
 
   constructor(
     private modalCtrl: ModalController,
@@ -139,34 +186,47 @@ export class BallsPage implements OnInit {
     private hapticService: HapticService,
     private ballService: BallService,
     public ballFilterService: BallFilterService,
+    private route: ActivatedRoute,
+    public sortService: SortService,
+    private networkService: NetworkService,
+    public favoritesService: FavoritesService,
+    private analyticsService: AnalyticsService,
   ) {
-    addIcons({ filterOutline, closeCircle, globeOutline, openOutline, addOutline, camera });
+    addIcons({ filterOutline, closeCircle, globeOutline, openOutline, addOutline, camera, heart, heartOutline });
     this.searchSubject.subscribe((query) => {
-      this.searchTerm = query;
+      this.searchTerm.set(query);
       if (this.content) {
-        this.content.scrollToTop(300);
+        setTimeout(() => {
+          this.content.scrollToTop(300);
+        }, 300);
+      }
+    });
+    this.route.queryParams.subscribe((params) => {
+      if (params['search']) {
+        this.searchTerm.set(params['search']);
       }
     });
   }
 
   async ngOnInit(): Promise<void> {
-    this.loadingService.setLoading(true);
+    this.isPageLoading.set(true);
+    this.loadFavoritesFirstSetting();
     try {
       await this.loadBalls();
     } catch (error) {
       console.error('Error loading balls:', error);
     } finally {
-      this.loadingService.setLoading(false);
+      this.isPageLoading.set(false);
     }
   }
 
   async handleRefresh(event: RefresherCustomEvent): Promise<void> {
     try {
       this.hapticService.vibrate(ImpactStyle.Medium);
-      this.loadingService.setLoading(true);
+      this.isPageLoading.set(true);
       this.currentPage = 0;
       this.hasMoreData = true;
-      this.balls = [];
+      this.balls.set([]);
       if (this.isFilterActive()) {
         this.filterDisplayCount = 100;
       }
@@ -178,13 +238,14 @@ export class BallsPage implements OnInit {
       this.toastService.showToast(ToastMessages.ballLoadError, 'bug', true);
     } finally {
       event.target.complete();
-      this.loadingService.setLoading(false);
+      this.isPageLoading.set(false);
     }
   }
 
   searchBalls(event: SearchbarCustomEvent): void {
     const query = event.detail.value!.toLowerCase();
     this.searchSubject.next(query);
+    this.analyticsService.trackBallSearch(query);
   }
 
   async removeFromArsenal(ball: Ball): Promise<void> {
@@ -209,10 +270,6 @@ export class BallsPage implements OnInit {
     }
   }
 
-  isInArsenal(ball: Ball): boolean {
-    return this.storageService.arsenal().some((b: Ball) => b.ball_id === ball.ball_id && b.core_weight === ball.core_weight);
-  }
-
   async openFilterModal(): Promise<void> {
     const modal = await this.modalCtrl.create({
       component: BallFilterComponent,
@@ -222,16 +279,25 @@ export class BallsPage implements OnInit {
       this.hasMoreData = true;
       this.filterDisplayCount = 100;
       if (this.content) {
-        this.content.scrollToTop(300);
+        setTimeout(() => {
+          this.content.scrollToTop(300);
+        }, 300);
       }
     });
     return await modal.present();
   }
 
   async loadBalls(event?: InfiniteScrollCustomEvent): Promise<void> {
+    const now = Date.now();
+    if (now - this.lastLoadTime < this.debounceMs) {
+      if (event) event.target.complete();
+      return;
+    }
+    this.lastLoadTime = now;
+
     try {
       if (!event) {
-        this.loadingService.setLoading(true);
+        // this.loadingService.setLoading(true);
       }
       // If filters are active and an infinite scroll event is triggered, increase the display count.
       if (this.isFilterActive() && event) {
@@ -246,8 +312,10 @@ export class BallsPage implements OnInit {
       // Otherwise, load the next page from the API.
       const response = await this.ballService.loadBalls(this.currentPage);
       if (response.length > 0) {
-        this.balls = [...this.balls, ...response];
+        this.balls.set([...this.balls(), ...response]);
         this.currentPage++;
+      } else if (this.networkService.isOffline) {
+        this.toastService.showToast('You are offline and no cached data is available.', 'information-circle-outline', true);
       } else {
         this.hasMoreData = false;
       }
@@ -264,10 +332,39 @@ export class BallsPage implements OnInit {
     }
   }
 
+  getLengthPotential(ball: Ball): string {
+    const rg = parseFloat(ball.core_rg);
+    if (isNaN(rg)) {
+      return '';
+    }
+
+    if (rg < 2.52) {
+      return 'Early Roll';
+    } else if (rg < 2.58) {
+      return 'Medium Roll';
+    } else {
+      return 'Late Roll';
+    }
+  }
+
+  getFlarePotential(ball: Ball): string {
+    const diff = parseFloat(ball.core_diff);
+    if (isNaN(diff)) {
+      return '';
+    }
+
+    if (diff < 0.035) {
+      return 'Low Flare';
+    } else if (diff < 0.05) {
+      return 'Medium Flare';
+    } else {
+      return 'High Flare';
+    }
+  }
+
   async getSameCoreBalls(ball: Ball): Promise<void> {
     try {
       this.hapticService.vibrate(ImpactStyle.Light);
-      this.componentLoading = true;
       this.loadingService.setLoading(true);
       this.coreBalls = await this.ballService.getBallsByCore(ball);
       if (this.coreBalls.length > 0) {
@@ -279,7 +376,6 @@ export class BallsPage implements OnInit {
       console.error('Error fetching core balls:', error);
       this.toastService.showToast(`Error fetching balls for core ${ball.core_name}`, 'bug', true);
     } finally {
-      this.componentLoading = false;
       this.loadingService.setLoading(false);
     }
   }
@@ -287,7 +383,6 @@ export class BallsPage implements OnInit {
   async getSameCoverstockBalls(ball: Ball): Promise<void> {
     try {
       this.hapticService.vibrate(ImpactStyle.Light);
-      this.componentLoading = true;
       this.loadingService.setLoading(true);
       this.coverstockBalls = await this.ballService.getBallsByCoverstock(ball);
       if (this.coverstockBalls.length > 0) {
@@ -299,12 +394,125 @@ export class BallsPage implements OnInit {
       console.error('Error fetching coverstock balls:', error);
       this.toastService.showToast(`Error fetching balls for coverstock ${ball.coverstock_name}`, 'bug', true);
     } finally {
-      this.componentLoading = false;
       this.loadingService.setLoading(false);
     }
   }
 
+  async getSimilarMovementBalls(ball: Ball): Promise<void> {
+    try {
+      this.hapticService.vibrate(ImpactStyle.Light);
+      this.loadingService.setLoading(true);
+
+      // Use all available balls for comparison
+      const allBalls = this.storageService.allBalls();
+      this.movementBalls = await this.ballService.getBallsByMovementPattern(ball, allBalls);
+
+      if (this.movementBalls.length > 0) {
+        await this.movementModal.present();
+
+        void this.analyticsService.trackEvent('ball_similar_movement_viewed', {
+          ball_name: ball.ball_name,
+          brand: ball.brand_name,
+          similar_count: this.movementBalls.length,
+        });
+      } else {
+        this.toastService.showToast(`No balls found with similar reaction to ${ball.ball_name}.`, 'information-circle-outline');
+      }
+    } catch (error) {
+      console.error('Error fetching similar reaction balls:', error);
+      this.toastService.showToast(`Error fetching balls with similar reaction`, 'bug', true);
+    } finally {
+      this.loadingService.setLoading(false);
+    }
+  }
+
+  isInArsenal(ball: Ball): boolean {
+    return this.storageService.arsenal().some((b: Ball) => b.ball_id === ball.ball_id && b.core_weight === ball.core_weight);
+  }
+
   isFilterActive(): boolean {
     return this.ballFilterService.activeFilterCount() > 0;
+  }
+
+  onSortChanged(sortOption: unknown): void {
+    this.currentSortOption = sortOption as BallSortOption;
+    if (this.content) {
+      setTimeout(() => {
+        this.content.scrollToTop(300);
+      }, 100);
+    }
+
+    // Track sort change
+    void this.analyticsService.trackEvent('balls_sorted', {
+      sort_field: this.currentSortOption.field,
+      sort_direction: this.currentSortOption.direction,
+      sort_label: this.currentSortOption.label,
+    });
+  }
+
+  toggleFavorite(event: Event, ball: Ball): void {
+    event.stopPropagation();
+    const isFavorited = this.favoritesService.toggleBallFavorite(ball.ball_id, ball.core_weight);
+
+    if (isFavorited) {
+      this.toastService.showToast(`Added ${ball.ball_name} to favorites`, 'heart');
+
+      void this.analyticsService.trackEvent('ball_favorited', {
+        ball_name: ball.ball_name,
+        brand: ball.brand_name,
+        ball_id: ball.ball_id,
+      });
+    } else {
+      this.toastService.showToast(`Removed ${ball.ball_name} from favorites`, 'heart-outline');
+
+      void this.analyticsService.trackEvent('ball_unfavorited', {
+        ball_name: ball.ball_name,
+        brand: ball.brand_name,
+        ball_id: ball.ball_id,
+      });
+    }
+  }
+
+  onFavoritesFirstChange(checked: boolean): void {
+    this.favoritesFirst.set(checked);
+    this.saveFavoritesFirstSetting(checked);
+    if (this.content) {
+      setTimeout(() => {
+        this.content.scrollToTop(300);
+      }, 100);
+    }
+  }
+
+  private loadFavoritesFirstSetting(): void {
+    if (typeof localStorage !== 'undefined') {
+      const saved = localStorage.getItem('balls-favorites-first');
+      if (saved !== null) {
+        this.favoritesFirst.set(saved === 'true');
+      }
+    }
+  }
+
+  private saveFavoritesFirstSetting(value: boolean): void {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('balls-favorites-first', value.toString());
+    }
+  }
+
+  onBallSelected(ball: Ball): void {
+    // Close the modal
+    // modal.dismiss();
+
+    // Set the search term to the ball name
+    this.searchTerm.set(ball.ball_name);
+
+    // Trigger search
+    this.searchSubject.next(ball.ball_name);
+
+    // Scroll to top to show search results
+    if (this.content) {
+      setTimeout(() => {
+        this.content.scrollToTop(300);
+      }, 300);
+    }
   }
 }

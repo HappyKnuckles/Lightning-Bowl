@@ -27,6 +27,7 @@ import { GameFilterService } from 'src/app/core/services/game-filter/game-filter
 import { SortUtilsService } from 'src/app/core/services/sort-utils/sort-utils.service';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { UtilsService } from 'src/app/core/services/utils/utils.service';
+import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
 
 @Component({
   selector: 'app-game-filter',
@@ -65,7 +66,8 @@ export class GameFilterComponent implements OnInit {
   patterns = computed<string[]>(() => {
     return this.storageService
       .games()
-      .map((game) => game.pattern)
+      .map((game) => game.patterns)
+      .flat()
       .filter((pattern, index, self) => pattern && self.indexOf(pattern) === index);
   });
 
@@ -75,6 +77,7 @@ export class GameFilterComponent implements OnInit {
     private sortUtilsService: SortUtilsService,
     public storageService: StorageService,
     private utilsService: UtilsService,
+    private analyticsService: AnalyticsService,
   ) {}
 
   ngOnInit(): void {
@@ -141,10 +144,29 @@ export class GameFilterComponent implements OnInit {
   }
 
   confirm(): Promise<boolean> {
+    const activeFilters = this.gameFilterService.activeFilterCount();
+    const filters = this.gameFilterService.filters();
+
     this.gameFilterService.filters.update((filters) => ({ ...filters }));
     this.gameFilterService.saveFilters();
     // this.filterService.filterGames(this.storageService.games());
     this.getHighlightedDates();
+
+    if (activeFilters > 0) {
+      void this.analyticsService.trackGameFilterApplied({
+        active_filter_count: activeFilters,
+        has_leagues: filters.leagues.length > 0,
+        has_balls: filters.balls.length > 0,
+        has_patterns: filters.patterns.length > 0,
+        has_date_range: !!filters.startDate || !!filters.endDate,
+        has_score_range: filters.minScore > 0 || filters.maxScore < 300,
+        exclude_practice: filters.excludePractice,
+        is_clean_only: filters.isClean,
+        is_perfect_only: filters.isPerfect,
+        time_range: filters.timeRange,
+      });
+    }
+
     return this.modalCtrl.dismiss('confirm');
   }
 

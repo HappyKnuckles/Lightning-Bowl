@@ -5,4 +5,5 @@
     <string name="package_name">io.ionic.bowling</string>
     <string name="custom_url_scheme">io.ionic.bowling</string>
     <string name="admob_app_id">ca-app-pub-5244538287702059~2003936792</string>
+
 </resources>

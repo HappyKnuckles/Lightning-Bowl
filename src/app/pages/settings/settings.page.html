@@ -54,17 +54,25 @@
         clearOnEdit="true"></ion-input>
     </ion-item>
 
+    <!-- Issues & Features Section -->
+    <ion-item button id="github-issues-modal">
+      <ion-icon name="bug-outline" slot="start"></ion-icon>
+      <ion-label>Issues & Features</ion-label>
+    </ion-item>
+
     <!-- TODO maybe add InAppBrowser for this -->
     <ion-item href="https://github.com/HappyKnuckles/bowling-stats/issues" button detail="false">
       <ion-icon name="logo-github" slot="start"></ion-icon>
       <ion-label>Feature/Bug overview</ion-label>
       <p class="link">Follow me</p>
     </ion-item>
+
     <ion-item id="feedback-modal" class="ion-activatable ripple-parent rectangle">
       <ion-icon name="mail-outline" slot="start"></ion-icon>
       <ion-label>Feedback/Requests</ion-label>
       <p class="link">Open form</p>
     </ion-item>
+
     <ion-item (click)="updateApp()" button [detail]="false" *ngIf="updateAvailable">
       <ion-icon name="refresh-circle-outline" slot="start"></ion-icon>
       <ion-label>Load update</ion-label>
@@ -88,6 +96,12 @@
     <ion-content [fullscreen]="true">
       <app-spare-names></app-spare-names>
     </ion-content>
+  </ng-template>
+</ion-modal>
+
+<ion-modal trigger="github-issues-modal" #githubIssuesModal>
+  <ng-template>
+    <app-github-issues-modal [modal]="githubIssuesModal"></app-github-issues-modal>
   </ng-template>
 </ion-modal>
 

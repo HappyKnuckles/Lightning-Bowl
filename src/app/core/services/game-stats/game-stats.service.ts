@@ -1,6 +1,6 @@
 import { computed, Injectable, Signal } from '@angular/core';
 import { Game } from 'src/app/core/models/game.model';
-import { SessionStats, Stats } from 'src/app/core/models/stats.model';
+import { BestBallStats, SessionStats, Stats } from 'src/app/core/models/stats.model';
 import { PrevStats } from 'src/app/core/models/stats.model';
 import { GameFilterService } from '../game-filter/game-filter.service';
 import { UtilsService } from '../utils/utils.service';
@@ -12,7 +12,6 @@ const MAX_FRAMES = 10;
 })
 export class GameStatsService {
   // Previous Stats
-
   #prevStats = computed(() => {
     const gameHistory = this.storageService.games();
     const lastComparisonDate = parseInt(localStorage.getItem('lastComparisonDate') ?? '0');
@@ -53,6 +52,20 @@ export class GameStatsService {
       return prevStats;
     }
   });
+
+  #bestBallStats: Signal<BestBallStats> = computed(() => {
+    return this.calculateBestBallStats(this.gameFilterService.filteredGames());
+  });
+  #mostPlayedBallStats: Signal<BestBallStats> = computed(() => {
+    return this.calculateMostPlayedBall(this.gameFilterService.filteredGames());
+  });
+  get mostPlayedBallStats() {
+    return this.#mostPlayedBallStats;
+  }
+
+  get bestBallStats() {
+    return this.#bestBallStats;
+  }
   get prevStats() {
     return this.#prevStats;
   }
@@ -79,6 +92,34 @@ export class GameStatsService {
     private utilsService: UtilsService,
     private storageService: StorageService,
   ) {}
+
+  calculateBestBallStats(gameHistory: Game[]): BestBallStats {
+    const allBallStats = this._calculateAllBallStats(gameHistory);
+    const ballNames = Object.keys(allBallStats);
+    const defaultBall: BestBallStats = { ballName: '', ballImage: '', ballAvg: 0, ballHighestGame: 0, ballLowestGame: 0, gameCount: 0 };
+
+    if (ballNames.length === 0) {
+      return defaultBall;
+    }
+
+    return ballNames.reduce((best, currentBallName) => {
+      return allBallStats[currentBallName].ballAvg > best.ballAvg ? allBallStats[currentBallName] : best;
+    }, defaultBall);
+  }
+
+  calculateMostPlayedBall(gameHistory: Game[]): BestBallStats {
+    const allBallStats = this._calculateAllBallStats(gameHistory);
+    const ballNames = Object.keys(allBallStats);
+    const defaultBall: BestBallStats = { ballName: '', ballImage: '', ballAvg: 0, ballHighestGame: 0, ballLowestGame: 0, gameCount: 0 };
+
+    if (ballNames.length === 0) {
+      return defaultBall;
+    }
+
+    return ballNames.reduce((mostPlayed, currentBallName) => {
+      return allBallStats[currentBallName].gameCount > mostPlayed.gameCount ? allBallStats[currentBallName] : mostPlayed;
+    }, defaultBall);
+  }
 
   calculateSeriesStats(gameHistory: Game[]): {
     average3SeriesScore: number;
@@ -226,8 +267,8 @@ export class GameStatsService {
   }
 
   calculateBowlingStats(gameHistory: Game[]): Stats | SessionStats {
+    // Initialize counters
     let totalStrikes = 0;
-    let totalSpares = 0;
     let totalSparesConverted = 0;
     let totalSparesMissed = 0;
     const pinCounts = Array(11).fill(0);
@@ -235,114 +276,211 @@ export class GameStatsService {
     let firstThrowCount = 0;
     let perfectGameCount = 0;
     let cleanGameCount = 0;
+    let longestStrikeStreak = 0;
+    let currentStrikeStreak = 0;
+    let longestOpenStreak = 0;
+    let currentOpenStreak = 0;
+    let dutch200Count = 0;
+    let varipapa300Count = 0;
+    let strikeoutCount = 0;
+    let allSparesGameCount = 0;
 
-    gameHistory.forEach((game: Game) => {
+    // Streak counts for exactly n consecutive strikes (3 to 11)
+    const streakCounts = Array(12).fill(0);
+    const recordStrikeStreak = (len: number) => {
+      if (len >= 3 && len <= 11) streakCounts[len]++;
+    };
+
+    // Strike-to-strike metrics
+    let strikeOpportunities = 0;
+    let strikeFollowUps = 0;
+    let previousWasStrike = false;
+
+    // Track date boundaries
+    let previousGameDate: string | null = null;
+
+    // Process each game
+    gameHistory.forEach((game) => {
       if (game.isClean) {
         cleanGameCount++;
-        if (game.isPerfect) {
-          perfectGameCount++;
-        }
+        if (game.isPerfect) perfectGameCount++;
+      }
+      const gameDate = new Date(game.date).toDateString();
+      if (gameDate !== previousGameDate) {
+        recordStrikeStreak(currentStrikeStreak);
+        longestOpenStreak = Math.max(longestOpenStreak, currentOpenStreak);
+        currentStrikeStreak = 0;
+        currentOpenStreak = 0;
+        previousGameDate = gameDate;
+        previousWasStrike = false; // reset for strike-to-strike
       }
 
-      game.frames.forEach((frame: { throws: any }, index: number) => {
-        const throws = frame.throws;
+      let strikesInThisGame = 0;
+      let isAllSpares = true;
 
-        // Count the first throw in each frame for firstThrowAverage
-        firstThrowCount += parseInt(throws[0].value);
+      game.frames.forEach((frame: { throws: any[] }, idx: number) => {
+        const throws = frame.throws.map((t: any) => parseInt(t.value, 10));
+        firstThrowCount += throws[0] || 0;
+        const throw1 = throws[0];
+        const throw2 = throws.length > 1 ? throws[1] : undefined;
+        const throw3 = throws.length > 2 ? throws[2] : undefined;
 
-        // Count strikes
-        if (throws[0].value === 10) {
+        const isStrike = throw1 === 10;
+        const isSpare = !isStrike && throw2 !== undefined && throw1 + throw2 === 10;
+        const isOpen = !isStrike && !isSpare;
+
+        // Strike-to-strike tracking
+        if (previousWasStrike) {
+          strikeOpportunities++;
+          if (isStrike) strikeFollowUps++;
+        }
+        previousWasStrike = isStrike;
+
+        if (isStrike || !isSpare) isAllSpares = false;
+
+        // Open streak
+        if (isOpen) {
+          currentOpenStreak++;
+        } else {
+          longestOpenStreak = Math.max(longestOpenStreak, currentOpenStreak);
+          currentOpenStreak = 0;
+        }
+
+        // Strike streak
+        if (isStrike) {
           totalStrikes++;
-          // Additional logic for counting strikes in the 10th frame
-          if (index === 9) {
-            if (throws[1]?.value === 10) {
-              totalStrikes++; // Increment by 1 if second throw is also a strike
-              if (throws[2]?.value === 10) {
-                totalStrikes++; // Increment by 1 if third throw is also a strike
+          currentStrikeStreak++;
+          strikesInThisGame++;
+          if (idx === MAX_FRAMES - 1 && throws.length >= 2) {
+            if (throw2 === 10) {
+              totalStrikes++;
+              currentStrikeStreak++;
+              strikesInThisGame++;
+            }
+            if (throw3 === 10) {
+              totalStrikes++;
+              currentStrikeStreak++;
+              strikesInThisGame++;
+            }
+            if (throw1 === 10 && throw2 === 10 && throw3 === 10) strikeoutCount++;
+          }
+          if (currentStrikeStreak === 12 && strikesInThisGame < 12) varipapa300Count++;
+        } else {
+          recordStrikeStreak(currentStrikeStreak);
+          currentStrikeStreak = 0;
+          // Count strike on fill ball in 10th if previous was spare
+          if (idx === MAX_FRAMES - 1 && isSpare && throw3 === 10) {
+            totalStrikes++;
+          }
+        }
+        longestStrikeStreak = Math.max(longestStrikeStreak, currentStrikeStreak);
+
+        // Pin counts
+        if (isSpare) {
+          // Frame was a spare on the first two balls (e.g., 7 /)
+          // This applies to frames 1-9 and the first two balls of the 10th if throw1 < 10.
+          pinCounts[10 - throw1]++;
+        } else if (isOpen) {
+          // Frame was open on the first one or two balls (e.g., 7 2 or 7 -)
+          // This applies to frames 1-9 and the first two balls of the 10th if throw1 < 10.
+          missedCounts[10 - throw1]++;
+        }
+        // If `isStrike` is true, the above `isSpare` and `isOpen` are false.
+        // We then need to check the 10th frame specifically for a spare/open opportunity
+        // on the 2nd and 3rd balls if the first was a strike.
+        if (isStrike && idx === MAX_FRAMES - 1) {
+          // First ball was a strike in the 10th frame.
+          // Check for spare/open on the 2nd and 3rd balls.
+          if (throw2 !== undefined && throw2 < 10) {
+            // Second ball was not a strike
+            if (throw3 !== undefined) {
+              if (throw2 + throw3 === 10) {
+                // Spare on 2nd/3rd balls (e.g., X 7 /)
+                pinCounts[10 - throw2]++;
+              } else if (throw2 + throw3 < 10) {
+                // Open on 2nd/3rd balls (e.g., X 7 2)
+                missedCounts[10 - throw2]++;
               }
+            } else {
+              // Only two balls after initial strike, second was not a strike (e.g. X 7 -)
+              missedCounts[10 - throw2]++;
             }
           }
-        } else if (index === 9 && throws.length === 3) {
-          if (throws[2]?.value === 10) {
-            totalStrikes++; // Increment by 1 if third throw is a strike
-          }
-        }
-
-        // Handle pin counts for spares
-        if (throws.length === 2) {
-          if (throws[0].value + throws[1].value === 10) {
-            const pinsLeft = 10 - throws[0].value;
-            pinCounts[pinsLeft]++;
-          } else {
-            const pinsLeft = 10 - throws[0].value;
-            missedCounts[pinsLeft]++;
-          }
-        } else if (throws.length === 3) {
-          // Check for spares in the first two throws
-          if (throws[0].value !== 10 && throws[0].value + throws[1].value === 10) {
-            const pinsLeft = 10 - throws[0].value;
-            pinCounts[pinsLeft]++;
-          } else if (throws[1].value !== 10 && throws[1].value + throws[2].value === 10) {
-            const pinsLeft = 10 - throws[1].value;
-            pinCounts[pinsLeft]++;
-          }
-
-          // Check for missed pins
-          if (throws[0].value !== 10 && throws[0].value + throws[1].value !== 10) {
-            const pinsLeft = 10 - throws[0].value;
-            missedCounts[pinsLeft]++;
-          }
-          if (throws[1].value !== 10 && throws[0].value + throws[1].value !== 10 && throws[1].value + throws[2].value !== 10) {
-            const pinsLeft = 10 - throws[1].value;
-            missedCounts[pinsLeft]++;
-          }
+          // If throw2 was also a strike (X X ...), then throw3 is a fill ball; no new spare/open opportunity here.
         }
       });
+
+      if (isAllSpares) allSparesGameCount++;
+
+      // Dutch 200 detection
+      if (game.totalScore === 200) {
+        let ok = true;
+        game.frames.forEach((frame: { throws: any[] }, idx: number) => {
+          const arr = frame.throws.map((t: any) => parseInt(t.value, 10));
+          if (idx < 9) {
+            const want = idx % 2 === 0 ? arr[0] === 10 : arr.length >= 2 && arr[0] !== 10 && arr[0] + arr[1] === 10;
+            if (!want) ok = false;
+          } else {
+            if (arr.length < 3 || arr[0] + arr[1] !== 10 || arr[2] !== 10) ok = false;
+          }
+        });
+        if (ok) dutch200Count++;
+      }
     });
 
+    // Finalize streaks
+    recordStrikeStreak(currentStrikeStreak);
+    longestOpenStreak = Math.max(longestOpenStreak, currentOpenStreak);
+
+    // Compute spare totals
     for (let i = 1; i <= MAX_FRAMES; i++) {
       totalSparesMissed += missedCounts[i] || 0;
       totalSparesConverted += pinCounts[i] || 0;
     }
 
-    totalSpares = totalSparesConverted;
-    const totalPins = gameHistory.reduce((sum, game) => sum + game.totalScore, 0);
+    // Core aggregated stats
+    const totalPins = gameHistory.reduce((s, g) => s + g.totalScore, 0);
     const totalGames = gameHistory.length;
-    const averageScore = totalPins / gameHistory.length || 0;
-    const highGame = Math.max(...gameHistory.map((game) => game.totalScore));
-    const lowGame = Math.min(...gameHistory.map((game) => game.totalScore));
-
+    const averageScore = totalPins / totalGames || 0;
+    const highGame = Math.max(...gameHistory.map((g) => g.totalScore));
+    const lowGame = Math.min(...gameHistory.map((g) => g.totalScore));
     const cleanGamePercentage = (cleanGameCount / totalGames) * 100 || 0;
-
     const totalFrames = totalGames * 10;
-    const strikeChances = gameHistory.length * 12;
-
+    const strikeChances = totalGames * 12;
     const averageStrikesPerGame = totalStrikes / totalGames || 0;
-    const averageSparesPerGame = totalSpares / totalGames || 0;
+    const averageSparesPerGame = totalSparesConverted / totalGames || 0;
     const averageOpensPerGame = totalSparesMissed / totalGames || 0;
-
     const strikePercentage = (totalStrikes / strikeChances) * 100 || 0;
-    const sparePercentage = (totalSpares / totalFrames) * 100 || 0;
+    const sparePercentage = (totalSparesConverted / totalFrames) * 100 || 0;
     const openPercentage = (totalSparesMissed / totalFrames) * 100 || 0;
-
     const averageFirstCount = firstThrowCount / totalFrames;
-
-    const spareRates = pinCounts.map((pinCount, i) => this.getRate(pinCount, missedCounts[i]));
+    const spareRates = pinCounts.map((c, i) => this.getRate(c, missedCounts[i]));
     const overallSpareRate = this.getRate(totalSparesConverted, totalSparesMissed);
     const spareConversionPercentage = (totalSparesConverted / (totalSparesConverted + totalSparesMissed)) * 100;
     const overallMissedRate = totalSparesMissed > 0 ? 100 - overallSpareRate : 0;
-    const average3SeriesScore = this.calculateSeriesStats(gameHistory).average3SeriesScore;
-    const high3Series = this.calculateSeriesStats(gameHistory).high3Series;
-    const average4SeriesScore = this.calculateSeriesStats(gameHistory).average4SeriesScore;
-    const high4Series = this.calculateSeriesStats(gameHistory).high4Series;
-    const average5SeriesScore = this.calculateSeriesStats(gameHistory).average5SeriesScore;
-    const high5Series = this.calculateSeriesStats(gameHistory).high5Series;
-    const average6SeriesScore = this.calculateSeriesStats(gameHistory).average6SeriesScore;
-    const high6Series = this.calculateSeriesStats(gameHistory).high6Series;
+    const seriesStats = this.calculateSeriesStats(gameHistory);
+    const markPercentage = ((totalFrames - totalSparesMissed) / totalFrames) * 100 || 0;
+    // Frequency metrics
+    const msPerDay = 1000 * 60 * 60 * 24;
+    const times = gameHistory.map((g) => new Date(g.date).getTime());
+    const minT = Math.min(...times),
+      maxT = Math.max(...times);
+    const totalDays = Math.ceil((maxT - minT) / msPerDay) + 1;
+    const weeks = totalDays / 7,
+      months = totalDays / 30;
+    const distinctDays = new Set(gameHistory.map((g) => new Date(g.date).toDateString())).size;
+    const averageGamesPerWeek = totalGames / weeks;
+    const averageGamesPerMonth = totalGames / months;
+    const averageSessionsPerWeek = distinctDays / weeks;
+    const averageSessionsPerMonth = distinctDays / months;
+    const averageGamesPerSession = totalGames / distinctDays;
+
+    // Strike-to-strike percentage
+    const strikeToStrikePercentage = strikeOpportunities ? (strikeFollowUps / strikeOpportunities) * 100 : 0;
 
     return {
       totalStrikes,
-      totalSpares,
+      totalSpares: totalSparesConverted,
       totalSparesConverted,
       totalSparesMissed,
       pinCounts,
@@ -353,9 +491,11 @@ export class GameStatsService {
       totalGames,
       averageScore,
       highGame,
+      lowGame,
       averageStrikesPerGame,
       averageSparesPerGame,
       averageOpensPerGame,
+      markPercentage,
       strikePercentage,
       sparePercentage,
       openPercentage,
@@ -365,15 +505,36 @@ export class GameStatsService {
       totalPins,
       overallMissedRate,
       spareConversionPercentage,
-      lowGame,
-      average3SeriesScore,
-      high3Series,
-      average4SeriesScore,
-      high4Series,
-      average5SeriesScore,
-      high5Series,
-      average6SeriesScore,
-      high6Series,
+      longestStrikeStreak,
+      longestOpenStreak,
+      dutch200Count,
+      varipapa300Count,
+      strikeoutCount,
+      allSparesGameCount,
+      turkeyCount: streakCounts[3],
+      bagger4Count: streakCounts[4],
+      bagger5Count: streakCounts[5],
+      bagger6Count: streakCounts[6],
+      bagger7Count: streakCounts[7],
+      bagger8Count: streakCounts[8],
+      bagger9Count: streakCounts[9],
+      bagger10Count: streakCounts[10],
+      bagger11Count: streakCounts[11],
+      streakCounts,
+      average3SeriesScore: seriesStats.average3SeriesScore,
+      high3Series: seriesStats.high3Series,
+      average4SeriesScore: seriesStats.average4SeriesScore,
+      high4Series: seriesStats.high4Series,
+      average5SeriesScore: seriesStats.average5SeriesScore,
+      high5Series: seriesStats.high5Series,
+      average6SeriesScore: seriesStats.average6SeriesScore,
+      high6Series: seriesStats.high6Series,
+      averageGamesPerWeek,
+      averageGamesPerMonth,
+      averageSessionsPerWeek,
+      averageSessionsPerMonth,
+      averageGamesPerSession,
+      strikeToStrikePercentage,
     };
   }
 
@@ -415,6 +576,7 @@ export class GameStatsService {
 
   private mapStatsToPrevStats(stats: Stats): PrevStats {
     return {
+      markPercentage: stats.markPercentage,
       strikePercentage: stats.strikePercentage,
       sparePercentage: stats.sparePercentage,
       openPercentage: stats.openPercentage,
@@ -440,6 +602,7 @@ export class GameStatsService {
 
   private getDefaultPrevStats(): PrevStats {
     return {
+      markPercentage: 0,
       strikePercentage: 0,
       sparePercentage: 0,
       openPercentage: 0,
@@ -461,6 +624,77 @@ export class GameStatsService {
       high5Series: 0,
       spareRates: Array(11).fill(0),
     };
+  }
+
+  private _calculateAllBallStats(gameHistory: Game[]): Record<string, BestBallStats> {
+    const gamesWithBalls = gameHistory.filter((game) => game.balls && game.balls.length > 0);
+    const tempStats: Record<
+      string,
+      { totalScore: number; gameCount: number; highestGame: number; lowestGame: number; cleanGames: number; totalStrikes: number }
+    > = {};
+
+    gamesWithBalls.forEach((game) => {
+      const uniqueBallsInGame = new Set(game.balls);
+
+      const isCleanGame = game.frames.every((frame: { throws: any[] }) => {
+        const totalPinsInFrame = frame.throws.reduce((sum: number, throwData: { value: number }) => sum + throwData.value, 0);
+        return totalPinsInFrame >= 10;
+      });
+
+      let totalStrikesInGame = 0;
+      game.frames.forEach((frame: { throws: any[] }, index: number) => {
+        if (index < 9) {
+          if (frame.throws[0]?.value === 10) {
+            totalStrikesInGame++;
+          }
+        } else if (index === 9) {
+          frame.throws.forEach((throwData: { value: number }) => {
+            if (throwData.value === 10) {
+              totalStrikesInGame++;
+            }
+          });
+        }
+      });
+
+      uniqueBallsInGame.forEach((ballName) => {
+        if (!tempStats[ballName]) {
+          tempStats[ballName] = { totalScore: 0, gameCount: 0, highestGame: 0, lowestGame: 301, cleanGames: 0, totalStrikes: 0 };
+        }
+        const stats = tempStats[ballName];
+        stats.totalScore += game.totalScore;
+        stats.gameCount++;
+        stats.totalStrikes += totalStrikesInGame;
+        if (game.totalScore > stats.highestGame) {
+          stats.highestGame = game.totalScore;
+        }
+        if (game.totalScore < stats.lowestGame) {
+          stats.lowestGame = game.totalScore;
+        }
+        if (isCleanGame) {
+          stats.cleanGames++;
+        }
+      });
+    });
+
+    const finalStats: Record<string, BestBallStats> = {};
+    for (const ballName in tempStats) {
+      const stats = tempStats[ballName];
+      const ballImage = this.storageService.allBalls().find((b) => b.ball_name === ballName)?.ball_image || '';
+      const totalPossibleStrikes = stats.gameCount * 12; // 12 possible strikes per game
+      const strikeRate = totalPossibleStrikes > 0 ? Math.round((stats.totalStrikes / totalPossibleStrikes) * 100) : 0;
+
+      finalStats[ballName] = {
+        ballName: ballName,
+        ballImage: ballImage,
+        ballAvg: stats.gameCount > 0 ? Math.round(stats.totalScore / stats.gameCount) : 0,
+        ballHighestGame: stats.highestGame,
+        ballLowestGame: stats.lowestGame === 301 ? 0 : stats.lowestGame,
+        gameCount: stats.gameCount,
+        cleanGameCount: stats.cleanGames,
+        strikeRate: strikeRate,
+      };
+    }
+    return finalStats;
   }
 
   private getRate(converted: number, missed: number): number {

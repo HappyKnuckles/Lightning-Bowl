@@ -1,14 +1,17 @@
 <ion-header [translucent]="true">
   <ion-toolbar style="display: flex; align-items: flex-start">
     <ion-title size="small">
-      {{ isCoverstock ? "Coverstock: " + balls[0].coverstock_name : "Core: " + balls[0].core_name }}
+      {{ title || (isCoverstock ? "Coverstock: " + balls[0].coverstock_name : "Core: " + balls[0].core_name) }}
     </ion-title>
   </ion-toolbar>
 </ion-header>
 <ion-content [fullscreen]="true">
   <ion-list>
     @for (ball of balls; track ball.ball_id) {
-      <ion-item>
+      <!-- Überlegen ob es nicht sinnvoller ist das mit router navigate und searchparams besser ist
+        Falls jemals nochmal gebraucht 
+      -->
+      <ion-item (click)="onBallClick(ball)" button>
         <ion-avatar slot="start">
           <ion-img [src]="storageService.url + ball.thumbnail_image"></ion-img>
         </ion-avatar>

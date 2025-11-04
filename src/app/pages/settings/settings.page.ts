@@ -32,8 +32,9 @@ import {
   chevronBack,
   refreshCircleOutline,
   chevronBackOutline,
+  bugOutline,
 } from 'ionicons/icons';
-import { NgClass, NgFor } from '@angular/common';
+import { NgClass, NgFor, NgIf } from '@angular/common';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { UserService } from 'src/app/core/services/user/user.service';
 import { ThemeChangerService } from 'src/app/core/services/theme-changer/theme-changer.service';
@@ -45,6 +46,8 @@ import { LeagueSelectorComponent } from 'src/app/shared/components/league-select
 import { SpareNamesComponent } from 'src/app/shared/components/spare-names/spare-names.component';
 import { GameStatsService } from 'src/app/core/services/game-stats/game-stats.service';
 import { AlertController, InputCustomEvent } from '@ionic/angular';
+import { GithubIssuesModalComponent } from 'src/app/shared/components/github-issues-modal/github-issues-modal.component';
+import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
 
 @Component({
   selector: 'app-settings',
@@ -77,6 +80,8 @@ import { AlertController, InputCustomEvent } from '@ionic/angular';
     ReactiveFormsModule,
     LeagueSelectorComponent,
     SpareNamesComponent,
+    GithubIssuesModalComponent,
+    NgIf,
   ],
 })
 export class SettingsPage implements OnInit {
@@ -99,6 +104,7 @@ export class SettingsPage implements OnInit {
     private themeService: ThemeChangerService,
     private statsService: GameStatsService,
     private alertCtrl: AlertController,
+    private analyticsService: AnalyticsService,
   ) {
     addIcons({
       personCircleOutline,
@@ -110,6 +116,7 @@ export class SettingsPage implements OnInit {
       addOutline,
       chevronBack,
       sendOutline,
+      bugOutline,
     });
   }
 
@@ -164,6 +171,8 @@ export class SettingsPage implements OnInit {
   changeColor(): void {
     this.themeService.saveColorTheme(this.currentColor!);
     this.toastService.showToast(`Changed theme to ${this.currentColor}.`, 'checkmark-outline');
+
+    void this.analyticsService.trackThemeChanged(this.currentColor!);
   }
 
   updateApp(): void {

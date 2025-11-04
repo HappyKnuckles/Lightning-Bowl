@@ -1,5 +1,4 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core';
-import { NgIf } from '@angular/common';
 import { IonButton, IonIcon } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { checkmarkCircle, addCircle, arrowUndo } from 'ionicons/icons';
@@ -21,7 +20,7 @@ export interface PinThrowEvent {
   templateUrl: './pin-input.component.html',
   styleUrls: ['./pin-input.component.scss'],
   standalone: true,
-  imports: [NgIf, IonButton, IonIcon],
+  imports: [IonButton, IonIcon],
 })
 export class PinInputComponent implements OnInit, OnChanges {
   @Input() frames: number[][] = [];

@@ -1,0 +1,13 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Alley map</ion-title>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-searchbar appSearchBlur placeholder="Search" (ionInput)="onSearch($event)" debounce="300"></ion-searchbar>
+  </ion-toolbar>
+</ion-header>
+<ion-content [fullscreen]="true">
+  <div class="map-wrapper">
+    <div #mapContainer id="map_canvas"></div>
+  </div>
+</ion-content>

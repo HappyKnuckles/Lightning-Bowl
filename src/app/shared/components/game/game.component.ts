@@ -1,4 +1,4 @@
-import { NgIf, NgFor, NgClass, DatePipe } from '@angular/common';
+import { NgIf, NgFor, DatePipe } from '@angular/common';
 import { Component, Input, Renderer2, ViewChild, OnChanges, SimpleChanges, computed, OnInit } from '@angular/core';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
@@ -52,8 +52,17 @@ import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { UtilsService } from 'src/app/core/services/utils/utils.service';
-import { PatternTypeaheadComponent } from '../pattern-typeahead/pattern-typeahead.component';
+import { GenericTypeaheadComponent } from '../generic-typeahead/generic-typeahead.component';
+import { createPartialPatternTypeaheadConfig } from '../generic-typeahead/typeahead-configs';
+import { TypeaheadConfig } from '../generic-typeahead/typeahead-config.interface';
+import { PatternService } from 'src/app/core/services/pattern/pattern.service';
+import { Pattern } from 'src/app/core/models/pattern.model';
 import { LongPressDirective } from 'src/app/core/directives/long-press/long-press.directive';
+import { Router } from '@angular/router';
+import { GameGridComponent } from '../game-grid/game-grid.component';
+import { BallSelectComponent } from '../ball-select/ball-select.component';
+import { alertEnterAnimation, alertLeaveAnimation } from '../../animations/alert.animation';
+import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
 
 @Component({
   selector: 'app-game',
@@ -91,22 +100,26 @@ import { LongPressDirective } from 'src/app/core/directives/long-press/long-pres
     IonInput,
     NgIf,
     NgFor,
-    NgClass,
     IonSelect,
     IonSelectOption,
     ReactiveFormsModule,
     FormsModule,
-    PatternTypeaheadComponent,
     LongPressDirective,
     DatePipe,
+    GameGridComponent,
+    GenericTypeaheadComponent,
+    BallSelectComponent,
   ],
   standalone: true,
 })
 export class GameComponent implements OnChanges, OnInit {
+  @ViewChild('modal', { static: false }) modal!: IonModal;
   @Input() games!: Game[];
   @Input() isLeaguePage?: boolean = false;
   @Input() gameCount?: number;
   @ViewChild('accordionGroup') accordionGroup!: IonAccordionGroup;
+  @ViewChild(GameGridComponent) gameGrid!: GameGridComponent;
+
   leagues = computed(() => {
     const savedLeagues = this.storageService.leagues();
     const leagueKeys = this.games.reduce((acc: string[], game: Game) => {
@@ -142,14 +155,15 @@ export class GameComponent implements OnChanges, OnInit {
   sortedGames: Game[] = [];
   showingGames: Game[] = [];
   presentingElement?: HTMLElement;
-
   private batchSize = 100;
   public loadedCount = 0;
   isEditMode: Record<string, boolean> = {};
   private closeTimers: Record<string, NodeJS.Timeout> = {};
   public delayedCloseMap: Record<string, boolean> = {};
   private originalGameState: Record<string, Game> = {};
-
+  patternTypeaheadConfig!: TypeaheadConfig<Partial<Pattern>>;
+  enterAnimation = alertEnterAnimation;
+  leaveAnimation = alertLeaveAnimation;
   constructor(
     private alertController: AlertController,
     private toastService: ToastService,
@@ -160,6 +174,10 @@ export class GameComponent implements OnChanges, OnInit {
     private renderer: Renderer2,
     private gameUtilsService: GameUtilsService,
     private utilsService: UtilsService,
+    private router: Router,
+    private modalCtrl: ModalController,
+    private patternService: PatternService,
+    private analyticsService: AnalyticsService,
   ) {
     addIcons({
       trashOutline,
@@ -177,6 +195,7 @@ export class GameComponent implements OnChanges, OnInit {
 
   ngOnInit(): void {
     this.presentingElement = document.querySelector('.ion-page')!;
+    this.patternTypeaheadConfig = createPartialPatternTypeaheadConfig((searchTerm: string) => this.patternService.searchPattern(searchTerm));
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -234,7 +253,6 @@ export class GameComponent implements OnChanges, OnInit {
     else nativeEl.value = accordionId;
   }
 
-  /** LONG-PRESS or header click entry point */
   saveOriginalStateAndEnableEdit(game: Game): void {
     if (!this.isEditMode[game.gameId]) {
       this.originalGameState[game.gameId] = structuredClone(game);
@@ -254,11 +272,25 @@ export class GameComponent implements OnChanges, OnInit {
     }
   }
 
+  onBallSelect(selectedBalls: string[], game: Game, modal: IonModal): void {
+    modal.dismiss();
+    game.balls = selectedBalls;
+  }
+
+  getSelectedBallsText(game: Game): string {
+    const balls = game.balls || [];
+    return balls.length > 0 ? balls.join(', ') : 'None';
+  }
+
   cancelEdit(game: Game): void {
     const saved = this.originalGameState[game.gameId];
     if (saved) {
       Object.assign(game, saved);
       delete this.originalGameState[game.gameId];
+    }
+
+    if (game.isSeries) {
+      this.updateSeries(game, game.league, game.patterns);
     }
 
     this.isEditMode[game.gameId] = false;
@@ -269,27 +301,77 @@ export class GameComponent implements OnChanges, OnInit {
     delete this.delayedCloseMap[game.gameId];
   }
 
+  updateSeries(game: Game, league?: string, patterns?: string[]): void {
+    if (!game.isSeries) return;
+
+    this.storageService.games.update((gamesArr) =>
+      gamesArr.map((g) => {
+        if (g.seriesId === game.seriesId) {
+          return {
+            ...g,
+            ...(league !== undefined && { league }),
+            ...(patterns !== undefined && { patterns }),
+          };
+        }
+        return g;
+      }),
+    );
+  }
+
   async saveEdit(game: Game): Promise<void> {
     try {
-      if (!this.isGameValid(game)) {
+      const editedGameFromGrid = this.gameGrid.game();
+
+      // 1) Validate using the current data from the grid
+      if (!this.isGameValid(editedGameFromGrid)) {
         this.hapticService.vibrate(ImpactStyle.Heavy);
         this.toastService.showToast(ToastMessages.invalidInput, 'bug', true);
         return;
       }
 
-      const gameCopy = structuredClone(game);
-      gameCopy.frames.forEach((f: any) => delete f.isInvalid);
-      gameCopy.isPractice = !gameCopy.league;
-      gameCopy.totalScore = gameCopy.frameScores[9];
-      await this.storageService.saveGameToLocalStorage(gameCopy);
+      // 2) Clean up per‐frame flags on the current grid data
+      editedGameFromGrid.frames.forEach((f: any) => delete f.isInvalid);
+
+      // 3) Compute isPractice on the current grid data
+      editedGameFromGrid.isPractice = !editedGameFromGrid.league;
+
+      // 4) Did we change league or patterns? Compare original with current grid data.
+      const originalGameSnapshot = this.originalGameState[game.gameId];
+      const leagueChanged = originalGameSnapshot && originalGameSnapshot.league !== editedGameFromGrid.league;
+      const patternsChanged = originalGameSnapshot && JSON.stringify(originalGameSnapshot.patterns) !== JSON.stringify(editedGameFromGrid.patterns);
+      // 5) If part of a series and league/patterns changed → update everyone
+      if (editedGameFromGrid.isSeries && (leagueChanged || patternsChanged)) {
+        const seriesIdToUpdate = editedGameFromGrid.seriesId;
+        const newLeague = editedGameFromGrid.league;
+        const newPatterns = editedGameFromGrid.patterns;
+        const newIsPractice = !newLeague;
+
+        // First, save the primary edited game
+        await this.gameGrid.saveGameToLocalStorage(editedGameFromGrid.isSeries!, seriesIdToUpdate!);
+
+        // Then, update other games in the same series
+        const gamesToUpdateInStorage = this.storageService
+          .games()
+          .filter((g) => g.seriesId === seriesIdToUpdate && g.gameId !== editedGameFromGrid.gameId)
+          .map((g) => ({
+            ...g,
+            league: newLeague,
+            patterns: newPatterns,
+            isPractice: newIsPractice,
+          }));
+        await this.storageService.saveGamesToLocalStorage(gamesToUpdateInStorage);
+      } else {
+        await this.gameGrid.saveGameToLocalStorage(editedGameFromGrid.isSeries!, editedGameFromGrid.seriesId!);
+      }
 
       this.toastService.showToast(ToastMessages.gameUpdateSuccess, 'refresh-outline');
-
       this.isEditMode[game.gameId] = false;
       this.hapticService.vibrate(ImpactStyle.Light);
+
       const wasOpen = this.delayedCloseMap[game.gameId];
       this.openExpansionPanel(wasOpen ? game.gameId : undefined);
 
+      this.analyticsService.trackGameEdited();
       delete this.originalGameState[game.gameId];
       delete this.delayedCloseMap[game.gameId];
     } catch (error) {
@@ -297,6 +379,7 @@ export class GameComponent implements OnChanges, OnInit {
       console.error('Error saving game edit:', error);
     }
   }
+
   // Hides the accordion content so it renders faster
   hideContent(event: CustomEvent): void {
     const openGameIds: string[] = event.detail.value || [];
@@ -321,6 +404,14 @@ export class GameComponent implements OnChanges, OnInit {
         }
       }
     });
+  }
+
+  navigateToBallsPage(balls: string[]): void {
+    const searchQuery = balls.join(', ');
+    if (this.isLeaguePage) {
+      this.modalCtrl.dismiss();
+    }
+    this.router.navigate(['tabs/balls'], { queryParams: { search: searchQuery } });
   }
 
   isDelayedOpen(gameId: string): boolean {
@@ -399,7 +490,7 @@ export class GameComponent implements OnChanges, OnInit {
             : `Bowled with: ${game.balls.join(', ')}`
           : null,
 
-        game.pattern ? `Pattern: ${game.pattern}` : null,
+        game.patterns && game.patterns.length > 0 ? `Patterns: ${game.patterns.join(', ')}` : null,
       ];
 
       const message = messageParts.filter((part) => part !== null).join('\n');

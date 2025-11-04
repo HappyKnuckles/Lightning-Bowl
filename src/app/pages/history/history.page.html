@@ -1,28 +1,46 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
     <ion-buttons slot="start" style="padding: 4px">
-      <ion-button for="excelUpload" type="button" class="action-sheet" slot="start" fill="clear" (click)="openExcelFileInput()">
+      <ion-button
+        for="excelUpload"
+        type="button"
+        class="action-sheet"
+        slot="start"
+        fill="clear"
+        [disabled]="storageService.allBalls().length === 0"
+        (click)="openExcelFileInput()">
         <ion-icon slot="icon-only" name="cloud-upload-outline"></ion-icon>
       </ion-button>
       <ion-button
         (click)="exportToExcel()"
         class="action-sheet"
         fill="clear"
-        [disabled]="(storageService.games().length <= 0 && !loadingService.isLoading())">
+        [disabled]="storageService.games().length <= 0 && !loadingService.isLoading()">
         <ion-icon slot="icon-only" name="cloud-download-outline"></ion-icon> </ion-button
     ></ion-buttons>
     <!-- Clear Input on Upload-->
     <input type="file" id="excelUpload" class="ion-hide" (input)="handleFileUpload($event)" placeholder="Upload file" accept=".xlsx" />
     <ion-title>
       History
-      <ion-badge>{{gameFilterService.filteredGames().length }}</ion-badge>
+      <ion-badge>{{ gameFilterService.filteredGames().length }}</ion-badge>
     </ion-title>
     <ion-buttons slot="end" class="action-sheet">
-      <ion-button fill="clear" (click)="openFilterModal()" [disabled]="(storageService.games().length <= 0 && !loadingService.isLoading())">
+      <!-- <app-sort-header
+        [id]="'game-sort-header'"
+        [sortOptions]="sortService.GAME_SORT_OPTIONS"
+        [selectedSort]="currentSortOption"
+        storageKey="games-sort-option"
+        (sortChanged)="onSortChanged($event)">
+      </app-sort-header> -->
+      <ion-button fill="clear" (click)="openFilterModal()" [disabled]="storageService.games().length <= 0 && !loadingService.isLoading()">
         <ion-icon slot="icon-only" name="filter-outline"></ion-icon>
-        <ion-text class="filter-indicator" *ngIf="gameFilterService.activeFilterCount() !== 0">{{gameFilterService.activeFilterCount()}}</ion-text>
+        <ion-text class="filter-indicator" *ngIf="gameFilterService.activeFilterCount() !== 0">{{ gameFilterService.activeFilterCount() }}</ion-text>
       </ion-button>
     </ion-buttons>
+  </ion-toolbar>
+  <ion-toolbar *ngIf="gameFilterService.activeFilterCount() !== 0" style="text-align: center">
+    <app-generic-filter-active [filters]="currentFilters" [defaultFilters]="defaultFilters" [filterConfigs]="gameFilterConfigs">
+    </app-generic-filter-active>
   </ion-toolbar>
 </ion-header>
 
@@ -30,7 +48,6 @@
   <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
-  <app-game-filter-active></app-game-filter-active>
 
   <!-- Show this message if there are no game history items and it's not loading -->
   <ng-container *ngIf="storageService.games().length <= 0 && !loadingService.isLoading(); else checkFilteredGames">
@@ -43,7 +60,7 @@
   </ng-template>
   <!-- Main content to display when there is game history or when loading is done -->
   <ng-template #content>
-    <!-- <ion-button (click)="deleteAll()">Delete</ion-button> -->
+    <!-- <ion-button (click)="deleteAll()">Delete</ion-button>-->
     <app-game [games]="gameFilterService.filteredGames()" [gameCount]="gameFilterService.filteredGames().length"></app-game>
   </ng-template>
 </ion-content>

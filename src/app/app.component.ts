@@ -5,23 +5,33 @@ import { NgIf } from '@angular/common';
 import { SwUpdate } from '@angular/service-worker';
 import { HttpClient } from '@angular/common/http';
 import { DomSanitizer } from '@angular/platform-browser';
+import { Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { LoadingService } from './core/services/loader/loading.service';
 import { ToastService } from './core/services/toast/toast.service';
 import { UserService } from './core/services/user/user.service';
 import { ToastComponent } from './shared/components/toast/toast.component';
 import { ThemeChangerService } from './core/services/theme-changer/theme-changer.service';
+import { PwaInstallService } from './core/services/pwa-install/pwa-install.service';
+import { PwaInstallPromptComponent } from './shared/components/pwa-install-prompt/pwa-install-prompt.component';
+import { AnalyticsService } from './core/services/analytics/analytics.service';
 
 @Component({
   selector: 'app-root',
   templateUrl: 'app.component.html',
   styleUrls: ['app.component.scss'],
   standalone: true,
-  imports: [IonApp, NgIf, IonBackdrop, IonSpinner, IonRouterOutlet, ToastComponent],
+  imports: [IonApp, NgIf, IonBackdrop, IonSpinner, IonRouterOutlet, ToastComponent, PwaInstallPromptComponent],
 })
 export class AppComponent implements OnInit, OnDestroy {
+  private readonly GREETING_THROTTLE_DURATION_MS = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
   private userNameSubscription: Subscription;
+  private pwaInstallSubscription: Subscription;
   username = '';
+  private updateInterval: any;
+  showPwaInstallPrompt = false;
+  canInstallPwa = false;
 
   constructor(
     private alertController: AlertController,
@@ -32,6 +42,9 @@ export class AppComponent implements OnInit, OnDestroy {
     private themeService: ThemeChangerService,
     private http: HttpClient,
     private sanitizer: DomSanitizer,
+    private pwaInstallService: PwaInstallService,
+    private analyticsService: AnalyticsService,
+    private router: Router,
   ) {
     this.initializeApp();
     const currentTheme = this.themeService.getCurrentTheme();
@@ -39,14 +52,31 @@ export class AppComponent implements OnInit, OnDestroy {
     this.userNameSubscription = this.userService.getUsername().subscribe((username: string) => {
       this.username = username;
     });
+
+    this.pwaInstallSubscription = this.pwaInstallService.canShowInstallPrompt().subscribe((canShow) => {
+      this.showPwaInstallPrompt = canShow;
+      this.canInstallPwa = this.pwaInstallService.isInstallable();
+    });
   }
 
   async ngOnInit(): Promise<void> {
     this.greetUser();
+
+    await this.analyticsService.trackAppLaunched();
+
+    this.router.events.pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd)).subscribe((event) => {
+      void this.analyticsService.trackRouteChange(event.urlAfterRedirects);
+    });
   }
 
   ngOnDestroy(): void {
     this.userNameSubscription.unsubscribe();
+    if (this.pwaInstallSubscription) {
+      this.pwaInstallSubscription.unsubscribe();
+    }
+    if (this.updateInterval) {
+      clearInterval(this.updateInterval);
+    }
   }
 
   private initializeApp(): void {
@@ -128,6 +158,13 @@ export class AppComponent implements OnInit, OnDestroy {
         });
       }
     });
+
+    this.updateInterval = setInterval(
+      () => {
+        this.swUpdate.checkForUpdate();
+      },
+      15 * 60 * 1000,
+    );
   }
 
   private async greetUser(): Promise<void> {
@@ -135,7 +172,26 @@ export class AppComponent implements OnInit, OnDestroy {
       if (!this.username) {
         await this.showEnterNameAlert();
       } else {
-        this.presentGreetingAlert(this.username);
+        // Check if we should show the greeting based on last greeting time
+        const lastGreetingData = localStorage.getItem('lastGreeting');
+        let shouldShowGreeting = true;
+
+        if (lastGreetingData) {
+          try {
+            const { expiration } = JSON.parse(lastGreetingData);
+            // Only show greeting if the expiration time has passed
+            if (expiration && new Date().getTime() < expiration) {
+              shouldShowGreeting = false;
+            }
+          } catch {
+            // If data is corrupted, remove it and show greeting
+            localStorage.removeItem('lastGreeting');
+          }
+        }
+
+        if (shouldShowGreeting) {
+          this.presentGreetingAlert(this.username);
+        }
       }
     }
   }
@@ -170,6 +226,24 @@ export class AppComponent implements OnInit, OnDestroy {
     await alert.present();
   }
 
+  async onPwaInstall(): Promise<void> {
+    try {
+      const installed = await this.pwaInstallService.triggerInstall();
+      if (installed) {
+        this.toastService.showToast('App installed successfully!', 'checkmark-circle', false);
+        this.showPwaInstallPrompt = false;
+      }
+    } catch (error) {
+      console.error('Error installing PWA:', error);
+      this.toastService.showToast('Installation failed. Please try again.', 'alert-circle', true);
+    }
+  }
+
+  onPwaDismiss(): void {
+    this.pwaInstallService.dismissInstallPrompt();
+    this.showPwaInstallPrompt = false;
+  }
+
   private async presentGreetingAlert(name: string): Promise<void> {
     const alert = await this.alertController.create({
       header: `Hello ${name}!`,
@@ -188,5 +262,13 @@ export class AppComponent implements OnInit, OnDestroy {
     });
 
     await alert.present();
+
+    // Store the greeting timestamp with 7-day expiration
+    alert.onDidDismiss().then(() => {
+      const expirationDate = new Date();
+      expirationDate.setTime(expirationDate.getTime() + this.GREETING_THROTTLE_DURATION_MS);
+      const greetingData = { expiration: expirationDate.getTime() };
+      localStorage.setItem('lastGreeting', JSON.stringify(greetingData));
+    });
   }
 }

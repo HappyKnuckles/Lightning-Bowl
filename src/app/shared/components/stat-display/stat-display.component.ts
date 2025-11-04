@@ -1,17 +1,21 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { StatDefinition } from 'src/app/core/models/stat-definitions.model';
-import { StatRowComponent } from '../stat-list/stat-row.component';
+import { StatRowComponent } from '../stat-row/stat-row.component';
 import { GameStats } from 'src/app/core/models/stats.model';
+import { IonList, IonListHeader } from '@ionic/angular/standalone';
+import { NgIf } from '@angular/common';
+
 @Component({
   selector: 'app-stat-display',
   templateUrl: './stat-display.component.html',
   styleUrls: ['./stat-display.component.scss'],
-  imports: [StatRowComponent],
+  imports: [IonListHeader, IonList, NgIf, StatRowComponent],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StatDisplayComponent {
   @Input() statDefinitions: StatDefinition[] = [];
+  @Input() title = '';
   @Input() currentStats!: GameStats;
   @Input() prevStats?: GameStats;
 

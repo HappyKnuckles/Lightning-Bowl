@@ -1,5 +1,5 @@
 import { Component, CUSTOM_ELEMENTS_SCHEMA, ElementRef, ViewChild, ViewChildren, QueryList, computed, Signal, signal, effect } from '@angular/core';
-import { DecimalPipe, NgFor, NgIf } from '@angular/common';
+import { DecimalPipe, NgIf } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import {
   IonContent,
@@ -40,20 +40,22 @@ import { Game } from 'src/app/core/models/game.model';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { AlertController, RefresherCustomEvent, SegmentCustomEvent } from '@ionic/angular';
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
-import { Stats } from 'src/app/core/models/stats.model';
+import { BestBallStats, Stats } from 'src/app/core/models/stats.model';
 import { GameStatsService } from 'src/app/core/services/game-stats/game-stats.service';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { ImpactStyle } from '@capacitor/haptics';
 import { SortUtilsService } from 'src/app/core/services/sort-utils/sort-utils.service';
 import Chart from 'chart.js/auto';
 import { ChartGenerationService } from 'src/app/core/services/chart/chart-generation.service';
-import { leagueStatDefinitions } from '../stats/stats.definitions';
+import { leagueStatDefinitions } from '../../core/constants/stats.definitions.constants';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { GameComponent } from 'src/app/shared/components/game/game.component';
 import { SpareDisplayComponent } from 'src/app/shared/components/spare-display/spare-display.component';
 import { StatDisplayComponent } from 'src/app/shared/components/stat-display/stat-display.component';
 import { LongPressDirective } from 'src/app/core/directives/long-press/long-press.directive';
 import { HiddenLeagueSelectionService } from 'src/app/core/services/hidden-league/hidden-league.service';
+import { BallStatsComponent } from '../../shared/components/ball-stats/ball-stats.component';
+import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
 
 @Component({
   selector: 'app-league',
@@ -80,7 +82,6 @@ import { HiddenLeagueSelectionService } from 'src/app/core/services/hidden-leagu
     GameComponent,
     ReactiveFormsModule,
     NgIf,
-    NgFor,
     DecimalPipe,
     StatDisplayComponent,
     SpareDisplayComponent,
@@ -89,6 +90,7 @@ import { HiddenLeagueSelectionService } from 'src/app/core/services/hidden-leagu
     IonSegmentView,
     IonSegmentContent,
     LongPressDirective,
+    BallStatsComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
@@ -131,6 +133,25 @@ export class LeaguePage {
 
     return statsByLeague;
   });
+
+  bestBallsByLeague: Signal<Record<string, BestBallStats>> = computed(() => {
+    const gamesByLeague = this.gamesByLeague();
+    const bestBallsByLeague: Record<string, BestBallStats> = {};
+    Object.keys(gamesByLeague).forEach((league) => {
+      bestBallsByLeague[league] = this.statService.calculateBestBallStats(gamesByLeague[league] || []);
+    });
+    return bestBallsByLeague;
+  });
+
+  mostPlayedBallsByLeague: Signal<Record<string, BestBallStats>> = computed(() => {
+    const gamesByLeague = this.gamesByLeague();
+    const mostUsedBallsByLeague: Record<string, BestBallStats> = {};
+    Object.keys(gamesByLeague).forEach((league) => {
+      mostUsedBallsByLeague[league] = this.statService.calculateMostPlayedBall(gamesByLeague[league] || []);
+    });
+    return mostUsedBallsByLeague;
+  });
+
   statDefinitions = leagueStatDefinitions;
   private scoreChartInstances: Record<string, Chart> = {};
   private pinChartInstances: Record<string, Chart> = {};
@@ -157,6 +178,7 @@ export class LeaguePage {
     private toastService: ToastService,
     private chartService: ChartGenerationService,
     private hiddenLeagueSelectionService: HiddenLeagueSelectionService,
+    private analyticsService: AnalyticsService,
   ) {
     addIcons({
       addOutline,
@@ -254,7 +276,9 @@ export class LeaguePage {
   onSegmentChanged(league: string, event: SegmentCustomEvent): void {
     this.selectedSegment = event.detail.value?.toString() || 'Overall';
     this.generateCharts(league);
-    this.content.scrollToTop(300);
+    setTimeout(() => {
+      this.content.scrollToTop(300);
+    }, 300);
   }
 
   generateCharts(league: string, isReload?: boolean): void {
@@ -300,6 +324,8 @@ export class LeaguePage {
             try {
               await this.storageService.addLeague(data.league);
               this.toastService.showToast(ToastMessages.leagueSaveSuccess, 'add');
+
+              void this.analyticsService.trackLeagueCreated({ name: data.league });
             } catch (error) {
               this.toastService.showToast(ToastMessages.leagueSaveError, 'bug', true);
               console.error('Error saving league:', error);
@@ -361,8 +387,10 @@ export class LeaguePage {
         {
           text: 'Edit',
           handler: async (data: { league: string }) => {
+            const newLeagueName = data.league;
+            const oldLeagueName = league;
             try {
-              await this.storageService.editLeague(data.league, league);
+              await this.storageService.editLeague(newLeagueName, oldLeagueName);
               this.toastService.showToast(ToastMessages.leagueEditSuccess, 'checkmark-outline');
             } catch (error) {
               this.toastService.showToast(ToastMessages.leagueEditError, 'bug', true);
@@ -386,6 +414,8 @@ export class LeaguePage {
         this.scoreChart,
         this.gamesByLeagueReverse()[league],
         this.scoreChartInstances[league]!,
+        undefined,
+        undefined,
         isReload,
       );
     } catch (error) {

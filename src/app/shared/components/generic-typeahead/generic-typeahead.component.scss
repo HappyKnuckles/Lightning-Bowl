@@ -1,0 +1,20 @@
+%card {
+  margin-bottom: 6px;
+  border-radius: 7px;
+  border-left: 5px solid;
+}
+
+.red-card {
+  @extend %card;
+  border-left-color: red;
+}
+
+.yellow-card {
+  @extend %card;
+  border-left-color: yellow;
+}
+
+.green-card {
+  @extend %card;
+  border-left-color: green;
+}

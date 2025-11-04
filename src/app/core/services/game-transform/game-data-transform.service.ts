@@ -14,14 +14,16 @@ export class GameDataTransformerService {
     isSeries?: boolean,
     seriesId?: string,
     note?: string,
-    pattern?: string,
+    patterns?: string[],
     balls?: string[],
+    existingGameId?: string,
+    existingDate?: number,
     throwsData?: { value: number; pinsLeftStanding: number[] }[][],
     isPinMode?: boolean,
   ): Game {
     try {
-      const gameId = Date.now() + '_' + Math.random().toString(36).slice(2, 9); // Generate a unique gameId
-      const date = Date.now();
+      const gameId = existingGameId || Date.now() + '_' + Math.random().toString(36).slice(2, 9);
+      const date = existingDate || Date.now();
       const isPerfect = totalScore === 300;
       const isClean = !frames.some((frame: number[]) => {
         const frameScore = frame.reduce((acc: number, curr: number) => acc + curr, 0);
@@ -51,8 +53,8 @@ export class GameDataTransformerService {
         league: league,
         isClean: isClean,
         isPerfect: isPerfect,
-        pattern: pattern!,
-        balls: balls,
+        patterns: patterns ? [...patterns].sort() : [],
+        balls: balls ? [...balls].sort() : undefined,
       };
     } catch (error) {
       throw new Error(`Error transforming game data: ${error}`);

@@ -28,8 +28,11 @@ import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
-import { BallCoreTypeaheadComponent } from '../ball-core-typeahead/ball-core-typeahead.component';
-import { BallCoverstockTypeaheadComponent } from '../ball-coverstock-typeahead/ball-coverstock-typeahead.component';
+import { GenericTypeaheadComponent } from '../generic-typeahead/generic-typeahead.component';
+import { createBallCoreTypeaheadConfig, createBallCoverstockTypeaheadConfig } from '../generic-typeahead/typeahead-configs';
+import { TypeaheadConfig } from '../generic-typeahead/typeahead-config.interface';
+import { Core, Coverstock } from 'src/app/core/models/ball.model';
+import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
 @Component({
   selector: 'app-ball-filter',
   templateUrl: './ball-filter.component.html',
@@ -58,8 +61,7 @@ import { BallCoverstockTypeaheadComponent } from '../ball-coverstock-typeahead/b
     ReactiveFormsModule,
     CommonModule,
     IonSelectOption,
-    BallCoreTypeaheadComponent,
-    BallCoverstockTypeaheadComponent,
+    GenericTypeaheadComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
@@ -69,6 +71,8 @@ export class BallFilterComponent implements OnInit {
   coverstockTypes: CoverstockType[] = Object.values(CoverstockType);
   weights: string[] = ['12', '13', '14', '15', '16'];
   presentingElement?: HTMLElement;
+  coreTypeaheadConfig!: TypeaheadConfig<Core>;
+  coverstockTypeaheadConfig!: TypeaheadConfig<Coverstock>;
 
   constructor(
     public ballFilterService: BallFilterService,
@@ -77,9 +81,12 @@ export class BallFilterComponent implements OnInit {
     private storageService: StorageService,
     private toastService: ToastService,
     private loadingService: LoadingService,
+    private analyticsService: AnalyticsService,
   ) {}
   ngOnInit() {
     this.presentingElement = document.querySelector('.ion-page')!;
+    this.coreTypeaheadConfig = createBallCoreTypeaheadConfig();
+    this.coverstockTypeaheadConfig = createBallCoverstockTypeaheadConfig();
   }
   cancel(): Promise<boolean> {
     this.ballFilterService.filters.update(() =>
@@ -103,10 +110,29 @@ export class BallFilterComponent implements OnInit {
   }
 
   confirm(): Promise<boolean> {
+    const activeFilters = this.ballFilterService.activeFilterCount();
+    const filters = this.ballFilterService.filters();
+
     this.ballFilterService.filters.update((filters) => ({
       ...filters,
     }));
     this.ballFilterService.saveFilters();
+
+    if (activeFilters > 0) {
+      void this.analyticsService.trackBallFilterApplied({
+        active_filter_count: activeFilters,
+        has_brands: filters.brands.length > 0,
+        has_cores: filters.cores.length > 0,
+        has_coverstocks: filters.coverstocks.length > 0,
+        has_core_type: filters.coreType !== CoreType.ALL,
+        has_coverstock_types: filters.coverstockTypes.length > 0,
+        has_market: filters.market !== Market.ALL,
+        has_rg_range: filters.minRg > 0 || filters.maxRg < 999,
+        has_diff_range: filters.minDiff > 0 || filters.maxDiff < 999,
+        in_arsenal_only: filters.inArsenal,
+      });
+    }
+
     // this.ballFilterService.filterGames(this.games);
     return this.modalCtrl.dismiss('confirm');
   }

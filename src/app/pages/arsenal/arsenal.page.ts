@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, Signal, ViewChild } from '@angular/core';
+import { Component, OnInit, computed, Signal, ViewChild, ElementRef, effect, model } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -29,12 +29,19 @@ import {
   IonChip,
   IonReorderGroup,
   IonReorder,
+  IonSegment,
+  IonSegmentButton,
+  IonSegmentContent,
+  IonSegmentView,
+  IonAvatar,
+  IonListHeader,
+  IonRippleEffect,
 } from '@ionic/angular/standalone';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { Ball } from 'src/app/core/models/ball.model';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { addIcons } from 'ionicons';
-import { chevronBack, add, openOutline, trashOutline } from 'ionicons/icons';
+import { chevronBack, add, openOutline, trashOutline, ellipsisVerticalOutline } from 'ionicons/icons';
 import { AlertController, ItemReorderCustomEvent, ModalController } from '@ionic/angular';
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import { ImpactStyle } from '@capacitor/haptics';
@@ -42,7 +49,11 @@ import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { BallService } from 'src/app/core/services/ball/ball.service';
 import { BallListComponent } from 'src/app/shared/components/ball-list/ball-list.component';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
-import { BallTypeaheadComponent } from 'src/app/shared/components/ball-typeahead/ball-typeahead.component';
+import { GenericTypeaheadComponent } from 'src/app/shared/components/generic-typeahead/generic-typeahead.component';
+import { createBallTypeaheadConfig } from 'src/app/shared/components/generic-typeahead/typeahead-configs';
+import { TypeaheadConfig } from 'src/app/shared/components/generic-typeahead/typeahead-config.interface';
+import { Chart } from 'chart.js';
+import { ChartGenerationService } from 'src/app/core/services/chart/chart-generation.service';
 
 @Component({
   selector: 'app-arsenal',
@@ -51,6 +62,11 @@ import { BallTypeaheadComponent } from 'src/app/shared/components/ball-typeahead
   standalone: true,
   providers: [ModalController],
   imports: [
+    IonRippleEffect,
+    IonListHeader,
+    IonAvatar,
+    IonSegmentButton,
+    IonSegment,
     IonReorder,
     IonReorderGroup,
     IonChip,
@@ -81,7 +97,9 @@ import { BallTypeaheadComponent } from 'src/app/shared/components/ball-typeahead
     CommonModule,
     FormsModule,
     BallListComponent,
-    BallTypeaheadComponent,
+    GenericTypeaheadComponent,
+    IonSegmentContent,
+    IonSegmentView,
   ],
 })
 export class ArsenalPage implements OnInit {
@@ -90,26 +108,52 @@ export class ArsenalPage implements OnInit {
   coverstockBalls: Ball[] = [];
   coreBalls: Ball[] = [];
   presentingElement?: HTMLElement;
+  ballTypeaheadConfig!: TypeaheadConfig<Ball>;
   ballsWithoutArsenal: Signal<Ball[]> = computed(() =>
     this.storageService
       .allBalls()
       .filter((ball) => !this.storageService.arsenal().some((b) => b.ball_id === ball.ball_id && b.core_weight === ball.core_weight)),
   );
+  selectedSegment = model('arsenal');
+  @ViewChild('balls', { static: false }) ballChart?: ElementRef;
+  private ballsChartInstance: Chart | null = null;
   constructor(
     public storageService: StorageService,
     private hapticService: HapticService,
     private alertController: AlertController,
-
     private loadingService: LoadingService,
     public toastService: ToastService,
     public modalCtrl: ModalController,
     private ballService: BallService,
+    private chartGenerationService: ChartGenerationService,
   ) {
-    addIcons({ add, trashOutline, chevronBack, openOutline });
+    addIcons({ add, ellipsisVerticalOutline, trashOutline, chevronBack, openOutline });
+    effect(() => {
+      if (this.selectedSegment() === 'compare') {
+        this.generateBallDistributionChart();
+      }
+    });
   }
 
   ngOnInit() {
     this.presentingElement = document.querySelector('.ion-page')!;
+    this.ballTypeaheadConfig = createBallTypeaheadConfig(this.storageService);
+  }
+
+  private generateBallDistributionChart(): void {
+    try {
+      if (!this.ballChart) {
+        return;
+      }
+      this.ballsChartInstance = this.chartGenerationService.generateBallDistributionChart(
+        this.ballChart!,
+        this.storageService.arsenal(),
+        this.ballsChartInstance!,
+      );
+    } catch (error) {
+      console.error('Error generating ball distribution chart:', error);
+      this.toastService.showToast(ToastMessages.chartGenerationError, 'bug', true);
+    }
   }
 
   async removeFromArsenal(ball: Ball): Promise<void> {
@@ -174,6 +218,11 @@ export class ArsenalPage implements OnInit {
       console.error('Error saving balls to arsenal:', error);
       this.toastService.showToast(ToastMessages.ballSaveError, 'bug', true);
     }
+  }
+
+  onBallSelectionChange(ballIds: string[]): void {
+    const selectedBalls = this.ballsWithoutArsenal().filter((ball) => ballIds.includes(ball.ball_id));
+    this.saveBallToArsenal(selectedBalls);
   }
 
   async getSameCoreBalls(ball: Ball): Promise<void> {

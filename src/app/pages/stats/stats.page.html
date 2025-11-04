@@ -1,7 +1,14 @@
 <ion-header [translucent]="true" class="ion-text-center">
   <ion-toolbar>
     <ion-buttons slot="start" style="padding: 4px">
-      <ion-button for="excelUpload" type="button" class="action-sheet" slot="start" fill="clear" (click)="openExcelFileInput()">
+      <ion-button
+        for="excelUpload"
+        type="button"
+        class="action-sheet"
+        slot="start"
+        fill="clear"
+        [disabled]="storageService.allBalls().length === 0"
+        (click)="openExcelFileInput()">
         <ion-icon slot="icon-only" name="cloud-upload-outline"></ion-icon>
       </ion-button>
       <ion-button
@@ -32,28 +39,57 @@
       </ion-segment>
     </ion-toolbar>
   }
+  <ion-toolbar *ngIf="gameFilterService.activeFilterCount() !== 0" style="text-align: center">
+    <app-generic-filter-active [filters]="currentFilters" [defaultFilters]="defaultFilters" [filterConfigs]="gameFilterConfigs">
+    </app-generic-filter-active>
+  </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
   <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
-  <app-game-filter-active></app-game-filter-active>
+
   <ion-segment-view>
     <ion-segment-content id="Overall">
       <section class="tab" *ngIf="gameFilterService.filteredGames().length > 0">
         <app-stat-display
+          [title]="'Overall Stats'"
           [statDefinitions]="overallStatDefinitions"
           [currentStats]="statsService.currentStats()"
           [prevStats]="statsService.prevStats()">
         </app-stat-display>
         <app-stat-display
+          [title]="'Play Frequency Stats'"
+          [statDefinitions]="playFrequencyStatDefinitions"
+          [currentStats]="statsService.currentStats()"
+          [prevStats]="statsService.prevStats()">
+        </app-stat-display>
+        <app-stat-display
+          [title]="'Special Stats'"
+          [statDefinitions]="specialStatDefinitions"
+          [currentStats]="statsService.currentStats()"
+          [prevStats]="statsService.prevStats()">
+        </app-stat-display>
+        <app-ball-stats
+          [title]="'Most used ball'"
+          [bestBall]="statsService.mostPlayedBallStats()"
+          [totalGames]="statsService.currentStats().totalGames"></app-ball-stats>
+        <app-ball-stats
+          [title]="'Best ball'"
+          [bestBall]="statsService.bestBallStats()"
+          [totalGames]="statsService.currentStats().totalGames"></app-ball-stats>
+        <app-stat-display
+          [title]="'Series Stats'"
           [statDefinitions]="seriesStatDefinitions"
           [currentStats]="statsService.currentStats()"
           [prevStats]="statsService.prevStats()">
         </app-stat-display>
         <div class="stat-container">
           <canvas #scoreChart class="score" style="width: 300px; height: 400px; max-height: 700px"></canvas>
+        </div>
+        <div class="stat-container">
+          <canvas #averageScoreChart class="average-score" style="width: 300px; height: 400px; max-height: 700px"></canvas>
         </div>
         <div class="stat-container">
           <canvas #scoreDistributionChart style="width: 300px; height: 400px; max-height: 700px"></canvas>
@@ -63,6 +99,7 @@
 
     <ion-segment-content id="Spares">
       <section class="tab" *ngIf="gameFilterService.filteredGames().length > 0">
+        <ion-list-header style="margin-bottom: 4px">Spare Overview</ion-list-header>
         <app-spare-display [stats]="statsService.currentStats()" [prevStats]="statsService.prevStats()" id="overalSpareStats"></app-spare-display>
         <div class="stat-container">
           <canvas #pinChart class="spares" style="width: 300px; height: 400px; max-height: 700px"></canvas>
@@ -76,7 +113,14 @@
     <ion-segment-content id="Throws">
       <section class="tab" *ngIf="gameFilterService.filteredGames().length > 0">
         <app-stat-display
+          [title]="'Throw Stats'"
           [statDefinitions]="throwStatDefinitions"
+          [currentStats]="statsService.currentStats()"
+          [prevStats]="statsService.prevStats()">
+        </app-stat-display>
+        <app-stat-display
+          [title]="'Strike Stats'"
+          [statDefinitions]="strikeStatDefinitions"
           [currentStats]="statsService.currentStats()"
           [prevStats]="statsService.prevStats()">
         </app-stat-display>
@@ -102,19 +146,14 @@
         </ion-item>
 
         <section class="tab">
-          <ion-item lines="none" style="--background: none">
-            <ion-label>
-              <h1>Overall</h1>
-            </ion-label>
-          </ion-item>
-          <app-stat-display [statDefinitions]="sessionStatDefinitions" [currentStats]="sessionStats()" [prevStats]="statsService.currentStats()">
+          <app-stat-display
+            [title]="'Overall Stats'"
+            [statDefinitions]="sessionStatDefinitions"
+            [currentStats]="sessionStats()"
+            [prevStats]="statsService.currentStats()">
           </app-stat-display>
-          <ion-item lines="none" style="--background: none">
-            <ion-label>
-              <h1>Spares</h1>
-            </ion-label>
-          </ion-item>
-          <app-spare-display [prevStats]="statsService.currentStats()" [stats]="sessionStats()" [id]="'sessionSpareStats'"> </app-spare-display>
+          <app-spare-display [title]="'Spare Stats'" [prevStats]="statsService.currentStats()" [stats]="sessionStats()" [id]="'sessionSpareStats'">
+          </app-spare-display>
         </section>
       }
     </ion-segment-content>
