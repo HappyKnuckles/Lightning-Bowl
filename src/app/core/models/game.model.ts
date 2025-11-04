@@ -7,6 +7,7 @@ export interface Game {
   isClean: boolean;
   isPerfect: boolean;
   isPractice: boolean;
+  isPinMode?: boolean;
   isSeries?: boolean;
   seriesId?: string;
   note?: string;

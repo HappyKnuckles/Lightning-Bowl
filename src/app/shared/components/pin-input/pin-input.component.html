@@ -1,0 +1,109 @@
+<div class="pin-input-container">
+  <div class="pin-row">
+    <ion-button
+      class="pin"
+      [class.active]="isPinSelected(7)"
+      [class.disabled]="!isPinAvailable(7)"
+      [class.knocked-down]="isPinKnockedDownPreviously(7)"
+      [disabled]="!isPinAvailable(7)"
+      (click)="togglePin(7)">
+      7
+    </ion-button>
+    <ion-button
+      class="pin"
+      [class.active]="isPinSelected(8)"
+      [class.disabled]="!isPinAvailable(8)"
+      [class.knocked-down]="isPinKnockedDownPreviously(8)"
+      [disabled]="!isPinAvailable(8)"
+      (click)="togglePin(8)">
+      8
+    </ion-button>
+    <ion-button
+      class="pin"
+      [class.active]="isPinSelected(9)"
+      [class.disabled]="!isPinAvailable(9)"
+      [class.knocked-down]="isPinKnockedDownPreviously(9)"
+      [disabled]="!isPinAvailable(9)"
+      (click)="togglePin(9)">
+      9
+    </ion-button>
+    <ion-button
+      class="pin"
+      [class.active]="isPinSelected(10)"
+      [class.disabled]="!isPinAvailable(10)"
+      [class.knocked-down]="isPinKnockedDownPreviously(10)"
+      [disabled]="!isPinAvailable(10)"
+      (click)="togglePin(10)">
+      10
+    </ion-button>
+  </div>
+  <div class="pin-row">
+    <ion-button
+      class="pin"
+      [class.active]="isPinSelected(4)"
+      [class.disabled]="!isPinAvailable(4)"
+      [class.knocked-down]="isPinKnockedDownPreviously(4)"
+      [disabled]="!isPinAvailable(4)"
+      (click)="togglePin(4)">
+      4
+    </ion-button>
+    <ion-button
+      class="pin"
+      [class.active]="isPinSelected(5)"
+      [class.disabled]="!isPinAvailable(5)"
+      [class.knocked-down]="isPinKnockedDownPreviously(5)"
+      [disabled]="!isPinAvailable(5)"
+      (click)="togglePin(5)">
+      5
+    </ion-button>
+    <ion-button
+      class="pin"
+      [class.active]="isPinSelected(6)"
+      [class.disabled]="!isPinAvailable(6)"
+      [class.knocked-down]="isPinKnockedDownPreviously(6)"
+      [disabled]="!isPinAvailable(6)"
+      (click)="togglePin(6)">
+      6
+    </ion-button>
+  </div>
+  <div class="pin-row">
+    <ion-button
+      class="pin"
+      [class.active]="isPinSelected(2)"
+      [class.disabled]="!isPinAvailable(2)"
+      [class.knocked-down]="isPinKnockedDownPreviously(2)"
+      [disabled]="!isPinAvailable(2)"
+      (click)="togglePin(2)">
+      2
+    </ion-button>
+    <ion-button
+      class="pin"
+      [class.active]="isPinSelected(3)"
+      [class.disabled]="!isPinAvailable(3)"
+      [class.knocked-down]="isPinKnockedDownPreviously(3)"
+      [disabled]="!isPinAvailable(3)"
+      (click)="togglePin(3)">
+      3
+    </ion-button>
+  </div>
+  <div class="pin-row">
+    <ion-button
+      class="pin"
+      [class.active]="isPinSelected(1)"
+      [class.disabled]="!isPinAvailable(1)"
+      [class.knocked-down]="isPinKnockedDownPreviously(1)"
+      [disabled]="!isPinAvailable(1)"
+      (click)="togglePin(1)">
+      1
+    </ion-button>
+  </div>
+
+  <div class="quick-actions">
+    <ion-button expand="block" (click)="recordStrike()" [disabled]="!canRecordStrike()"> X </ion-button>
+    <ion-button expand="block" (click)="recordSpare()" [disabled]="!canRecordSpare()"> / </ion-button>
+    <ion-button expand="block" (click)="undoLastThrow()" [disabled]="!canUndoLastThrow()">
+      <ion-icon name="arrow-undo" slot="start"></ion-icon>
+    </ion-button>
+    <ion-button expand="block" (click)="confirmPinThrow()"> Confirm ({{ selectedPins.length }} pins) </ion-button>
+  </div>
+</div>

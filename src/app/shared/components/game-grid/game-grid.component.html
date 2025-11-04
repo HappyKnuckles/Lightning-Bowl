@@ -1,4 +1,4 @@
-<div class="grid-container">
+<div class="grid-container" *ngIf="!isPinMode">
   <ion-grid fixed="true" *ngFor="let i of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; let frameIndex = index">
     <ion-row>
       <ion-col class="middle frame">{{ i }}</ion-col>
@@ -72,7 +72,7 @@
   </ion-grid>
 </div>
 
-<div style="margin: 0 5px">
+<div style="margin: 0 5px" *ngIf="!isPinMode">
   <ion-list lines="full" style="border-radius: 7px">
     <ion-item>
       <ion-checkbox [(ngModel)]="isPractice" name="isPractice" #checkbox (ionChange)="isPracticeChanged.emit(isPractice)">Practice</ion-checkbox>
@@ -110,101 +110,122 @@
   </ion-list>
 </div>
 
-<div class="grid-container">
-<ion-grid *ngFor="let i of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; let frameIndex = index">
-  <ion-row>
-    <ion-col class="middle frame">{{ i }}</ion-col>
-  </ion-row>
-  <ion-row>
-    <ion-col class="input-col" *ngIf="i !== 10"></ion-col>
-    <ion-col class="input-col">
-      <ion-input
-        type="text"
-        clearOnEdit="true"
-        inputmode="numeric"
-        autocapitalize="on"
-        debounce="1000"
-        [value]="getFrameValue(frameIndex, 0)"
-        (ionInput)="simulateScore($event, frameIndex, 0)">
-      </ion-input>
-    </ion-col>
-    <ion-col class="input-col" *ngIf="i !== 10">
-      <ion-input
-        type="text"
-        clearOnEdit="true"
-        inputmode="numeric"
-        autocapitalize="on"
-        debounce="1000"
-        [disabled]="frames[frameIndex][0] === 10 && i !== 10"
-        [value]="getFrameValue(frameIndex, 1)"
-        (ionInput)="simulateScore($event, frameIndex, 1)">
-      </ion-input>
-    </ion-col>
-    <ion-col class="input-col" *ngIf="i === 10">
-      <ion-input
-        type="text"
-        clearOnEdit="true"
-        inputmode="numeric"
-        autocapitalize="on"
-        debounce="1000"
-        [disabled]="frames[frameIndex][0] === 10 && i !== 10"
-        [value]="getFrameValue(frameIndex, 1)"
-        (ionInput)="simulateScore($event, frameIndex, 1)">
-      </ion-input>
-    </ion-col>
-    <ion-col class="input-col" *ngIf="i === 10">
-      <ion-input
-        type="text"
-        clearOnEdit="true"
-        inputmode="numeric"
-        autocapitalize="on"
-        debounce="1000"
-        [value]="getFrameValue(frameIndex, 2)"
-        [disabled]="frames[frameIndex][0] !== 10 && frames[frameIndex][0] + (frames[frameIndex][1] || 0) !== 10"
-        (ionInput)="simulateScore($event, frameIndex, 2)">
-      </ion-input>
-    </ion-col>
-  </ion-row>
-  <ion-row
-    *ngIf="
-      (frames[frameIndex][0] !== undefined || frames[frameIndex][1] !== undefined || (i === 10 && frames[frameIndex][0] !== undefined)) &&
-      isNumber(frameScores[i - 1])
-    ">
-    <ion-col class="middle count">{{ frameScores[i - 1] }}</ion-col>
-  </ion-row>
-  <ion-row
-    *ngIf="
-      !(
-        (frames[frameIndex][0] !== undefined || frames[frameIndex][1] !== undefined || (i === 10 && frames[frameIndex][0] !== undefined)) &&
-        isNumber(frameScores[i - 1])
-      )
-    ">
-    <ion-col class="middle count" style="color: var(--ion-color-quartiary)">0</ion-col>
-  </ion-row>
-</ion-grid>
-</div>
-
-<div class="reverse-bowling-layout">
-  <div class="pin-row">
-    <ion-button class="pin" data-pin="7"> 7 </ion-button>
-    <ion-button class="pin" data-pin="8"> 8 </ion-button>
-    <ion-button class="pin" data-pin="9"> 9 </ion-button>
-    <ion-button class="pin" data-pin="10"> 10 </ion-button>
+@if (isPinMode) {
+  <div class="grid-container">
+    <ion-grid *ngFor="let i of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; let frameIndex = index">
+      <ion-row>
+        <ion-col class="middle frame">{{ i }}</ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col class="input-col" *ngIf="i !== 10"></ion-col>
+        <ion-col class="input-col" [class.current-throw]="frameIndex === currentFrameIndex && currentThrowIndex === 0">
+          <ion-input
+            type="text"
+            clearOnEdit="true"
+            inputmode="numeric"
+            autocapitalize="on"
+            debounce="1000"
+            [value]="getFrameValue(frameIndex, 0)"
+            (ionInput)="simulateScore($event, frameIndex, 0)">
+          </ion-input>
+        </ion-col>
+        <ion-col class="input-col" *ngIf="i !== 10" [class.current-throw]="frameIndex === currentFrameIndex && currentThrowIndex === 1">
+          <ion-input
+            type="text"
+            clearOnEdit="true"
+            inputmode="numeric"
+            autocapitalize="on"
+            debounce="1000"
+            [disabled]="frames[frameIndex][0] === 10 && i !== 10"
+            [value]="getFrameValue(frameIndex, 1)"
+            (ionInput)="simulateScore($event, frameIndex, 1)">
+          </ion-input>
+        </ion-col>
+        <ion-col class="input-col" *ngIf="i === 10" [class.current-throw]="frameIndex === currentFrameIndex && currentThrowIndex === 1">
+          <ion-input
+            type="text"
+            clearOnEdit="true"
+            inputmode="numeric"
+            autocapitalize="on"
+            debounce="1000"
+            [disabled]="frames[frameIndex][0] === 10 && i !== 10"
+            [value]="getFrameValue(frameIndex, 1)"
+            (ionInput)="simulateScore($event, frameIndex, 1)">
+          </ion-input>
+        </ion-col>
+        <ion-col class="input-col" *ngIf="i === 10" [class.current-throw]="frameIndex === currentFrameIndex && currentThrowIndex === 2">
+          <ion-input
+            type="text"
+            clearOnEdit="true"
+            inputmode="numeric"
+            autocapitalize="on"
+            debounce="1000"
+            [value]="getFrameValue(frameIndex, 2)"
+            [disabled]="frames[frameIndex][0] !== 10 && frames[frameIndex][0] + (frames[frameIndex][1] || 0) !== 10"
+            (ionInput)="simulateScore($event, frameIndex, 2)">
+          </ion-input>
+        </ion-col>
+      </ion-row>
+      <ion-row
+        *ngIf="
+          (frames[frameIndex][0] !== undefined || frames[frameIndex][1] !== undefined || (i === 10 && frames[frameIndex][0] !== undefined)) &&
+          isNumber(frameScores[i - 1])
+        ">
+        <ion-col class="middle count">{{ frameScores[i - 1] }}</ion-col>
+      </ion-row>
+      <ion-row
+        *ngIf="
+          !(
+            (frames[frameIndex][0] !== undefined || frames[frameIndex][1] !== undefined || (i === 10 && frames[frameIndex][0] !== undefined)) &&
+            isNumber(frameScores[i - 1])
+          )
+        ">
+        <ion-col class="middle count" style="color: var(--ion-color-quartiary)">0</ion-col>
+      </ion-row>
+    </ion-grid>
   </div>
-  <div class="pin-row">
-    <ion-button class="pin" data-pin="4"> 4 </ion-button>
-    <ion-button class="pin" data-pin="5"> 5 </ion-button>
-    <ion-button class="pin" data-pin="6"> 6 </ion-button>
+
+  <app-pin-input
+    [frames]="frames"
+    [throwsData]="throwsData"
+    [currentFrameIndex]="currentFrameIndex"
+    [currentThrowIndex]="currentThrowIndex"
+    (throwConfirmed)="onPinThrowConfirmed($event)"
+    (throwUndone)="onPinThrowUndone()"></app-pin-input>
+  <div style="margin: 20px 5px 0">
+    <ion-list lines="full" style="border-radius: 7px">
+      <ion-item>
+        <ion-checkbox [(ngModel)]="isPractice" name="isPractice" #checkbox (ionChange)="isPracticeChanged.emit(isPractice)">Practice</ion-checkbox>
+      </ion-item>
+      <app-league-selector [isAddPage]="true" (leagueChanged)="onLeagueChanged($event)" #leagueSelector></app-league-selector>
+      <ion-item id="selectPatternAdd" button>
+        <ion-label>Pattern</ion-label>
+        {{ pattern }}
+      </ion-item>
+      <ion-modal [presentingElement]="presentingElement" trigger="selectPatternAdd">
+        <ng-template>
+          <app-pattern-typeahead
+            [patterns]="storageService.allPatterns()"
+            [prevSelectedPattern]="pattern"
+            (selectedPatternsChange)="selectPattern($event)"></app-pattern-typeahead>
+        </ng-template>
+      </ion-modal>
+      <ion-item>
+        <ion-select [(ngModel)]="balls" multiple="true" name="balls" placeholder="None" label="Balls">
+          <ion-select-option *ngFor="let ball of storageService.arsenal()" [value]="ball.ball_name">
+            {{ ball.ball_name }}
+          </ion-select-option>
+        </ion-select>
+      </ion-item>
+      <ion-item>
+        <ion-textarea
+          label="Note"
+          type="text"
+          [(ngModel)]="note"
+          name="note"
+          [autoGrow]="true"
+          placeholder="today knee pain, lanes dry af, i fucking suck today"></ion-textarea>
+      </ion-item>
+    </ion-list>
   </div>
-  <div class="pin-row">
-    <ion-button class="pin" data-pin="2"> 2 </ion-button>
-    <ion-button class="pin" data-pin="3"> 3 </ion-button>
-  </div>
-  <div class="pin-row">
-    <ion-button class="pin" data-pin="1"> 1 </ion-button>
-  </div>
-</div>
-
-
-
-
+}

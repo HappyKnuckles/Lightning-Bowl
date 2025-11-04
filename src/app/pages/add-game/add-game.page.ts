@@ -21,12 +21,17 @@ import {
   IonSegmentView,
   IonSegmentContent,
   IonCheckbox,
+  IonToggle,
+  IonLabel,
+  IonItem,
+  IonList,
 } from '@ionic/angular/standalone';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Game } from 'src/app/core/models/game.model';
 import { addIcons } from 'ionicons';
 import { add, chevronDown, chevronUp, cameraOutline, documentTextOutline, medalOutline } from 'ionicons/icons';
 import { NgIf, NgFor } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ImpactStyle } from '@capacitor/haptics';
 import { AdService } from 'src/app/core/services/ad/ad.service';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
@@ -81,6 +86,11 @@ defineCustomElements(window);
     IonSegment,
     IonSegmentContent,
     IonSegmentView,
+    IonToggle,
+    IonLabel,
+    IonItem,
+    IonList,
+    FormsModule,
     NgIf,
     NgFor,
     GameGridComponent,
@@ -109,6 +119,7 @@ export class AddGamePage implements OnInit {
   selectedSegment = 'Game 1';
   segments: string[] = ['Game 1'];
   presentingElement!: HTMLElement;
+  isPinMode = false;
   private allowedDeviceIds = [
     '820fabe8-d29b-45c2-89b3-6bcc0e149f2b',
     '21330a3a-9cff-41ce-981a-00208c21d883',

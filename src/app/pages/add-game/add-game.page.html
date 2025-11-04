@@ -16,6 +16,13 @@
     </ion-buttons>
   </ion-toolbar>
 
+  <ion-toolbar>
+    <ion-item lines="none">
+      <ion-label>Pin Input Mode</ion-label>
+      <ion-toggle [(ngModel)]="isPinMode" slot="end"></ion-toggle>
+    </ion-item>
+  </ion-toolbar>
+
   @if (selectedMode !== "Single") {
     <ion-toolbar>
       <ion-segment [value]="selectedSegment" [scrollable]="true">
@@ -52,6 +59,7 @@
     <ion-segment-view>
       <ion-segment-content *ngFor="let trackIndex of trackIndexes[i]; let j = index" [id]="segments[j]">
         <app-game-grid
+          [isPinMode]="isPinMode"
           (maxScoreChanged)="onMaxScoreChanged($event, trackIndex)"
           (totalScoreChanged)="onTotalScoreChange($event, trackIndex)"
           (leagueChanged)="onLeagueChange($event)"
