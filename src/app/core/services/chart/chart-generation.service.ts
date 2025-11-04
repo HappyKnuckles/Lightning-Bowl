@@ -12,13 +12,8 @@ import Chart, {
   LegendElement,
   ChartDataset,
 } from 'chart.js/auto';
-import * as d3 from 'd3';
-import { Pattern, ForwardsData, ReverseData } from '../../models/pattern.model';
 import { Ball } from '../../models/ball.model';
 import zoomPlugin from 'chartjs-plugin-zoom';
-
-const LANE_HEIGHT = 70;
-const LANE_WIDTH = 39;
 
 const ballDistributionZonePlugin: Plugin<'scatter'> = {
   id: 'ballDistributionZones',
@@ -900,287 +895,287 @@ export class ChartGenerationService {
     }
   }
 
-  generatePatternChartDataUri(
-    pattern: Partial<Pattern>,
-    svgWidth: number,
-    svgHeight: number,
-    viewBoxWidth: number,
-    viewBoxHeight: number,
-    pinRadius: number,
-    pinStrokeWidth: number,
-    arrowSize: number,
-    horizontal = false,
-  ): string {
-    // determine color from ratio
-    const ratio = parseFloat(pattern.ratio!.split(':')[0]);
-    let color = 'blue';
-    if (ratio >= 1 && ratio < 4) {
-      color = 'red';
-    } else if (ratio >= 4 && ratio < 8) {
-      color = '#ed8e07';
-    } else if (ratio >= 8) {
-      color = 'green';
-    }
+  // generatePatternChartDataUri(
+  //   pattern: Partial<Pattern>,
+  //   svgWidth: number,
+  //   svgHeight: number,
+  //   viewBoxWidth: number,
+  //   viewBoxHeight: number,
+  //   pinRadius: number,
+  //   pinStrokeWidth: number,
+  //   arrowSize: number,
+  //   horizontal = false,
+  // ): string {
+  //   // determine color from ratio
+  //   const ratio = parseFloat(pattern.ratio!.split(':')[0]);
+  //   let color = 'blue';
+  //   if (ratio >= 1 && ratio < 4) {
+  //     color = 'red';
+  //   } else if (ratio >= 4 && ratio < 8) {
+  //     color = '#ed8e07';
+  //   } else if (ratio >= 8) {
+  //     color = 'green';
+  //   }
 
-    // 1. Create detached SVG in memory
-    const tempSvgElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  //   // 1. Create detached SVG in memory
+  //   const tempSvgElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
 
-    d3.select(tempSvgElement)
-      .attr('xmlns', 'http://www.w3.org/2000/svg')
-      .attr('preserveAspectRatio', 'xMidYMid slice')
-      .attr('viewBox', `0 0 ${viewBoxWidth} ${viewBoxHeight}`)
-      .style('background-color', 'white');
+  //   d3.select(tempSvgElement)
+  //     .attr('xmlns', 'http://www.w3.org/2000/svg')
+  //     .attr('preserveAspectRatio', 'xMidYMid slice')
+  //     .attr('viewBox', `0 0 ${viewBoxWidth} ${viewBoxHeight}`)
+  //     .style('background-color', 'white');
 
-    // margins and drawing area
-    const margin = { top: 30, right: 10, bottom: 10, left: 30 };
-    const width = horizontal ? svgWidth - margin.top - margin.bottom : svgWidth - margin.left - margin.right;
-    const height = horizontal ? svgHeight - margin.left - margin.right : svgHeight - margin.top - margin.bottom;
+  //   // margins and drawing area
+  //   const margin = { top: 30, right: 10, bottom: 10, left: 30 };
+  //   const width = horizontal ? svgWidth - margin.top - margin.bottom : svgWidth - margin.left - margin.right;
+  //   const height = horizontal ? svgHeight - margin.left - margin.right : svgHeight - margin.top - margin.bottom;
 
-    const g = d3.select(tempSvgElement).append('g');
+  //   const g = d3.select(tempSvgElement).append('g');
 
-    if (horizontal) {
-      g.attr('transform', `translate(${margin.left - 4}, ${width + 40}) rotate(-90)`);
-    } else {
-      g.attr('transform', `translate(${margin.left}, ${margin.top - 10})`);
-    }
+  //   if (horizontal) {
+  //     g.attr('transform', `translate(${margin.left - 4}, ${width + 40}) rotate(-90)`);
+  //   } else {
+  //     g.attr('transform', `translate(${margin.left}, ${margin.top - 10})`);
+  //   }
 
-    // Ensure yScale domain includes 60 so yScale(60) is valid in grid/areas/ticks.
-    const yDomainMax = Math.max(LANE_HEIGHT, 60);
+  //   // Ensure yScale domain includes 60 so yScale(60) is valid in grid/areas/ticks.
+  //   const yDomainMax = Math.max(LANE_HEIGHT, 60);
 
-    const xScale = d3.scaleLinear().domain([0, LANE_WIDTH]).range([0, width]);
-    const yScale = d3.scaleLinear().domain([0, yDomainMax]).range([height, 0]);
+  //   const xScale = d3.scaleLinear().domain([0, LANE_WIDTH]).range([0, width]);
+  //   const yScale = d3.scaleLinear().domain([0, yDomainMax]).range([height, 0]);
 
-    // vertical grid lines (x)
-    g.selectAll('.grid-line-x')
-      .data(d3.range(0, LANE_WIDTH + 1, 1))
-      .enter()
-      .append('line')
-      .attr('class', 'grid-line-x')
-      .attr('x1', (d) => xScale(d))
-      .attr('x2', (d) => xScale(d))
-      .attr('y1', yScale(0))
-      .attr('y2', yScale(60)) // now valid because yScale domain includes 60
-      .attr('stroke', 'lightgray')
-      .attr('stroke-width', 0.5);
+  //   // vertical grid lines (x)
+  //   g.selectAll('.grid-line-x')
+  //     .data(d3.range(0, LANE_WIDTH + 1, 1))
+  //     .enter()
+  //     .append('line')
+  //     .attr('class', 'grid-line-x')
+  //     .attr('x1', (d) => xScale(d))
+  //     .attr('x2', (d) => xScale(d))
+  //     .attr('y1', yScale(0))
+  //     .attr('y2', yScale(60)) // now valid because yScale domain includes 60
+  //     .attr('stroke', 'lightgray')
+  //     .attr('stroke-width', 0.5);
 
-    // horizontal grid lines up to 60
-    g.selectAll('.grid-line-y')
-      .data(d3.range(0, 61, 10))
-      .enter()
-      .append('line')
-      .attr('class', 'grid-line-y')
-      .attr('x1', 0)
-      .attr('x2', width)
-      .attr('y1', (d) => yScale(d))
-      .attr('y2', (d) => yScale(d))
-      .attr('stroke', 'lightgray')
-      .attr('stroke-width', 0.5);
+  //   // horizontal grid lines up to 60
+  //   g.selectAll('.grid-line-y')
+  //     .data(d3.range(0, 61, 10))
+  //     .enter()
+  //     .append('line')
+  //     .attr('class', 'grid-line-y')
+  //     .attr('x1', 0)
+  //     .attr('x2', width)
+  //     .attr('y1', (d) => yScale(d))
+  //     .attr('y2', (d) => yScale(d))
+  //     .attr('stroke', 'lightgray')
+  //     .attr('stroke-width', 0.5);
 
-    const parseX = (value: string): number => {
-      const num = parseFloat(value);
-      if (value.toUpperCase().endsWith('L')) {
-        return num;
-      } else if (value.toUpperCase().endsWith('R')) {
-        return LANE_WIDTH - num;
-      }
-      return num;
-    };
+  //   const parseX = (value: string): number => {
+  //     const num = parseFloat(value);
+  //     if (value.toUpperCase().endsWith('L')) {
+  //       return num;
+  //     } else if (value.toUpperCase().endsWith('R')) {
+  //       return LANE_WIDTH - num;
+  //     }
+  //     return num;
+  //   };
 
-    // computeRect: compute pixel width/height robustly via scaled positions
-    const computeRect = (data: ForwardsData | ReverseData) => {
-      const xStart = parseX(data.start);
-      const xEnd = parseX(data.stop);
-      const rectX = Math.min(xStart, xEnd);
-      const rectX2 = Math.max(xStart, xEnd);
+  //   // computeRect: compute pixel width/height robustly via scaled positions
+  //   const computeRect = (data: ForwardsData | ReverseData) => {
+  //     const xStart = parseX(data.start);
+  //     const xEnd = parseX(data.stop);
+  //     const rectX = Math.min(xStart, xEnd);
+  //     const rectX2 = Math.max(xStart, xEnd);
 
-      const yStartVal = parseFloat(data.distance_start);
-      const yEndVal = parseFloat(data.distance_end);
-      const rectYVal = Math.min(yStartVal, yEndVal);
-      const rectYVal2 = Math.max(yStartVal, yEndVal);
+  //     const yStartVal = parseFloat(data.distance_start);
+  //     const yEndVal = parseFloat(data.distance_end);
+  //     const rectYVal = Math.min(yStartVal, yEndVal);
+  //     const rectYVal2 = Math.max(yStartVal, yEndVal);
 
-      const x1px = xScale(rectX);
-      const x2px = xScale(rectX2);
-      const y1px = yScale(rectYVal);
-      const y2px = yScale(rectYVal2);
+  //     const x1px = xScale(rectX);
+  //     const x2px = xScale(rectX2);
+  //     const y1px = yScale(rectYVal);
+  //     const y2px = yScale(rectYVal2);
 
-      return {
-        x: x1px,
-        y: Math.min(y1px, y2px),
-        width: Math.abs(x2px - x1px),
-        height: Math.abs(y2px - y1px),
-      };
-    };
+  //     return {
+  //       x: x1px,
+  //       y: Math.min(y1px, y2px),
+  //       width: Math.abs(x2px - x1px),
+  //       height: Math.abs(y2px - y1px),
+  //     };
+  //   };
 
-    // parse oil numbers (unchanged)
-    const parseOilValue = (oilStr: string): number => {
-      if (oilStr.includes('.')) {
-        const parts = oilStr.split('.');
-        const factor = Math.pow(10, parts[1].length);
-        return parseFloat(oilStr) * factor;
-      }
-      return parseFloat(oilStr);
-    };
+  //   // parse oil numbers (unchanged)
+  //   const parseOilValue = (oilStr: string): number => {
+  //     if (oilStr.includes('.')) {
+  //       const parts = oilStr.split('.');
+  //       const factor = Math.pow(10, parts[1].length);
+  //       return parseFloat(oilStr) * factor;
+  //     }
+  //     return parseFloat(oilStr);
+  //   };
 
-    const allOilValues: number[] = [];
-    if (pattern.forwards_data) {
-      pattern.forwards_data.forEach((d: ForwardsData) => {
-        const oilVal = parseOilValue(d.total_oil);
-        if (oilVal !== 0) allOilValues.push(oilVal);
-      });
-    }
-    if (pattern.reverse_data) {
-      pattern.reverse_data.forEach((d: ReverseData) => {
-        const oilVal = parseOilValue(d.total_oil);
-        if (oilVal !== 0) allOilValues.push(oilVal);
-      });
-    }
+  //   const allOilValues: number[] = [];
+  //   if (pattern.forwards_data) {
+  //     pattern.forwards_data.forEach((d: ForwardsData) => {
+  //       const oilVal = parseOilValue(d.total_oil);
+  //       if (oilVal !== 0) allOilValues.push(oilVal);
+  //     });
+  //   }
+  //   if (pattern.reverse_data) {
+  //     pattern.reverse_data.forEach((d: ReverseData) => {
+  //       const oilVal = parseOilValue(d.total_oil);
+  //       if (oilVal !== 0) allOilValues.push(oilVal);
+  //     });
+  //   }
 
-    // Draw forwards_data rects
-    if (pattern.forwards_data) {
-      pattern.forwards_data.forEach((d: ForwardsData) => {
-        if (parseInt(d.total_oil) !== 0) {
-          const rect = computeRect(d);
-          g.append('rect')
-            .attr('x', rect.x)
-            .attr('y', rect.y)
-            .attr('width', rect.width)
-            .attr('height', rect.height)
-            .attr('fill', color)
-            .attr('fill-opacity', 0.5);
-        }
-      });
-    }
+  //   // Draw forwards_data rects
+  //   if (pattern.forwards_data) {
+  //     pattern.forwards_data.forEach((d: ForwardsData) => {
+  //       if (parseInt(d.total_oil) !== 0) {
+  //         const rect = computeRect(d);
+  //         g.append('rect')
+  //           .attr('x', rect.x)
+  //           .attr('y', rect.y)
+  //           .attr('width', rect.width)
+  //           .attr('height', rect.height)
+  //           .attr('fill', color)
+  //           .attr('fill-opacity', 0.5);
+  //       }
+  //     });
+  //   }
 
-    // Draw reverse_data rects
-    if (pattern.reverse_data) {
-      pattern.reverse_data.forEach((d: ReverseData) => {
-        if (parseInt(d.total_oil) !== 0 || parseFloat(d.distance_end) === 0) {
-          const rect = computeRect(d);
-          g.append('rect')
-            .attr('x', rect.x)
-            .attr('y', rect.y)
-            .attr('width', rect.width)
-            .attr('height', rect.height)
-            .attr('fill', color)
-            .attr('fill-opacity', 0.3);
-        }
-      });
-    }
+  //   // Draw reverse_data rects
+  //   if (pattern.reverse_data) {
+  //     pattern.reverse_data.forEach((d: ReverseData) => {
+  //       if (parseInt(d.total_oil) !== 0 || parseFloat(d.distance_end) === 0) {
+  //         const rect = computeRect(d);
+  //         g.append('rect')
+  //           .attr('x', rect.x)
+  //           .attr('y', rect.y)
+  //           .attr('width', rect.width)
+  //           .attr('height', rect.height)
+  //           .attr('fill', color)
+  //           .attr('fill-opacity', 0.3);
+  //       }
+  //     });
+  //   }
 
-    // Use the same yScale for axis that was used for drawing
-    const yAxis = d3.axisLeft(yScale).tickValues(d3.range(0, 61, 5));
-    const yAxisG = g.append('g').call(yAxis);
-    yAxisG.selectAll('line, path').attr('stroke', 'lightgray').attr('stroke-width', 0.5);
-    yAxisG.selectAll('text').attr('fill', 'black').attr('stroke-width', 0.5);
+  //   // Use the same yScale for axis that was used for drawing
+  //   const yAxis = d3.axisLeft(yScale).tickValues(d3.range(0, 61, 5));
+  //   const yAxisG = g.append('g').call(yAxis);
+  //   yAxisG.selectAll('line, path').attr('stroke', 'lightgray').attr('stroke-width', 0.5);
+  //   yAxisG.selectAll('text').attr('fill', 'black').attr('stroke-width', 0.5);
 
-    // compute forward/reverse maxima for area backgrounds
-    let forwardsMaxDistance = 0;
-    let reverseMaxDistance = 0;
+  //   // compute forward/reverse maxima for area backgrounds
+  //   let forwardsMaxDistance = 0;
+  //   let reverseMaxDistance = 0;
 
-    if (pattern.forwards_data && pattern.forwards_data.length > 0) {
-      pattern.forwards_data.forEach((d) => {
-        const distanceStart = parseFloat(d.distance_start);
-        const distanceEnd = parseFloat(d.distance_end);
-        forwardsMaxDistance = Math.max(forwardsMaxDistance, distanceStart, distanceEnd);
-      });
-    }
+  //   if (pattern.forwards_data && pattern.forwards_data.length > 0) {
+  //     pattern.forwards_data.forEach((d) => {
+  //       const distanceStart = parseFloat(d.distance_start);
+  //       const distanceEnd = parseFloat(d.distance_end);
+  //       forwardsMaxDistance = Math.max(forwardsMaxDistance, distanceStart, distanceEnd);
+  //     });
+  //   }
 
-    if (pattern.reverse_data && pattern.reverse_data.length > 0) {
-      pattern.reverse_data.forEach((d) => {
-        const distanceStart = parseFloat(d.distance_start);
-        const distanceEnd = parseFloat(d.distance_end);
-        reverseMaxDistance = Math.max(reverseMaxDistance, distanceStart, distanceEnd);
-      });
-    }
+  //   if (pattern.reverse_data && pattern.reverse_data.length > 0) {
+  //     pattern.reverse_data.forEach((d) => {
+  //       const distanceStart = parseFloat(d.distance_start);
+  //       const distanceEnd = parseFloat(d.distance_end);
+  //       reverseMaxDistance = Math.max(reverseMaxDistance, distanceStart, distanceEnd);
+  //     });
+  //   }
 
-    if (reverseMaxDistance !== forwardsMaxDistance) {
-      g.append('rect')
-        .attr('x', xScale(1))
-        .attr('y', yScale(forwardsMaxDistance))
-        .attr('width', xScale(LANE_WIDTH - 1) - xScale(1))
-        .attr('height', yScale(0) - yScale(forwardsMaxDistance))
-        .attr('fill', color)
-        .attr('fill-opacity', 0.05);
-    }
+  //   if (reverseMaxDistance !== forwardsMaxDistance) {
+  //     g.append('rect')
+  //       .attr('x', xScale(1))
+  //       .attr('y', yScale(forwardsMaxDistance))
+  //       .attr('width', xScale(LANE_WIDTH - 1) - xScale(1))
+  //       .attr('height', yScale(0) - yScale(forwardsMaxDistance))
+  //       .attr('fill', color)
+  //       .attr('fill-opacity', 0.05);
+  //   }
 
-    g.append('rect')
-      .attr('x', xScale(1))
-      .attr('y', yScale(reverseMaxDistance))
-      .attr('width', xScale(LANE_WIDTH - 1) - xScale(1))
-      .attr('height', yScale(0) - yScale(reverseMaxDistance))
-      .attr('fill', color)
-      .attr('fill-opacity', 0.1);
+  //   g.append('rect')
+  //     .attr('x', xScale(1))
+  //     .attr('y', yScale(reverseMaxDistance))
+  //     .attr('width', xScale(LANE_WIDTH - 1) - xScale(1))
+  //     .attr('height', yScale(0) - yScale(reverseMaxDistance))
+  //     .attr('fill', color)
+  //     .attr('fill-opacity', 0.1);
 
-    // Pins (unchanged positions but using yScale consistently)
-    const centerX = LANE_WIDTH / 2;
-    const baseY = 60;
-    const rowSpacing = 3;
-    const offset = 11;
+  //   // Pins (unchanged positions but using yScale consistently)
+  //   const centerX = LANE_WIDTH / 2;
+  //   const baseY = 60;
+  //   const rowSpacing = 3;
+  //   const offset = 11;
 
-    const row1 = [{ number: 1, x: centerX, y: baseY }];
-    const row2 = [
-      { number: 2, x: centerX - offset / 2, y: baseY + rowSpacing },
-      { number: 3, x: centerX + offset / 2, y: baseY + rowSpacing },
-    ];
-    const row3 = [
-      { number: 4, x: centerX - offset, y: baseY + 2 * rowSpacing },
-      { number: 5, x: centerX, y: baseY + 2 * rowSpacing },
-      { number: 6, x: centerX + offset, y: baseY + 2 * rowSpacing },
-    ];
-    const row4 = [
-      { number: 7, x: centerX - 1.5 * offset, y: baseY + 3 * rowSpacing },
-      { number: 8, x: centerX - 0.5 * offset, y: baseY + 3 * rowSpacing },
-      { number: 9, x: centerX + 0.5 * offset, y: baseY + 3 * rowSpacing },
-      { number: 10, x: centerX + 1.5 * offset, y: baseY + 3 * rowSpacing },
-    ];
+  //   const row1 = [{ number: 1, x: centerX, y: baseY }];
+  //   const row2 = [
+  //     { number: 2, x: centerX - offset / 2, y: baseY + rowSpacing },
+  //     { number: 3, x: centerX + offset / 2, y: baseY + rowSpacing },
+  //   ];
+  //   const row3 = [
+  //     { number: 4, x: centerX - offset, y: baseY + 2 * rowSpacing },
+  //     { number: 5, x: centerX, y: baseY + 2 * rowSpacing },
+  //     { number: 6, x: centerX + offset, y: baseY + 2 * rowSpacing },
+  //   ];
+  //   const row4 = [
+  //     { number: 7, x: centerX - 1.5 * offset, y: baseY + 3 * rowSpacing },
+  //     { number: 8, x: centerX - 0.5 * offset, y: baseY + 3 * rowSpacing },
+  //     { number: 9, x: centerX + 0.5 * offset, y: baseY + 3 * rowSpacing },
+  //     { number: 10, x: centerX + 1.5 * offset, y: baseY + 3 * rowSpacing },
+  //   ];
 
-    const pins = [...row4, ...row3, ...row2, ...row1];
+  //   const pins = [...row4, ...row3, ...row2, ...row1];
 
-    const pinsGroup = g.append('g').attr('class', 'pins-group');
+  //   const pinsGroup = g.append('g').attr('class', 'pins-group');
 
-    pinsGroup
-      .selectAll('.pin')
-      .data(pins)
-      .enter()
-      .append('circle')
-      .attr('class', 'pin')
-      .attr('cx', (d) => xScale(d.x))
-      .attr('cy', (d) => yScale(d.y))
-      .attr('r', pinRadius)
-      .attr('fill', 'white')
-      .attr('stroke', 'black')
-      .attr('stroke-width', pinStrokeWidth);
+  //   pinsGroup
+  //     .selectAll('.pin')
+  //     .data(pins)
+  //     .enter()
+  //     .append('circle')
+  //     .attr('class', 'pin')
+  //     .attr('cx', (d) => xScale(d.x))
+  //     .attr('cy', (d) => yScale(d.y))
+  //     .attr('r', pinRadius)
+  //     .attr('fill', 'white')
+  //     .attr('stroke', 'black')
+  //     .attr('stroke-width', pinStrokeWidth);
 
-    // arrows
-    const arrowPositions = [
-      { board: 4, distance: 12.5 },
-      { board: 9, distance: 13.5 },
-      { board: 14, distance: 14.5 },
-      { board: 19, distance: 15.5 },
-      { board: 24, distance: 14.5 },
-      { board: 29, distance: 13.5 },
-      { board: 34, distance: 12.5 },
-    ];
+  //   // arrows
+  //   const arrowPositions = [
+  //     { board: 4, distance: 12.5 },
+  //     { board: 9, distance: 13.5 },
+  //     { board: 14, distance: 14.5 },
+  //     { board: 19, distance: 15.5 },
+  //     { board: 24, distance: 14.5 },
+  //     { board: 29, distance: 13.5 },
+  //     { board: 34, distance: 12.5 },
+  //   ];
 
-    const arrowShape = d3
-      .symbol()
-      .type(d3.symbolTriangle)
-      .size(arrowSize * arrowSize);
+  //   const arrowShape = d3
+  //     .symbol()
+  //     .type(d3.symbolTriangle)
+  //     .size(arrowSize * arrowSize);
 
-    g.selectAll('.lane-arrow')
-      .data(arrowPositions)
-      .enter()
-      .append('path')
-      .attr('class', 'lane-arrow')
-      .attr('d', arrowShape)
-      .attr('transform', (d) => `translate(${xScale(d.board)}, ${yScale(d.distance)}) scale(1, 2.5)`)
-      .attr('fill', 'black')
-      .attr('stroke', 'none');
+  //   g.selectAll('.lane-arrow')
+  //     .data(arrowPositions)
+  //     .enter()
+  //     .append('path')
+  //     .attr('class', 'lane-arrow')
+  //     .attr('d', arrowShape)
+  //     .attr('transform', (d) => `translate(${xScale(d.board)}, ${yScale(d.distance)}) scale(1, 2.5)`)
+  //     .attr('fill', 'black')
+  //     .attr('stroke', 'none');
 
-    const svgString = tempSvgElement.outerHTML;
-    const encodedString = btoa(unescape(encodeURIComponent(svgString)));
-    return 'data:image/svg+xml;base64,' + encodedString;
-  }
+  //   const svgString = tempSvgElement.outerHTML;
+  //   const encodedString = btoa(unescape(encodeURIComponent(svgString)));
+  //   return 'data:image/svg+xml;base64,' + encodedString;
+  // }
 
   generateBallDistributionChart(
     ballDistributionChartCanvas: ElementRef,

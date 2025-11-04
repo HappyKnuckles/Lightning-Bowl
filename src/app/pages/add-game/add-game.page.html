@@ -30,6 +30,15 @@
 <ion-alert [isOpen]="isAlertOpen" header="Error" message="You didn't fill all inputs" [buttons]="['Dismiss']" (didDismiss)="isAlertOpen = false">
 </ion-alert>
 
+<div class="score-toolbar" [class.show]="showScoreToolbar" [ngStyle]="{ bottom: toolbarOffset + 'px' }">
+  <ion-button (click)="onToolbarButtonClick('X')" (mousedown)="$event.preventDefault()" [disabled]="toolbarDisabledState.strikeDisabled">
+    X
+  </ion-button>
+  <ion-button (click)="onToolbarButtonClick('/')" (mousedown)="$event.preventDefault()" [disabled]="toolbarDisabledState.spareDisabled">
+    /
+  </ion-button>
+</div>
+
 <div
   *ngIf="is300"
   style="
@@ -52,11 +61,14 @@
     <ion-segment-view>
       <ion-segment-content *ngFor="let trackIndex of trackIndexes[i]; let j = index" [id]="segments[j]">
         <app-game-grid
+          #gameGrid
           (maxScoreChanged)="onMaxScoreChanged($event, trackIndex)"
           (totalScoreChanged)="onTotalScoreChange($event, trackIndex)"
           (leagueChanged)="onLeagueChange($event)"
           (patternChanged)="onPatternChange($event)"
           (isPracticeChanged)="onIsPracticeChange($event)"
+          (toolbarStateChanged)="onToolbarStateChanged($event)"
+          (toolbarDisabledState)="onToolbarDisabledStateChanged($event)"
           [patternId]="j.toString()"
           [ballSelectorId]="'modal-ball-selector' + j"></app-game-grid>
         <ion-grid *ngIf="i !== 0">

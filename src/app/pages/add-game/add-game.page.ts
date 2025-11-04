@@ -25,7 +25,7 @@ import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Game } from 'src/app/core/models/game.model';
 import { addIcons } from 'ionicons';
 import { add, chevronDown, chevronUp, cameraOutline, documentTextOutline, medalOutline } from 'ionicons/icons';
-import { NgIf, NgFor } from '@angular/common';
+import { NgIf, NgFor, NgStyle } from '@angular/common';
 import { ImpactStyle } from '@capacitor/haptics';
 import { AdService } from 'src/app/core/services/ad/ad.service';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
@@ -80,6 +80,7 @@ defineCustomElements(window);
     IonSegmentView,
     NgIf,
     NgFor,
+    NgStyle,
     GameGridComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
@@ -98,6 +99,13 @@ export class AddGamePage implements OnInit {
   username = '';
   gameData!: Game;
   deviceId = '';
+
+  // Toolbar state
+  showScoreToolbar = false;
+  toolbarOffset = 0;
+  toolbarDisabledState = { strikeDisabled: true, spareDisabled: true };
+  activeGameGrid: GameGridComponent | null = null;
+
   @ViewChildren(GameGridComponent) gameGrids!: QueryList<GameGridComponent>;
   @ViewChild(IonModal) modal!: IonModal;
   @ViewChild('modalGrid', { static: false }) modalGrid!: GameGridComponent;
@@ -246,6 +254,22 @@ export class AddGamePage implements OnInit {
       this.toastService.showToast(ToastMessages.gameSaveError, 'bug', true);
       console.error(error);
       await this.analyticsService.trackError('game_save_confirm_error', error instanceof Error ? error.message : String(error));
+    }
+  }
+
+  onToolbarStateChanged(state: { show: boolean; offset: number }): void {
+    this.showScoreToolbar = state.show;
+    this.toolbarOffset = state.offset;
+  }
+
+  onToolbarDisabledStateChanged(state: { strikeDisabled: boolean; spareDisabled: boolean }): void {
+    this.toolbarDisabledState = state;
+  }
+
+  onToolbarButtonClick(char: string): void {
+    const activeGrid = this.gameGrids.toArray().find((grid) => grid.showButtonToolbar);
+    if (activeGrid) {
+      activeGrid.selectSpecialScore(char);
     }
   }
 

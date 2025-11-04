@@ -24,6 +24,7 @@ import {
   IonButton,
   IonIcon,
   ModalController,
+  IonImg,
 } from '@ionic/angular/standalone';
 import { Pattern } from 'src/app/core/models/pattern.model';
 import { PatternService } from 'src/app/core/services/pattern/pattern.service';
@@ -53,6 +54,7 @@ import { AnalyticsService } from 'src/app/core/services/analytics/analytics.serv
   styleUrls: ['./pattern.page.scss'],
   standalone: true,
   imports: [
+    IonImg,
     IonIcon,
     IonButton,
     IonButtons,
@@ -129,7 +131,7 @@ export class PatternPage implements OnInit {
   async ngOnInit() {
     this.loadFavoritesFirstSetting();
     await this.loadPatterns();
-    this.generateChartImages();
+    // this.generateChartImages();
     // this.renderCharts();
   }
 
@@ -182,7 +184,7 @@ export class PatternPage implements OnInit {
       if (event) {
         event.target.complete();
       }
-      this.generateChartImages();
+      // this.generateChartImages();
     }
   }
 
@@ -213,7 +215,7 @@ export class PatternPage implements OnInit {
       this.toastService.showToast(ToastMessages.patternLoadError, 'bug', true);
     } finally {
       this.loadingService.setLoading(false);
-      this.generateChartImages();
+      // this.generateChartImages();
     }
   }
 
@@ -229,20 +231,20 @@ export class PatternPage implements OnInit {
     return parseFloat(numericPart);
   }
 
-  private generateChartImages(): void {
-    this.patterns.forEach((pattern) => {
-      if (!pattern.chartImageSrc) {
-        try {
-          const svgDataUri = this.chartService.generatePatternChartDataUri(pattern, 325, 1300, 1300, 400, 20, 1, 7, true);
-          const svgDataUriHor = this.chartService.generatePatternChartDataUri(pattern, 375, 1500, 400, 1500, 20, 1, 7, false);
-          pattern.chartImageSrcHorizontal = this.sanitizer.bypassSecurityTrustUrl(svgDataUriHor);
-          pattern.chartImageSrc = this.sanitizer.bypassSecurityTrustUrl(svgDataUri);
-        } catch (error) {
-          console.error(`Error generating chart for pattern ${pattern.title}:`, error);
-        }
-      }
-    });
-  }
+  // private generateChartImages(): void {
+  //   this.patterns.forEach((pattern) => {
+  //     if (!pattern.chartImageSrc) {
+  //       try {
+  //         const svgDataUri = this.chartService.generatePatternChartDataUri(pattern, 325, 1300, 1300, 400, 20, 1, 7, true);
+  //         const svgDataUriHor = this.chartService.generatePatternChartDataUri(pattern, 375, 1500, 400, 1500, 20, 1, 7, false);
+  //         pattern.chartImageSrcHorizontal = this.sanitizer.bypassSecurityTrustUrl(svgDataUriHor);
+  //         pattern.chartImageSrc = this.sanitizer.bypassSecurityTrustUrl(svgDataUri);
+  //       } catch (error) {
+  //         console.error(`Error generating chart for pattern ${pattern.title}:`, error);
+  //       }
+  //     }
+  //   });
+  // }
 
   onSortChanged(sortOption: unknown): void {
     this.currentSortOption = sortOption as PatternSortOption;

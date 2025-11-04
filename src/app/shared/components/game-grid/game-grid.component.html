@@ -89,11 +89,6 @@
       >
     </ion-row>
   </ion-grid>
-
-  <div class="score-toolbar" *ngIf="showMetadata()" [class.show]="showButtonToolbar" [ngStyle]="{ bottom: keyboardOffset + 'px' }">
-    <ion-button (click)="selectSpecialScore('X')" (mousedown)="$event.preventDefault()" [disabled]="isStrikeButtonDisabled()"> X </ion-button>
-    <ion-button (click)="selectSpecialScore('/')" (mousedown)="$event.preventDefault()" [disabled]="isSpareButtonDisabled()"> / </ion-button>
-  </div>
 </div>
 
 @if (showMetadata()) {

@@ -1,20 +1,8 @@
-import {
-  Component,
-  OnInit,
-  OnDestroy,
-  EventEmitter,
-  Output,
-  QueryList,
-  ViewChildren,
-  ViewChild,
-  CUSTOM_ELEMENTS_SCHEMA,
-  input,
-  output,
-} from '@angular/core';
+import { Component, OnInit, OnDestroy, QueryList, ViewChildren, ViewChild, CUSTOM_ELEMENTS_SCHEMA, input, output } from '@angular/core';
 import { Platform } from '@ionic/angular';
 import { Subscription } from 'rxjs';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
-import { NgFor, NgIf, NgStyle } from '@angular/common';
+import { NgFor, NgIf } from '@angular/common';
 import { IonGrid, IonModal, IonRow, IonCol, IonInput, IonItem, IonTextarea, IonCheckbox, IonList, IonLabel } from '@ionic/angular/standalone';
 import { FormsModule } from '@angular/forms';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
@@ -61,24 +49,14 @@ import { AnalyticsService } from 'src/app/core/services/analytics/analytics.serv
     LeagueSelectorComponent,
     IonModal,
     GenericTypeaheadComponent,
-    NgStyle,
     IonLabel,
     BallSelectComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class GameGridComponent implements OnInit, OnDestroy {
-  @Output() maxScoreChanged = new EventEmitter<number>();
-  @Output() totalScoreChanged = new EventEmitter<number>();
-  @Output() leagueChanged = new EventEmitter<string>();
-  @Output() isPracticeChanged = new EventEmitter<boolean>();
+  // Input signals
   ballSelectorId = input<string>();
-  patternChanged = output<string[]>();
-  @ViewChildren(IonInput) inputs!: QueryList<IonInput>;
-  @ViewChild('leagueSelector') leagueSelector!: LeagueSelectorComponent;
-  @ViewChild('checkbox') checkbox!: IonCheckbox;
-  enterAnimation = alertEnterAnimation;
-  leaveAnimation = alertLeaveAnimation;
   showMetadata = input<boolean>(true);
   patternId = input.required<string>();
   game = input<Game>({
@@ -95,6 +73,24 @@ export class GameGridComponent implements OnInit, OnDestroy {
     isClean: false,
     isPerfect: false,
   });
+
+  // Output signals
+  maxScoreChanged = output<number>();
+  totalScoreChanged = output<number>();
+  leagueChanged = output<string>();
+  isPracticeChanged = output<boolean>();
+  patternChanged = output<string[]>();
+  toolbarStateChanged = output<{ show: boolean; offset: number }>();
+  toolbarButtonClick = output<string>();
+  toolbarDisabledState = output<{ strikeDisabled: boolean; spareDisabled: boolean }>();
+
+  // View children and references
+  @ViewChildren(IonInput) inputs!: QueryList<IonInput>;
+  @ViewChild('leagueSelector') leagueSelector!: LeagueSelectorComponent;
+  @ViewChild('checkbox') checkbox!: IonCheckbox;
+
+  enterAnimation = alertEnterAnimation;
+  leaveAnimation = alertLeaveAnimation;
   maxScore = 300;
   presentingElement?: HTMLElement;
   patternTypeaheadConfig!: TypeaheadConfig<Partial<Pattern>>;
@@ -105,6 +101,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
   currentRollIndex: number | null = null;
   keyboardOffset = 0;
   isLandScapeMode = false;
+  private isFrameInputFocused = false;
 
   private keyboardShowSubscription: Subscription | undefined;
   private keyboardHideSubscription: Subscription | undefined;
@@ -167,12 +164,16 @@ export class GameGridComponent implements OnInit, OnDestroy {
     if (this.platform.is('mobile') && !this.platform.is('mobileweb')) {
       Keyboard.addListener('keyboardWillShow', (info) => {
         this.keyboardOffset = Math.max(0, info.keyboardHeight || 0);
-        this.showButtonToolbar = true;
+        if (this.isFrameInputFocused) {
+          this.showButtonToolbar = true;
+          this.toolbarStateChanged.emit({ show: true, offset: this.keyboardOffset });
+        }
       });
 
       Keyboard.addListener('keyboardWillHide', () => {
         this.keyboardOffset = 0;
         this.showButtonToolbar = false;
+        this.toolbarStateChanged.emit({ show: false, offset: this.keyboardOffset });
       });
     } else if ('visualViewport' in window && window.visualViewport) {
       window.visualViewport.addEventListener('resize', this.onViewportResize);
@@ -185,14 +186,15 @@ export class GameGridComponent implements OnInit, OnDestroy {
   handleInputFocus(frameIndex: number, rollIndex: number) {
     this.currentFrameIndex = frameIndex;
     this.currentRollIndex = rollIndex;
+    this.isFrameInputFocused = true;
 
     setTimeout(() => {
-      this.showButtonToolbar = true;
+      this.emitToolbarDisabledState();
     }, 100);
   }
 
   handleInputBlur() {
-    this.showButtonToolbar = false;
+    this.isFrameInputFocused = false;
   }
 
   onLeagueChanged(league: string): void {
@@ -261,6 +263,13 @@ export class GameGridComponent implements OnInit, OnDestroy {
     return val.toString();
   }
 
+  emitToolbarDisabledState() {
+    this.toolbarDisabledState.emit({
+      strikeDisabled: this.isStrikeButtonDisabled(),
+      spareDisabled: this.isSpareButtonDisabled(),
+    });
+  }
+
   selectSpecialScore(char: string) {
     if (this.currentFrameIndex === null || this.currentRollIndex === null) {
       this.showButtonToolbar = false;
@@ -295,6 +304,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
     this.game().frames[frameIndex][inputIndex] = parsedValue;
     this.updateScores();
     this.focusNextInput(frameIndex, inputIndex);
+    this.emitToolbarDisabledState();
   }
 
   clearFrames(isSave: boolean): void {
@@ -444,7 +454,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
   }
 
   private onViewportResize = () => {
-    // This method is now primarily a fallback.
+    // Fallback for web/PWA keyboard detection using visualViewport
     if (!window.visualViewport) return;
 
     const viewportHeight = window.visualViewport.height;
@@ -453,9 +463,20 @@ export class GameGridComponent implements OnInit, OnDestroy {
 
     if (keyboardActualHeight > 100) {
       this.keyboardOffset = this.isLandScapeMode ? Math.max(0, keyboardActualHeight - 72) : Math.max(0, keyboardActualHeight - 85);
+
+      if (this.isFrameInputFocused) {
+        if (!this.showButtonToolbar) {
+          this.showButtonToolbar = true;
+          this.toolbarStateChanged.emit({ show: true, offset: this.keyboardOffset });
+        } else {
+          this.toolbarStateChanged.emit({ show: true, offset: this.keyboardOffset });
+        }
+      }
     } else {
-      {
-        this.keyboardOffset = 0;
+      this.keyboardOffset = 0;
+      if (this.showButtonToolbar) {
+        this.showButtonToolbar = false;
+        this.toolbarStateChanged.emit({ show: false, offset: this.keyboardOffset });
       }
     }
   };

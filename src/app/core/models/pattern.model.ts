@@ -1,5 +1,3 @@
-import { SafeUrl } from '@angular/platform-browser';
-
 export interface ForwardsData {
   number: string;
   // start is the starting board 1L first left board, 1R first right board, 39 total boards; x axis
@@ -43,6 +41,6 @@ export interface Pattern {
   tanks?: string;
   forwards_data: ForwardsData[];
   reverse_data: ReverseData[];
-  chartImageSrc?: SafeUrl;
-  chartImageSrcHorizontal?: SafeUrl;
+  chart_standard: string;
+  chart_horizontal: string;
 }
