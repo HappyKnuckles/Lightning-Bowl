@@ -10,6 +10,7 @@ import { IonButton } from '@ionic/angular/standalone';
 })
 export class PinDeckComponent {
   activePins = input.required<number[]>();
+  scale = input<number>(1);
 
   isPinSelected(pinNumber: number): boolean {
     const pins = this.activePins();
