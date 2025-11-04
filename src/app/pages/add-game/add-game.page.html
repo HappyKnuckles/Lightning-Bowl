@@ -6,21 +6,15 @@
       </ion-button>
     </ion-buttons>
     <input type="file" id="upload" class="ion-hide" accept="image/*" />
-    <ion-title> Add Game </ion-title>
+    <ion-title (click)="presentActionSheet()" style="cursor: pointer">
+      New {{ selectedMode === "Single" ? "Game" : selectedMode }}
+      <ion-icon [name]="sheetOpen ? 'chevron-up' : 'chevron-down'" size="small" style="vertical-align: middle"></ion-icon>
+    </ion-title>
     <ion-buttons slot="end">
-      <ion-button class="action-sheet" (click)="presentActionSheet()" fill="clear">
-        {{ selectedMode }}
-        <ion-icon *ngIf="!sheetOpen" name="chevron-down" class="chevron"></ion-icon>
-        <ion-icon *ngIf="sheetOpen" name="chevron-up" class="chevron"></ion-icon>
+      <ion-button fill="clear" (click)="togglePinMode()">
+        <ion-icon slot="icon-only" [name]="isPinMode ? 'bowling-ball' : 'bowling-ball-outline'"></ion-icon>
       </ion-button>
     </ion-buttons>
-  </ion-toolbar>
-
-  <ion-toolbar>
-    <ion-item lines="none">
-      <ion-label>Pin Input Mode</ion-label>
-      <ion-toggle [(ngModel)]="isPinMode" slot="end"></ion-toggle>
-    </ion-item>
   </ion-toolbar>
 
   @if (selectedMode !== "Single") {

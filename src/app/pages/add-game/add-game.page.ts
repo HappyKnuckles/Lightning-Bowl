@@ -20,14 +20,11 @@ import {
   IonSegmentView,
   IonSegmentContent,
   IonCheckbox,
-  IonToggle,
-  IonLabel,
-  IonItem,
 } from '@ionic/angular/standalone';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Game } from 'src/app/core/models/game.model';
 import { addIcons } from 'ionicons';
-import { add, chevronDown, chevronUp, cameraOutline, documentTextOutline, medalOutline } from 'ionicons/icons';
+import { add, chevronDown, chevronUp, cameraOutline, documentTextOutline, medalOutline, bowlingBall, bowlingBallOutline } from 'ionicons/icons';
 import { NgIf, NgFor, NgStyle } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ImpactStyle } from '@capacitor/haptics';
@@ -82,9 +79,6 @@ defineCustomElements(window);
     IonSegment,
     IonSegmentContent,
     IonSegmentView,
-    IonToggle,
-    IonLabel,
-    IonItem,
     FormsModule,
     NgIf,
     NgFor,
@@ -145,7 +139,7 @@ export class AddGamePage implements OnInit {
     private storageService: StorageService,
     private analyticsService: AnalyticsService,
   ) {
-    addIcons({ cameraOutline, chevronDown, chevronUp, medalOutline, documentTextOutline, add });
+    addIcons({ cameraOutline, chevronDown, chevronUp, medalOutline, documentTextOutline, add, bowlingBall, bowlingBallOutline });
   }
 
   async ngOnInit(): Promise<void> {
@@ -154,6 +148,11 @@ export class AddGamePage implements OnInit {
     });
     this.deviceId = (await Device.getId()).identifier;
     this.presentingElement = document.querySelector('.ion-page')!;
+  }
+
+  togglePinMode(): void {
+    this.isPinMode = !this.isPinMode;
+    this.hapticService.vibrate(ImpactStyle.Light);
   }
 
   async handleImageUpload(): Promise<void> {
