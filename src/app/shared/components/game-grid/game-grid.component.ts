@@ -594,7 +594,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
       return;
     }
 
-    delete this.game().frames[lastFrameIndex][lastThrowIndex];
+    this.game().frames[lastFrameIndex].splice(lastThrowIndex, 1);
 
     if (this.throwsData[lastFrameIndex] && this.throwsData[lastFrameIndex][lastThrowIndex]) {
       this.throwsData[lastFrameIndex].splice(lastThrowIndex, 1);
