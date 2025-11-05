@@ -115,8 +115,28 @@ export class PinInputComponent implements OnInit, OnChanges {
     }
 
     const prevThrowIndex = this.currentThrowIndex - 1;
+
     if (this.throwsData[this.currentFrameIndex] && this.throwsData[this.currentFrameIndex][prevThrowIndex]) {
       return this.throwsData[this.currentFrameIndex][prevThrowIndex].pinsLeftStanding;
+    }
+
+    const frame = this.frames[this.currentFrameIndex];
+    if (frame && frame[prevThrowIndex] !== undefined) {
+      const pinsKnockedDown = frame[prevThrowIndex];
+
+      if (this.currentFrameIndex === 9) {
+        if (prevThrowIndex === 0 && pinsKnockedDown === 10) {
+          return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        } else if (prevThrowIndex === 1 && frame[0] === 10 && pinsKnockedDown === 10) {
+          return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        } else if (prevThrowIndex === 1 && frame[0] !== 10) {
+          const pinsRemaining = 10 - pinsKnockedDown;
+          return Array.from({ length: pinsRemaining }, (_, i) => i + 1);
+        }
+      }
+
+      const pinsRemaining = 10 - pinsKnockedDown;
+      return Array.from({ length: pinsRemaining }, (_, i) => i + 1);
     }
 
     return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
@@ -189,8 +209,12 @@ export class PinInputComponent implements OnInit, OnChanges {
   recordSpare(): void {
     if (!this.canRecordSpare()) return;
 
+    // For a spare, select only the remaining pins that are still standing
     const availablePins = this.getPinsLeftFromPreviousThrow();
+
+    // Only select pins that are currently standing (not knocked down in previous throw)
     this.selectedPins = [...availablePins];
+
     this.confirmPinThrow();
   }
 
