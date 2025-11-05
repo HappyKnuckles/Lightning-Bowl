@@ -1,10 +1,8 @@
 import { Component, input } from '@angular/core';
-import { IonButton } from '@ionic/angular/standalone';
 
 @Component({
   selector: 'app-pin-deck',
   standalone: true,
-  imports: [IonButton],
   templateUrl: './pin-deck.component.html',
   styleUrl: './pin-deck.component.scss',
 })
