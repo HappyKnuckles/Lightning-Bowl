@@ -44,32 +44,46 @@
           </ion-input>
         </ion-col>
       </ion-row>
-      <ion-row
-        *ngIf="
-          (game().frames[frameIndex][0] !== undefined ||
-            game().frames[frameIndex][1] !== undefined ||
-            (i === 10 && game().frames[frameIndex][0] !== undefined)) &&
-          isNumber(game().frameScores[i - 1])
-        ">
-        <ion-col class="middle count">{{ game().frameScores[i - 1] }}</ion-col>
-      </ion-row>
-      <ion-row
-        *ngIf="
-          !(
-            (game().frames[frameIndex][0] !== undefined ||
-              game().frames[frameIndex][1] !== undefined ||
-              (i === 10 && game().frames[frameIndex][0] !== undefined)) &&
-            isNumber(game().frameScores[i - 1])
-          )
-        ">
-        <ion-col class="middle count" style="color: var(--ion-color-quartiary)">0</ion-col>
+
+      <!-- Pin Deck Visualization Row -->
+      <app-frame-pin-deck-row *ngIf="game().frames[frameIndex][0] !== undefined" [game]="game()" [frameIndex]="frameIndex"> </app-frame-pin-deck-row>
+
+      <ion-row>
+        <ion-col class="middle count">
+          <ng-container
+            *ngIf="
+              (game().frames[frameIndex][0] !== undefined ||
+                game().frames[frameIndex][1] !== undefined ||
+                (i === 10 && game().frames[frameIndex][0] !== undefined && game().frames[frameIndex][1] !== undefined)) &&
+              isNumber(game().frameScores[i - 1])
+            ">
+            {{ game().frameScores[i - 1] }}
+          </ng-container>
+
+          <ng-container *ngIf="i === 10 && (game().frames[frameIndex][0] === undefined || game().frames[frameIndex][1] === undefined)">
+            <span style="color: var(--ion-color-secondary)"> ({{ maxScore }}) </span>
+          </ng-container>
+        </ion-col>
+
+        <ion-col
+          *ngIf="
+            !(
+              (game().frames[frameIndex][0] !== undefined ||
+                game().frames[frameIndex][1] !== undefined ||
+                (i === 10 && game().frames[frameIndex][0] !== undefined)) &&
+              isNumber(game().frameScores[i - 1])
+            ) && !(i === 10 && game().frames[frameIndex][0] === undefined)
+          "
+          class="middle count"
+          style="color: var(--ion-color-quartiary)"
+          >0</ion-col
+        >
       </ion-row>
     </ion-grid>
   </div>
 
   <app-pin-input
     [frames]="game().frames"
-    [throwsData]="throwsData"
     [currentFrameIndex]="currentFrameIndex!"
     [currentThrowIndex]="currentThrowIndex"
     (throwConfirmed)="onPinThrowConfirmed($event)"
@@ -178,6 +192,11 @@
           </ion-input>
         </ion-col>
       </ion-row>
+      @if (game().isPinMode) {
+        <!-- Pin Deck Visualization Row -->
+        <app-pin-deck-frame-row *ngIf="game().frames[frameIndex][0] !== undefined" [game]="game()" [frameIndex]="frameIndex">
+        </app-pin-deck-frame-row>
+      }
       <ion-row>
         <ion-col class="middle count">
           <ng-container

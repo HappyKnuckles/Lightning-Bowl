@@ -63,6 +63,7 @@ import { GameGridComponent } from '../game-grid/game-grid.component';
 import { BallSelectComponent } from '../ball-select/ball-select.component';
 import { alertEnterAnimation, alertLeaveAnimation } from '../../animations/alert.animation';
 import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
+import { PinDeckFrameRowComponent } from '../pin-deck-frame-row/pin-deck-frame-row.component';
 
 @Component({
   selector: 'app-game',
@@ -109,6 +110,7 @@ import { AnalyticsService } from 'src/app/core/services/analytics/analytics.serv
     GameGridComponent,
     GenericTypeaheadComponent,
     BallSelectComponent,
+    PinDeckFrameRowComponent,
   ],
   standalone: true,
 })

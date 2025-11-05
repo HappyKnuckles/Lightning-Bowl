@@ -137,6 +137,10 @@
                         </ion-input>
                       </ion-col>
                     </ion-row>
+                    @if (game.isPinMode) {
+                      <!-- Pin Deck Visualization Row -->
+                      <app-pin-deck-frame-row [game]="game" [frameIndex]="j"></app-pin-deck-frame-row>
+                    }
                     <ion-row>
                       <ion-col class="middle count">{{ game.frameScores[j] }}</ion-col>
                     </ion-row>

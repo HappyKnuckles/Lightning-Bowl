@@ -28,6 +28,7 @@ import { BallSelectComponent } from '../ball-select/ball-select.component';
 import { alertEnterAnimation, alertLeaveAnimation } from '../../animations/alert.animation';
 import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
 import { PinInputComponent, PinThrowEvent } from '../pin-input/pin-input.component';
+import { PinDeckFrameRowComponent } from '../pin-deck-frame-row/pin-deck-frame-row.component';
 
 @Component({
   selector: 'app-game-grid',
@@ -52,7 +53,7 @@ import { PinInputComponent, PinThrowEvent } from '../pin-input/pin-input.compone
     GenericTypeaheadComponent,
     IonLabel,
     PinInputComponent,
-    IonLabel,
+    PinDeckFrameRowComponent,
     BallSelectComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
