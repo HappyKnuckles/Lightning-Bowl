@@ -9,7 +9,6 @@ import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { ImpactStyle } from '@capacitor/haptics';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { LeagueSelectorComponent } from '../league-selector/league-selector.component';
-import { GameUtilsService } from 'src/app/core/services/game-utils/game-utils.service';
 import { GameScoreCalculatorService } from 'src/app/core/services/game-score-calculator/game-score-calculator.service';
 import { GameDataTransformerService } from 'src/app/core/services/game-transform/game-data-transform.service';
 import { InputCustomEvent } from '@ionic/angular';
@@ -138,7 +137,6 @@ export class GameGridComponent implements OnInit, OnDestroy {
     private transformGameService: GameDataTransformerService,
     private toastService: ToastService,
     private hapticService: HapticService,
-    private gameUtilsService: GameUtilsService,
     private utilsService: UtilsService,
     private platform: Platform,
     private patternService: PatternService,
@@ -281,7 +279,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
 
   simulateScore(event: InputCustomEvent, frameIndex: number, inputIndex: number): void {
     const inputValue = event.detail.value!;
-    const parsedValue = this.gameUtilsService.parseInputValue(inputValue, frameIndex, inputIndex, this.game().frames);
+    const parsedValue = this.formatterService.parseInputValue(inputValue, frameIndex, inputIndex, this.game().frames);
 
     if (inputValue.length === 0) {
       this.game().frames[frameIndex].splice(inputIndex, 1);

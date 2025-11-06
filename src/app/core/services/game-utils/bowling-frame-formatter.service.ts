@@ -56,4 +56,63 @@ export class BowlingFrameFormatterService {
 
     return val.toString();
   }
+
+  /**
+   * Parses user input (X, /, numbers) into numeric values
+   * @param inputValue The string input (e.g., 'X', '/', '7')
+   * @param frameIndex The frame index (0-9)
+   * @param throwIndex The throw index within the frame (0-2)
+   * @param frames The game frames array
+   * @returns Numeric value for the throw
+   */
+  parseInputValue(inputValue: string, frameIndex: number, throwIndex: number, frames: number[][]): number {
+    if (frameIndex < 9) {
+      // Frames 1-9
+      if (inputValue === 'X' || inputValue === 'x') {
+        return 10; // Strike
+      } else if (inputValue === '/') {
+        const firstThrow = frames[frameIndex][0] || 0;
+        return 10 - firstThrow; // Spare
+      }
+    } else {
+      // 10th Frame
+      const firstThrow = frames[frameIndex][0] || 0;
+      const secondThrow = frames[frameIndex][1] || 0;
+
+      switch (throwIndex) {
+        case 0: // First throw of 10th frame
+          if (inputValue === 'X' || inputValue === 'x') {
+            return 10; // Strike
+          }
+          break;
+        case 1: // Second throw of 10th frame
+          if (firstThrow === 10) {
+            // First throw was a strike; any value (0-10) is valid
+            if (inputValue === 'X' || inputValue === 'x') {
+              return 10;
+            }
+          } else if (inputValue === '/') {
+            // First throw was not a strike; spare notation applies
+            return 10 - firstThrow;
+          }
+          break;
+        case 2: // Third throw of 10th frame
+          if (firstThrow === 10) {
+            // If first throw is a strike, handle second throw conditions
+            if (secondThrow === 10 && (inputValue === 'X' || inputValue === 'x')) {
+              return 10; // Double strike
+            } else if (secondThrow !== 10 && inputValue === '/') {
+              return 10 - secondThrow; // Spare after a non-strike second throw
+            }
+          } else if (firstThrow + secondThrow === 10) {
+            // First two throws were a spare; any value (0-10) is valid
+            if (inputValue === 'X' || inputValue === 'x') {
+              return 10;
+            }
+          }
+          break;
+      }
+    }
+    return parseInt(inputValue, 10);
+  }
 }
