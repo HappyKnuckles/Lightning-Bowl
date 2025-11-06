@@ -26,7 +26,6 @@ import {
   IonSelectOption,
   IonSegmentView,
   IonSegmentContent,
-  IonAvatar,
 } from '@ionic/angular/standalone';
 import { NgIf, NgFor, DecimalPipe, DatePipe } from '@angular/common';
 import { ImpactStyle } from '@capacitor/haptics';
@@ -62,7 +61,6 @@ import { GameFilterComponent } from 'src/app/shared/components/game-filter/game-
 import { SpareDisplayComponent } from 'src/app/shared/components/spare-display/spare-display.component';
 import { StatDisplayComponent } from 'src/app/shared/components/stat-display/stat-display.component';
 import { BallStatsComponent } from '../../shared/components/ball-stats/ball-stats.component';
-import { PinDeckComponent } from 'src/app/shared/components/pin-deck/pin-deck.component';
 
 @Component({
   selector: 'app-stats',
@@ -93,8 +91,6 @@ import { PinDeckComponent } from 'src/app/shared/components/pin-deck/pin-deck.co
     SpareDisplayComponent,
     GenericFilterActiveComponent,
     BallStatsComponent,
-    PinDeckComponent,
-    IonAvatar,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

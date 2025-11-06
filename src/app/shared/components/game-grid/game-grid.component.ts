@@ -30,7 +30,7 @@ import { alertEnterAnimation, alertLeaveAnimation } from '../../animations/alert
 import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
 import { PinInputComponent, PinThrowEvent } from '../pin-input/pin-input.component';
 import { PinDeckFrameRowComponent } from '../pin-deck-frame-row/pin-deck-frame-row.component';
-import { BowlingGameValidationService } from 'src/app/core/services/bowling-game-validation.service';
+import { BowlingGameValidationService } from 'src/app/core/services/game-utils/bowling-game-validation.service';
 
 @Component({
   selector: 'app-game-grid',
@@ -238,32 +238,17 @@ export class GameGridComponent implements OnInit, OnDestroy {
     this.toolbarDisabledState.emit({ strikeDisabled: !canStrike, spareDisabled: !canSpare });
   }
 
-  selectSpecialScore(char: string): void {
+  selectSpecialScore(char: string) {
     if (this.currentFrameIndex === null || this.currentRollIndex === null) {
+      this.showButtonToolbar = false;
       return;
     }
 
-    const frame = this.game().frames[this.currentFrameIndex];
-    let value: number;
+    const mockEvent = {
+      detail: { value: char },
+    } as InputCustomEvent<{ value: string | undefined | null }>;
 
-    if (char === 'X' || char === '/') {
-      if (char === 'X') {
-        value = 10;
-      } else {
-        const previousRoll = this.currentRollIndex > 0 ? frame[this.currentRollIndex - 1] : undefined;
-        if (previousRoll === undefined || previousRoll >= 10) {
-          return;
-        }
-        value = 10 - previousRoll;
-      }
-
-      this.game().frames[this.currentFrameIndex][this.currentRollIndex] = value;
-      this.updateScores();
-
-      this.focusNextInput(this.currentFrameIndex, this.currentRollIndex);
-
-      this.emitToolbarDisabledState();
-    }
+    this.simulateScore(mockEvent, this.currentFrameIndex, this.currentRollIndex);
   }
 
   onLeagueChanged(league: string): void {

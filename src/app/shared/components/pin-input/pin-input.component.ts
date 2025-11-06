@@ -5,7 +5,7 @@ import { addIcons } from 'ionicons';
 import { checkmarkCircle, addCircle, arrowUndo } from 'ionicons/icons';
 import { PinDeckFrameRowComponent } from '../pin-deck-frame-row/pin-deck-frame-row.component';
 import { Game } from 'src/app/core/models/game.model';
-import { BowlingGameValidationService } from 'src/app/core/services/bowling-game-validation.service';
+import { BowlingGameValidationService } from 'src/app/core/services/game-utils/bowling-game-validation.service';
 
 export interface ThrowData {
   value: number;

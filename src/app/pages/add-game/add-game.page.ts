@@ -25,7 +25,7 @@ import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Game } from 'src/app/core/models/game.model';
 import { addIcons } from 'ionicons';
 import { add, chevronDown, chevronUp, cameraOutline, documentTextOutline, medalOutline, bowlingBall, bowlingBallOutline } from 'ionicons/icons';
-import { NgIf, NgFor, NgStyle } from '@angular/common';
+import { NgIf, NgFor } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ImpactStyle } from '@capacitor/haptics';
 import { AdService } from 'src/app/core/services/ad/ad.service';
@@ -37,7 +37,7 @@ import { UserService } from 'src/app/core/services/user/user.service';
 import { defineCustomElements } from '@teamhive/lottie-player/loader';
 import { Device } from '@capacitor/device';
 import { GameUtilsService } from 'src/app/core/services/game-utils/game-utils.service';
-import { BowlingGameValidationService } from 'src/app/core/services/bowling-game-validation.service';
+import { BowlingGameValidationService } from 'src/app/core/services/game-utils/bowling-game-validation.service';
 import { GameScoreCalculatorService } from 'src/app/core/services/game-score-calculator/game-score-calculator.service';
 import { GameDataTransformerService } from 'src/app/core/services/game-transform/game-data-transform.service';
 import { InputCustomEvent, ModalController } from '@ionic/angular';
@@ -84,7 +84,6 @@ defineCustomElements(window);
     FormsModule,
     NgIf,
     NgFor,
-    NgStyle,
     GameGridComponent,
     GameScoreToolbarComponent,
   ],
@@ -156,7 +155,6 @@ export class AddGamePage implements OnInit {
 
   togglePinMode(): void {
     this.isPinMode = !this.isPinMode;
-    this.hapticService.vibrate(ImpactStyle.Light);
   }
 
   async handleImageUpload(): Promise<void> {
