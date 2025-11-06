@@ -30,7 +30,6 @@ export class PinDeckFrameRowComponent {
 
     const frame = game.frames[frameIndex];
 
-    // Check if frame has throws array with pin data (detailed format)
     if (frame.throws && Array.isArray(frame.throws)) {
       const throwData = frame.throws[throwIndex];
       if (throwData?.pinsLeftStanding) {
@@ -38,14 +37,13 @@ export class PinDeckFrameRowComponent {
       }
     }
 
-    // Fallback: calculate approximate pins standing from throw values (for old games without pin data)
     const allPins = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
     if (throwIndex === 0) {
       const pinsKnockedDown = frame.throws?.[0]?.value ?? frame[0];
       if (pinsKnockedDown === undefined) return [];
       if (pinsKnockedDown === 10) return [];
-      return allPins.slice(0, 10 - pinsKnockedDown);
+      return allPins.slice(pinsKnockedDown);
     }
 
     if (throwIndex === 1) {
@@ -54,18 +52,34 @@ export class PinDeckFrameRowComponent {
       if (secondThrow === undefined) return [];
 
       if (frameIndex === 9 && firstThrow === 10) {
-        return allPins.slice(0, Math.max(0, 10 - secondThrow));
+        if (secondThrow === 10) return [];
+        return allPins.slice(secondThrow);
       }
 
-      const pinsAfterFirst = 10 - firstThrow;
-      const pinsAfterSecond = pinsAfterFirst - secondThrow;
-      return allPins.slice(0, Math.max(0, pinsAfterSecond));
+      const totalKnockedDown = firstThrow + secondThrow;
+      if (totalKnockedDown >= 10) return [];
+      return allPins.slice(totalKnockedDown);
     }
 
     if (throwIndex === 2 && frameIndex === 9) {
+      const firstThrow = frame.throws?.[0]?.value ?? frame[0];
+      const secondThrow = frame.throws?.[1]?.value ?? frame[1];
       const thirdThrow = frame.throws?.[2]?.value ?? frame[2];
       if (thirdThrow === undefined) return [];
-      return allPins.slice(0, Math.max(0, 10 - thirdThrow));
+
+      if (firstThrow === 10 && secondThrow === 10) {
+        if (thirdThrow === 10) return [];
+        return allPins.slice(thirdThrow);
+      }
+
+      if (firstThrow === 10) {
+        const totalKnockedDown = secondThrow + thirdThrow;
+        if (totalKnockedDown >= 10) return [];
+        return allPins.slice(totalKnockedDown);
+      }
+
+      if (thirdThrow === 10) return [];
+      return allPins.slice(thirdThrow);
     }
 
     return [];

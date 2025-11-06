@@ -100,7 +100,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
   presentingElement?: HTMLElement;
   patternTypeaheadConfig!: TypeaheadConfig<Partial<Pattern>>;
   // Pin mode properties
-  throwsData: { value: number; pinsLeftStanding: number[] }[][] = Array.from({ length: 10 }, () => []); // Stores throw value and pins left standing
+  throwsData: { value: number; pinsLeftStanding: number[]; pinsKnockedDown: number[] }[][] = Array.from({ length: 10 }, () => []); // Stores throw value, pins left standing, and pins knocked down
   currentThrowIndex = 0;
   // Keyboard toolbar
   showButtonToolbar = false;
@@ -328,9 +328,6 @@ export class GameGridComponent implements OnInit, OnDestroy {
         this.throwsData[frameIndex].splice(inputIndex, 1);
       }
       this.updateScores();
-      if (this.isPinMode()) {
-        this.updateCurrentThrow();
-      }
       return;
     }
     if (!this.isValidNumber0to10(parsedValue)) {
@@ -346,9 +343,6 @@ export class GameGridComponent implements OnInit, OnDestroy {
     this.updateScores();
     this.focusNextInput(frameIndex, inputIndex);
 
-    if (this.isPinMode()) {
-      this.updateCurrentThrow();
-    }
     this.emitToolbarDisabledState();
   }
 
@@ -547,6 +541,17 @@ export class GameGridComponent implements OnInit, OnDestroy {
     this.throwsData[event.frameIndex][event.throwIndex] = {
       value: event.pinsKnockedDown,
       pinsLeftStanding: event.pinsLeftStanding,
+      pinsKnockedDown: event.pinsKnockedDownNumbers,
+    };
+
+    // Store detailed throw data in the game object for pin-deck visualization
+    if (!this.game().frames[event.frameIndex].throws) {
+      this.game().frames[event.frameIndex].throws = [];
+    }
+    this.game().frames[event.frameIndex].throws[event.throwIndex] = {
+      value: event.pinsKnockedDown,
+      pinsLeftStanding: event.pinsLeftStanding,
+      pinsKnockedDown: event.pinsKnockedDownNumbers,
     };
 
     this.game().frames[event.frameIndex][event.throwIndex] = event.pinsKnockedDown;

@@ -1,91 +1,11 @@
 @if (isPinMode()) {
-  <div class="grid-container">
-    <ion-grid *ngFor="let i of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; let frameIndex = index">
-      <ion-row>
-        <ion-col class="middle frame">{{ i }}</ion-col>
-      </ion-row>
-      <ion-row>
-        <ion-col class="input-col" *ngIf="i !== 10"></ion-col>
-        <ion-col class="input-col" [class.current-throw]="frameIndex === currentFrameIndex && currentThrowIndex === 0">
-          <ion-input type="text" clearOnEdit="true" inputmode="numeric" autocapitalize="on" readonly="true" [value]="getFrameValue(frameIndex, 0)">
-          </ion-input>
-        </ion-col>
-        <ion-col class="input-col" *ngIf="i !== 10" [class.current-throw]="frameIndex === currentFrameIndex && currentThrowIndex === 1">
-          <ion-input
-            type="text"
-            clearOnEdit="true"
-            inputmode="numeric"
-            autocapitalize="on"
-            readonly="true"
-            [disabled]="game().frames[frameIndex][0] === 10 && i !== 10"
-            [value]="getFrameValue(frameIndex, 1)">
-          </ion-input>
-        </ion-col>
-        <ion-col class="input-col" *ngIf="i === 10" [class.current-throw]="frameIndex === currentFrameIndex && currentThrowIndex === 1">
-          <ion-input
-            type="text"
-            clearOnEdit="true"
-            inputmode="numeric"
-            autocapitalize="on"
-            readonly="true"
-            [disabled]="game().frames[frameIndex][0] === 10 && i !== 10"
-            [value]="getFrameValue(frameIndex, 1)">
-          </ion-input>
-        </ion-col>
-        <ion-col class="input-col" *ngIf="i === 10" [class.current-throw]="frameIndex === currentFrameIndex && currentThrowIndex === 2">
-          <ion-input
-            type="text"
-            clearOnEdit="true"
-            inputmode="numeric"
-            autocapitalize="on"
-            readonly="true"
-            [value]="getFrameValue(frameIndex, 2)"
-            [disabled]="game().frames[frameIndex][0] !== 10 && game().frames[frameIndex][0] + (game().frames[frameIndex][1] || 0) !== 10">
-          </ion-input>
-        </ion-col>
-      </ion-row>
-
-      <!-- Pin Deck Visualization Row -->
-      <app-frame-pin-deck-row *ngIf="game().frames[frameIndex][0] !== undefined" [game]="game()" [frameIndex]="frameIndex"> </app-frame-pin-deck-row>
-
-      <ion-row>
-        <ion-col class="middle count">
-          <ng-container
-            *ngIf="
-              (game().frames[frameIndex][0] !== undefined ||
-                game().frames[frameIndex][1] !== undefined ||
-                (i === 10 && game().frames[frameIndex][0] !== undefined && game().frames[frameIndex][1] !== undefined)) &&
-              isNumber(game().frameScores[i - 1])
-            ">
-            {{ game().frameScores[i - 1] }}
-          </ng-container>
-
-          <ng-container *ngIf="i === 10 && (game().frames[frameIndex][0] === undefined || game().frames[frameIndex][1] === undefined)">
-            <span style="color: var(--ion-color-secondary)"> ({{ maxScore }}) </span>
-          </ng-container>
-        </ion-col>
-
-        <ion-col
-          *ngIf="
-            !(
-              (game().frames[frameIndex][0] !== undefined ||
-                game().frames[frameIndex][1] !== undefined ||
-                (i === 10 && game().frames[frameIndex][0] !== undefined)) &&
-              isNumber(game().frameScores[i - 1])
-            ) && !(i === 10 && game().frames[frameIndex][0] === undefined)
-          "
-          class="middle count"
-          style="color: var(--ion-color-quartiary)"
-          >0</ion-col
-        >
-      </ion-row>
-    </ion-grid>
-  </div>
-
   <app-pin-input
     [frames]="game().frames"
     [currentFrameIndex]="currentFrameIndex!"
     [currentThrowIndex]="currentThrowIndex"
+    [game]="game()"
+    [maxScore]="maxScore"
+    [throwsData]="throwsData"
     (throwConfirmed)="onPinThrowConfirmed($event)"
     (throwUndone)="onPinThrowUndone()"></app-pin-input>
 

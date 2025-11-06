@@ -97,14 +97,6 @@
       </section>
     </ion-segment-content>
 
-    <ion-segment-content id="Pins">
-      <section class="tab" *ngIf="gameFilterService.filteredGames().length > 0">
-        Coming Soon...
-        <!-- <app-pin-deck [activePins]="[1, 5, 6, 10]"></app-pin-deck>
-        <app-pin-deck [activePins]="[2, 7, 4]"></app-pin-deck> -->
-      </section>
-    </ion-segment-content>
-
     <ion-segment-content id="Spares">
       <section class="tab" *ngIf="gameFilterService.filteredGames().length > 0">
         <ion-list-header style="margin-bottom: 4px">Spare Overview</ion-list-header>
@@ -115,6 +107,15 @@
         <div class="stat-container">
           <canvas #spareDistributionChart style="width: 300px; height: 400px; max-height: 700px"></canvas>
         </div>
+      </section>
+    </ion-segment-content>
+
+    <ion-segment-content id="Pins">
+      <section class="tab" *ngIf="gameFilterService.filteredGames().length > 0" style="height: 85dvh">
+        <div class="no-game-text">Coming Soon...</div>
+
+        <!-- <app-pin-deck [activePins]="[1, 5, 6, 10]"></app-pin-deck>
+            <app-pin-deck [activePins]="[2, 7, 4]"></app-pin-deck> -->
       </section>
     </ion-segment-content>
 
