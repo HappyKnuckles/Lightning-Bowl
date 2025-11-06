@@ -190,6 +190,8 @@
     <ion-button size="small" (click)="undoLastThrow()" [disabled]="!canUndoLastThrow()">
       <ion-icon slot="icon-only" name="arrow-undo"></ion-icon>
     </ion-button>
-    <ion-button size="small" (click)="confirmPinThrow()" [disabled]="isGameComplete()"> Confirm ({{ selectedPins.length }} pins) </ion-button>
+    <ion-button size="small" (click)="confirmPinThrow()" [disabled]="isGameComplete()">
+      <ion-icon slot="icon-only" name="checkmark-outline"></ion-icon>
+    </ion-button>
   </div>
 </div>

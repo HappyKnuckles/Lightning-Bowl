@@ -63,6 +63,8 @@
   gap: 10px;
 
   ion-button {
+    min-width: 55px;
+    min-height: 35px;
     flex: 1;
     margin: 0;
   }
