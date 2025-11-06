@@ -25,6 +25,7 @@ import { Keyboard } from '@capacitor/keyboard';
 import { addIcons } from 'ionicons';
 import { chevronExpandOutline } from 'ionicons/icons';
 import { BallSelectComponent } from '../ball-select/ball-select.component';
+import { GameScoreToolbarComponent } from '../game-score-toolbar/game-score-toolbar.component';
 import { alertEnterAnimation, alertLeaveAnimation } from '../../animations/alert.animation';
 import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
 import { PinInputComponent, PinThrowEvent } from '../pin-input/pin-input.component';
@@ -56,6 +57,7 @@ import { BowlingGameValidationService } from 'src/app/core/services/bowling-game
     PinInputComponent,
     PinDeckFrameRowComponent,
     BallSelectComponent,
+    GameScoreToolbarComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
@@ -97,6 +99,19 @@ export class GameGridComponent implements OnInit, OnDestroy {
 
   enterAnimation = alertEnterAnimation;
   leaveAnimation = alertLeaveAnimation;
+  get isStrikeDisabled(): boolean {
+    if (this.currentFrameIndex === null || this.currentRollIndex === null) {
+      return true;
+    }
+    return !this.validationService.canRecordStrike(this.currentFrameIndex, this.currentRollIndex, this.game().frames);
+  }
+
+  get isSpareDisabled(): boolean {
+    if (this.currentFrameIndex === null || this.currentRollIndex === null) {
+      return true;
+    }
+    return !this.validationService.canRecordSpare(this.currentFrameIndex, this.currentRollIndex, this.game().frames);
+  }
   maxScore = 300;
   presentingElement?: HTMLElement;
   patternTypeaheadConfig!: TypeaheadConfig<Partial<Pattern>>;
@@ -550,7 +565,9 @@ export class GameGridComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.game().frames[lastFrameIndex].splice(lastThrowIndex, 1);
+    const newFrame = [...this.game().frames[lastFrameIndex]];
+    newFrame.splice(lastThrowIndex, 1);
+    this.game().frames[lastFrameIndex] = newFrame;
 
     if (this.throwsData[lastFrameIndex] && this.throwsData[lastFrameIndex][lastThrowIndex]) {
       this.throwsData[lastFrameIndex].splice(lastThrowIndex, 1);

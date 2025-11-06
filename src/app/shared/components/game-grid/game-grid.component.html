@@ -1,3 +1,12 @@
+<app-game-score-toolbar
+  [show]="showButtonToolbar"
+  [offset]="keyboardOffset"
+  [strikeDisabled]="isStrikeDisabled"
+  [spareDisabled]="isSpareDisabled"
+  (strikeClick)="selectSpecialScore('X')"
+  (spareClick)="selectSpecialScore('/')">
+</app-game-score-toolbar>
+
 @if (isPinMode()) {
   <app-pin-input
     [frames]="game().frames"

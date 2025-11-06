@@ -31,14 +31,14 @@
 <ion-alert [isOpen]="isAlertOpen" header="Error" message="You didn't fill all inputs" [buttons]="['Dismiss']" (didDismiss)="isAlertOpen = false">
 </ion-alert>
 
-<div class="score-toolbar" [class.show]="showScoreToolbar" [ngStyle]="{ bottom: toolbarOffset + 'px' }">
-  <ion-button (click)="onToolbarButtonClick('X')" (mousedown)="$event.preventDefault()" [disabled]="toolbarDisabledState.strikeDisabled">
-    X
-  </ion-button>
-  <ion-button (click)="onToolbarButtonClick('/')" (mousedown)="$event.preventDefault()" [disabled]="toolbarDisabledState.spareDisabled">
-    /
-  </ion-button>
-</div>
+<app-game-score-toolbar
+  [show]="showScoreToolbar"
+  [offset]="toolbarOffset"
+  [strikeDisabled]="toolbarDisabledState.strikeDisabled"
+  [spareDisabled]="toolbarDisabledState.spareDisabled"
+  (strikeClick)="onToolbarButtonClick('X')"
+  (spareClick)="onToolbarButtonClick('/')">
+</app-game-score-toolbar>
 
 <div
   *ngIf="is300"

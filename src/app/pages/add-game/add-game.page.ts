@@ -43,6 +43,7 @@ import { GameDataTransformerService } from 'src/app/core/services/game-transform
 import { InputCustomEvent, ModalController } from '@ionic/angular';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { GameGridComponent } from 'src/app/shared/components/game-grid/game-grid.component';
+import { GameScoreToolbarComponent } from 'src/app/shared/components/game-score-toolbar/game-score-toolbar.component';
 import { HighScoreAlertService } from 'src/app/core/services/high-score-alert/high-score-alert.service';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
@@ -85,6 +86,7 @@ defineCustomElements(window);
     NgFor,
     NgStyle,
     GameGridComponent,
+    GameScoreToolbarComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
