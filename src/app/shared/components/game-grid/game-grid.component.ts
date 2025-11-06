@@ -29,6 +29,7 @@ import { alertEnterAnimation, alertLeaveAnimation } from '../../animations/alert
 import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
 import { PinInputComponent, PinThrowEvent } from '../pin-input/pin-input.component';
 import { PinDeckFrameRowComponent } from '../pin-deck-frame-row/pin-deck-frame-row.component';
+import { BowlingGameValidationService } from 'src/app/core/services/bowling-game-validation.service';
 
 @Component({
   selector: 'app-game-grid',
@@ -126,6 +127,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
     private platform: Platform,
     private patternService: PatternService,
     private analyticsService: AnalyticsService,
+    private validationService: BowlingGameValidationService,
   ) {
     this.initializeKeyboardListeners();
     addIcons({ chevronExpandOutline });
@@ -215,11 +217,8 @@ export class GameGridComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const frame = this.game().frames[this.currentFrameIndex];
-
-    const canStrike = this.currentRollIndex === 0 || this.currentFrameIndex === 9;
-
-    const canSpare = this.currentRollIndex > 0 && frame[this.currentRollIndex - 1] !== undefined && frame[this.currentRollIndex - 1] < 10;
+    const canStrike = this.validationService.canRecordStrike(this.currentFrameIndex, this.currentRollIndex, this.game().frames);
+    const canSpare = this.validationService.canRecordSpare(this.currentFrameIndex, this.currentRollIndex, this.game().frames);
 
     this.toolbarDisabledState.emit({ strikeDisabled: !canStrike, spareDisabled: !canSpare });
   }
@@ -330,11 +329,11 @@ export class GameGridComponent implements OnInit, OnDestroy {
       this.updateScores();
       return;
     }
-    if (!this.isValidNumber0to10(parsedValue)) {
+    if (!this.validationService.isValidNumber0to10(parsedValue)) {
       this.handleInvalidInput(event);
       return;
     }
-    if (!this.gameUtilsService.isValidFrameScore(parsedValue, frameIndex, inputIndex, this.game().frames)) {
+    if (!this.validationService.isValidFrameScore(parsedValue, frameIndex, inputIndex, this.game().frames)) {
       this.handleInvalidInput(event);
       return;
     }
@@ -422,7 +421,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
   }
 
   isGameValid(): boolean {
-    return this.gameUtilsService.isGameValid(undefined, this.game().frames);
+    return this.validationService.isGameValid(undefined, this.game().frames);
   }
 
   isNumber(value: unknown): boolean {
@@ -430,59 +429,11 @@ export class GameGridComponent implements OnInit, OnDestroy {
   }
 
   isStrikeButtonDisabled(): boolean {
-    if (this.currentFrameIndex === null || this.currentRollIndex === null) return true;
-
-    const frameIndex = this.currentFrameIndex;
-    const rollIndex = this.currentRollIndex;
-
-    if (frameIndex < 9) {
-      return rollIndex !== 0;
-    }
-
-    const frame = this.game().frames[9];
-    const first = frame[0];
-    const second = frame[1];
-
-    switch (rollIndex) {
-      case 0:
-        return false;
-      case 1:
-        return first !== 10;
-      case 2:
-        return !((first === 10 && second === 10) || (first + second === 10 && first !== 10 && second !== 10) || (first !== 10 && second === 10));
-      default:
-        return true;
-    }
+    return this.validationService.isStrikeButtonDisabled(this.currentFrameIndex, this.currentRollIndex, this.game().frames);
   }
 
   isSpareButtonDisabled(): boolean {
-    if (this.currentFrameIndex === null || this.currentRollIndex === null) return true;
-
-    const frameIndex = this.currentFrameIndex;
-    const rollIndex = this.currentRollIndex;
-
-    if (frameIndex < 9) {
-      return rollIndex !== 1;
-    }
-
-    const frame = this.game().frames[9];
-    const first = frame[0];
-    const second = frame[1];
-
-    switch (rollIndex) {
-      case 0:
-        return true;
-      case 1:
-        return first === 10;
-      case 2:
-        return (first === 10 && second === 10) || (first !== 10 && first + second === 10);
-      default:
-        return true;
-    }
-  }
-
-  private isValidNumber0to10(value: number): boolean {
-    return !isNaN(value) && value >= 0 && value <= 10;
+    return this.validationService.isSpareButtonDisabled(this.currentFrameIndex, this.currentRollIndex, this.game().frames);
   }
 
   private handleInvalidInput(event: InputCustomEvent): void {

@@ -37,6 +37,7 @@ import { UserService } from 'src/app/core/services/user/user.service';
 import { defineCustomElements } from '@teamhive/lottie-player/loader';
 import { Device } from '@capacitor/device';
 import { GameUtilsService } from 'src/app/core/services/game-utils/game-utils.service';
+import { BowlingGameValidationService } from 'src/app/core/services/bowling-game-validation.service';
 import { GameScoreCalculatorService } from 'src/app/core/services/game-score-calculator/game-score-calculator.service';
 import { GameDataTransformerService } from 'src/app/core/services/game-transform/game-data-transform.service';
 import { InputCustomEvent, ModalController } from '@ionic/angular';
@@ -135,6 +136,7 @@ export class AddGamePage implements OnInit {
     private adService: AdService,
     private hapticService: HapticService,
     private gameUtilsService: GameUtilsService,
+    private validationService: BowlingGameValidationService,
     private highScoreAlertService: HighScoreAlertService,
     private storageService: StorageService,
     private analyticsService: AnalyticsService,
@@ -282,7 +284,7 @@ export class AddGamePage implements OnInit {
   }
 
   isGameValid(game: Game): boolean {
-    return this.gameUtilsService.isGameValid(game);
+    return this.validationService.isGameValid(game);
   }
 
   updateFrameScore(event: InputCustomEvent, index: number): void {

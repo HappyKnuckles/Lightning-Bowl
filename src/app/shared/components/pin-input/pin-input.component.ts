@@ -1,10 +1,11 @@
-import { Component, input, output, effect } from '@angular/core';
+import { Component, input, output, effect, inject } from '@angular/core';
 import { IonButton, IonIcon, IonGrid, IonRow, IonCol, IonInput } from '@ionic/angular/standalone';
 import { NgFor, NgIf } from '@angular/common';
 import { addIcons } from 'ionicons';
 import { checkmarkCircle, addCircle, arrowUndo } from 'ionicons/icons';
 import { PinDeckFrameRowComponent } from '../pin-deck-frame-row/pin-deck-frame-row.component';
 import { Game } from 'src/app/core/models/game.model';
+import { BowlingGameValidationService } from 'src/app/core/services/bowling-game-validation.service';
 
 export interface ThrowData {
   value: number;
@@ -41,6 +42,7 @@ export class PinInputComponent {
   throwUndone = output<void>();
 
   selectedPins: number[] = [];
+  private validationService = inject(BowlingGameValidationService);
 
   constructor() {
     addIcons({ checkmarkCircle, addCircle, arrowUndo });
@@ -67,102 +69,25 @@ export class PinInputComponent {
   }
 
   isPinAvailable(pinNumber: number): boolean {
-    if (this.currentThrowIndex() === 0) {
-      return true;
-    }
-
-    if (this.currentFrameIndex() < 9 && this.currentThrowIndex() === 1) {
-      const pinsLeftFromFirstThrow = this.getPinsLeftFromPreviousThrow();
-      return pinsLeftFromFirstThrow.includes(pinNumber);
-    }
-
-    if (this.currentFrameIndex() === 9) {
-      const firstThrow = this.frames()[9][0];
-      const secondThrow = this.frames()[9][1];
-
-      if (this.currentThrowIndex() === 1) {
-        if (firstThrow === 10) {
-          return true;
-        }
-        const pinsLeftFromFirstThrow = this.getPinsLeftFromPreviousThrow();
-        return pinsLeftFromFirstThrow.includes(pinNumber);
-      } else if (this.currentThrowIndex() === 2) {
-        if (firstThrow === 10) {
-          if (secondThrow === 10) {
-            return true;
-          } else {
-            const pinsLeftFromSecondThrow = this.getPinsLeftFromPreviousThrow();
-            return pinsLeftFromSecondThrow.includes(pinNumber);
-          }
-        } else {
-          if (firstThrow + secondThrow === 10) {
-            return true;
-          } else {
-            return false;
-          }
-        }
-      }
-    }
-
-    return true;
+    return this.validationService.isPinAvailable(pinNumber, this.currentFrameIndex(), this.currentThrowIndex(), this.frames(), this.throwsData());
   }
 
   isPinKnockedDownPreviously(pinNumber: number): boolean {
-    if (this.currentThrowIndex() === 0) {
-      return false;
-    }
-
-    return !this.isPinAvailable(pinNumber);
+    return this.validationService.isPinKnockedDownPreviously(
+      pinNumber,
+      this.currentFrameIndex(),
+      this.currentThrowIndex(),
+      this.frames(),
+      this.throwsData(),
+    );
   }
 
   canRecordStrike(): boolean {
-    if (this.currentFrameIndex() < 9) {
-      return this.currentThrowIndex() === 0;
-    }
-
-    const firstThrow = this.frames()[9][0];
-    const secondThrow = this.frames()[9][1];
-
-    if (this.currentThrowIndex() === 0) {
-      return true;
-    } else if (this.currentThrowIndex() === 1) {
-      return firstThrow === 10;
-    } else if (this.currentThrowIndex() === 2) {
-      if (firstThrow === 10 && secondThrow === 10) {
-        return true;
-      }
-      if (firstThrow !== 10 && firstThrow + secondThrow === 10) {
-        return true;
-      }
-      return false;
-    }
-
-    return false;
+    return this.validationService.canRecordStrike(this.currentFrameIndex(), this.currentThrowIndex(), this.frames());
   }
 
   canRecordSpare(): boolean {
-    if (this.currentThrowIndex() === 0) {
-      return false;
-    }
-
-    if (this.currentFrameIndex() < 9) {
-      const firstThrow = this.frames()[this.currentFrameIndex()][0];
-      return firstThrow !== undefined && firstThrow !== 10;
-    } else {
-      const firstThrow = this.frames()[9][0];
-      const secondThrow = this.frames()[9][1];
-
-      if (this.currentThrowIndex() === 1) {
-        return firstThrow !== undefined && firstThrow !== 10;
-      } else if (this.currentThrowIndex() === 2) {
-        if (firstThrow === 10 && secondThrow !== undefined && secondThrow !== 10) {
-          return true;
-        }
-        return false;
-      }
-    }
-
-    return false;
+    return this.validationService.canRecordSpare(this.currentFrameIndex(), this.currentThrowIndex(), this.frames());
   }
 
   recordStrike(): void {
@@ -194,13 +119,7 @@ export class PinInputComponent {
   }
 
   canUndoLastThrow(): boolean {
-    for (let frameIndex = 0; frameIndex < 10; frameIndex++) {
-      const frame = this.frames()[frameIndex];
-      if (frame && frame[0] !== undefined) {
-        return true;
-      }
-    }
-    return false;
+    return this.validationService.canUndoLastThrow(this.frames());
   }
 
   confirmPinThrow(): void {
@@ -270,56 +189,10 @@ export class PinInputComponent {
   }
 
   isGameComplete(): boolean {
-    const frames = this.frames();
-    if (!frames || frames.length < 10) {
-      return false;
-    }
-
-    const frame10 = frames[9];
-
-    if (frame10[0] === undefined || frame10[1] === undefined) {
-      return false;
-    }
-
-    if (frame10[0] === 10 || frame10[0] + frame10[1] === 10) {
-      return frame10[2] !== undefined;
-    }
-
-    return true;
+    return this.validationService.isGameComplete(this.frames());
   }
 
   private getPinsLeftFromPreviousThrow(): number[] {
-    if (this.currentThrowIndex() === 0) {
-      return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-    }
-
-    const prevThrowIndex = this.currentThrowIndex() - 1;
-
-    if (this.throwsData()[this.currentFrameIndex()] && this.throwsData()[this.currentFrameIndex()][prevThrowIndex]) {
-      return this.throwsData()[this.currentFrameIndex()][prevThrowIndex].pinsLeftStanding;
-    }
-
-    const frame = this.frames()[this.currentFrameIndex()];
-    if (frame && frame[prevThrowIndex] !== undefined) {
-      const pinsKnockedDown = frame[prevThrowIndex];
-      const allPins = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-
-      if (this.currentFrameIndex() === 9) {
-        if (prevThrowIndex === 0 && pinsKnockedDown === 10) {
-          return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-        } else if (prevThrowIndex === 1 && frame[0] === 10 && pinsKnockedDown === 10) {
-          return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-        } else if (prevThrowIndex === 1 && frame[0] !== 10) {
-          const totalKnockedDown = frame[0] + pinsKnockedDown;
-          return allPins.slice(totalKnockedDown);
-        } else if (prevThrowIndex === 1 && frame[0] === 10) {
-          return allPins.slice(pinsKnockedDown);
-        }
-      }
-
-      return allPins.slice(pinsKnockedDown);
-    }
-
-    return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    return this.validationService.getPinsLeftFromPreviousThrow(this.currentFrameIndex(), this.currentThrowIndex(), this.frames(), this.throwsData());
   }
 }
