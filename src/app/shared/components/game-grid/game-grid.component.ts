@@ -31,6 +31,7 @@ import { AnalyticsService } from 'src/app/core/services/analytics/analytics.serv
 import { PinInputComponent, PinThrowEvent } from '../pin-input/pin-input.component';
 import { PinDeckFrameRowComponent } from '../pin-deck-frame-row/pin-deck-frame-row.component';
 import { BowlingGameValidationService } from 'src/app/core/services/game-utils/bowling-game-validation.service';
+import { BowlingFrameFormatterService } from 'src/app/core/services/game-utils/bowling-frame-formatter.service';
 
 @Component({
   selector: 'app-game-grid',
@@ -143,6 +144,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
     private patternService: PatternService,
     private analyticsService: AnalyticsService,
     private validationService: BowlingGameValidationService,
+    private formatterService: BowlingFrameFormatterService,
   ) {
     this.initializeKeyboardListeners();
     addIcons({ chevronExpandOutline });
@@ -274,47 +276,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
   }
 
   getFrameValue(frameIndex: number, throwIndex: number): string {
-    const frame = this.game().frames[frameIndex];
-    const val = frame[throwIndex];
-
-    if (val === undefined || val === null) {
-      return '';
-    }
-
-    const firstBall = frame[0];
-    const isTenth = frameIndex === 9;
-
-    if (throwIndex === 0) {
-      return val === 10 ? 'X' : val.toString();
-    }
-
-    if (!isTenth) {
-      if (firstBall !== undefined && firstBall !== 10 && firstBall + val === 10) {
-        return '/';
-      }
-      return val.toString();
-    }
-
-    const secondBall = frame[1];
-
-    if (throwIndex === 1) {
-      if (firstBall !== undefined && firstBall !== 10 && firstBall + val === 10) {
-        return '/';
-      }
-      return val === 10 ? 'X' : val.toString();
-    }
-
-    if (throwIndex === 2) {
-      if (firstBall === 10) {
-        if (secondBall === 10) {
-          return val === 10 ? 'X' : val.toString();
-        }
-        return secondBall !== undefined && secondBall + val === 10 ? '/' : val.toString();
-      }
-      return val === 10 ? 'X' : val.toString();
-    }
-
-    return val.toString();
+    return this.formatterService.formatThrowValue(frameIndex, throwIndex, this.game().frames);
   }
 
   simulateScore(event: InputCustomEvent, frameIndex: number, inputIndex: number): void {
