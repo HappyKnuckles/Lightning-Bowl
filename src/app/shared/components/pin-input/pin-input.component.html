@@ -185,10 +185,10 @@
     <ion-button size="small" (click)="recordStrike()" [disabled]="!canRecordStrike() || isGameComplete()"> X </ion-button>
     <ion-button size="small" (click)="recordSpare()" [disabled]="!canRecordSpare() || isGameComplete()"> / </ion-button>
     <ion-button size="small" (click)="clearSelectedPins()" [disabled]="selectedPins.length === 0 || isGameComplete()">
-      <ion-icon slot="icon-only" name="close-circle"></ion-icon>
+      <ion-icon slot="icon-only" name="close-circle-outline"></ion-icon>
     </ion-button>
     <ion-button size="small" (click)="undoLastThrow()" [disabled]="!canUndoLastThrow()">
-      <ion-icon slot="icon-only" name="arrow-undo"></ion-icon>
+      <ion-icon slot="icon-only" name="arrow-undo-outline"></ion-icon>
     </ion-button>
     <ion-button size="small" (click)="confirmPinThrow()" [disabled]="isGameComplete()">
       <ion-icon slot="icon-only" name="checkmark-outline"></ion-icon>

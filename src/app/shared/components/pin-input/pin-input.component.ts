@@ -2,7 +2,7 @@ import { Component, input, output, effect, inject } from '@angular/core';
 import { IonButton, IonIcon, IonGrid, IonRow, IonCol, IonInput } from '@ionic/angular/standalone';
 import { NgFor, NgIf } from '@angular/common';
 import { addIcons } from 'ionicons';
-import { checkmarkCircle, addCircle, arrowUndo, closeCircle } from 'ionicons/icons';
+import { closeCircleOutline, arrowUndoOutline, checkmarkOutline } from 'ionicons/icons';
 import { PinDeckFrameRowComponent } from '../pin-deck-frame-row/pin-deck-frame-row.component';
 import { Game } from 'src/app/core/models/game.model';
 import { BowlingGameValidationService } from 'src/app/core/services/game-utils/bowling-game-validation.service';
@@ -47,7 +47,7 @@ export class PinInputComponent {
   private formatterService = inject(BowlingFrameFormatterService);
 
   constructor() {
-    addIcons({ checkmarkCircle, addCircle, arrowUndo, closeCircle });
+    addIcons({ checkmarkOutline, arrowUndoOutline, closeCircleOutline });
 
     effect(() => {
       this.currentFrameIndex();

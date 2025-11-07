@@ -56,6 +56,7 @@ export interface Stats {
   average6SeriesScore?: number;
   high6Series?: number;
   // Pin-specific stats (only calculated if isPinMode is true)
+  // TODO add most left/hit single/multi pins stats and maybe add a separate PinStats interface
   pocketHits?: number;
   totalFirstBalls?: number;
   pocketHitPercentage?: number;
