@@ -380,4 +380,44 @@ export class BowlingGameValidationService {
 
     return false;
   }
+
+  /**
+   * Determines if a split is makeable (convertible)
+   * Unmakeable splits (also called impossible splits) are combinations where
+   * it's physically impossible to hit all remaining pins with one ball
+   * Common unmakeable splits: 7-10, 4-6, 4-7-10, 6-7-10, 4-6-7-10, etc.
+   */
+  isMakeableSplit(pinsLeftStanding: number[]): boolean {
+    if (!this.isSplit(pinsLeftStanding)) {
+      return false; // Not a split, so not applicable
+    }
+
+    // Define unmakeable split patterns
+    // These are splits where it's physically impossible to convert
+    const unmakeableSplits: number[][] = [
+      [7, 10], // 7-10 split (widest split)
+      [4, 6], // 4-6 split
+      [4, 6, 7], // 4-6-7 split
+      [4, 6, 10], // 4-6-10 split
+      [4, 7, 10], // 4-7-10 split
+      [6, 7, 10], // 6-7-10 split
+      [4, 6, 7, 10], // 4-6-7-10 split (Big Four)
+      [4, 6, 7, 9], // Greek Church variant
+      [4, 6, 7, 9, 10], // Big Five
+    ];
+
+    // Normalize the pins (sort to compare)
+    const sortedPins = [...pinsLeftStanding].sort((a, b) => a - b);
+
+    // Check if this matches any unmakeable pattern
+    for (const unmakeable of unmakeableSplits) {
+      const sortedUnmakeable = [...unmakeable].sort((a, b) => a - b);
+      if (sortedPins.length === sortedUnmakeable.length && sortedPins.every((pin, idx) => pin === sortedUnmakeable[idx])) {
+        return false; // This is an unmakeable split
+      }
+    }
+
+    // If not in the unmakeable list, it's considered makeable
+    return true;
+  }
 }

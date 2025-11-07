@@ -71,6 +71,9 @@ export interface Stats {
   multiPinSparePercentage?: number;
   nonSplitSparePercentage?: number;
   splitConversionPercentage?: number;
+  makeableSplits?: number;
+  makeableSplitOpportunities?: number;
+  makeableSplitPercentage?: number;
   [key: string]: StatValue | undefined;
 }
 export interface SessionStats extends Stats {
@@ -104,9 +107,16 @@ export interface PrevStats {
   cleanGameCount: number;
   perfectGameCount: number;
   averageScore: number;
+  strikeToStrikePercentage?: number;
   overallSpareRate: number;
   overallMissedRate: number;
   spareRates: number[];
+  pocketHitPercentage?: number;
+  singlePinSparePercentage?: number;
+  multiPinSparePercentage?: number;
+  nonSplitSparePercentage?: number;
+  splitConversionPercentage?: number;
+  makeableSplitPercentage?: number;
   average3SeriesScore?: number;
   high3Series?: number;
   average4SeriesScore?: number;
@@ -124,6 +134,13 @@ export interface BestBallStats {
   gameCount: number;
   strikeRate?: number;
   cleanGameCount?: number;
+}
+
+export interface LeaveStats {
+  pins: number[];
+  occurrences: number;
+  pickups: number;
+  pickupPercentage: number;
 }
 
 export type GameStats = Stats | SessionStats | SeriesStats | PrevStats;

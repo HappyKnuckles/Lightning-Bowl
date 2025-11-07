@@ -1,19 +1,12 @@
 import { Component, input } from '@angular/core';
-import { IonItem, IonLabel, IonList, IonListHeader, IonText } from '@ionic/angular/standalone';
-import { NgFor, NgIf } from '@angular/common';
+import { IonItem, IonLabel, IonList, IonListHeader } from '@ionic/angular/standalone';
 import { PinDeckComponent } from '../pin-deck/pin-deck.component';
-
-export interface LeaveStats {
-  pins: number[];
-  occurrences: number;
-  pickups: number;
-  pickupPercentage: number;
-}
+import { LeaveStats } from 'src/app/core/models/stats.model';
 
 @Component({
   selector: 'app-pin-leave-stats',
   standalone: true,
-  imports: [IonList, IonListHeader, IonItem, IonLabel, IonText, NgFor, NgIf, PinDeckComponent],
+  imports: [IonList, IonListHeader, IonItem, IonLabel, PinDeckComponent],
   templateUrl: './pin-leave-stats.component.html',
   styleUrl: './pin-leave-stats.component.scss',
 })

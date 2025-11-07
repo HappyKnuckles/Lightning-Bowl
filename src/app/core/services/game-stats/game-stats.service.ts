@@ -298,6 +298,11 @@ export class GameStatsService {
     let nonSplitSpareOpportunities = 0;
     let splits = 0;
     let splitOpportunities = 0;
+    let makeableSplits = 0;
+    let makeableSplitOpportunities = 0;
+
+    // Track most common leaves for "most left" statistics
+    // const leaveMap = new Map<string, { pins: number[]; occurrences: number; pickups: number }>();
 
     // Streak counts for exactly n consecutive strikes (3 to 11)
     const streakCounts = Array(12).fill(0);
@@ -448,6 +453,17 @@ export class GameStatsService {
             const pinsLeftCount = pinsLeft.length;
             const isSplit = this.validationService.isSplit(pinsLeft);
 
+            // // Track this leave for "most left" statistics
+            // const key = [...pinsLeft].sort((a: number, b: number) => a - b).join(',');
+            // if (!leaveMap.has(key)) {
+            //   leaveMap.set(key, { pins: [...pinsLeft].sort((a: number, b: number) => a - b), occurrences: 0, pickups: 0 });
+            // }
+            // const leave = leaveMap.get(key)!;
+            // leave.occurrences++;
+            // if (isSpare) {
+            //   leave.pickups++;
+            // }
+
             // Count opportunity
             if (pinsLeftCount === 1) {
               singlePinSpareOpportunities++;
@@ -457,6 +473,10 @@ export class GameStatsService {
                 nonSplitSpareOpportunities++;
               } else {
                 splitOpportunities++;
+                // Check if split is makeable
+                if (this.validationService.isMakeableSplit(pinsLeft)) {
+                  makeableSplitOpportunities++;
+                }
               }
             }
 
@@ -470,6 +490,10 @@ export class GameStatsService {
                   nonSplitSpares++;
                 } else {
                   splits++;
+                  // Check if makeable split was converted
+                  if (this.validationService.isMakeableSplit(pinsLeft)) {
+                    makeableSplits++;
+                  }
                 }
               }
             }
@@ -481,6 +505,17 @@ export class GameStatsService {
             const pinsLeftCount = pinsLeft.length;
             const isSplit = this.validationService.isSplit(pinsLeft);
 
+            // // Track this leave for "most left" statistics
+            // const key = [...pinsLeft].sort((a: number, b: number) => a - b).join(',');
+            // if (!leaveMap.has(key)) {
+            //   leaveMap.set(key, { pins: [...pinsLeft].sort((a: number, b: number) => a - b), occurrences: 0, pickups: 0 });
+            // }
+            // const leave = leaveMap.get(key)!;
+            // leave.occurrences++;
+            // if (throw3 !== undefined && throw2 + throw3 === 10) {
+            //   leave.pickups++;
+            // }
+
             // Count opportunity
             if (pinsLeftCount === 1) {
               singlePinSpareOpportunities++;
@@ -490,6 +525,10 @@ export class GameStatsService {
                 nonSplitSpareOpportunities++;
               } else {
                 splitOpportunities++;
+                // Check if split is makeable
+                if (this.validationService.isMakeableSplit(pinsLeft)) {
+                  makeableSplitOpportunities++;
+                }
               }
             }
 
@@ -503,6 +542,10 @@ export class GameStatsService {
                   nonSplitSpares++;
                 } else {
                   splits++;
+                  // Check if makeable split was converted
+                  if (this.validationService.isMakeableSplit(pinsLeft)) {
+                    makeableSplits++;
+                  }
                 }
               }
             }
@@ -584,6 +627,30 @@ export class GameStatsService {
     const multiPinSparePercentage = multiPinSpareOpportunities > 0 ? (multiPinSpares / multiPinSpareOpportunities) * 100 : 0;
     const nonSplitSparePercentage = nonSplitSpareOpportunities > 0 ? (nonSplitSpares / nonSplitSpareOpportunities) * 100 : 0;
     const splitConversionPercentage = splitOpportunities > 0 ? (splits / splitOpportunities) * 100 : 0;
+    const makeableSplitPercentage = makeableSplitOpportunities > 0 ? (makeableSplits / makeableSplitOpportunities) * 100 : 0;
+
+    // // Calculate "most left" statistics from leaveMap
+    // const leavesArray: LeaveStats[] = Array.from(leaveMap.values()).map((leave) => ({
+    //   ...leave,
+    //   pickupPercentage: leave.occurrences > 0 ? (leave.pickups / leave.occurrences) * 100 : 0,
+    // }));
+
+    // // Most left single pin (most common single pin leave)
+    // const singlePinLeaves = leavesArray.filter((leave) => leave.pins.length === 1);
+    // const mostLeftSinglePin = singlePinLeaves.length > 0
+    //   ? singlePinLeaves.sort((a, b) => b.occurrences - a.occurrences)[0]
+    //   : undefined;
+
+    // // Most left spare (most common spare opportunity that was left, regardless of conversion)
+    // const mostLeftSpare = leavesArray.length > 0
+    //   ? leavesArray.sort((a, b) => b.occurrences - a.occurrences)[0]
+    //   : undefined;
+
+    // // Most hit spare (spare with highest conversion rate among those with significant attempts)
+    // const significantLeaves = leavesArray.filter((leave) => leave.occurrences >= 3); // At least 3 attempts
+    // const mostHitSpare = significantLeaves.length > 0
+    //   ? significantLeaves.sort((a, b) => b.pickupPercentage - a.pickupPercentage)[0]
+    //   : undefined;
 
     return {
       totalStrikes,
@@ -658,6 +725,9 @@ export class GameStatsService {
       multiPinSparePercentage,
       nonSplitSparePercentage,
       splitConversionPercentage,
+      makeableSplits,
+      makeableSplitOpportunities,
+      makeableSplitPercentage,
     };
   }
 
@@ -711,9 +781,16 @@ export class GameStatsService {
       cleanGameCount: stats.cleanGameCount,
       perfectGameCount: stats.perfectGameCount,
       averageScore: stats.averageScore,
+      strikeToStrikePercentage: stats.strikeToStrikePercentage,
       overallSpareRate: stats.overallSpareRate,
       spareRates: stats.spareRates,
       overallMissedRate: stats.overallMissedRate,
+      pocketHitPercentage: stats.pocketHitPercentage,
+      singlePinSparePercentage: stats.singlePinSparePercentage,
+      multiPinSparePercentage: stats.multiPinSparePercentage,
+      nonSplitSparePercentage: stats.nonSplitSparePercentage,
+      splitConversionPercentage: stats.splitConversionPercentage,
+      makeableSplitPercentage: stats.makeableSplitPercentage,
       average3SeriesScore: stats.average3SeriesScore!,
       average4SeriesScore: stats.average4SeriesScore!,
       average5SeriesScore: stats.average5SeriesScore!,
@@ -737,8 +814,15 @@ export class GameStatsService {
       cleanGameCount: 0,
       perfectGameCount: 0,
       averageScore: 0,
+      strikeToStrikePercentage: 0,
       overallSpareRate: 0,
       overallMissedRate: 0,
+      pocketHitPercentage: 0,
+      singlePinSparePercentage: 0,
+      multiPinSparePercentage: 0,
+      nonSplitSparePercentage: 0,
+      splitConversionPercentage: 0,
+      makeableSplitPercentage: 0,
       average3SeriesScore: 0,
       average4SeriesScore: 0,
       average5SeriesScore: 0,

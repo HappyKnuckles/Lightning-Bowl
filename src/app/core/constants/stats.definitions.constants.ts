@@ -243,6 +243,7 @@ export const pinStatDefinitions: StatDefinition[] = [
     key: 'pocketHitPercentage',
     id: 'pocketHitPercentage',
     isPercentage: true,
+    prevKey: 'pocketHitPercentage',
     toolTip: 'Percentage of first balls where you hit the pocket.',
   },
   {
@@ -274,26 +275,46 @@ export const pinStatDefinitions: StatDefinition[] = [
   {
     label: 'Single pin spare %',
     key: 'singlePinSparePercentage',
+
     id: 'singlePinSparePercentage',
     isPercentage: true,
+    prevKey: 'singlePinSparePercentage',
   },
   {
     label: 'Multi pin spare %',
     key: 'multiPinSparePercentage',
     id: 'multiPinSparePercentage',
     isPercentage: true,
+    prevKey: 'multiPinSparePercentage',
   },
   {
     label: 'Non-split spare %',
     key: 'nonSplitSparePercentage',
     id: 'nonSplitSparePercentage',
     isPercentage: true,
+    prevKey: 'nonSplitSparePercentage',
   },
   {
     label: 'Split conversion %',
     key: 'splitConversionPercentage',
     id: 'splitConversionPercentage',
     isPercentage: true,
+    prevKey: 'splitConversionPercentage',
+  },
+  {
+    label: 'Makeable split conversions',
+    key: 'makeableSplits',
+    id: 'makeableSplits',
+    secondaryKey: 'makeableSplitOpportunities',
+    toolTip: 'Number of makeable splits converted (excludes impossible splits like 7-10, 4-6, etc.).',
+  },
+  {
+    label: 'Makeable split %',
+    key: 'makeableSplitPercentage',
+    prevKey: 'makeableSplitPercentage',
+    id: 'makeableSplitPercentage',
+    isPercentage: true,
+    toolTip: 'Percentage of makeable splits that were successfully converted.',
   },
 ];
 
