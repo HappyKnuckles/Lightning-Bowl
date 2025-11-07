@@ -55,6 +55,22 @@ export interface Stats {
   high5Series?: number;
   average6SeriesScore?: number;
   high6Series?: number;
+  // Pin-specific stats (only calculated if isPinMode is true)
+  pocketHits?: number;
+  totalFirstBalls?: number;
+  pocketHitPercentage?: number;
+  singlePinSpares?: number;
+  singlePinSpareOpportunities?: number;
+  multiPinSpares?: number;
+  multiPinSpareOpportunities?: number;
+  nonSplitSpares?: number;
+  nonSplitSpareOpportunities?: number;
+  splits?: number;
+  splitOpportunities?: number;
+  singlePinSparePercentage?: number;
+  multiPinSparePercentage?: number;
+  nonSplitSparePercentage?: number;
+  splitConversionPercentage?: number;
   [key: string]: StatValue | undefined;
 }
 export interface SessionStats extends Stats {

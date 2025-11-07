@@ -318,4 +318,66 @@ export class BowlingGameValidationService {
 
     return isValid;
   }
+
+  /**
+   * Detects if a throw resulted in a split
+   * A split occurs when the headpin (1) is knocked down and at least one pin
+   * is left standing with a gap between standing pins
+   */
+  isSplit(pinsLeftStanding: number[]): boolean {
+    if (!pinsLeftStanding?.length || pinsLeftStanding.length < 2) {
+      return false;
+    }
+
+    // Headpin (1) must be down for a split
+    if (pinsLeftStanding.includes(1)) {
+      return false;
+    }
+
+    // Adjacency map for 10-pin bowling
+    const adjacencies: Record<number, number[]> = {
+      1: [2, 3],
+      2: [1, 4, 5],
+      3: [1, 5, 6],
+      4: [2, 7, 8],
+      5: [2, 3, 8, 9],
+      6: [3, 9, 10],
+      7: [4],
+      8: [4, 5],
+      9: [5, 6],
+      10: [6],
+    };
+
+    // Create a Set for O(1) membership lookup
+    const standing = new Set(pinsLeftStanding);
+
+    // If any pin has an adjacent pin also standing → not a split
+    for (const pin of standing) {
+      const adjacentPins = adjacencies[pin] ?? [];
+      if (adjacentPins.some((adj) => standing.has(adj))) {
+        return false;
+      }
+    }
+
+    // No adjacent pins — it's a split
+    return true;
+  }
+
+  /**
+   * Checks if a specific throw resulted in a split
+   * Only works in pin mode when throwsData is available
+   */
+  isThrowSplit(frameIndex: number, throwIndex: number, frames: number[][], throwsData: ThrowData[][], isPinMode?: boolean): boolean {
+    // Only detect splits in pin mode when throwsData is available
+    if (!isPinMode || !throwsData || !throwsData[frameIndex]) {
+      return false;
+    }
+
+    const throwData = throwsData[frameIndex][throwIndex];
+    if (throwData) {
+      return this.isSplit(throwData.pinsLeftStanding);
+    }
+
+    return false;
+  }
 }

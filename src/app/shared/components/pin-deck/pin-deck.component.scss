@@ -22,10 +22,11 @@
   height: 8px;
   border-radius: 100%;
   margin: 0;
-  background: var(--ion-color-dark);
+  background: rgb(65, 65, 65);
 
   &.active {
     background: rgb(226, 226, 226);
+    border: 1px solid var(--ion-color-primary);
     color: white;
     font-weight: bold;
   }

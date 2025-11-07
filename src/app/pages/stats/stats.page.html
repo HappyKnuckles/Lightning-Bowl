@@ -111,11 +111,23 @@
     </ion-segment-content>
 
     <ion-segment-content id="Pins">
-      <section class="tab" *ngIf="gameFilterService.filteredGames().length > 0" style="height: 85dvh">
-        <div class="no-game-text">Coming Soon...</div>
+      <section class="tab" *ngIf="gameFilterService.filteredGames().length > 0">
+        @if (statsService.currentStats().singlePinSpareOpportunities === 0 && statsService.currentStats().multiPinSpareOpportunities === 0) {
+          <div class="no-game-text" style="padding: 20px; text-align: center">
+            <ion-text color="medium">
+              <p>Play games in pin mode to see detailed pin statistics</p>
+            </ion-text>
+          </div>
+        } @else {
+          <app-stat-display
+            [title]="'Pin Stats'"
+            [statDefinitions]="pinStatDefinitions"
+            [currentStats]="statsService.currentStats()"
+            [prevStats]="statsService.prevStats()">
+          </app-stat-display>
 
-        <!-- <app-pin-deck [activePins]="[1, 5, 6, 10]"></app-pin-deck>
-            <app-pin-deck [activePins]="[2, 7, 4]"></app-pin-deck> -->
+          <app-pin-leave-stats [title]="'Most Common Leaves'" [leaveStats]="mostCommonLeaves()"> </app-pin-leave-stats>
+        }
       </section>
     </ion-segment-content>
 

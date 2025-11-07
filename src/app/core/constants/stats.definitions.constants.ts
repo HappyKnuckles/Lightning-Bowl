@@ -230,6 +230,73 @@ export const strikeStatDefinitions: StatDefinition[] = [
   },
 ];
 
+export const pinStatDefinitions: StatDefinition[] = [
+  {
+    label: 'Pocket hits',
+    key: 'pocketHits',
+    id: 'pocketHits',
+    secondaryKey: 'totalFirstBalls',
+    toolTip: 'Number of times you hit the pocket on the first ball (knocked down at least pins 1 and 2, or 1 and 3).',
+  },
+  {
+    label: 'Pocket hit %',
+    key: 'pocketHitPercentage',
+    id: 'pocketHitPercentage',
+    isPercentage: true,
+    toolTip: 'Percentage of first balls where you hit the pocket.',
+  },
+  {
+    label: 'Single pin spares',
+    key: 'singlePinSpares',
+    id: 'singlePinSpares',
+    secondaryKey: 'singlePinSpareOpportunities',
+    toolTip: 'Number of spares made when only one pin was left standing after the first ball.',
+  },
+  {
+    label: 'Multi pin spares',
+    key: 'multiPinSpares',
+    id: 'multiPinSpares',
+    secondaryKey: 'multiPinSpareOpportunities',
+    toolTip: 'Number of spares made when multiple pins were left standing after the first ball.',
+  },
+  {
+    label: 'Non-split spares',
+    key: 'nonSplitSpares',
+    id: 'nonSplitSpares',
+    secondaryKey: 'nonSplitSpareOpportunities',
+  },
+  {
+    label: 'Split conversions',
+    key: 'splits',
+    id: 'splits',
+    secondaryKey: 'splitOpportunities',
+  },
+  {
+    label: 'Single pin spare %',
+    key: 'singlePinSparePercentage',
+    id: 'singlePinSparePercentage',
+    isPercentage: true,
+  },
+  {
+    label: 'Multi pin spare %',
+    key: 'multiPinSparePercentage',
+    id: 'multiPinSparePercentage',
+    isPercentage: true,
+  },
+  {
+    label: 'Non-split spare %',
+    key: 'nonSplitSparePercentage',
+    id: 'nonSplitSparePercentage',
+    isPercentage: true,
+  },
+  {
+    label: 'Split conversion %',
+    key: 'splitConversionPercentage',
+    id: 'splitConversionPercentage',
+    isPercentage: true,
+  },
+];
+
 export const sessionStatDefinitions: StatDefinition[] = [
   { label: 'Games', key: 'totalGames', id: 'sessionTotalGames' },
   {

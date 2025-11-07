@@ -5,6 +5,7 @@ import { PrevStats } from 'src/app/core/models/stats.model';
 import { GameFilterService } from '../game-filter/game-filter.service';
 import { UtilsService } from '../utils/utils.service';
 import { StorageService } from '../storage/storage.service';
+import { BowlingGameValidationService } from '../game-utils/bowling-game-validation.service';
 
 const MAX_FRAMES = 10;
 @Injectable({
@@ -91,6 +92,7 @@ export class GameStatsService {
     private gameFilterService: GameFilterService,
     private utilsService: UtilsService,
     private storageService: StorageService,
+    private validationService: BowlingGameValidationService,
   ) {}
 
   calculateBestBallStats(gameHistory: Game[]): BestBallStats {
@@ -285,6 +287,18 @@ export class GameStatsService {
     let strikeoutCount = 0;
     let allSparesGameCount = 0;
 
+    // Pin-specific counters (only for pin mode games)
+    let pocketHits = 0;
+    let totalFirstBalls = 0;
+    let singlePinSpares = 0;
+    let singlePinSpareOpportunities = 0;
+    let multiPinSpares = 0;
+    let multiPinSpareOpportunities = 0;
+    let nonSplitSpares = 0;
+    let nonSplitSpareOpportunities = 0;
+    let splits = 0;
+    let splitOpportunities = 0;
+
     // Streak counts for exactly n consecutive strikes (3 to 11)
     const streakCounts = Array(12).fill(0);
     const recordStrikeStreak = (len: number) => {
@@ -408,6 +422,92 @@ export class GameStatsService {
           }
           // If throw2 was also a strike (X X ...), then throw3 is a fill ball; no new spare/open opportunity here.
         }
+
+        // Pin-specific statistics (only for pin mode games)
+        if (game.isPinMode && frame.throws) {
+          // Check for pocket hit on first throw (not 10th frame bonus balls)
+          if (frame.throws[0] && idx < 9) {
+            totalFirstBalls++;
+
+            // Pocket hit is when pin 1 is knocked down AND either pin 2 or 3 is knocked down
+            if (frame.throws[0].pinsLeftStanding) {
+              const pinsLeft = frame.throws[0].pinsLeftStanding;
+              const pin1Down = !pinsLeft.includes(1);
+              const pin2Down = !pinsLeft.includes(2);
+              const pin3Down = !pinsLeft.includes(3);
+
+              if (pin1Down && (pin2Down || pin3Down)) {
+                pocketHits++;
+              }
+            }
+          }
+
+          // Process first throw if not a strike
+          if (!isStrike && frame.throws[0] && frame.throws[0].pinsLeftStanding) {
+            const pinsLeft = frame.throws[0].pinsLeftStanding;
+            const pinsLeftCount = pinsLeft.length;
+            const isSplit = this.validationService.isSplit(pinsLeft);
+
+            // Count opportunity
+            if (pinsLeftCount === 1) {
+              singlePinSpareOpportunities++;
+            } else if (pinsLeftCount > 1) {
+              multiPinSpareOpportunities++;
+              if (!isSplit) {
+                nonSplitSpareOpportunities++;
+              } else {
+                splitOpportunities++;
+              }
+            }
+
+            // Count conversion if spare
+            if (isSpare) {
+              if (pinsLeftCount === 1) {
+                singlePinSpares++;
+              } else if (pinsLeftCount > 1) {
+                multiPinSpares++;
+                if (!isSplit) {
+                  nonSplitSpares++;
+                } else {
+                  splits++;
+                }
+              }
+            }
+          }
+
+          // Process 10th frame additional throws
+          if (idx === MAX_FRAMES - 1 && isStrike && throw2 !== undefined && throw2 < 10 && frame.throws[1] && frame.throws[1].pinsLeftStanding) {
+            const pinsLeft = frame.throws[1].pinsLeftStanding;
+            const pinsLeftCount = pinsLeft.length;
+            const isSplit = this.validationService.isSplit(pinsLeft);
+
+            // Count opportunity
+            if (pinsLeftCount === 1) {
+              singlePinSpareOpportunities++;
+            } else if (pinsLeftCount > 1) {
+              multiPinSpareOpportunities++;
+              if (!isSplit) {
+                nonSplitSpareOpportunities++;
+              } else {
+                splitOpportunities++;
+              }
+            }
+
+            // Count conversion if spare made
+            if (throw3 !== undefined && throw2 + throw3 === 10) {
+              if (pinsLeftCount === 1) {
+                singlePinSpares++;
+              } else if (pinsLeftCount > 1) {
+                multiPinSpares++;
+                if (!isSplit) {
+                  nonSplitSpares++;
+                } else {
+                  splits++;
+                }
+              }
+            }
+          }
+        }
       });
 
       if (isAllSpares) allSparesGameCount++;
@@ -478,6 +578,13 @@ export class GameStatsService {
     // Strike-to-strike percentage
     const strikeToStrikePercentage = strikeOpportunities ? (strikeFollowUps / strikeOpportunities) * 100 : 0;
 
+    // Pin-specific percentages
+    const pocketHitPercentage = totalFirstBalls > 0 ? (pocketHits / totalFirstBalls) * 100 : 0;
+    const singlePinSparePercentage = singlePinSpareOpportunities > 0 ? (singlePinSpares / singlePinSpareOpportunities) * 100 : 0;
+    const multiPinSparePercentage = multiPinSpareOpportunities > 0 ? (multiPinSpares / multiPinSpareOpportunities) * 100 : 0;
+    const nonSplitSparePercentage = nonSplitSpareOpportunities > 0 ? (nonSplitSpares / nonSplitSpareOpportunities) * 100 : 0;
+    const splitConversionPercentage = splitOpportunities > 0 ? (splits / splitOpportunities) * 100 : 0;
+
     return {
       totalStrikes,
       totalSpares: totalSparesConverted,
@@ -535,6 +642,22 @@ export class GameStatsService {
       averageSessionsPerMonth,
       averageGamesPerSession,
       strikeToStrikePercentage,
+      // Pin-specific stats
+      pocketHits,
+      totalFirstBalls,
+      pocketHitPercentage,
+      singlePinSpares,
+      singlePinSpareOpportunities,
+      multiPinSpares,
+      multiPinSpareOpportunities,
+      nonSplitSpares,
+      nonSplitSpareOpportunities,
+      splits,
+      splitOpportunities,
+      singlePinSparePercentage,
+      multiPinSparePercentage,
+      nonSplitSparePercentage,
+      splitConversionPercentage,
     };
   }
 
