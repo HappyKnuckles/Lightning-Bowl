@@ -467,6 +467,8 @@ export class GameGridComponent implements OnInit, OnDestroy {
 
     this.game().frames[event.frameIndex][event.throwIndex] = event.pinsKnockedDown;
 
+    this.throwsData = [...this.throwsData];
+
     this.advanceToNextThrow();
 
     this.updateScores();
@@ -520,6 +522,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
 
     this.currentFrameIndex = lastFrameIndex;
     this.currentThrowIndex = lastThrowIndex;
+    this.throwsData = [...this.throwsData];
 
     this.updateScores();
   }

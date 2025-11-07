@@ -367,8 +367,7 @@ export class BowlingGameValidationService {
    * Checks if a specific throw resulted in a split
    * Only works in pin mode when throwsData is available
    */
-  isThrowSplit(frameIndex: number, throwIndex: number, frames: number[][], throwsData: ThrowData[][], isPinMode?: boolean): boolean {
-    // Only detect splits in pin mode when throwsData is available
+  isThrowSplit(frameIndex: number, throwIndex: number, throwsData: ThrowData[][], isPinMode?: boolean): boolean {
     if (!isPinMode || !throwsData || !throwsData[frameIndex]) {
       return false;
     }

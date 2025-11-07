@@ -37,6 +37,7 @@ export class PinInputComponent {
   currentThrowIndex = input<number>(0);
   game = input.required<Game>();
   maxScore = input<number>(300);
+  selectHitPinsFlag = input<boolean>(true);
 
   // Output signals
   throwConfirmed = output<PinThrowEvent>();
@@ -46,18 +47,38 @@ export class PinInputComponent {
   private validationService = inject(BowlingGameValidationService);
   private formatterService = inject(BowlingFrameFormatterService);
 
+  // Memoized State Properties for Performance
+  private memoizedPinsLeftStanding: number[] = [];
+  private memoizedPinsKnockedDownPreviously: number[] = [];
+
   constructor() {
     addIcons({ checkmarkOutline, arrowUndoOutline, closeCircleOutline });
 
     effect(() => {
       this.currentFrameIndex();
       this.currentThrowIndex();
+      this.frames();
+      this.throwsData();
+
+      this.memoizedPinsLeftStanding = this.validationService.getPinsLeftFromPreviousThrow(
+        this.currentFrameIndex(),
+        this.currentThrowIndex(),
+        this.frames(),
+        this.throwsData(),
+      );
+
+      const allPins = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+      this.memoizedPinsKnockedDownPreviously = allPins.filter((pin) => !this.memoizedPinsLeftStanding.includes(pin));
 
       this.selectedPins = [];
     });
   }
 
   togglePin(pinNumber: number): void {
+    if (!this.memoizedPinsLeftStanding.includes(pinNumber)) {
+      return;
+    }
+
     const index = this.selectedPins.indexOf(pinNumber);
     if (index > -1) {
       this.selectedPins.splice(index, 1);
@@ -71,17 +92,11 @@ export class PinInputComponent {
   }
 
   isPinAvailable(pinNumber: number): boolean {
-    return this.validationService.isPinAvailable(pinNumber, this.currentFrameIndex(), this.currentThrowIndex(), this.frames(), this.throwsData());
+    return this.memoizedPinsLeftStanding.includes(pinNumber);
   }
 
   isPinKnockedDownPreviously(pinNumber: number): boolean {
-    return this.validationService.isPinKnockedDownPreviously(
-      pinNumber,
-      this.currentFrameIndex(),
-      this.currentThrowIndex(),
-      this.frames(),
-      this.throwsData(),
-    );
+    return this.memoizedPinsKnockedDownPreviously.includes(pinNumber);
   }
 
   canRecordStrike(): boolean {
@@ -95,12 +110,10 @@ export class PinInputComponent {
   recordStrike(): void {
     if (!this.canRecordStrike()) return;
 
-    const availablePins = this.getPinsLeftFromPreviousThrow();
-
-    if (availablePins.length !== 10) {
-      this.selectedPins = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    if (this.memoizedPinsLeftStanding.length !== 10) {
+      this.selectedPins = [...this.memoizedPinsLeftStanding];
     } else {
-      this.selectedPins = [...availablePins];
+      this.selectedPins = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
     }
 
     this.confirmPinThrow();
@@ -109,9 +122,7 @@ export class PinInputComponent {
   recordSpare(): void {
     if (!this.canRecordSpare()) return;
 
-    const availablePins = this.getPinsLeftFromPreviousThrow();
-
-    this.selectedPins = [...availablePins];
+    this.selectedPins = [...this.memoizedPinsLeftStanding];
 
     this.confirmPinThrow();
   }
@@ -129,11 +140,20 @@ export class PinInputComponent {
   }
 
   confirmPinThrow(): void {
-    const pinsKnockedDown = this.selectedPins.length;
-    const pinsKnockedDownNumbers = [...this.selectedPins];
+    let pinsKnockedDownNumbers: number[] = [];
+    let pinsLeftStanding: number[] = [];
 
-    const availablePins = this.getPinsLeftFromPreviousThrow();
-    const pinsLeftStanding = availablePins.filter((pin) => !this.selectedPins.includes(pin));
+    const availablePins = this.memoizedPinsLeftStanding;
+
+    if (this.selectHitPinsFlag()) {
+      pinsKnockedDownNumbers = [...this.selectedPins];
+      pinsLeftStanding = availablePins.filter((pin) => !this.selectedPins.includes(pin));
+    } else {
+      pinsLeftStanding = [...this.selectedPins];
+      pinsKnockedDownNumbers = availablePins.filter((pin) => !this.selectedPins.includes(pin));
+    }
+
+    const pinsKnockedDown = pinsKnockedDownNumbers.length;
 
     this.throwConfirmed.emit({
       frameIndex: this.currentFrameIndex(),
@@ -156,9 +176,5 @@ export class PinInputComponent {
 
   isGameComplete(): boolean {
     return this.validationService.isGameComplete(this.frames());
-  }
-
-  private getPinsLeftFromPreviousThrow(): number[] {
-    return this.validationService.getPinsLeftFromPreviousThrow(this.currentFrameIndex(), this.currentThrowIndex(), this.frames(), this.throwsData());
   }
 }

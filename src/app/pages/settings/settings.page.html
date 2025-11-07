@@ -34,6 +34,18 @@
       </ion-select>
     </ion-item>
 
+    <ion-item>
+      <ion-icon name="bowling-ball-outline" slot="start"></ion-icon>
+      <ion-select
+        label="Pin Input Mode"
+        interface="action-sheet"
+        [value]="storageService.pinInputMode() ? 'hit' : 'missing'"
+        (ionChange)="savePinInputMode($event.detail.value)">
+        <ion-select-option value="missing">Missing Pins</ion-select-option>
+        <ion-select-option value="hit">Hit Pins</ion-select-option>
+      </ion-select>
+    </ion-item>
+
     <app-league-selector></app-league-selector>
 
     <ion-item button id="spare-names-modal">
@@ -58,13 +70,6 @@
     <ion-item button id="github-issues-modal">
       <ion-icon name="bug-outline" slot="start"></ion-icon>
       <ion-label>Issues & Features</ion-label>
-    </ion-item>
-
-    <!-- TODO maybe add InAppBrowser for this -->
-    <ion-item href="https://github.com/HappyKnuckles/bowling-stats/issues" button detail="false">
-      <ion-icon name="logo-github" slot="start"></ion-icon>
-      <ion-label>Feature/Bug overview</ion-label>
-      <p class="link">Follow me</p>
     </ion-item>
 
     <ion-item id="feedback-modal" class="ion-activatable ripple-parent rectangle">

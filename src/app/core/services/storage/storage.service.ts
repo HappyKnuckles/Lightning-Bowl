@@ -26,6 +26,12 @@ export class StorageService {
 
   #isUsingCache = signal<boolean>(false);
 
+  #pinInputMode = signal<boolean>(true);
+
+  get pinInputMode() {
+    return this.#pinInputMode;
+  }
+
   get usingCacheStatus() {
     return computed(() => ({
       isOffline: this.networkService.isOffline,
@@ -173,6 +179,12 @@ export class StorageService {
     }
   }
 
+  loadPinInputMode(): void {
+    const mode = localStorage.getItem('pin-input-mode');
+    const pinInputMode = mode === null ? true : mode === 'hit';
+    this.#pinInputMode.set(pinInputMode);
+  }
+
   async loadAllBalls(updated?: string, weight?: number, forceRefresh = false): Promise<void> {
     const cacheKey = `all_balls_${weight || 'default'}`;
 
@@ -285,6 +297,12 @@ export class StorageService {
     } catch (error) {
       console.error('Background refresh failed for patterns:', error);
     }
+  }
+
+  savePinInputMode(pinMode: string): void {
+    this.#pinInputMode.set(pinMode === 'hit');
+    const mode = pinMode === 'hit' ? 'hit' : 'missing';
+    localStorage.setItem('pin-input-mode', mode);
   }
 
   async saveBallToArsenal(ball: Ball) {
@@ -447,6 +465,7 @@ export class StorageService {
 
   private async loadInitialData(weight: number): Promise<void> {
     try {
+      this.loadPinInputMode();
       await Promise.all([
         this.loadAllPatterns(),
         this.loadAllBalls(undefined, weight),
