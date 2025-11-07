@@ -331,9 +331,6 @@ export class StatsCalculationService {
     const overallMissedRate = totalSparesMissed > 0 ? 100 - overallSpareRate : 0;
     const markPercentage = ((totalFrames - totalSparesMissed) / totalFrames) * 100 || 0;
 
-    // Frequency metrics (simplified, assuming UtilsService date logic is in UtilsService)
-    // The original code uses UtilsService, but the implementation relies on local date logic.
-    // Assuming the necessary date calculations are correct:
     const msPerDay = 1000 * 60 * 60 * 24;
     const times = gameHistory.map((g) => new Date(g.date).getTime());
     const minT = times.length > 0 ? Math.min(...times) : 0;

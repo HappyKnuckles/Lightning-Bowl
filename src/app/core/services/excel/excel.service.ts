@@ -32,7 +32,9 @@ export class ExcelService {
   async exportToExcel(): Promise<boolean> {
     try {
       const gameData = this.getGameDataForExport(this.storageService.games());
-      const { overall, spares, throwStats, strike, special, playFrequency, series } = this.getStatsTablesForExport(this.statsService.currentStats());
+      const { overall, spares, throwStats, strike, special, playFrequency, series, pinStats } = this.getStatsTablesForExport(
+        this.statsService.currentStats(),
+      );
 
       const workbook = new ExcelJS.Workbook();
       const gameWorksheet = workbook.addWorksheet('Game History');
@@ -46,10 +48,11 @@ export class ExcelService {
         { name: 'OverallStats', start: 'A1', headers: ['Overall', 'Value'], data: overall },
         { name: 'SparesStats', start: 'D1', headers: ['Spares', 'Value'], data: spares },
         { name: 'ThrowStats', start: 'G1', headers: ['Throw', 'Value'], data: throwStats },
-        { name: 'StrikeStats', start: 'J1', headers: ['Strike', 'Value'], data: strike },
-        { name: 'SpecialStats', start: 'M1', headers: ['Special', 'Value'], data: special },
-        { name: 'PlayFrequency', start: 'P1', headers: ['Frequency', 'Value'], data: playFrequency },
-        { name: 'SeriesStats', start: 'S1', headers: ['Series', 'Value'], data: series },
+        { name: 'PinStats', start: 'J1', headers: ['Pin', 'Value'], data: pinStats },
+        { name: 'StrikeStats', start: 'M1', headers: ['Strike', 'Value'], data: strike },
+        { name: 'SpecialStats', start: 'P1', headers: ['Special', 'Value'], data: special },
+        { name: 'PlayFrequency', start: 'S1', headers: ['Frequency', 'Value'], data: playFrequency },
+        { name: 'SeriesStats', start: 'V1', headers: ['Series', 'Value'], data: series },
       ];
 
       sections.forEach(({ name, start, headers, data }) => {
@@ -141,22 +144,59 @@ export class ExcelService {
       for (let i = 1; i < data.length; i++) {
         const row = data[i];
         const frames = [];
+        const isPinMode = (row['isPinMode'] as string)?.trim().toLowerCase() === 'true';
+
         for (let j = 1; j <= 10; j++) {
-          const frame: { frameIndex: number; throws: { value: number; throwIndex: number }[] } = {
-            frameIndex: j,
+          const frameIndex = j;
+          const frame: { frameIndex: number; throws: { value: number; throwIndex: number; pinsLeftStanding?: number[] }[] } = {
+            frameIndex: frameIndex,
             throws: [],
           };
 
-          const throwsData = row[`Frame ${j}`];
+          const throwsData = row[`Frame ${frameIndex}`] as string;
+          const throwValues: number[] = [];
+
           if (typeof throwsData === 'string' && throwsData.trim() !== '') {
             if (throwsData.includes('/')) {
-              const throws = throwsData.split(' / ').map((value) => parseInt(value));
-              for (let k = 0; k < throws.length; k++) {
-                frame.throws.push({ value: throws[k], throwIndex: k + 1 });
-              }
+              throwValues.push(...throwsData.split(' / ').map((value: string) => parseInt(value)));
             } else {
-              frame.throws.push({ value: parseInt(throwsData), throwIndex: 1 });
+              throwValues.push(parseInt(throwsData));
             }
+          }
+
+          const pinsLeft1 = (row[`Frame ${frameIndex} Pins 1`] as string) || '';
+          const pinsLeft2 = (row[`Frame ${frameIndex} Pins 2`] as string) || '';
+          const pinsLeft3 = frameIndex === 10 ? (row[`Frame ${frameIndex} Pins 3`] as string) || '' : '';
+          const pinsLefts = [pinsLeft1, pinsLeft2, pinsLeft3];
+
+          const maxThrowsInFrame = frameIndex === 10 ? 3 : 2;
+
+          for (let k = 0; k < throwValues.length && k < maxThrowsInFrame; k++) {
+            const throwObj: { value: number; throwIndex: number; pinsLeftStanding?: number[] } = {
+              value: throwValues[k],
+              throwIndex: k + 1,
+            };
+
+            // Nur wenn isPinMode true, fügen wir pinsLeftStanding hinzu.
+            if (isPinMode) {
+              const pinsLeftString = pinsLefts[k];
+
+              if (pinsLeftString.trim() === '') {
+                throwObj.pinsLeftStanding = [];
+              } else if (pinsLeftString.trim().length > 0) {
+                const pinArray = pinsLeftString
+                  .split(',')
+                  .map((p) => parseInt(p))
+                  .filter((p) => !isNaN(p));
+                if (pinArray.length > 0) {
+                  throwObj.pinsLeftStanding = pinArray;
+                }
+              } else {
+                throwObj.pinsLeftStanding = [];
+              }
+            }
+
+            frame.throws.push(throwObj);
           }
           frames.push(frame);
         }
@@ -173,6 +213,7 @@ export class ExcelService {
           isPerfect: (row['Perfect'] as string)?.trim().toLowerCase() === 'true',
           isSeries: (row['Series'] as string)?.trim().toLowerCase() === 'true',
           seriesId: row['Series ID'] as string,
+          isPinMode: isPinMode,
           patterns: (row['Patterns'] as string)?.trim()
             ? (row['Patterns'] as string).split(', ').slice(0, 2)
             : (row['Pattern'] as string)?.trim()
@@ -195,7 +236,6 @@ export class ExcelService {
         gameData.push(game);
       }
 
-      // Save leagues and balls into storage if needed
       for (const league of leagueMap.values()) {
         await this.storageService.addLeague(league);
       }
@@ -251,11 +291,20 @@ export class ExcelService {
   }
 
   private getGameDataForExport(gameHistory: Game[]): Record<string, ExcelCellValue>[] {
-    const headers = [
-      'Game',
-      'Date',
-      ...Array.from({ length: 10 }, (_, i) => `Frame ${i + 1}`),
-      'Total Score',
+    const baseHeaders = ['Game', 'Date', ...Array.from({ length: 10 }, (_, i) => `Frame ${i + 1}`), 'Total Score'];
+
+    const pinHeaders: string[] = [];
+    for (let i = 0; i < 10; i++) {
+      const frameIndex = i + 1;
+      pinHeaders.push(`Frame ${frameIndex} Pins 1`);
+      pinHeaders.push(`Frame ${frameIndex} Pins 2`);
+
+      if (frameIndex === 10) {
+        pinHeaders.push(`Frame ${frameIndex} Pins 3`);
+      }
+    }
+
+    const finalStaticHeaders = [
       'Frame Scores',
       'League',
       'Practice',
@@ -266,7 +315,10 @@ export class ExcelService {
       'Patterns',
       'Balls',
       'Notes',
+      'isPinMode',
     ];
+
+    const headers = [...baseHeaders, ...finalStaticHeaders, ...pinHeaders];
 
     return gameHistory.map((game) => {
       const frameValues = Array.from({ length: 10 }, (_, i) => {
@@ -283,6 +335,28 @@ export class ExcelService {
         return '';
       });
 
+      const pinData: string[] = [];
+      for (let i = 0; i < 10; i++) {
+        const frame = game.frames[i];
+        const frameIndex = i + 1;
+
+        const framePins: string[] = ['', '', ''];
+
+        if (frame) {
+          const pins = frame.throws.map((t: any) => t.pinsLeftStanding?.join(',') || '');
+
+          const maxThrows = frameIndex === 10 ? 3 : 2;
+          for (let k = 0; k < maxThrows; k++) {
+            framePins[k] = pins[k] || '';
+          }
+        }
+
+        pinData.push(framePins[0], framePins[1]);
+        if (frameIndex === 10) {
+          pinData.push(framePins[2]);
+        }
+      }
+
       const rowData = [
         game.gameId.toString(),
         new Date(game.date).toLocaleDateString('en-US'),
@@ -298,6 +372,8 @@ export class ExcelService {
         game.patterns?.join(', ') || '',
         game.balls?.join(', ') || '',
         game.note || '',
+        game.isPinMode ? 'true' : 'false',
+        ...pinData,
       ];
 
       return headers.reduce(
@@ -314,6 +390,11 @@ export class ExcelService {
   private getStatsTablesForExport(stats: Stats): Record<string, Record<string, ExcelCellValue>[]> {
     const formatPercent = (v: number) => `${v.toFixed(2)}%`;
     const formatFixed = (v: number) => v.toFixed(2);
+    const formatRatio = (hits: number | undefined, opportunities: number | undefined): ExcelCellValue => {
+      const h = hits ?? 0;
+      const o = opportunities ?? 0;
+      return o > 0 ? `${h} / ${o}` : `${h}`;
+    };
 
     // Overall Stats
     const overallDefs: [string, ExcelCellValue][] = [
@@ -410,7 +491,24 @@ export class ExcelService {
     ];
     const series = seriesDefs.map(([label, val]) => ({ Series: label, Value: val }));
 
-    return { overall, spares, throwStats, strike, special, playFrequency, series };
+    // Pin Stats
+    const pinDefs: [string, ExcelCellValue][] = [
+      ['Pocket Hits (Hit/Total)', formatRatio(stats.pocketHits, stats.totalFirstBalls)],
+      ['Pocket Hit %', formatPercent(stats.pocketHitPercentage || 0)],
+      ['Single Pin Spares (Hit/Total)', formatRatio(stats.singlePinSpares, stats.singlePinSpareOpportunities)],
+      ['Single Pin Spare %', formatPercent(stats.singlePinSparePercentage || 0)],
+      ['Multi Pin Spares (Hit/Total)', formatRatio(stats.multiPinSpares, stats.multiPinSpareOpportunities)],
+      ['Multi Pin Spare %', formatPercent(stats.multiPinSparePercentage || 0)],
+      ['Non-Split Spares (Hit/Total)', formatRatio(stats.nonSplitSpares, stats.nonSplitSpareOpportunities)],
+      ['Non-Split Spare %', formatPercent(stats.nonSplitSparePercentage || 0)],
+      ['Split Conversions (Hit/Total)', formatRatio(stats.splits, stats.splitOpportunities)],
+      ['Split Conversion %', formatPercent(stats.splitConversionPercentage || 0)],
+      ['Makeable Splits (Hit/Total)', formatRatio(stats.makeableSplits, stats.makeableSplitOpportunities)],
+      ['Makeable Split %', formatPercent(stats.makeableSplitPercentage || 0)],
+    ];
+    const pinStats = pinDefs.map(([label, val]) => ({ Pin: label, Value: val }));
+
+    return { overall, spares, throwStats, strike, special, playFrequency, series, pinStats };
   }
 
   private addTable(worksheet: ExcelJS.Worksheet, name: string, ref: string, headers: string[], rows: Record<string, ExcelCellValue>[]): void {
