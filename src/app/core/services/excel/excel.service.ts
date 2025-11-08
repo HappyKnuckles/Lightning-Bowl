@@ -2,7 +2,6 @@ import { Injectable } from '@angular/core';
 import { Directory, Filesystem } from '@capacitor/filesystem';
 import * as ExcelJS from 'exceljs';
 import { isPlatform } from '@ionic/angular';
-import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { ImpactStyle } from '@capacitor/haptics';
 import { Game } from 'src/app/core/models/game.model';
@@ -11,6 +10,7 @@ import { SortUtilsService } from '../sort-utils/sort-utils.service';
 import { GameFilterService } from '../game-filter/game-filter.service';
 import { GameStatsService } from '../game-stats/game-stats.service';
 import { Stats } from 'src/app/core/models/stats.model';
+import { BowlingGameValidationService } from '../game-utils/bowling-game-validation.service';
 
 type ExcelCellValue = string | number | boolean | Date | null;
 type ExcelRow = Record<string, ExcelCellValue>;
@@ -20,12 +20,12 @@ type ExcelRow = Record<string, ExcelCellValue>;
 })
 export class ExcelService {
   constructor(
-    private toastService: ToastService,
     private hapticService: HapticService,
     private storageService: StorageService,
     private sortUtils: SortUtilsService,
     private gameFilterService: GameFilterService,
     private statsService: GameStatsService,
+    private validationService: BowlingGameValidationService,
   ) {}
 
   // TODO make one folder for all and one for each league and in there have stats and game history for the league
@@ -148,7 +148,7 @@ export class ExcelService {
 
         for (let j = 1; j <= 10; j++) {
           const frameIndex = j;
-          const frame: { frameIndex: number; throws: { value: number; throwIndex: number; pinsLeftStanding?: number[] }[] } = {
+          const frame: { frameIndex: number; throws: { value: number; throwIndex: number; pinsLeftStanding?: number[]; isSplit?: boolean }[] } = {
             frameIndex: frameIndex,
             throws: [],
           };
@@ -164,20 +164,19 @@ export class ExcelService {
             }
           }
 
-          const pinsLeft1 = (row[`Frame ${frameIndex} Pins 1`] as string) || '';
-          const pinsLeft2 = (row[`Frame ${frameIndex} Pins 2`] as string) || '';
-          const pinsLeft3 = frameIndex === 10 ? (row[`Frame ${frameIndex} Pins 3`] as string) || '' : '';
+          const pinsLeft1 = (row[`Frame ${frameIndex} Throw 1`] as string) || '';
+          const pinsLeft2 = (row[`Frame ${frameIndex} Throw 2`] as string) || '';
+          const pinsLeft3 = frameIndex === 10 ? (row[`Frame ${frameIndex} Throw 3`] as string) || '' : '';
           const pinsLefts = [pinsLeft1, pinsLeft2, pinsLeft3];
 
           const maxThrowsInFrame = frameIndex === 10 ? 3 : 2;
 
           for (let k = 0; k < throwValues.length && k < maxThrowsInFrame; k++) {
-            const throwObj: { value: number; throwIndex: number; pinsLeftStanding?: number[] } = {
+            const throwObj: { value: number; throwIndex: number; pinsLeftStanding?: number[]; isSplit?: boolean } = {
               value: throwValues[k],
               throwIndex: k + 1,
             };
 
-            // Nur wenn isPinMode true, fügen wir pinsLeftStanding hinzu.
             if (isPinMode) {
               const pinsLeftString = pinsLefts[k];
 
@@ -190,6 +189,27 @@ export class ExcelService {
                   .filter((p) => !isNaN(p));
                 if (pinArray.length > 0) {
                   throwObj.pinsLeftStanding = pinArray;
+                  if (frameIndex < 9) {
+                    if (k === 0) throwObj.isSplit = !!this.validationService.isSplit(pinArray);
+                  } else {
+                    const prevThrow = frame.throws[k - 1];
+
+                    let allowSplit = true;
+
+                    if (prevThrow) {
+                      const prevValue = prevThrow.value;
+                      const prevWasSplit = prevThrow.isSplit;
+                      const prevWasSpareOrStrike = prevValue === 10;
+
+                      if (prevWasSplit && !prevWasSpareOrStrike) {
+                        allowSplit = false;
+                      }
+                    }
+
+                    if (allowSplit) {
+                      throwObj.isSplit = this.validationService.isSplit(pinArray);
+                    }
+                  }
                 }
               } else {
                 throwObj.pinsLeftStanding = [];
@@ -296,11 +316,11 @@ export class ExcelService {
     const pinHeaders: string[] = [];
     for (let i = 0; i < 10; i++) {
       const frameIndex = i + 1;
-      pinHeaders.push(`Frame ${frameIndex} Pins 1`);
-      pinHeaders.push(`Frame ${frameIndex} Pins 2`);
+      pinHeaders.push(`Frame ${frameIndex} Throw 1`);
+      pinHeaders.push(`Frame ${frameIndex} Throw 2`);
 
       if (frameIndex === 10) {
-        pinHeaders.push(`Frame ${frameIndex} Pins 3`);
+        pinHeaders.push(`Frame ${frameIndex} Throw 3`);
       }
     }
 
