@@ -18,7 +18,7 @@ export class GameDataTransformerService {
     balls?: string[],
     existingGameId?: string,
     existingDate?: number,
-    throwsData?: { value: number; pinsLeftStanding: number[] }[][],
+    throwsData?: { value: number; pinsLeftStanding: number[]; isSplit: boolean }[][],
     isPinMode?: boolean,
   ): Game {
     try {
@@ -39,6 +39,7 @@ export class GameDataTransformerService {
               value: parseInt(throwValue as string),
               throwIndex: throwIndex + 1, // Add 1 to make it 1-based index
               pinsLeftStanding: throwData ? throwData.pinsLeftStanding : undefined,
+              isSplit: throwData ? throwData.isSplit : undefined,
             };
           }),
           frameIndex: frameIndex + 1,

@@ -188,6 +188,24 @@ ion-item {
   .input-col {
     --ion-grid-column-padding: 0;
 
+    .is-split {
+      position: relative;
+      z-index: 2;
+
+      &::after {
+        content: "";
+        position: absolute;
+        width: 17px;
+        height: 25px;
+        border-radius: 50%;
+        background-color: #ff000077;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+      }
+    }
+
     &:not(:nth-child(2)) {
       margin: 0 3px !important;
     }

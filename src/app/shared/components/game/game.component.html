@@ -74,6 +74,7 @@
                       <ion-col class="input-col"></ion-col>
                       <ion-col class="input-col">
                         <ion-input
+                          [class.is-split]="frame.throws[0]?.isSplit"
                           readonly="true"
                           type="text"
                           inputmode="numeric"
@@ -101,6 +102,7 @@
                           readonly="true"
                           type="text"
                           inputmode="numeric"
+                          [class.is-split]="frame.throws[0]?.isSplit"
                           [value]="frame.throws[0]?.value === 10 ? 'X' : frame.throws[0]?.value === 0 ? '–' : frame.throws[0]?.value">
                         </ion-input>
                       </ion-col>
@@ -109,6 +111,7 @@
                           readonly="true"
                           type="text"
                           inputmode="numeric"
+                          [class.is-split]="frame.throws[1]?.isSplit"
                           [value]="
                             frame.throws[1]?.value === 10
                               ? 'X'
@@ -125,6 +128,7 @@
                           readonly="true"
                           type="text"
                           inputmode="numeric"
+                          [class.is-split]="frame.throws[2]?.isSplit"
                           [value]="
                             frame.throws[0]?.value === 10 && frame.throws[1]?.value !== 10 && frame.throws[1]?.value + frame.throws[2]?.value === 10
                               ? '/'

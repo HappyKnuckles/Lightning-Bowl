@@ -116,7 +116,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
   presentingElement?: HTMLElement;
   patternTypeaheadConfig!: TypeaheadConfig<Partial<Pattern>>;
   // Pin mode properties
-  throwsData: { value: number; pinsLeftStanding: number[]; pinsKnockedDown: number[] }[][] = Array.from({ length: 10 }, () => []); // Stores throw value, pins left standing, and pins knocked down
+  throwsData: { value: number; pinsLeftStanding: number[]; pinsKnockedDown: number[]; isSplit: boolean }[][] = Array.from({ length: 10 }, () => []); // Stores throw value, pins left standing, and pins knocked down
   currentThrowIndex = 0;
   // Keyboard toolbar
   showButtonToolbar = false;
@@ -445,32 +445,58 @@ export class GameGridComponent implements OnInit, OnDestroy {
   }
 
   // Pin mode event handlers
-  onPinThrowConfirmed(event: PinThrowEvent): void {
-    if (!this.throwsData[event.frameIndex]) {
-      this.throwsData[event.frameIndex] = [];
+  onPinThrowConfirmed(pinThrow: PinThrowEvent): void {
+    const { frameIndex, throwIndex, pinsKnockedDown, pinsKnockedDownNumbers, pinsLeftStanding } = pinThrow;
+
+    if (!this.throwsData[frameIndex]) {
+      this.throwsData[frameIndex] = [];
     }
-    this.throwsData[event.frameIndex][event.throwIndex] = {
-      value: event.pinsKnockedDown,
-      pinsLeftStanding: event.pinsLeftStanding,
-      pinsKnockedDown: event.pinsKnockedDownNumbers,
+
+    let isSplit = false;
+    if (frameIndex < 9) {
+      if (throwIndex === 0) {
+        isSplit = this.validationService.isSplit(pinsLeftStanding);
+      }
+    } else {
+      const frameThrows = this.game().frames[frameIndex].throws || [];
+      const prevThrow = frameThrows[throwIndex - 1];
+
+      let allowSplit = true;
+
+      if (prevThrow) {
+        const prevValue = prevThrow.value;
+        const prevWasSplit = prevThrow.isSplit;
+        const prevWasSpareOrStrike = prevValue === 10 || prevThrow.spare;
+
+        if (prevWasSplit && !prevWasSpareOrStrike) {
+          allowSplit = false;
+        }
+      }
+
+      if (allowSplit) {
+        isSplit = this.validationService.isSplit(pinsLeftStanding);
+      }
+    }
+
+    const throwData = {
+      value: pinsKnockedDown,
+      pinsLeftStanding,
+      pinsKnockedDown: pinsKnockedDownNumbers,
+      isSplit,
     };
 
-    // Store detailed throw data in the game object for pin-deck visualization
-    if (!this.game().frames[event.frameIndex].throws) {
-      this.game().frames[event.frameIndex].throws = [];
-    }
-    this.game().frames[event.frameIndex].throws[event.throwIndex] = {
-      value: event.pinsKnockedDown,
-      pinsLeftStanding: event.pinsLeftStanding,
-      pinsKnockedDown: event.pinsKnockedDownNumbers,
-    };
+    this.throwsData[frameIndex][throwIndex] = throwData;
 
-    this.game().frames[event.frameIndex][event.throwIndex] = event.pinsKnockedDown;
+    if (!this.game().frames[frameIndex].throws) {
+      this.game().frames[frameIndex].throws = [];
+    }
+    this.game().frames[frameIndex].throws[throwIndex] = throwData;
+
+    this.game().frames[frameIndex][throwIndex] = pinsKnockedDown;
 
     this.throwsData = [...this.throwsData];
 
     this.advanceToNextThrow();
-
     this.updateScores();
   }
 

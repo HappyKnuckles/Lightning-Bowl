@@ -6,7 +6,14 @@
     <ion-row>
       <ion-col class="input-col" *ngIf="i !== 10"></ion-col>
       <ion-col class="input-col" [class.current-throw]="frameIndex === currentFrameIndex() && currentThrowIndex() === 0 && !isGameComplete()">
-        <ion-input type="text" clearOnEdit="true" inputmode="numeric" autocapitalize="on" readonly="true" [value]="getFrameValue(frameIndex, 0)">
+        <ion-input
+          [class.is-split]="splitsMap()[frameIndex]?.[0] ?? false"
+          type="text"
+          clearOnEdit="true"
+          inputmode="numeric"
+          autocapitalize="on"
+          readonly="true"
+          [value]="getFrameValue(frameIndex, 0)">
         </ion-input>
       </ion-col>
       <ion-col class="input-col" *ngIf="i !== 10" [class.current-throw]="frameIndex === currentFrameIndex() && currentThrowIndex() === 1">
@@ -16,6 +23,7 @@
           inputmode="numeric"
           autocapitalize="on"
           readonly="true"
+          [class.is-split]="splitsMap()[frameIndex]?.[1] ?? false"
           [disabled]="game().frames[frameIndex][0] === 10 && i !== 10"
           [value]="getFrameValue(frameIndex, 1)">
         </ion-input>
@@ -30,6 +38,7 @@
           inputmode="numeric"
           autocapitalize="on"
           readonly="true"
+          [class.is-split]="splitsMap()[frameIndex]?.[1] ?? false"
           [disabled]="game().frames[frameIndex][0] === 10 && i !== 10"
           [value]="getFrameValue(frameIndex, 1)">
         </ion-input>
@@ -44,13 +53,14 @@
           inputmode="numeric"
           autocapitalize="on"
           readonly="true"
+          [class.is-split]="splitsMap()[frameIndex]?.[2] ?? false"
           [value]="getFrameValue(frameIndex, 2)"
           [disabled]="game().frames[frameIndex][0] !== 10 && game().frames[frameIndex][0] + (game().frames[frameIndex][1] || 0) !== 10">
         </ion-input>
       </ion-col>
     </ion-row>
     <div style="height: 24px" *ngIf="game().frames[frameIndex][0] === undefined"></div>
-    <!-- Pin Deck Visualization Row -->
+
     <app-pin-deck-frame-row *ngIf="game().frames[frameIndex][0] !== undefined" [game]="game()" [frameIndex]="frameIndex"> </app-pin-deck-frame-row>
 
     <ion-row>

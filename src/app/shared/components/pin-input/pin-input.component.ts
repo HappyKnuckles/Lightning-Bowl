@@ -12,6 +12,7 @@ export interface ThrowData {
   value: number;
   pinsLeftStanding: number[];
   pinsKnockedDown: number[];
+  isSplit: boolean;
 }
 
 export interface PinThrowEvent {
@@ -40,22 +41,28 @@ export class PinInputComponent {
   throwConfirmed = output<PinThrowEvent>();
   throwUndone = output<void>();
   selectedPins: number[] = [];
+  pinsLeftStanding = computed(() => {
+    return this.validationService.getPinsLeftFromPreviousThrow(this.currentFrameIndex(), this.currentThrowIndex(), this.frames(), this.throwsData());
+  });
+  pinsKnockedDownPreviously = computed(() => {
+    const allPins = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    return allPins.filter((pin) => !this.pinsLeftStanding().includes(pin));
+  });
+  splitsMap = computed(() => {
+    const map: Record<number, boolean[]> = {};
 
+    this.throwsData().forEach((frameThrows, frameIndex) => {
+      map[frameIndex] = frameThrows?.map((throwData) => throwData?.isSplit || false) || [];
+    });
+
+    return map;
+  });
   private validationService = inject(BowlingGameValidationService);
   private formatterService = inject(BowlingFrameFormatterService);
 
   constructor() {
     addIcons({ checkmarkOutline, arrowUndoOutline, closeCircleOutline });
   }
-
-  pinsLeftStanding = computed(() => {
-    return this.validationService.getPinsLeftFromPreviousThrow(this.currentFrameIndex(), this.currentThrowIndex(), this.frames(), this.throwsData());
-  });
-
-  pinsKnockedDownPreviously = computed(() => {
-    const allPins = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-    return allPins.filter((pin) => !this.pinsLeftStanding().includes(pin));
-  });
 
   togglePin(pinNumber: number): void {
     if (!this.pinsLeftStanding().includes(pinNumber)) return;
