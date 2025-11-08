@@ -65,7 +65,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
   // Input signals
   ballSelectorId = input<string>();
   showMetadata = input<boolean>(true);
-  patternId = input.required<string>();
+  patternModalId = input.required<string>();
   game = input<Game>({
     frames: [],
     totalScore: 0,
@@ -155,6 +155,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
   }
 
   async ngOnInit(): Promise<void> {
+    // TODO change this so it just uses the real game structure
     const currentGame = this.game();
     if (this.game().date != 0) {
       const newFrames: number[][] = [];
