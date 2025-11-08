@@ -125,8 +125,9 @@
             [currentStats]="statsService.currentStats()"
             [prevStats]="statsService.prevStats()">
           </app-stat-display>
-
-          <app-pin-leave-stats [title]="'Most Common Leaves'" [leaveStats]="mostCommonLeaves()"> </app-pin-leave-stats>
+          @if (mostCommonLeaves().length > 0) {
+            <app-pin-leave-stats [title]="'Most Common Leaves'" [leaveStats]="mostCommonLeaves()"> </app-pin-leave-stats>
+          }
         }
       </section>
     </ion-segment-content>
