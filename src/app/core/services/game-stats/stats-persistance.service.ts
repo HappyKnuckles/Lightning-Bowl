@@ -1,5 +1,3 @@
-// src/app/core/services/stats-persistence/stats-persistence.service.ts
-
 import { computed, Injectable, Signal } from '@angular/core';
 import { PrevStats, Stats } from 'src/app/core/models/stats.model';
 import { StorageService } from '../storage/storage.service';

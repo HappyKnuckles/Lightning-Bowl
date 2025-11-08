@@ -1,5 +1,3 @@
-// src/app/core/services/ball-stats/ball-stats.service.ts
-
 import { Injectable } from '@angular/core';
 import { Game } from 'src/app/core/models/game.model';
 import { BestBallStats } from 'src/app/core/models/stats.model';

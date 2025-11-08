@@ -1,8 +1,6 @@
-// src/app/core/services/stats-calculation/stats-calculation.service.ts
-
 import { Injectable } from '@angular/core';
 import { Game } from 'src/app/core/models/game.model';
-import { SeriesStats, SessionStats, Stats } from 'src/app/core/models/stats.model';
+import { SeriesStats, SessionStats, Stats, SinglePinLeaveStats, DisplayLeaveStat } from 'src/app/core/models/stats.model';
 import { BowlingGameValidationService } from '../game-utils/bowling-game-validation.service';
 
 const MAX_FRAMES = 10;
@@ -18,6 +16,14 @@ export class StatsCalculationService {
       return 0;
     }
     return (converted / (converted + missed)) * 100;
+  }
+
+  private getPickupColor(conversionRate: number): string {
+    if (conversionRate > 95) return '#4faeff';
+    if (conversionRate > 75) return '#008000';
+    if (conversionRate > 50) return '#809300';
+    if (conversionRate > 33) return '#FFA500';
+    return '#FF0000';
   }
 
   calculateBowlingStats(gameHistory: Game[], seriesStats: SeriesStats): Stats | SessionStats {
@@ -51,24 +57,49 @@ export class StatsCalculationService {
     let makeableSplits = 0;
     let makeableSplitOpportunities = 0;
 
-    // Track most common leaves for "most left" statistics
-    // const leaveMap = new Map<string, { pins: number[]; occurrences: number; pickups: number }>();
+    const leaveMap = new Map<string, { pins: number[]; occurrences: number; pickups: number }>();
+    const singlePinLeaveMap = new Map<number, { pin: number; occurrences: number; pickups: number }>();
 
-    // Streak counts for exactly n consecutive strikes (3 to 11)
     const streakCounts = Array(12).fill(0);
     const recordStrikeStreak = (len: number) => {
       if (len >= 3 && len <= 11) streakCounts[len]++;
     };
 
-    // Strike-to-strike metrics
     let strikeOpportunities = 0;
     let strikeFollowUps = 0;
     let previousWasStrike = false;
-
-    // Track date boundaries
     let previousGameDate: string | null = null;
 
-    // Process each game
+    const processLeave = (firstThrow: any, spareThrow: any) => {
+      if (firstThrow && firstThrow.value !== 10 && firstThrow.pinsLeftStanding) {
+        const pinsLeft = firstThrow.pinsLeftStanding.sort((a: number, b: number) => a - b);
+        if (pinsLeft.length === 0) return;
+        const key = pinsLeft.join(',');
+
+        if (!leaveMap.has(key)) {
+          leaveMap.set(key, { pins: pinsLeft, occurrences: 0, pickups: 0 });
+        }
+        const leave = leaveMap.get(key)!;
+        leave.occurrences++;
+
+        if (pinsLeft.length === 1) {
+          const pin = pinsLeft[0];
+          if (!singlePinLeaveMap.has(pin)) {
+            singlePinLeaveMap.set(pin, { pin, occurrences: 0, pickups: 0 });
+          }
+          const singlePinLeave = singlePinLeaveMap.get(pin)!;
+          singlePinLeave.occurrences++;
+          if (spareThrow && firstThrow.value + spareThrow.value === 10) {
+            singlePinLeave.pickups++;
+          }
+        }
+
+        if (spareThrow && firstThrow.value + spareThrow.value === 10) {
+          leave.pickups++;
+        }
+      }
+    };
+
     gameHistory.forEach((game) => {
       if (game.isClean) {
         cleanGameCount++;
@@ -81,14 +112,14 @@ export class StatsCalculationService {
         currentStrikeStreak = 0;
         currentOpenStreak = 0;
         previousGameDate = gameDate;
-        previousWasStrike = false; // reset for strike-to-strike
+        previousWasStrike = false;
       }
 
       let strikesInThisGame = 0;
       let isAllSpares = true;
 
-      game.frames.forEach((frame: { throws: any[] }, idx: number) => {
-        const throws = frame.throws.map((t: any) => parseInt(t.value, 10));
+      game.frames.forEach((frame: any, idx: number) => {
+        const throws = (frame.throws || []).map((t: any) => parseInt(t.value, 10));
         firstThrowCount += throws[0] || 0;
         const throw1 = throws[0];
         const throw2 = throws.length > 1 ? throws[1] : undefined;
@@ -98,7 +129,6 @@ export class StatsCalculationService {
         const isSpare = !isStrike && throw2 !== undefined && throw1 + throw2 === 10;
         const isOpen = !isStrike && !isSpare;
 
-        // Strike-to-strike tracking
         if (previousWasStrike) {
           strikeOpportunities++;
           if (isStrike) strikeFollowUps++;
@@ -107,7 +137,6 @@ export class StatsCalculationService {
 
         if (isStrike || !isSpare) isAllSpares = false;
 
-        // Open streak
         if (isOpen) {
           currentOpenStreak++;
         } else {
@@ -115,7 +144,6 @@ export class StatsCalculationService {
           currentOpenStreak = 0;
         }
 
-        // Strike streak
         if (isStrike) {
           totalStrikes++;
           currentStrikeStreak++;
@@ -137,143 +165,98 @@ export class StatsCalculationService {
         } else {
           recordStrikeStreak(currentStrikeStreak);
           currentStrikeStreak = 0;
-          // Count strike on fill ball in 10th if previous was spare
           if (idx === MAX_FRAMES - 1 && isSpare && throw3 === 10) {
             totalStrikes++;
           }
         }
         longestStrikeStreak = Math.max(longestStrikeStreak, currentStrikeStreak);
 
-        // Pin counts
         if (isSpare) {
-          // Frame was a spare on the first two balls (e.g., 7 /)
-          // This applies to frames 1-9 and the first two balls of the 10th if throw1 < 10.
           pinCounts[10 - throw1]++;
         } else if (isOpen) {
-          // Frame was open on the first one or two balls (e.g., 7 2 or 7 -)
-          // This applies to frames 1-9 and the first two balls of the 10th if throw1 < 10.
           missedCounts[10 - throw1]++;
         }
-        // If `isStrike` is true, the above `isSpare` and `isOpen` are false.
-        // We then need to check the 10th frame specifically for a spare/open opportunity
-        // on the 2nd and 3rd balls if the first was a strike.
+
         if (isStrike && idx === MAX_FRAMES - 1) {
-          // First ball was a strike in the 10th frame.
-          // Check for spare/open on the 2nd and 3rd balls.
           if (throw2 !== undefined && throw2 < 10) {
-            // Second ball was not a strike
             if (throw3 !== undefined) {
               if (throw2 + throw3 === 10) {
-                // Spare on 2nd/3rd balls (e.g., X 7 /)
                 pinCounts[10 - throw2]++;
               } else if (throw2 + throw3 < 10) {
-                // Open on 2nd/3rd balls (e.g., X 7 2)
                 missedCounts[10 - throw2]++;
               }
             } else {
-              // Only two balls after initial strike, second was not a strike (e.g. X 7 -)
               missedCounts[10 - throw2]++;
             }
           }
-          // If throw2 was also a strike (X X ...), then throw3 is a fill ball; no new spare/open opportunity here.
         }
 
-        // Pin-specific statistics (only for pin mode games)
         if (game.isPinMode && frame.throws) {
-          // Check for pocket hit on first throw (not 10th frame bonus balls)
+          processLeave(frame.throws[0], frame.throws[1]);
+          if (idx === 9 && isStrike) {
+            processLeave(frame.throws[1], frame.throws[2]);
+          }
+
           if (frame.throws[0] && idx < 9) {
             totalFirstBalls++;
-
-            // Pocket hit is when pin 1 is knocked down AND either pin 2 or 3 is knocked down
             if (frame.throws[0].pinsLeftStanding) {
               const pinsLeft = frame.throws[0].pinsLeftStanding;
               const pin1Down = !pinsLeft.includes(1);
               const pin2Down = !pinsLeft.includes(2);
               const pin3Down = !pinsLeft.includes(3);
-
               if (pin1Down && (pin2Down || pin3Down)) {
                 pocketHits++;
               }
             }
           }
 
-          // Process first throw if not a strike
           if (!isStrike && frame.throws[0] && frame.throws[0].pinsLeftStanding) {
             const pinsLeft = frame.throws[0].pinsLeftStanding;
             const pinsLeftCount = pinsLeft.length;
             const isSplit = this.validationService.isSplit(pinsLeft);
-
-            // Count opportunity
-            if (pinsLeftCount === 1) {
-              singlePinSpareOpportunities++;
-            } else if (pinsLeftCount > 1) {
+            if (pinsLeftCount === 1) singlePinSpareOpportunities++;
+            else if (pinsLeftCount > 1) {
               multiPinSpareOpportunities++;
-              if (!isSplit) {
-                nonSplitSpareOpportunities++;
-              } else {
+              if (!isSplit) nonSplitSpareOpportunities++;
+              else {
                 splitOpportunities++;
-                // Check if split is makeable
-                if (this.validationService.isMakeableSplit(pinsLeft)) {
-                  makeableSplitOpportunities++;
-                }
+                if (this.validationService.isMakeableSplit(pinsLeft)) makeableSplitOpportunities++;
               }
             }
-
-            // Count conversion if spare
             if (isSpare) {
-              if (pinsLeftCount === 1) {
-                singlePinSpares++;
-              } else if (pinsLeftCount > 1) {
+              if (pinsLeftCount === 1) singlePinSpares++;
+              else if (pinsLeftCount > 1) {
                 multiPinSpares++;
-                if (!isSplit) {
-                  nonSplitSpares++;
-                } else {
+                if (!isSplit) nonSplitSpares++;
+                else {
                   splits++;
-                  // Check if makeable split was converted
-                  if (this.validationService.isMakeableSplit(pinsLeft)) {
-                    makeableSplits++;
-                  }
+                  if (this.validationService.isMakeableSplit(pinsLeft)) makeableSplits++;
                 }
               }
             }
           }
 
-          // Process 10th frame additional throws
           if (idx === MAX_FRAMES - 1 && isStrike && throw2 !== undefined && throw2 < 10 && frame.throws[1] && frame.throws[1].pinsLeftStanding) {
             const pinsLeft = frame.throws[1].pinsLeftStanding;
             const pinsLeftCount = pinsLeft.length;
             const isSplit = this.validationService.isSplit(pinsLeft);
-
-            // Count opportunity
-            if (pinsLeftCount === 1) {
-              singlePinSpareOpportunities++;
-            } else if (pinsLeftCount > 1) {
+            if (pinsLeftCount === 1) singlePinSpareOpportunities++;
+            else if (pinsLeftCount > 1) {
               multiPinSpareOpportunities++;
-              if (!isSplit) {
-                nonSplitSpareOpportunities++;
-              } else {
+              if (!isSplit) nonSplitSpareOpportunities++;
+              else {
                 splitOpportunities++;
-                // Check if split is makeable
-                if (this.validationService.isMakeableSplit(pinsLeft)) {
-                  makeableSplitOpportunities++;
-                }
+                if (this.validationService.isMakeableSplit(pinsLeft)) makeableSplitOpportunities++;
               }
             }
-
-            // Count conversion if spare made
             if (throw3 !== undefined && throw2 + throw3 === 10) {
-              if (pinsLeftCount === 1) {
-                singlePinSpares++;
-              } else if (pinsLeftCount > 1) {
+              if (pinsLeftCount === 1) singlePinSpares++;
+              else if (pinsLeftCount > 1) {
                 multiPinSpares++;
-                if (!isSplit) {
-                  nonSplitSpares++;
-                } else {
+                if (!isSplit) nonSplitSpares++;
+                else {
                   splits++;
-                  // Check if makeable split was converted
-                  if (this.validationService.isMakeableSplit(pinsLeft)) {
-                    makeableSplits++;
-                  }
+                  if (this.validationService.isMakeableSplit(pinsLeft)) makeableSplits++;
                 }
               }
             }
@@ -283,11 +266,10 @@ export class StatsCalculationService {
 
       if (isAllSpares) allSparesGameCount++;
 
-      // Dutch 200 detection
       if (game.totalScore === 200) {
         let ok = true;
-        game.frames.forEach((frame: { throws: any[] }, idx: number) => {
-          const arr = frame.throws.map((t: any) => parseInt(t.value, 10));
+        game.frames.forEach((frame: any, idx: number) => {
+          const arr = (frame.throws || []).map((t: any) => parseInt(t.value, 10));
           if (idx < 9) {
             const want = idx % 2 === 0 ? arr[0] === 10 : arr.length >= 2 && arr[0] !== 10 && arr[0] + arr[1] === 10;
             if (!want) ok = false;
@@ -299,17 +281,167 @@ export class StatsCalculationService {
       }
     });
 
-    // Finalize streaks
     recordStrikeStreak(currentStrikeStreak);
     longestOpenStreak = Math.max(longestOpenStreak, currentOpenStreak);
 
-    // Compute spare totals
     for (let i = 1; i <= MAX_FRAMES; i++) {
       totalSparesMissed += missedCounts[i] || 0;
       totalSparesConverted += pinCounts[i] || 0;
     }
 
-    // Core aggregated stats
+    const mostCommonLeaves: DisplayLeaveStat[] = Array.from(leaveMap.values())
+      .map((leave) => {
+        const pickupPercentage = leave.occurrences > 0 ? (leave.pickups / leave.occurrences) * 100 : 0;
+        return {
+          ...leave,
+          primaryMetricLabel: 'Pickups',
+          primaryMetricValue: leave.pickups,
+          secondaryMetricLabel: 'Pickup %',
+          secondaryMetricValue: `${pickupPercentage.toFixed(0)}%`,
+          secondaryMetricColor: this.getPickupColor(pickupPercentage),
+        };
+      })
+      .sort((a, b) => b.occurrences - a.occurrences)
+      .slice(0, 10);
+
+    const mostHitSpares: DisplayLeaveStat[] = [];
+    const mostMissedSpares: DisplayLeaveStat[] = [];
+
+    const singlePinLeaves: SinglePinLeaveStats[] = Array.from(singlePinLeaveMap.values()).map((l) => ({
+      ...l,
+      pickupPercentage: l.occurrences > 0 ? (l.pickups / l.occurrences) * 100 : 0,
+    }));
+
+    const multiPinLeaves: { key: string; pins: number[]; occurrences: number; pickups: number; pickupPercentage: number }[] = [];
+    Array.from(leaveMap.entries()).forEach(([key, leave]) => {
+      if (leave.pins.length <= 1) return;
+      multiPinLeaves.push({
+        key,
+        pins: leave.pins.slice().sort((a, b) => a - b),
+        occurrences: leave.occurrences,
+        pickups: leave.pickups,
+        pickupPercentage: leave.occurrences > 0 ? (leave.pickups / leave.occurrences) * 100 : 0,
+      });
+    });
+
+    const wilsonLowerBound = (successes: number, trials: number, z = 1.96) => {
+      if (trials === 0) return 0;
+      const phat = successes / trials;
+      const z2 = z * z;
+      const denom = 1 + z2 / trials;
+      const centre = phat + z2 / (2 * trials);
+      const margin = z * Math.sqrt((phat * (1 - phat) + z2 / (4 * trials)) / trials);
+      return (centre - margin) / denom;
+    };
+    const EPS = 1e-12;
+
+    const selectTopHitsByWilson = (leaves: { occurrences: number; pickups: number; pin?: number; pins?: number[]; pickupPercentage?: number }[]) => {
+      if (!leaves || leaves.length === 0) return [];
+      const scored = leaves.map((l) => {
+        const n = l.occurrences;
+        const k = l.pickups;
+        const score = wilsonLowerBound(k, n);
+        const misses = n - k;
+        return { l, score, n, k, misses };
+      });
+
+      const maxScore = Math.max(...scored.map((s) => s.score));
+      let candidates = scored.filter((s) => Math.abs(s.score - maxScore) <= EPS);
+
+      if (candidates.length > 1) {
+        const maxOcc = Math.max(...candidates.map((c) => c.n));
+        candidates = candidates.filter((c) => c.n === maxOcc);
+      }
+      if (candidates.length > 1) {
+        const minMisses = Math.min(...candidates.map((c) => c.misses));
+        candidates = candidates.filter((c) => c.misses === minMisses);
+      }
+      return candidates.map((c) => c.l);
+    };
+
+    const selectTopMissesByWilson = (
+      leaves: { occurrences: number; pickups: number; pin?: number; pins?: number[]; pickupPercentage?: number }[],
+    ) => {
+      if (!leaves || leaves.length === 0) return [];
+      const scored = leaves.map((l) => {
+        const n = l.occurrences;
+        const misses = n - l.pickups;
+        const score = wilsonLowerBound(misses, n);
+        return { l, score, n, pickups: l.pickups, misses };
+      });
+
+      const maxScore = Math.max(...scored.map((s) => s.score));
+      let candidates = scored.filter((s) => Math.abs(s.score - maxScore) <= EPS);
+
+      if (candidates.length > 1) {
+        const maxOcc = Math.max(...candidates.map((c) => c.n));
+        candidates = candidates.filter((c) => c.n === maxOcc);
+      }
+      if (candidates.length > 1) {
+        const minPickups = Math.min(...candidates.map((c) => c.pickups));
+        candidates = candidates.filter((c) => c.pickups === minPickups);
+      }
+      return candidates.map((c) => c.l);
+    };
+
+    if (singlePinLeaves.length > 0) {
+      const singleTopHits = selectTopHitsByWilson(singlePinLeaves).filter((s) => s.occurrences > 0 && s.pickups > 0);
+      singleTopHits.forEach((s) =>
+        mostHitSpares.push({
+          pins: [s.pin!],
+          occurrences: s.occurrences,
+          primaryMetricLabel: 'Pickups',
+          primaryMetricValue: s.pickups,
+          secondaryMetricLabel: 'Pickup %',
+          secondaryMetricValue: `${((s.pickups / s.occurrences) * 100).toFixed(0)}%`,
+          secondaryMetricColor: this.getPickupColor(s.occurrences > 0 ? (s.pickups / s.occurrences) * 100 : 0),
+        }),
+      );
+
+      const singleTopMisses = selectTopMissesByWilson(singlePinLeaves).filter((s) => s.occurrences > 0 && s.occurrences - s.pickups > 0);
+      singleTopMisses.forEach((s) => {
+        const misses = s.occurrences - s.pickups;
+        mostMissedSpares.push({
+          pins: [s.pin!],
+          occurrences: s.occurrences,
+          primaryMetricLabel: 'Misses',
+          primaryMetricValue: misses,
+          secondaryMetricLabel: 'Miss Rate',
+          secondaryMetricValue: `${((misses / s.occurrences) * 100).toFixed(0)}%`,
+          secondaryMetricColor: this.getPickupColor(s.occurrences > 0 ? (s.pickups / s.occurrences) * 100 : 0),
+        });
+      });
+    }
+
+    if (multiPinLeaves.length > 0) {
+      const multiTopHits = selectTopHitsByWilson(multiPinLeaves).filter((s) => s.occurrences > 0 && s.pickups > 0);
+      multiTopHits.forEach((s) =>
+        mostHitSpares.push({
+          pins: s.pins!,
+          occurrences: s.occurrences,
+          primaryMetricLabel: 'Pickups',
+          primaryMetricValue: s.pickups,
+          secondaryMetricLabel: 'Pickup %',
+          secondaryMetricValue: `${((s.pickups / s.occurrences) * 100).toFixed(0)}%`,
+          secondaryMetricColor: this.getPickupColor(s.occurrences > 0 ? (s.pickups / s.occurrences) * 100 : 0),
+        }),
+      );
+
+      const multiTopMisses = selectTopMissesByWilson(multiPinLeaves).filter((s) => s.occurrences > 0 && s.occurrences - s.pickups > 0);
+      multiTopMisses.forEach((s) => {
+        const misses = s.occurrences - s.pickups;
+        mostMissedSpares.push({
+          pins: s.pins!,
+          occurrences: s.occurrences,
+          primaryMetricLabel: 'Misses',
+          primaryMetricValue: misses,
+          secondaryMetricLabel: 'Miss Rate',
+          secondaryMetricValue: `${((misses / s.occurrences) * 100).toFixed(0)}%`,
+          secondaryMetricColor: this.getPickupColor(s.occurrences > 0 ? (s.pickups / s.occurrences) * 100 : 0),
+        });
+      });
+    }
+
     const totalPins = gameHistory.reduce((s, g) => s + g.totalScore, 0);
     const totalGames = gameHistory.length;
     const averageScore = totalPins / totalGames || 0;
@@ -345,10 +477,8 @@ export class StatsCalculationService {
     const averageSessionsPerMonth = distinctDays / months || 0;
     const averageGamesPerSession = totalGames / distinctDays || 0;
 
-    // Strike-to-strike percentage
     const strikeToStrikePercentage = strikeOpportunities ? (strikeFollowUps / strikeOpportunities) * 100 : 0;
 
-    // Pin-specific percentages
     const pocketHitPercentage = totalFirstBalls > 0 ? (pocketHits / totalFirstBalls) * 100 : 0;
     const singlePinSparePercentage = singlePinSpareOpportunities > 0 ? (singlePinSpares / singlePinSpareOpportunities) * 100 : 0;
     const multiPinSparePercentage = multiPinSpareOpportunities > 0 ? (multiPinSpares / multiPinSpareOpportunities) * 100 : 0;
@@ -399,7 +529,6 @@ export class StatsCalculationService {
       bagger10Count: streakCounts[10],
       bagger11Count: streakCounts[11],
       streakCounts,
-      // Inject series stats here
       average3SeriesScore: seriesStats.average3SeriesScore,
       high3Series: seriesStats.high3Series,
       average4SeriesScore: seriesStats.average4SeriesScore,
@@ -414,7 +543,6 @@ export class StatsCalculationService {
       averageSessionsPerMonth,
       averageGamesPerSession,
       strikeToStrikePercentage,
-      // Pin-specific stats
       pocketHits,
       totalFirstBalls,
       pocketHitPercentage,
@@ -433,6 +561,9 @@ export class StatsCalculationService {
       makeableSplits,
       makeableSplitOpportunities,
       makeableSplitPercentage,
+      mostCommonLeaves,
+      mostHitSpares,
+      mostMissedSpares,
     };
   }
 

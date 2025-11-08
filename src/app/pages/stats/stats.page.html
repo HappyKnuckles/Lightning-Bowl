@@ -126,7 +126,9 @@
             [prevStats]="statsService.prevStats()">
           </app-stat-display>
 
-          <app-pin-leave-stats [title]="'Most Common Leaves'" [leaveStats]="mostCommonLeaves()"> </app-pin-leave-stats>
+          <app-pin-leave-stats [title]="'Most Common Leaves'" [leaveStats]="statsService.currentStats().mostCommonLeaves!"> </app-pin-leave-stats>
+          <app-pin-leave-stats [title]="'Most Hit Spares'" [leaveStats]="statsService.currentStats().mostHitSpares!"> </app-pin-leave-stats>
+          <app-pin-leave-stats [title]="'Most Missed Spares'" [leaveStats]="statsService.currentStats().mostMissedSpares!"> </app-pin-leave-stats>
         }
       </section>
     </ion-segment-content>

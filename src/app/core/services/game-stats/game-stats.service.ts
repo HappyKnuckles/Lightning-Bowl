@@ -1,5 +1,3 @@
-// src/app/core/services/game-stats/game-stats.service.ts (The original file, now a facade)
-
 import { computed, Injectable, Signal } from '@angular/core';
 import { Game } from 'src/app/core/models/game.model';
 import { BestBallStats, PrevStats, SeriesStats, Stats } from 'src/app/core/models/stats.model';
