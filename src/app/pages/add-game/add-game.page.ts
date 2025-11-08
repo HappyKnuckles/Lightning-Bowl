@@ -117,7 +117,7 @@ export class AddGamePage implements OnInit {
   selectedSegment = 'Game 1';
   segments: string[] = ['Game 1'];
   presentingElement!: HTMLElement;
-  isPinMode = false;
+  isPinInputMode = false;
   private allowedDeviceIds = [
     '820fabe8-d29b-45c2-89b3-6bcc0e149f2b',
     '21330a3a-9cff-41ce-981a-00208c21d883',
@@ -151,10 +151,12 @@ export class AddGamePage implements OnInit {
     });
     this.deviceId = (await Device.getId()).identifier;
     this.presentingElement = document.querySelector('.ion-page')!;
+    this.loadPinInputMode();
   }
 
-  togglePinMode(): void {
-    this.isPinMode = !this.isPinMode;
+  togglePinInputMode(): void {
+    this.isPinInputMode = !this.isPinInputMode;
+    localStorage.setItem('pinInputMode', String(this.isPinInputMode));
   }
 
   async handleImageUpload(): Promise<void> {
@@ -450,6 +452,10 @@ export class AddGamePage implements OnInit {
         this.handleImageUpload();
       }
     });
+  }
+
+  private loadPinInputMode(): void {
+    this.isPinInputMode = localStorage.getItem('pinInputMode') === 'true';
   }
 
   private updateSegments(): void {

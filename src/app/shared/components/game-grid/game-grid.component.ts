@@ -80,7 +80,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
     isClean: false,
     isPerfect: false,
   });
-  isPinMode = input<boolean>(false);
+  isPinInputMode = input<boolean>(false);
 
   // Output signals
   maxScoreChanged = output<number>();
@@ -148,7 +148,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
     addIcons({ chevronExpandOutline });
 
     effect(() => {
-      if (this.isPinMode()) {
+      if (this.isPinInputMode()) {
         this.updateCurrentThrow();
       }
     });
@@ -362,7 +362,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
         this.game().gameId,
         this.game().date,
         this.throwsData,
-        this.isPinMode(),
+        this.isPinInputMode(),
       );
       this.game().frames = gameData.frames;
       await this.storageService.saveGameToLocalStorage(gameData);

@@ -11,8 +11,8 @@
       <ion-icon [name]="sheetOpen ? 'chevron-up' : 'chevron-down'" size="small" style="vertical-align: middle"></ion-icon>
     </ion-title>
     <ion-buttons slot="end">
-      <ion-button fill="clear" (click)="togglePinMode()">
-        <ion-icon slot="icon-only" [name]="isPinMode ? 'bowling-ball' : 'bowling-ball-outline'"></ion-icon>
+      <ion-button fill="clear" (click)="togglePinInputMode()">
+        <ion-icon slot="icon-only" [name]="isPinInputMode ? 'bowling-ball' : 'bowling-ball-outline'"></ion-icon>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
@@ -62,7 +62,7 @@
     <ion-segment-view>
       <ion-segment-content *ngFor="let trackIndex of trackIndexes[i]; let j = index" [id]="segments[j]">
         <app-game-grid
-          [isPinMode]="isPinMode"
+          [isPinInputMode]="isPinInputMode"
           #gameGrid
           (maxScoreChanged)="onMaxScoreChanged($event, trackIndex)"
           (totalScoreChanged)="onTotalScoreChange($event, trackIndex)"

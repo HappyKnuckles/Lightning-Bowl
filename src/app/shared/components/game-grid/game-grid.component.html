@@ -7,7 +7,7 @@
   (spareClick)="selectSpecialScore('/')">
 </app-game-score-toolbar>
 
-@if (isPinMode()) {
+@if (isPinInputMode()) {
   <app-pin-input
     [frames]="game().frames"
     [currentFrameIndex]="currentFrameIndex!"

@@ -37,10 +37,8 @@ export class PinInputComponent {
   game = input.required<Game>();
   maxScore = input<number>(300);
   selectHitPins = input<boolean>(true);
-
   throwConfirmed = output<PinThrowEvent>();
   throwUndone = output<void>();
-
   selectedPins: number[] = [];
 
   private validationService = inject(BowlingGameValidationService);
