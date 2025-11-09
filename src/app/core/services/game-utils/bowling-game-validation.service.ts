@@ -342,25 +342,24 @@ export class BowlingGameValidationService {
       4: [2, 7, 8],
       5: [2, 3, 8, 9],
       6: [3, 9, 10],
-      7: [4],
-      8: [4, 5],
-      9: [5, 6],
-      10: [6],
+      7: [4, 8],
+      8: [4, 5, 7, 9],
+      9: [5, 6, 8, 10],
+      10: [6, 9],
     };
 
-    // Create a Set for O(1) membership lookup
     const standing = new Set(pinsLeftStanding);
 
-    // If any pin has an adjacent pin also standing → not a split
+    // If at least one pin is isolated (no adjacent standing pins) → it's a split
     for (const pin of standing) {
       const adjacentPins = adjacencies[pin] ?? [];
-      if (adjacentPins.some((adj) => standing.has(adj))) {
-        return false;
+      const hasAdjacentStanding = adjacentPins.some((adj) => standing.has(adj));
+      if (!hasAdjacentStanding) {
+        return true;
       }
     }
 
-    // No adjacent pins — it's a split
-    return true;
+    return false;
   }
 
   /**
