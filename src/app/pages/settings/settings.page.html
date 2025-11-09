@@ -12,10 +12,9 @@
         class="ion-text-right"
         label="Your name"
         type="text"
-        [value]="username"
-        placeholder="{{ username }}"
-        (ionChange)="username = $event.target.value!.toString()"
-        (ionChange)="changeName()"
+        [value]="userService.username()"
+        placeholder="{{ userService.username() }}"
+        (ionChange)="changeName($event)"
         style="margin-right: 21px">
       </ion-input>
     </ion-item>

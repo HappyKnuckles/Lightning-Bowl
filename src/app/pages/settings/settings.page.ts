@@ -88,7 +88,6 @@ import { StorageService } from 'src/app/core/services/storage/storage.service';
   ],
 })
 export class SettingsPage implements OnInit {
-  username: string | null = '';
   currentColor: string | null = '';
   optionsWithClasses: { name: string; class: string }[] = [
     { name: 'Blue', class: 'blue-option' },
@@ -101,7 +100,7 @@ export class SettingsPage implements OnInit {
   feedbackMessage = '';
   updateAvailable = false;
   constructor(
-    private userService: UserService,
+    public userService: UserService,
     private toastService: ToastService,
     private loadingService: LoadingService,
     private themeService: ThemeChangerService,
@@ -126,15 +125,14 @@ export class SettingsPage implements OnInit {
 
   ngOnInit(): void {
     this.currentColor = this.themeService.getCurrentTheme();
-
-    this.userService.getUsername().subscribe((username: string) => {
-      this.username = username;
-    });
     this.updateAvailable = localStorage.getItem('update') !== null ? true : false;
   }
 
-  changeName(): void {
-    this.userService.setUsername(this.username!);
+  changeName(event: InputCustomEvent): void {
+    const username = event.detail.value;
+    if (username) {
+      this.userService.setUsername(username);
+    }
   }
 
   savePinInputMode(pinMode: string): void {

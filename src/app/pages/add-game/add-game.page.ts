@@ -100,7 +100,6 @@ export class AddGamePage implements OnInit {
   isAlertOpen = false;
   isModalOpen = false;
   is300 = false;
-  username = '';
   gameData!: Game;
   deviceId = '';
 
@@ -146,9 +145,6 @@ export class AddGamePage implements OnInit {
   }
 
   async ngOnInit(): Promise<void> {
-    this.userService.getUsername().subscribe((username: string) => {
-      this.username = username;
-    });
     this.deviceId = (await Device.getId()).identifier;
     this.presentingElement = document.querySelector('.ion-page')!;
     this.loadPinInputMode();
@@ -505,7 +501,7 @@ export class AddGamePage implements OnInit {
 
   private parseBowlingScores(input: string): void {
     try {
-      const { frames, frameScores, totalScore } = this.gameUtilsService.parseBowlingScores(input, this.username!);
+      const { frames, frameScores, totalScore } = this.gameUtilsService.parseBowlingScores(input, this.userService.username());
       this.gameData = this.transformGameService.transformGameData(frames, frameScores, totalScore, false, '', false, '', '', [], []);
       this.gameData.isPractice = true;
       if (this.gameData.frames.length === 10 && this.gameData.frameScores.length === 10 && this.gameData.totalScore <= 300) {
