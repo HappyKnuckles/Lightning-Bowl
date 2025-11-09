@@ -124,7 +124,7 @@
       </ion-row>
       @if (game().isPinMode) {
         <!-- Pin Deck Visualization Row -->
-        <app-pin-deck-frame-row *ngIf="game().frames[frameIndex][0] !== undefined" [game]="game()" [frameIndex]="frameIndex">
+        <app-pin-deck-frame-row *ngIf="game().frames[frameIndex][0] !== undefined" [frame]="game().frames[frameIndex]" [frameIndex]="frameIndex">
         </app-pin-deck-frame-row>
       }
       <ion-row>

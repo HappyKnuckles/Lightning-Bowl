@@ -142,7 +142,7 @@
                       </ion-col>
                     </ion-row>
                     @if (game.isPinMode) {
-                      <app-pin-deck-frame-row [game]="game" [frameIndex]="j"></app-pin-deck-frame-row>
+                      <app-pin-deck-frame-row [frame]="game.frames[j]" [frameIndex]="j"></app-pin-deck-frame-row>
                     }
                     <ion-row>
                       <ion-col class="middle count">{{ game.frameScores[j] }}</ion-col>
