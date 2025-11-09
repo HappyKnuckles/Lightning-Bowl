@@ -2,17 +2,15 @@
   <!-- Empty spacer column for frames 1-9 (matches input row structure) -->
   <ion-col class="input-col" *ngIf="!isTenthFrame()"></ion-col>
 
-  <!-- First throw pin deck -->
   <ion-col class="input-col">
     <app-pin-deck *ngIf="getFirstThrow() !== undefined" [scale]="scale()" [activePins]="getPinsStanding(0)"> </app-pin-deck>
   </ion-col>
 
-  <!-- Second throw pin deck (non-10th frame) -->
   <ion-col class="input-col" *ngIf="!isTenthFrame()">
-    <app-pin-deck *ngIf="getSecondThrow() !== undefined && getFirstThrow() !== 10" [scale]="scale()" [activePins]="getPinsStanding(1)"></app-pin-deck>
+    <app-pin-deck *ngIf="getSecondThrow() !== undefined && getFirstThrow() !== 10" [scale]="scale()" [activePins]="getPinsStanding(1)">
+    </app-pin-deck>
   </ion-col>
 
-  <!-- Second and third throw pin decks (10th frame only) -->
   <ion-col class="input-col" *ngIf="isTenthFrame()">
     <app-pin-deck *ngIf="getSecondThrow() !== undefined" [scale]="scale()" [activePins]="getPinsStanding(1)"> </app-pin-deck>
   </ion-col>

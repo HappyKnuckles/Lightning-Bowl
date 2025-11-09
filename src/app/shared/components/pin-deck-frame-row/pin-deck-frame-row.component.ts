@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, computed } from '@angular/core';
 import { NgIf } from '@angular/common';
 import { IonRow, IonCol } from '@ionic/angular/standalone';
 import { PinDeckComponent } from '../pin-deck/pin-deck.component';
@@ -11,58 +11,45 @@ import { PinDeckComponent } from '../pin-deck/pin-deck.component';
   imports: [IonRow, IonCol, PinDeckComponent, NgIf],
 })
 export class PinDeckFrameRowComponent {
-  // Input signals
+  // Inputs
   frame = input.required<any>();
   frameIndex = input.required<number>();
   scale = input<number>(0.3);
 
-  /**
-   * Gets the pins left standing after a specific throw
-   */
+  // Computed signal for pins left per throw
+  pinsStanding = computed(() => {
+    const f = this.frame();
+    if (!f) return [];
+    const pins: number[][] = [];
+    for (let i = 0; i < 3; i++) {
+      pins[i] = f.throws?.[i]?.pinsLeftStanding ?? [];
+    }
+    return pins;
+  });
+
+  /** Get cached pins for a specific throw */
   getPinsStanding(throwIndex: number): number[] {
-    const frame = this.frame();
-    if (!frame) return [];
-
-    const throwData = frame.throws?.[throwIndex];
-    return throwData?.pinsLeftStanding ?? [];
+    return this.pinsStanding()[throwIndex] ?? [];
   }
 
-  /**
-   * Checks if any throw exists in the frame
-   */
-  hasThrows(): boolean {
-    const frame = this.frame();
-    return !!(frame?.throws?.[0]?.value !== undefined || frame?.[0] !== undefined);
-  }
-
-  /**
-   * Gets the first throw value
-   */
-  getFirstThrow(): number | undefined {
-    const frame = this.frame();
-    return frame?.throws?.[0]?.value ?? frame?.[0];
-  }
-
-  /**
-   * Gets the second throw value
-   */
-  getSecondThrow(): number | undefined {
-    const frame = this.frame();
-    return frame?.throws?.[1]?.value ?? frame?.[1];
-  }
-
-  /**
-   * Gets the third throw value (10th frame only)
-   */
-  getThirdThrow(): number | undefined {
-    const frame = this.frame();
-    return frame?.throws?.[2]?.value ?? frame?.[2];
-  }
-
-  /**
-   * Checks if this is the 10th frame
-   */
+  /** Checks if this is the 10th frame */
   isTenthFrame(): boolean {
     return this.frameIndex() === 9;
+  }
+
+  /** Helpers to get throw values */
+  getFirstThrow(): number | undefined {
+    const f = this.frame();
+    return f?.throws?.[0]?.value ?? f?.[0];
+  }
+
+  getSecondThrow(): number | undefined {
+    const f = this.frame();
+    return f?.throws?.[1]?.value ?? f?.[1];
+  }
+
+  getThirdThrow(): number | undefined {
+    const f = this.frame();
+    return f?.throws?.[2]?.value ?? f?.[2];
   }
 }

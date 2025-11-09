@@ -502,55 +502,68 @@ export class GameGridComponent implements OnInit, OnDestroy {
   }
 
   onPinThrowUndone(): void {
-    let lastFrameIndex = -1;
-    let lastThrowIndex = -1;
+    if (!this.game() || !Array.isArray(this.game().frames)) return;
 
-    for (let frameIndex = 9; frameIndex >= 0; frameIndex--) {
-      const frame = this.game().frames[frameIndex];
+    let frameIndex = this.currentFrameIndex ?? this.game().frames.length - 1;
+    let throwIndex = (this.currentThrowIndex ?? 0) - 1;
 
-      if (frameIndex === 9) {
-        if (frame[2] !== undefined) {
-          lastFrameIndex = frameIndex;
-          lastThrowIndex = 2;
-          break;
-        } else if (frame[1] !== undefined) {
-          lastFrameIndex = frameIndex;
-          lastThrowIndex = 1;
-          break;
-        } else if (frame[0] !== undefined) {
-          lastFrameIndex = frameIndex;
-          lastThrowIndex = 0;
-          break;
-        }
+    // Move to previous frame if needed
+    while (throwIndex < 0 && frameIndex > 0) {
+      frameIndex--;
+      const prevFrame = this.game().frames[frameIndex];
+      if (!prevFrame) continue;
+
+      if (Array.isArray(prevFrame.throws)) {
+        throwIndex = prevFrame.throws.length - 1;
+      } else if (Array.isArray(prevFrame)) {
+        throwIndex = prevFrame.length - 1;
       } else {
-        if (frame[1] !== undefined) {
-          lastFrameIndex = frameIndex;
-          lastThrowIndex = 1;
-          break;
-        } else if (frame[0] !== undefined) {
-          lastFrameIndex = frameIndex;
-          lastThrowIndex = 0;
-          break;
-        }
+        throwIndex = -1;
       }
     }
 
-    if (lastFrameIndex === -1) {
-      return;
+    if (throwIndex < 0) return; // nothing left to undo
+
+    // --- Remove the throw from throwsData immutably ---
+    if (this.throwsData?.[frameIndex]) {
+      const tdCopy = [...this.throwsData];
+      const tdFrame = [...tdCopy[frameIndex]];
+      tdFrame.splice(throwIndex, 1);
+      tdCopy[frameIndex] = tdFrame;
+      this.throwsData = tdCopy;
     }
 
-    const newFrame = [...this.game().frames[lastFrameIndex]];
-    newFrame.splice(lastThrowIndex, 1);
-    this.game().frames[lastFrameIndex] = newFrame;
+    // For undo, always take the last throw in the frame
+    const frameThrows = this.game().frames[frameIndex]?.throws ?? [];
+    if (!frameThrows.length) return;
 
-    if (this.throwsData[lastFrameIndex] && this.throwsData[lastFrameIndex][lastThrowIndex]) {
-      this.throwsData[lastFrameIndex].splice(lastThrowIndex, 1);
+    // Undo the last throw in the frame
+    const throwIndexToRemove = frameThrows.length - 1;
+    const newThrows = [...frameThrows];
+    newThrows.splice(throwIndexToRemove, 1);
+
+    // Update frames numeric array for calculation
+    const framesCopy = [...this.game().frames];
+    framesCopy[frameIndex] = newThrows.map((t) => t.value);
+    this.game().frames = framesCopy;
+
+    // Keep metadata
+    (this.game().frames[frameIndex] as any).throws = newThrows;
+
+    // Update throwsData
+    if (this.throwsData?.[frameIndex]) {
+      const tdCopy = [...this.throwsData];
+      const tdFrame = [...tdCopy[frameIndex]];
+      tdFrame.splice(throwIndexToRemove, 1);
+      tdCopy[frameIndex] = tdFrame;
+      this.throwsData = tdCopy;
     }
 
-    this.currentFrameIndex = lastFrameIndex;
-    this.currentThrowIndex = lastThrowIndex;
-    this.throwsData = [...this.throwsData];
+    // Update indices
+    this.currentFrameIndex = frameIndex;
+    this.currentThrowIndex = newThrows.length;
 
+    // Recompute
     this.updateScores();
   }
 
