@@ -7,6 +7,7 @@
           [label]="stat.label"
           [currentStat]="getNumericStat(currentStats, stat.key)!"
           [prevStat]="stat.prevKey ? getNumericStat(prevStats, stat.prevKey) : undefined"
+          [secondaryStat]="stat.secondaryKey ? getNumericStat(currentStats, stat.secondaryKey) : undefined"
           [toolTip]="stat.toolTip"
           [id]="stat.id"
           [isPercentage]="stat.isPercentage">

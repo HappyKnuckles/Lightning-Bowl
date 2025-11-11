@@ -20,6 +20,7 @@ export class StatRowComponent implements OnChanges {
   @Input({ required: true }) currentStat!: number;
   @Input() toolTip?: string;
   @Input() prevStat?: number;
+  @Input() secondaryStat?: number;
   @Input() id?: string;
   @Input() isPercentage?: boolean;
 

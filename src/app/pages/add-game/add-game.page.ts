@@ -24,8 +24,9 @@ import {
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Game } from 'src/app/core/models/game.model';
 import { addIcons } from 'ionicons';
-import { add, chevronDown, chevronUp, cameraOutline, documentTextOutline, medalOutline } from 'ionicons/icons';
-import { NgIf, NgFor, NgStyle } from '@angular/common';
+import { add, chevronDown, chevronUp, cameraOutline, documentTextOutline, medalOutline, bowlingBall, bowlingBallOutline } from 'ionicons/icons';
+import { NgIf, NgFor } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ImpactStyle } from '@capacitor/haptics';
 import { AdService } from 'src/app/core/services/ad/ad.service';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
@@ -36,11 +37,13 @@ import { UserService } from 'src/app/core/services/user/user.service';
 import { defineCustomElements } from '@teamhive/lottie-player/loader';
 import { Device } from '@capacitor/device';
 import { GameUtilsService } from 'src/app/core/services/game-utils/game-utils.service';
+import { BowlingGameValidationService } from 'src/app/core/services/game-utils/bowling-game-validation.service';
 import { GameScoreCalculatorService } from 'src/app/core/services/game-score-calculator/game-score-calculator.service';
 import { GameDataTransformerService } from 'src/app/core/services/game-transform/game-data-transform.service';
 import { InputCustomEvent, ModalController } from '@ionic/angular';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { GameGridComponent } from 'src/app/shared/components/game-grid/game-grid.component';
+import { GameScoreToolbarComponent } from 'src/app/shared/components/game-score-toolbar/game-score-toolbar.component';
 import { HighScoreAlertService } from 'src/app/core/services/high-score-alert/high-score-alert.service';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
@@ -78,10 +81,11 @@ defineCustomElements(window);
     IonSegment,
     IonSegmentContent,
     IonSegmentView,
+    FormsModule,
     NgIf,
     NgFor,
-    NgStyle,
     GameGridComponent,
+    GameScoreToolbarComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
@@ -96,7 +100,6 @@ export class AddGamePage implements OnInit {
   isAlertOpen = false;
   isModalOpen = false;
   is300 = false;
-  username = '';
   gameData!: Game;
   deviceId = '';
 
@@ -113,6 +116,7 @@ export class AddGamePage implements OnInit {
   selectedSegment = 'Game 1';
   segments: string[] = ['Game 1'];
   presentingElement!: HTMLElement;
+  isPinInputMode = false;
   private allowedDeviceIds = [
     '820fabe8-d29b-45c2-89b3-6bcc0e149f2b',
     '21330a3a-9cff-41ce-981a-00208c21d883',
@@ -132,19 +136,23 @@ export class AddGamePage implements OnInit {
     private adService: AdService,
     private hapticService: HapticService,
     private gameUtilsService: GameUtilsService,
+    private validationService: BowlingGameValidationService,
     private highScoreAlertService: HighScoreAlertService,
     private storageService: StorageService,
     private analyticsService: AnalyticsService,
   ) {
-    addIcons({ cameraOutline, chevronDown, chevronUp, medalOutline, documentTextOutline, add });
+    addIcons({ cameraOutline, chevronDown, chevronUp, medalOutline, documentTextOutline, add, bowlingBall, bowlingBallOutline });
   }
 
   async ngOnInit(): Promise<void> {
-    this.userService.getUsername().subscribe((username: string) => {
-      this.username = username;
-    });
     this.deviceId = (await Device.getId()).identifier;
     this.presentingElement = document.querySelector('.ion-page')!;
+    this.loadPinInputMode();
+  }
+
+  togglePinInputMode(): void {
+    this.isPinInputMode = !this.isPinInputMode;
+    localStorage.setItem('pinInputMode', String(this.isPinInputMode));
   }
 
   async handleImageUpload(): Promise<void> {
@@ -204,8 +212,8 @@ export class AddGamePage implements OnInit {
     } else {
       this.gameGrids.forEach((trackGrid: GameGridComponent) => {
         trackGrid.leagueSelector.selectedLeague = league;
-        trackGrid.game().league = league;
-        trackGrid.game().isPractice = isPractice;
+        trackGrid.game.league = league;
+        trackGrid.game.isPractice = isPractice;
         trackGrid.checkbox.checked = isPractice;
         trackGrid.checkbox.disabled = !isPractice;
       });
@@ -214,7 +222,7 @@ export class AddGamePage implements OnInit {
 
   onIsPracticeChange(isPractice: boolean): void {
     this.gameGrids.forEach((trackGrid: GameGridComponent) => {
-      trackGrid.game().isPractice = isPractice;
+      trackGrid.game.isPractice = isPractice;
     });
   }
 
@@ -224,7 +232,7 @@ export class AddGamePage implements OnInit {
       patterns = patterns.slice(-2);
     }
     this.gameGrids.forEach((trackGrid: GameGridComponent) => {
-      trackGrid.game().patterns = [...patterns];
+      trackGrid.game.patterns = [...patterns];
     });
   }
 
@@ -274,7 +282,7 @@ export class AddGamePage implements OnInit {
   }
 
   isGameValid(game: Game): boolean {
-    return this.gameUtilsService.isGameValid(game);
+    return this.validationService.isGameValid(game);
   }
 
   updateFrameScore(event: InputCustomEvent, index: number): void {
@@ -308,7 +316,7 @@ export class AddGamePage implements OnInit {
     }
 
     try {
-      const perfectGame = gameGridArray.some((grid: GameGridComponent) => grid.game().totalScore === 300);
+      const perfectGame = gameGridArray.some((grid: GameGridComponent) => grid.game.totalScore === 300);
 
       const savePromises = gameGridArray.map((grid: GameGridComponent) => grid.saveGameToLocalStorage(isSeries, this.seriesId));
       const savedGames = await Promise.all(savePromises);
@@ -382,12 +390,12 @@ export class AddGamePage implements OnInit {
 
     const captureGameData = () =>
       this.gameGrids.map((gameGrid: GameGridComponent) => ({
-        frames: gameGrid.game().frames,
-        league: gameGrid.game().league,
-        note: gameGrid.game().note,
-        balls: gameGrid.game().balls,
-        patterns: gameGrid.game().patterns,
-        isPractice: gameGrid.game().isPractice,
+        frames: gameGrid.game.frames,
+        league: gameGrid.game.league,
+        note: gameGrid.game.note,
+        balls: gameGrid.game.balls,
+        patterns: gameGrid.game.patterns,
+        isPractice: gameGrid.game.isPractice,
       }));
 
     actionSheet.onWillDismiss().then(() => {
@@ -399,11 +407,11 @@ export class AddGamePage implements OnInit {
       this.gameGrids.forEach((gameGrid: GameGridComponent, index: number) => {
         const data = gameData[index];
         if (!data) return;
-        gameGrid.game().frames = data.frames;
-        gameGrid.game().note = data.note!;
-        gameGrid.game().balls = data.balls!;
-        gameGrid.game().isPractice = data.isPractice!;
-        gameGrid.game().patterns = data.patterns!;
+        gameGrid.game.frames = data.frames;
+        gameGrid.game.note = data.note!;
+        gameGrid.game.balls = data.balls!;
+        gameGrid.game.isPractice = data.isPractice!;
+        gameGrid.game.patterns = data.patterns!;
         gameGrid.onPatternChanged(data.patterns!);
         gameGrid.onLeagueChanged(data.league!);
         gameGrid.updateScores();
@@ -440,6 +448,10 @@ export class AddGamePage implements OnInit {
         this.handleImageUpload();
       }
     });
+  }
+
+  private loadPinInputMode(): void {
+    this.isPinInputMode = localStorage.getItem('pinInputMode') === 'true';
   }
 
   private updateSegments(): void {
@@ -489,7 +501,7 @@ export class AddGamePage implements OnInit {
 
   private parseBowlingScores(input: string): void {
     try {
-      const { frames, frameScores, totalScore } = this.gameUtilsService.parseBowlingScores(input, this.username!);
+      const { frames, frameScores, totalScore } = this.gameUtilsService.parseBowlingScores(input, this.userService.username());
       this.gameData = this.transformGameService.transformGameData(frames, frameScores, totalScore, false, '', false, '', '', [], []);
       this.gameData.isPractice = true;
       if (this.gameData.frames.length === 10 && this.gameData.frameScores.length === 10 && this.gameData.totalScore <= 300) {

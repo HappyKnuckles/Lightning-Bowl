@@ -42,8 +42,8 @@ describe('BallsPage', () => {
         { provide: SortService, useValue: sortServiceSpy },
         { provide: NetworkService, useValue: networkServiceSpy },
         { provide: ActivatedRoute, useValue: { queryParams: of({}) } },
-        ModalController
-      ]
+        ModalController,
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(BallsPage);
@@ -59,7 +59,7 @@ describe('BallsPage', () => {
     const mockBall = {
       ball_id: 'test-ball-id',
       core_weight: '15lb',
-      ball_name: 'Test Ball'
+      ball_name: 'Test Ball',
     } as any;
 
     const mockEvent = { stopPropagation: jasmine.createSpy() } as any;

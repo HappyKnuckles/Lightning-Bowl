@@ -47,6 +47,7 @@ import {
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { Game } from 'src/app/core/models/game.model';
 import { GameUtilsService } from 'src/app/core/services/game-utils/game-utils.service';
+import { BowlingGameValidationService } from 'src/app/core/services/game-utils/bowling-game-validation.service';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
@@ -63,6 +64,7 @@ import { GameGridComponent } from '../game-grid/game-grid.component';
 import { BallSelectComponent } from '../ball-select/ball-select.component';
 import { alertEnterAnimation, alertLeaveAnimation } from '../../animations/alert.animation';
 import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
+import { PinDeckFrameRowComponent } from '../pin-deck-frame-row/pin-deck-frame-row.component';
 
 @Component({
   selector: 'app-game',
@@ -109,6 +111,7 @@ import { AnalyticsService } from 'src/app/core/services/analytics/analytics.serv
     GameGridComponent,
     GenericTypeaheadComponent,
     BallSelectComponent,
+    PinDeckFrameRowComponent,
   ],
   standalone: true,
 })
@@ -178,6 +181,7 @@ export class GameComponent implements OnChanges, OnInit {
     private modalCtrl: ModalController,
     private patternService: PatternService,
     private analyticsService: AnalyticsService,
+    private validationService: BowlingGameValidationService,
   ) {
     addIcons({
       trashOutline,
@@ -320,60 +324,31 @@ export class GameComponent implements OnChanges, OnInit {
 
   async saveEdit(game: Game): Promise<void> {
     try {
-      const editedGameFromGrid = this.gameGrid.game();
+      const editedGameFromGrid = this.gameGrid.game;
 
-      // 1) Validate using the current data from the grid
-      if (!this.isGameValid(editedGameFromGrid)) {
-        this.hapticService.vibrate(ImpactStyle.Heavy);
-        this.toastService.showToast(ToastMessages.invalidInput, 'bug', true);
+      if (game.isPinMode) {
+        const alert = await this.alertController.create({
+          header: 'Warning!',
+          message: 'This game was entered in manual pin mode. Editing it now will permanently erase all pin data. Do you want to continue?',
+          buttons: [
+            {
+              text: 'Cancel',
+              role: 'cancel',
+            },
+            {
+              text: 'Continue',
+              handler: async () => {
+                await this.performSave(game, editedGameFromGrid);
+              },
+            },
+          ],
+        });
+
+        await alert.present();
         return;
       }
 
-      // 2) Clean up per‐frame flags on the current grid data
-      editedGameFromGrid.frames.forEach((f: any) => delete f.isInvalid);
-
-      // 3) Compute isPractice on the current grid data
-      editedGameFromGrid.isPractice = !editedGameFromGrid.league;
-
-      // 4) Did we change league or patterns? Compare original with current grid data.
-      const originalGameSnapshot = this.originalGameState[game.gameId];
-      const leagueChanged = originalGameSnapshot && originalGameSnapshot.league !== editedGameFromGrid.league;
-      const patternsChanged = originalGameSnapshot && JSON.stringify(originalGameSnapshot.patterns) !== JSON.stringify(editedGameFromGrid.patterns);
-      // 5) If part of a series and league/patterns changed → update everyone
-      if (editedGameFromGrid.isSeries && (leagueChanged || patternsChanged)) {
-        const seriesIdToUpdate = editedGameFromGrid.seriesId;
-        const newLeague = editedGameFromGrid.league;
-        const newPatterns = editedGameFromGrid.patterns;
-        const newIsPractice = !newLeague;
-
-        // First, save the primary edited game
-        await this.gameGrid.saveGameToLocalStorage(editedGameFromGrid.isSeries!, seriesIdToUpdate!);
-
-        // Then, update other games in the same series
-        const gamesToUpdateInStorage = this.storageService
-          .games()
-          .filter((g) => g.seriesId === seriesIdToUpdate && g.gameId !== editedGameFromGrid.gameId)
-          .map((g) => ({
-            ...g,
-            league: newLeague,
-            patterns: newPatterns,
-            isPractice: newIsPractice,
-          }));
-        await this.storageService.saveGamesToLocalStorage(gamesToUpdateInStorage);
-      } else {
-        await this.gameGrid.saveGameToLocalStorage(editedGameFromGrid.isSeries!, editedGameFromGrid.seriesId!);
-      }
-
-      this.toastService.showToast(ToastMessages.gameUpdateSuccess, 'refresh-outline');
-      this.isEditMode[game.gameId] = false;
-      this.hapticService.vibrate(ImpactStyle.Light);
-
-      const wasOpen = this.delayedCloseMap[game.gameId];
-      this.openExpansionPanel(wasOpen ? game.gameId : undefined);
-
-      this.analyticsService.trackGameEdited();
-      delete this.originalGameState[game.gameId];
-      delete this.delayedCloseMap[game.gameId];
+      await this.performSave(game, editedGameFromGrid);
     } catch (error) {
       this.toastService.showToast(ToastMessages.gameUpdateError, 'bug', true);
       console.error('Error saving game edit:', error);
@@ -438,7 +413,7 @@ export class GameComponent implements OnChanges, OnInit {
   }
 
   isGameValid(game: Game): boolean {
-    return this.gameUtilsService.isGameValid(game);
+    return this.validationService.isGameValid(game);
   }
 
   parseIntValue(value: unknown): number {
@@ -549,5 +524,60 @@ export class GameComponent implements OnChanges, OnInit {
       this.delayedCloseMap[game.gameId] = false;
       this.loadingService.setLoading(false);
     }
+  }
+
+  private async performSave(game: Game, editedGameFromGrid: Game): Promise<void> {
+    if (!this.isGameValid(editedGameFromGrid)) {
+      this.hapticService.vibrate(ImpactStyle.Heavy);
+      this.toastService.showToast(ToastMessages.invalidInput, 'bug', true);
+      return;
+    }
+
+    editedGameFromGrid.frames.forEach((f: number[] | { isInvalid?: boolean }) => {
+      if (!Array.isArray(f)) {
+        delete f.isInvalid;
+      }
+    });
+
+    editedGameFromGrid.isPractice = !editedGameFromGrid.league;
+
+    const originalGameSnapshot = this.originalGameState[game.gameId];
+    const leagueChanged = originalGameSnapshot && originalGameSnapshot.league !== editedGameFromGrid.league;
+    const patternsChanged = originalGameSnapshot && JSON.stringify(originalGameSnapshot.patterns) !== JSON.stringify(editedGameFromGrid.patterns);
+
+    if (editedGameFromGrid.isSeries && (leagueChanged || patternsChanged)) {
+      const seriesIdToUpdate = editedGameFromGrid.seriesId;
+      const newLeague = editedGameFromGrid.league;
+      const newPatterns = editedGameFromGrid.patterns;
+      const newIsPractice = !newLeague;
+
+      await this.gameGrid.saveGameToLocalStorage(editedGameFromGrid.isSeries!, seriesIdToUpdate!);
+
+      const gamesToUpdateInStorage = this.storageService
+        .games()
+        .filter((g) => g.seriesId === seriesIdToUpdate && g.gameId !== editedGameFromGrid.gameId)
+        .map((g) => ({
+          ...g,
+          isPinMode: false,
+          league: newLeague,
+          patterns: newPatterns,
+          isPractice: newIsPractice,
+        }));
+
+      await this.storageService.saveGamesToLocalStorage(gamesToUpdateInStorage);
+    } else {
+      await this.gameGrid.saveGameToLocalStorage(editedGameFromGrid.isSeries!, editedGameFromGrid.seriesId!);
+    }
+
+    this.toastService.showToast(ToastMessages.gameUpdateSuccess, 'refresh-outline');
+    this.isEditMode[game.gameId] = false;
+    this.hapticService.vibrate(ImpactStyle.Light);
+
+    const wasOpen = this.delayedCloseMap[game.gameId];
+    this.openExpansionPanel(wasOpen ? game.gameId : undefined);
+
+    this.analyticsService.trackGameEdited();
+    delete this.originalGameState[game.gameId];
+    delete this.delayedCloseMap[game.gameId];
   }
 }

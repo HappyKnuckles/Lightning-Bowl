@@ -1,4 +1,16 @@
-import { Component, OnInit, OnDestroy, QueryList, ViewChildren, ViewChild, CUSTOM_ELEMENTS_SCHEMA, input, output } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  QueryList,
+  ViewChildren,
+  ViewChild,
+  CUSTOM_ELEMENTS_SCHEMA,
+  input,
+  output,
+  effect,
+  Input,
+} from '@angular/core';
 import { Platform } from '@ionic/angular';
 import { Subscription } from 'rxjs';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
@@ -9,7 +21,6 @@ import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { ImpactStyle } from '@capacitor/haptics';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { LeagueSelectorComponent } from '../league-selector/league-selector.component';
-import { GameUtilsService } from 'src/app/core/services/game-utils/game-utils.service';
 import { GameScoreCalculatorService } from 'src/app/core/services/game-score-calculator/game-score-calculator.service';
 import { GameDataTransformerService } from 'src/app/core/services/game-transform/game-data-transform.service';
 import { InputCustomEvent } from '@ionic/angular';
@@ -25,8 +36,13 @@ import { Keyboard } from '@capacitor/keyboard';
 import { addIcons } from 'ionicons';
 import { chevronExpandOutline } from 'ionicons/icons';
 import { BallSelectComponent } from '../ball-select/ball-select.component';
+import { GameScoreToolbarComponent } from '../game-score-toolbar/game-score-toolbar.component';
 import { alertEnterAnimation, alertLeaveAnimation } from '../../animations/alert.animation';
 import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
+import { PinInputComponent, PinThrowEvent } from '../pin-input/pin-input.component';
+import { PinDeckFrameRowComponent } from '../pin-deck-frame-row/pin-deck-frame-row.component';
+import { BowlingGameValidationService } from 'src/app/core/services/game-utils/bowling-game-validation.service';
+import { BowlingFrameFormatterService } from 'src/app/core/services/game-utils/bowling-frame-formatter.service';
 
 @Component({
   selector: 'app-game-grid',
@@ -50,7 +66,10 @@ import { AnalyticsService } from 'src/app/core/services/analytics/analytics.serv
     IonModal,
     GenericTypeaheadComponent,
     IonLabel,
+    PinInputComponent,
+    PinDeckFrameRowComponent,
     BallSelectComponent,
+    GameScoreToolbarComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
@@ -58,21 +77,22 @@ export class GameGridComponent implements OnInit, OnDestroy {
   // Input signals
   ballSelectorId = input<string>();
   showMetadata = input<boolean>(true);
-  patternId = input.required<string>();
-  game = input<Game>({
-    frames: [],
-    totalScore: 0,
-    note: '',
-    balls: [],
-    patterns: [],
-    league: '',
-    isPractice: true,
+  patternModalId = input.required<string>();
+  @Input() game: Game = {
     gameId: '',
     date: 0,
+    frames: [],
     frameScores: [],
+    totalScore: 0,
+    isPractice: true,
+    league: '',
+    patterns: [],
+    balls: [],
+    note: '',
     isClean: false,
     isPerfect: false,
-  });
+  };
+  isPinInputMode = input<boolean>(false);
 
   // Output signals
   maxScoreChanged = output<number>();
@@ -91,10 +111,25 @@ export class GameGridComponent implements OnInit, OnDestroy {
 
   enterAnimation = alertEnterAnimation;
   leaveAnimation = alertLeaveAnimation;
+  get isStrikeDisabled(): boolean {
+    if (this.currentFrameIndex === null || this.currentRollIndex === null) {
+      return true;
+    }
+    return !this.validationService.canRecordStrike(this.currentFrameIndex, this.currentRollIndex, this.game.frames);
+  }
+
+  get isSpareDisabled(): boolean {
+    if (this.currentFrameIndex === null || this.currentRollIndex === null) {
+      return true;
+    }
+    return !this.validationService.canRecordSpare(this.currentFrameIndex, this.currentRollIndex, this.game.frames);
+  }
   maxScore = 300;
   presentingElement?: HTMLElement;
   patternTypeaheadConfig!: TypeaheadConfig<Partial<Pattern>>;
-
+  // Pin mode properties
+  throwsData: { value: number; pinsLeftStanding: number[]; pinsKnockedDown: number[]; isSplit: boolean }[][] = Array.from({ length: 10 }, () => []); // Stores throw value, pins left standing, and pins knocked down
+  currentThrowIndex = 0;
   // Keyboard toolbar
   showButtonToolbar = false;
   currentFrameIndex: number | null = null;
@@ -114,32 +149,40 @@ export class GameGridComponent implements OnInit, OnDestroy {
     private transformGameService: GameDataTransformerService,
     private toastService: ToastService,
     private hapticService: HapticService,
-    private gameUtilsService: GameUtilsService,
     private utilsService: UtilsService,
     private platform: Platform,
     private patternService: PatternService,
     private analyticsService: AnalyticsService,
+    private validationService: BowlingGameValidationService,
+    private formatterService: BowlingFrameFormatterService,
   ) {
     this.initializeKeyboardListeners();
     addIcons({ chevronExpandOutline });
+
+    effect(() => {
+      if (this.isPinInputMode()) {
+        this.updateCurrentThrow();
+      }
+    });
   }
 
   async ngOnInit(): Promise<void> {
-    const currentGame = this.game();
-    if (this.game().date != 0) {
+    // TODO change this so it just uses the real game structure
+    const currentGame = this.game;
+    if (this.game.date != 0) {
       const newFrames: number[][] = [];
       for (let i = 0; i < 10; i++) {
         const frameData = currentGame.frames[i];
 
         if (frameData && Array.isArray(frameData.throws)) {
-          newFrames.push(frameData.throws.map((t: any) => t.value));
+          newFrames.push(frameData.throws.map((t: { value: number }) => t.value));
         } else {
           newFrames.push([]);
         }
       }
-      this.game().frames = newFrames;
+      this.game.frames = newFrames;
     } else {
-      this.game().frames = Array.from({ length: 10 }, () => []);
+      this.game.frames = Array.from({ length: 10 }, () => []);
     }
     this.presentingElement = document.querySelector('.ion-page')!;
     this.patternTypeaheadConfig = createPartialPatternTypeaheadConfig((searchTerm: string) => this.patternService.searchPattern(searchTerm));
@@ -197,77 +240,15 @@ export class GameGridComponent implements OnInit, OnDestroy {
     this.isFrameInputFocused = false;
   }
 
-  onLeagueChanged(league: string): void {
-    this.leagueChanged.emit(league);
-  }
-
-  onPatternChanged(patterns: string[]): void {
-    if (patterns.length > 2) {
-      patterns = patterns.slice(-2);
-    }
-    this.game().patterns = patterns;
-    this.patternChanged.emit(patterns);
-  }
-
-  onBallSelect(selectedBalls: string[], modal: IonModal): void {
-    modal.dismiss();
-    this.game().balls = selectedBalls;
-  }
-
-  getSelectedBallsText(): string {
-    const balls = this.game().balls || [];
-    return balls.length > 0 ? balls.join(', ') : 'None';
-  }
-
-  getFrameValue(frameIndex: number, throwIndex: number): string {
-    const frame = this.game().frames[frameIndex];
-    const val = frame[throwIndex];
-
-    if (val === undefined || val === null) {
-      return '';
+  emitToolbarDisabledState(): void {
+    if (this.currentFrameIndex === null || this.currentRollIndex === null) {
+      return;
     }
 
-    const firstBall = frame[0];
-    const isTenth = frameIndex === 9;
+    const canStrike = this.validationService.canRecordStrike(this.currentFrameIndex, this.currentRollIndex, this.game.frames);
+    const canSpare = this.validationService.canRecordSpare(this.currentFrameIndex, this.currentRollIndex, this.game.frames);
 
-    if (throwIndex === 0) {
-      return val === 10 ? 'X' : val.toString();
-    }
-
-    if (!isTenth) {
-      if (firstBall !== undefined && firstBall !== 10 && firstBall + val === 10) {
-        return '/';
-      }
-      return val.toString();
-    }
-
-    const secondBall = frame[1];
-
-    if (throwIndex === 1) {
-      if (firstBall !== undefined && firstBall !== 10 && firstBall + val === 10) {
-        return '/';
-      }
-      return val === 10 ? 'X' : val.toString();
-    }
-
-    if (throwIndex === 2) {
-      if (firstBall === 10) {
-        if (secondBall === 10) {
-          return val === 10 ? 'X' : val.toString();
-        }
-        return secondBall !== undefined && secondBall + val === 10 ? '/' : val.toString();
-      }
-      return val === 10 ? 'X' : val.toString();
-    }
-
-    return val.toString();
-  }
-
-  emitToolbarDisabledState() {
-    this.toolbarDisabledState.emit({
-      strikeDisabled: this.isStrikeButtonDisabled(),
-      spareDisabled: this.isSpareButtonDisabled(),
-    });
+    this.toolbarDisabledState.emit({ strikeDisabled: !canStrike, spareDisabled: !canSpare });
   }
 
   selectSpecialScore(char: string) {
@@ -283,85 +264,120 @@ export class GameGridComponent implements OnInit, OnDestroy {
     this.simulateScore(mockEvent, this.currentFrameIndex, this.currentRollIndex);
   }
 
+  onLeagueChanged(league: string): void {
+    this.leagueChanged.emit(league);
+  }
+
+  onPatternChanged(patterns: string[]): void {
+    if (patterns.length > 2) {
+      patterns = patterns.slice(-2);
+    }
+    this.game.patterns = patterns;
+    this.patternChanged.emit(patterns);
+  }
+
+  onBallSelect(selectedBalls: string[], modal: IonModal): void {
+    modal.dismiss();
+    this.game.balls = selectedBalls;
+  }
+
+  getSelectedBallsText(): string {
+    const balls = this.game.balls || [];
+    return balls.length > 0 ? balls.join(', ') : 'None';
+  }
+
+  getFrameValue(frameIndex: number, throwIndex: number): string {
+    return this.formatterService.formatThrowValue(frameIndex, throwIndex, this.game.frames);
+  }
+
   simulateScore(event: InputCustomEvent, frameIndex: number, inputIndex: number): void {
     const inputValue = event.detail.value!;
-    const parsedValue = this.gameUtilsService.parseInputValue(inputValue, frameIndex, inputIndex, this.game().frames);
+    const parsedValue = this.formatterService.parseInputValue(inputValue, frameIndex, inputIndex, this.game.frames);
 
     if (inputValue.length === 0) {
-      this.game().frames[frameIndex].splice(inputIndex, 1);
+      this.game.frames[frameIndex].splice(inputIndex, 1);
+      if (this.throwsData[frameIndex]) {
+        this.throwsData[frameIndex].splice(inputIndex, 1);
+      }
       this.updateScores();
       return;
     }
-    if (!this.isValidNumber0to10(parsedValue)) {
+    if (!this.validationService.isValidNumber0to10(parsedValue)) {
       this.handleInvalidInput(event);
       return;
     }
-    if (!this.gameUtilsService.isValidFrameScore(parsedValue, frameIndex, inputIndex, this.game().frames)) {
+    if (!this.validationService.isValidFrameScore(parsedValue, frameIndex, inputIndex, this.game.frames)) {
       this.handleInvalidInput(event);
       return;
     }
 
-    this.game().frames[frameIndex][inputIndex] = parsedValue;
+    this.game.frames[frameIndex][inputIndex] = parsedValue;
     this.updateScores();
     this.focusNextInput(frameIndex, inputIndex);
+
     this.emitToolbarDisabledState();
   }
 
   clearFrames(isSave: boolean): void {
-    this.game().frames = Array.from({ length: 10 }, () => []);
-    this.game().frameScores = [];
-    this.game().totalScore = 0;
+    this.game.frames = Array.from({ length: 10 }, () => []);
+    this.game.frameScores = [];
+    this.game.totalScore = 0;
     this.maxScore = 300;
+    this.throwsData = Array.from({ length: 10 }, () => []);
+    this.currentFrameIndex = 0;
+    this.currentThrowIndex = 0;
 
     this.inputs.forEach((input) => {
       input.value = '';
     });
 
     if (isSave) {
-      this.game().note = '';
-      this.game().league = '';
+      this.game.note = '';
+      this.game.league = '';
       this.leagueSelector.selectedLeague = '';
-      this.game().patterns = [];
-      this.game().isPractice = true;
-      this.game().balls = [];
+      this.game.patterns = [];
+      this.game.isPractice = true;
+      this.game.balls = [];
     }
 
     this.updateScores();
-    this.totalScoreChanged.emit(this.game().totalScore);
+    this.totalScoreChanged.emit(this.game.totalScore);
     this.maxScoreChanged.emit(this.maxScore);
   }
 
   updateScores(): void {
-    const scoreResult = this.gameScoreCalculatorService.calculateScore(this.game().frames);
-    this.game().totalScore = scoreResult.totalScore;
-    this.game().frameScores = scoreResult.frameScores;
+    const scoreResult = this.gameScoreCalculatorService.calculateScore(this.game.frames);
+    this.game.totalScore = scoreResult.totalScore;
+    this.game.frameScores = scoreResult.frameScores;
 
-    this.maxScore = this.gameScoreCalculatorService.calculateMaxScore(this.game().frames, this.game().totalScore);
-    this.totalScoreChanged.emit(this.game().totalScore);
+    this.maxScore = this.gameScoreCalculatorService.calculateMaxScore(this.game.frames, this.game.totalScore);
+    this.totalScoreChanged.emit(this.game.totalScore);
     this.maxScoreChanged.emit(this.maxScore);
   }
 
   async saveGameToLocalStorage(isSeries: boolean, seriesId: string): Promise<Game | null> {
     try {
-      if (this.game().league === 'New') {
+      if (this.game.league === 'New') {
         this.toastService.showToast(ToastMessages.selectLeague, 'bug', true);
         return null;
       }
       const gameData = this.transformGameService.transformGameData(
-        this.game().frames,
-        this.game().frameScores,
-        this.game().totalScore,
-        this.game().isPractice,
-        this.game().league,
+        this.game.frames,
+        this.game.frameScores,
+        this.game.totalScore,
+        this.game.isPractice,
+        this.game.league,
         isSeries,
         seriesId,
-        this.game().note,
-        this.game().patterns,
-        this.game().balls,
-        this.game().gameId,
-        this.game().date,
+        this.game.note,
+        this.game.patterns,
+        this.game.balls,
+        this.game.gameId,
+        this.game.date,
+        this.throwsData,
+        this.isPinInputMode(),
       );
-      this.game().frames = gameData.frames;
+      this.game.frames = gameData.frames;
       await this.storageService.saveGameToLocalStorage(gameData);
       if (this.showMetadata()) {
         this.clearFrames(true);
@@ -378,7 +394,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
   }
 
   isGameValid(): boolean {
-    return this.gameUtilsService.isGameValid(undefined, this.game().frames);
+    return this.validationService.isGameValid(undefined, this.game.frames);
   }
 
   isNumber(value: unknown): boolean {
@@ -386,66 +402,11 @@ export class GameGridComponent implements OnInit, OnDestroy {
   }
 
   isStrikeButtonDisabled(): boolean {
-    if (this.currentFrameIndex === null || this.currentRollIndex === null) return true;
-
-    const frameIndex = this.currentFrameIndex;
-    const rollIndex = this.currentRollIndex;
-
-    if (frameIndex < 9) {
-      return rollIndex !== 0;
-    }
-
-    const frame = this.game().frames[9];
-    const first = frame[0];
-    const second = frame[1];
-
-    switch (rollIndex) {
-      case 0:
-        return false; // Always allowed on first
-      case 1:
-        return first !== 10; // Only allowed if first was strike
-      case 2:
-        // Allow if:
-        // - first and second are both strikes
-        // - OR first + second == 10 (i.e. spare), but neither is 10
-        // - OR second is 10 (i.e. second strike after first miss)
-        return !((first === 10 && second === 10) || (first + second === 10 && first !== 10 && second !== 10) || (first !== 10 && second === 10));
-      default:
-        return true;
-    }
+    return this.validationService.isStrikeButtonDisabled(this.currentFrameIndex, this.currentRollIndex, this.game.frames);
   }
 
   isSpareButtonDisabled(): boolean {
-    if (this.currentFrameIndex === null || this.currentRollIndex === null) return true;
-
-    const frameIndex = this.currentFrameIndex;
-    const rollIndex = this.currentRollIndex;
-
-    if (frameIndex < 9) {
-      return rollIndex !== 1;
-    }
-
-    const frame = this.game().frames[9];
-    const first = frame[0];
-    const second = frame[1];
-
-    switch (rollIndex) {
-      case 0:
-        return true; // Never allowed on first
-      case 1:
-        return first === 10; // Not allowed if first was strike
-      case 2:
-        // Disable if:
-        // 1. First two balls were strikes (e.g., X, X, then this throw)
-        // 2. First two balls formed a spare (e.g., 5, /, then this throw)
-        return (first === 10 && second === 10) || (first !== 10 && first + second === 10);
-      default:
-        return true;
-    }
-  }
-
-  private isValidNumber0to10(value: number): boolean {
-    return !isNaN(value) && value >= 0 && value <= 10;
+    return this.validationService.isSpareButtonDisabled(this.currentFrameIndex, this.currentRollIndex, this.game.frames);
   }
 
   private handleInvalidInput(event: InputCustomEvent): void {
@@ -454,7 +415,6 @@ export class GameGridComponent implements OnInit, OnDestroy {
   }
 
   private onViewportResize = () => {
-    // Fallback for web/PWA keyboard detection using visualViewport
     if (!window.visualViewport) return;
 
     const viewportHeight = window.visualViewport.height;
@@ -484,10 +444,8 @@ export class GameGridComponent implements OnInit, OnDestroy {
   private async focusNextInput(frameIndex: number, inputIndex: number) {
     await new Promise((resolve) => setTimeout(resolve, 50));
     const inputArray = this.inputs.toArray();
-    // Calculate the current index in the linear array of inputs.
     const currentInputPosition = frameIndex * 2 + inputIndex;
 
-    // Find the next input element that is not disabled.
     for (let i = currentInputPosition + 1; i < inputArray.length; i++) {
       const nextInput = inputArray[i];
       const nextInputElement = await nextInput.getInputElement();
@@ -495,6 +453,196 @@ export class GameGridComponent implements OnInit, OnDestroy {
       if (!nextInputElement.disabled) {
         nextInput.setFocus();
         break;
+      }
+    }
+  }
+
+  // Pin mode event handlers
+  onPinThrowConfirmed(pinThrow: PinThrowEvent): void {
+    const { frameIndex, throwIndex, pinsKnockedDown, pinsKnockedDownNumbers, pinsLeftStanding } = pinThrow;
+
+    if (!this.throwsData[frameIndex]) {
+      this.throwsData[frameIndex] = [];
+    }
+
+    let isSplit = false;
+    if (frameIndex < 9) {
+      if (throwIndex === 0) {
+        isSplit = this.validationService.isSplit(pinsLeftStanding);
+      }
+    } else {
+      const frameThrows = this.game.frames[frameIndex].throws || [];
+      const prevThrow = frameThrows[throwIndex - 1];
+
+      let allowSplit = true;
+
+      if (prevThrow) {
+        const prevValue = prevThrow.value;
+        const prevWasSplit = prevThrow.isSplit;
+        const prevWasSpareOrStrike = prevValue === 10 || prevThrow.spare;
+
+        if (prevWasSplit && !prevWasSpareOrStrike) {
+          allowSplit = false;
+        }
+      }
+
+      if (allowSplit) {
+        isSplit = this.validationService.isSplit(pinsLeftStanding);
+      }
+    }
+
+    const throwData = {
+      value: pinsKnockedDown,
+      pinsLeftStanding,
+      pinsKnockedDown: pinsKnockedDownNumbers,
+      isSplit,
+    };
+
+    this.throwsData[frameIndex][throwIndex] = throwData;
+
+    if (!this.game.frames[frameIndex].throws) {
+      this.game.frames[frameIndex].throws = [];
+    }
+    this.game.frames[frameIndex].throws[throwIndex] = throwData;
+
+    this.game.frames[frameIndex][throwIndex] = pinsKnockedDown;
+
+    this.throwsData = [...this.throwsData];
+
+    this.game = { ...this.game };
+
+    this.advanceToNextThrow();
+    this.updateScores();
+  }
+
+  onPinThrowUndone(): void {
+    if (!this.game || !Array.isArray(this.game.frames)) return;
+
+    let frameIndex = this.currentFrameIndex ?? this.game.frames.length - 1;
+    let throwIndex = (this.currentThrowIndex ?? 0) - 1;
+
+    // Move to previous frame if needed
+    while (throwIndex < 0 && frameIndex > 0) {
+      frameIndex--;
+      const prevFrame = this.game.frames[frameIndex];
+      if (!prevFrame) continue;
+
+      if (Array.isArray(prevFrame.throws)) {
+        throwIndex = prevFrame.throws.length - 1;
+      } else if (Array.isArray(prevFrame)) {
+        throwIndex = prevFrame.length - 1;
+      } else {
+        throwIndex = -1;
+      }
+    }
+
+    if (throwIndex < 0) return; // nothing left to undo
+
+    // --- Remove the throw from throwsData immutably ---
+    if (this.throwsData?.[frameIndex]) {
+      const tdCopy = [...this.throwsData];
+      const tdFrame = [...tdCopy[frameIndex]];
+      tdFrame.splice(throwIndex, 1);
+      tdCopy[frameIndex] = tdFrame;
+      this.throwsData = tdCopy;
+    }
+
+    // For undo, always take the last throw in the frame
+    const frameThrows = this.game.frames[frameIndex]?.throws ?? [];
+    if (!frameThrows.length) return;
+
+    // Undo the last throw in the frame
+    const throwIndexToRemove = frameThrows.length - 1;
+    const newThrows = [...frameThrows];
+    newThrows.splice(throwIndexToRemove, 1);
+
+    // Update frames numeric array for calculation
+    const framesCopy = [...this.game.frames];
+    framesCopy[frameIndex] = newThrows.map((t) => t.value);
+    this.game.frames = framesCopy;
+
+    // Keep metadata
+    (this.game.frames[frameIndex] as any).throws = newThrows;
+
+    // Update throwsData
+    if (this.throwsData?.[frameIndex]) {
+      const tdCopy = [...this.throwsData];
+      const tdFrame = [...tdCopy[frameIndex]];
+      tdFrame.splice(throwIndexToRemove, 1);
+      tdCopy[frameIndex] = tdFrame;
+      this.throwsData = tdCopy;
+    }
+
+    // Update indices
+    this.currentFrameIndex = frameIndex;
+    this.currentThrowIndex = newThrows.length;
+
+    // Recompute
+    this.updateScores();
+  }
+
+  private updateCurrentThrow(): void {
+    for (let frameIndex = 0; frameIndex < 10; frameIndex++) {
+      const frame = this.game.frames[frameIndex];
+
+      if (frameIndex < 9) {
+        if (frame[0] === undefined) {
+          this.currentFrameIndex = frameIndex;
+          this.currentThrowIndex = 0;
+          return;
+        } else if (frame[0] !== 10 && frame[1] === undefined) {
+          this.currentFrameIndex = frameIndex;
+          this.currentThrowIndex = 1;
+          return;
+        }
+      } else {
+        if (frame[0] === undefined) {
+          this.currentFrameIndex = frameIndex;
+          this.currentThrowIndex = 0;
+          return;
+        } else if (frame[1] === undefined) {
+          this.currentFrameIndex = frameIndex;
+          this.currentThrowIndex = 1;
+          return;
+        } else if ((frame[0] === 10 || frame[0] + frame[1] === 10) && frame[2] === undefined) {
+          this.currentFrameIndex = frameIndex;
+          this.currentThrowIndex = 2;
+          return;
+        }
+      }
+    }
+
+    this.currentFrameIndex = 9;
+    this.currentThrowIndex = 2;
+  }
+
+  private advanceToNextThrow(): void {
+    if (this.currentFrameIndex === null) return;
+
+    const frame = this.game.frames[this.currentFrameIndex];
+
+    if (this.currentFrameIndex < 9) {
+      if (this.currentThrowIndex === 0) {
+        if (frame[0] === 10) {
+          this.currentFrameIndex++;
+          this.currentThrowIndex = 0;
+        } else {
+          this.currentThrowIndex = 1;
+        }
+      } else {
+        this.currentFrameIndex++;
+        this.currentThrowIndex = 0;
+      }
+    } else {
+      const firstThrow = frame[0];
+      const secondThrow = frame[1];
+
+      if (this.currentThrowIndex === 0) {
+        this.currentThrowIndex = 1;
+      } else if (this.currentThrowIndex === 1) {
+        if (firstThrow === 10 || firstThrow + secondThrow === 10) {
+          this.currentThrowIndex = 2;
+        }
       }
     }
   }

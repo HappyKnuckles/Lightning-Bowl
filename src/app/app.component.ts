@@ -26,7 +26,6 @@ import { AnalyticsService } from './core/services/analytics/analytics.service';
 })
 export class AppComponent implements OnInit, OnDestroy {
   private readonly GREETING_THROTTLE_DURATION_MS = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
-  private userNameSubscription: Subscription;
   private pwaInstallSubscription: Subscription;
   username = '';
   private updateInterval: any;
@@ -49,9 +48,6 @@ export class AppComponent implements OnInit, OnDestroy {
     this.initializeApp();
     const currentTheme = this.themeService.getCurrentTheme();
     this.themeService.applyTheme(currentTheme);
-    this.userNameSubscription = this.userService.getUsername().subscribe((username: string) => {
-      this.username = username;
-    });
 
     this.pwaInstallSubscription = this.pwaInstallService.canShowInstallPrompt().subscribe((canShow) => {
       this.showPwaInstallPrompt = canShow;
@@ -70,7 +66,6 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.userNameSubscription.unsubscribe();
     if (this.pwaInstallSubscription) {
       this.pwaInstallSubscription.unsubscribe();
     }

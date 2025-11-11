@@ -144,6 +144,7 @@
                   [title]="'Best ball'"
                   [bestBall]="bestBallsByLeague()[league]"
                   [totalGames]="statsByLeague()[league].totalGames"></app-ball-stats>
+                <ion-list-header style="margin-bottom: 4px"> Score Analysis</ion-list-header>
                 <div class="stat-container">
                   <canvas #scoreChart style="width: 300px; height: 400px; max-height: 700px"></canvas>
                 </div>
@@ -154,6 +155,7 @@
               <section class="tab">
                 <ion-list-header>Spares Overview</ion-list-header>
                 <app-spare-display [prevStats]="overallStats()" [stats]="statsByLeague()[league]" id="league-spareStats"> </app-spare-display>
+                <ion-list-header style="margin-bottom: 4px"> Converted vs Missed Spares</ion-list-header>
                 <div class="stat-container">
                   <canvas #pinChart style="width: 300px; height: 300px; max-height: 700px"></canvas>
                 </div>

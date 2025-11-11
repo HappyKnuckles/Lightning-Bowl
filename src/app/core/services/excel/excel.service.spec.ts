@@ -17,7 +17,7 @@ describe('ExcelService', () => {
       'allBalls',
       'arsenal',
       'saveBallToArsenal',
-      'saveGamesToLocalStorage'
+      'saveGamesToLocalStorage',
     ]);
 
     TestBed.configureTestingModule({
@@ -77,8 +77,8 @@ describe('ExcelService', () => {
     const testData = [
       // Header row
       {
-        'Game': 'Game',
-        'Date': 'Date',
+        Game: 'Game',
+        Date: 'Date',
         'Frame 1': 'Frame 1',
         'Frame 2': 'Frame 2',
         'Frame 3': 'Frame 3',
@@ -91,20 +91,20 @@ describe('ExcelService', () => {
         'Frame 10': 'Frame 10',
         'Total Score': 'Total Score',
         'Frame Scores': 'Frame Scores',
-        'League': 'League',
-        'Practice': 'Practice',
-        'Clean': 'Clean',
-        'Perfect': 'Perfect',
-        'Series': 'Series',
+        League: 'League',
+        Practice: 'Practice',
+        Clean: 'Clean',
+        Perfect: 'Perfect',
+        Series: 'Series',
         'Series ID': 'Series ID',
-        'Pattern': 'Pattern', // Legacy field name
-        'Balls': 'Balls',
-        'Notes': 'Notes',
+        Pattern: 'Pattern', // Legacy field name
+        Balls: 'Balls',
+        Notes: 'Notes',
       },
       // Data row with legacy Pattern field
       {
-        'Game': '1',
-        'Date': '1/1/2024',
+        Game: '1',
+        Date: '1/1/2024',
         'Frame 1': '10',
         'Frame 2': '10',
         'Frame 3': '10',
@@ -117,16 +117,16 @@ describe('ExcelService', () => {
         'Frame 10': '10 / 10 / 10',
         'Total Score': '300',
         'Frame Scores': '30, 60, 90, 120, 150, 180, 210, 240, 270, 300',
-        'League': 'Test League',
-        'Practice': 'false',
-        'Clean': 'true',
-        'Perfect': 'true',
-        'Series': 'false',
+        League: 'Test League',
+        Practice: 'false',
+        Clean: 'true',
+        Perfect: 'true',
+        Series: 'false',
         'Series ID': '',
-        'Pattern': 'Test Pattern, House Shot', // Legacy field with comma-separated values
-        'Balls': 'Storm Ball',
-        'Notes': 'Test game',
-      }
+        Pattern: 'Test Pattern, House Shot', // Legacy field with comma-separated values
+        Balls: 'Storm Ball',
+        Notes: 'Test game',
+      },
     ];
 
     // This should not throw and should process the legacy Pattern field
@@ -153,8 +153,8 @@ describe('ExcelService', () => {
     const testData = [
       // Header row
       {
-        'Game': 'Game',
-        'Date': 'Date',
+        Game: 'Game',
+        Date: 'Date',
         'Frame 1': 'Frame 1',
         'Frame 2': 'Frame 2',
         'Frame 3': 'Frame 3',
@@ -167,21 +167,21 @@ describe('ExcelService', () => {
         'Frame 10': 'Frame 10',
         'Total Score': 'Total Score',
         'Frame Scores': 'Frame Scores',
-        'League': 'League',
-        'Practice': 'Practice',
-        'Clean': 'Clean',
-        'Perfect': 'Perfect',
-        'Series': 'Series',
+        League: 'League',
+        Practice: 'Practice',
+        Clean: 'Clean',
+        Perfect: 'Perfect',
+        Series: 'Series',
         'Series ID': 'Series ID',
-        'Patterns': 'Patterns', // New field name
-        'Pattern': 'Pattern', // Legacy field name
-        'Balls': 'Balls',
-        'Notes': 'Notes',
+        Patterns: 'Patterns', // New field name
+        Pattern: 'Pattern', // Legacy field name
+        Balls: 'Balls',
+        Notes: 'Notes',
       },
       // Data row with both fields present
       {
-        'Game': '1',
-        'Date': '1/1/2024',
+        Game: '1',
+        Date: '1/1/2024',
         'Frame 1': '10',
         'Frame 2': '10',
         'Frame 3': '10',
@@ -194,17 +194,17 @@ describe('ExcelService', () => {
         'Frame 10': '10 / 10 / 10',
         'Total Score': '300',
         'Frame Scores': '30, 60, 90, 120, 150, 180, 210, 240, 270, 300',
-        'League': 'Test League',
-        'Practice': 'false',
-        'Clean': 'true',
-        'Perfect': 'true',
-        'Series': 'false',
+        League: 'Test League',
+        Practice: 'false',
+        Clean: 'true',
+        Perfect: 'true',
+        Series: 'false',
         'Series ID': '',
-        'Patterns': 'New Pattern, Sport Pattern', // New field should be preferred
-        'Pattern': 'Old Pattern, Legacy Pattern', // Legacy field should be ignored
-        'Balls': 'Storm Ball',
-        'Notes': 'Test game',
-      }
+        Patterns: 'New Pattern, Sport Pattern', // New field should be preferred
+        Pattern: 'Old Pattern, Legacy Pattern', // Legacy field should be ignored
+        Balls: 'Storm Ball',
+        Notes: 'Test game',
+      },
     ];
 
     await expectAsync(service.transformData(testData)).toBeResolved();

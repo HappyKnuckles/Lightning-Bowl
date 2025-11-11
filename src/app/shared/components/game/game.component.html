@@ -74,6 +74,7 @@
                       <ion-col class="input-col"></ion-col>
                       <ion-col class="input-col">
                         <ion-input
+                          [class.is-split]="frame.throws[0]?.isSplit"
                           readonly="true"
                           type="text"
                           inputmode="numeric"
@@ -101,6 +102,7 @@
                           readonly="true"
                           type="text"
                           inputmode="numeric"
+                          [class.is-split]="frame.throws[0]?.isSplit"
                           [value]="frame.throws[0]?.value === 10 ? 'X' : frame.throws[0]?.value === 0 ? '–' : frame.throws[0]?.value">
                         </ion-input>
                       </ion-col>
@@ -109,6 +111,7 @@
                           readonly="true"
                           type="text"
                           inputmode="numeric"
+                          [class.is-split]="frame.throws[1]?.isSplit"
                           [value]="
                             frame.throws[1]?.value === 10
                               ? 'X'
@@ -125,6 +128,7 @@
                           readonly="true"
                           type="text"
                           inputmode="numeric"
+                          [class.is-split]="frame.throws[2]?.isSplit"
                           [value]="
                             frame.throws[0]?.value === 10 && frame.throws[1]?.value !== 10 && frame.throws[1]?.value + frame.throws[2]?.value === 10
                               ? '/'
@@ -137,13 +141,16 @@
                         </ion-input>
                       </ion-col>
                     </ion-row>
+                    @if (game.isPinMode) {
+                      <app-pin-deck-frame-row [game]="game" [frameIndex]="j"></app-pin-deck-frame-row>
+                    }
                     <ion-row>
                       <ion-col class="middle count">{{ game.frameScores[j] }}</ion-col>
                     </ion-row>
                   </ion-grid>
                 </div>
               } @else {
-                <ion-item class="league">
+                <ion-item class="league" [disabled]="leagues().length <= 0">
                   <ion-icon name="medal-outline" slot="start"></ion-icon>
                   <ion-select
                     name="league"
@@ -170,7 +177,12 @@
                     </app-generic-typeahead>
                   </ng-template>
                 </ion-modal>
-                <ion-item class="arsenal" id="ball-selector-{{ game.gameId }}" button detailIcon="chevron-expand-outline">
+                <ion-item
+                  [disabled]="storageService.arsenal().length <= 0"
+                  class="arsenal"
+                  id="ball-selector-{{ game.gameId }}"
+                  button
+                  detailIcon="chevron-expand-outline">
                   <ion-icon name="bowling-ball-outline" slot="start"></ion-icon>
                   <!-- <ion-select [(ngModel)]="game.balls" multiple="true" name="balls" label="Balls">
                     <ion-select-option *ngFor="let ball of storageService.arsenal()" [value]="ball.ball_name">
@@ -194,7 +206,7 @@
                   <ion-icon name="document-text-outline" slot="start"> </ion-icon>
                   <ion-textarea type="text" [(ngModel)]="game.note" [autoGrow]="true"></ion-textarea>
                 </ion-item>
-                <app-game-grid [game]="game" [patternId]="game.gameId" [showMetadata]="false"></app-game-grid>
+                <app-game-grid [game]="game" [patternModalId]="game.gameId" [showMetadata]="false"></app-game-grid>
                 <div class="action-row">
                   <ion-button class="left-button" (click)="cancelEdit(game)">Cancel</ion-button>
                   <ion-button class="right-button" [disabled]="!isGameValid(game)" (click)="saveEdit(game)">Save</ion-button>
