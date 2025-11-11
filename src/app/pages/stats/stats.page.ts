@@ -49,6 +49,7 @@ import {
   specialStatDefinitions,
   strikeStatDefinitions,
   pinStatDefinitions,
+  spareStatDefinitions,
 } from '../../core/constants/stats.definitions.constants';
 import { GameFilterService } from 'src/app/core/services/game-filter/game-filter.service';
 import { UtilsService } from 'src/app/core/services/utils/utils.service';
@@ -106,6 +107,7 @@ export class StatsPage implements OnInit, AfterViewInit {
   playFrequencyStatDefinitions = playFrequencyStatDefinitions;
   specialStatDefinitions = specialStatDefinitions;
   strikeStatDefinitions = strikeStatDefinitions;
+  spareStatDefinitions = spareStatDefinitions;
   pinStatDefinitions = pinStatDefinitions;
   uniqueSortedDates: Signal<number[]> = computed(() => {
     const dateSet = new Set<number>();
@@ -131,7 +133,7 @@ export class StatsPage implements OnInit, AfterViewInit {
   chartViewMode: 'week' | 'game' | 'monthly' | 'yearly' = 'game';
   averageChartViewMode: 'daily' | 'weekly' | 'monthly' | 'yearly' = 'monthly';
   selectedSegment = 'Overall';
-  segments: string[] = ['Overall', 'Spares', 'Pins', 'Throws', 'Sessions'];
+  segments: string[] = ['Overall', 'Throws', 'Spares', 'Pins', 'Sessions'];
 
   // Most common leaves computed signal
   mostCommonLeaves: Signal<LeaveStats[]> = computed(() => {

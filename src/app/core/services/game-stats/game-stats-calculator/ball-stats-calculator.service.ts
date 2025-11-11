@@ -3,12 +3,12 @@
 import { Injectable } from '@angular/core';
 import { Game } from 'src/app/core/models/game.model';
 import { BestBallStats } from 'src/app/core/models/stats.model';
-import { StorageService } from '../storage/storage.service';
+import { StorageService } from '../../storage/storage.service';
 
 @Injectable({
   providedIn: 'root',
 })
-export class BallStatsService {
+export class BallStatsCalculatorService {
   constructor(private storageService: StorageService) {}
 
   private _calculateAllBallStats(gameHistory: Game[]): Record<string, BestBallStats> {

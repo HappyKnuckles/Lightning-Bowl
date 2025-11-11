@@ -230,6 +230,38 @@ export const strikeStatDefinitions: StatDefinition[] = [
   },
 ];
 
+export const spareStatDefinitions: StatDefinition[] = [
+  {
+    label: 'Single pin spares',
+    key: 'singlePinSpares',
+    id: 'singlePinSpares',
+    secondaryKey: 'singlePinSpareOpportunities',
+    toolTip: 'Number of spares made when only one pin was left standing after the first ball.',
+  },
+  {
+    label: 'Multi pin spares',
+    key: 'multiPinSpares',
+    id: 'multiPinSpares',
+    secondaryKey: 'multiPinSpareOpportunities',
+    toolTip: 'Number of spares made when multiple pins were left standing after the first ball.',
+  },
+  {
+    label: 'Single pin spare %',
+    key: 'singlePinSparePercentage',
+
+    id: 'singlePinSparePercentage',
+    isPercentage: true,
+    prevKey: 'singlePinSparePercentage',
+  },
+  {
+    label: 'Multi pin spare %',
+    key: 'multiPinSparePercentage',
+    id: 'multiPinSparePercentage',
+    isPercentage: true,
+    prevKey: 'multiPinSparePercentage',
+  },
+];
+
 export const pinStatDefinitions: StatDefinition[] = [
   {
     label: 'Pocket hits',
@@ -247,45 +279,10 @@ export const pinStatDefinitions: StatDefinition[] = [
     toolTip: 'Percentage of first balls where you hit the pocket.',
   },
   {
-    label: 'Single pin spares',
-    key: 'singlePinSpares',
-    id: 'singlePinSpares',
-    secondaryKey: 'singlePinSpareOpportunities',
-    toolTip: 'Number of spares made when only one pin was left standing after the first ball.',
-  },
-  {
-    label: 'Multi pin spares',
-    key: 'multiPinSpares',
-    id: 'multiPinSpares',
-    secondaryKey: 'multiPinSpareOpportunities',
-    toolTip: 'Number of spares made when multiple pins were left standing after the first ball.',
-  },
-  {
     label: 'Non-split spares',
     key: 'nonSplitSpares',
     id: 'nonSplitSpares',
     secondaryKey: 'nonSplitSpareOpportunities',
-  },
-  {
-    label: 'Split conversions',
-    key: 'splits',
-    id: 'splits',
-    secondaryKey: 'splitOpportunities',
-  },
-  {
-    label: 'Single pin spare %',
-    key: 'singlePinSparePercentage',
-
-    id: 'singlePinSparePercentage',
-    isPercentage: true,
-    prevKey: 'singlePinSparePercentage',
-  },
-  {
-    label: 'Multi pin spare %',
-    key: 'multiPinSparePercentage',
-    id: 'multiPinSparePercentage',
-    isPercentage: true,
-    prevKey: 'multiPinSparePercentage',
   },
   {
     label: 'Non-split spare %',
@@ -293,6 +290,12 @@ export const pinStatDefinitions: StatDefinition[] = [
     id: 'nonSplitSparePercentage',
     isPercentage: true,
     prevKey: 'nonSplitSparePercentage',
+  },
+  {
+    label: 'Split conversions',
+    key: 'splits',
+    id: 'splits',
+    secondaryKey: 'splitOpportunities',
   },
   {
     label: 'Split conversion %',

@@ -4,8 +4,8 @@ import { computed, Injectable, Signal } from '@angular/core';
 import { PrevStats, Stats } from 'src/app/core/models/stats.model';
 import { StorageService } from '../storage/storage.service';
 import { UtilsService } from '../utils/utils.service';
-import { SeriesStatsService } from './series-stats.service';
-import { StatsCalculationService } from './stats-calculation.service';
+import { OverallStatsCalculatorService } from './game-stats-calculator/overall-stats-calculator.service';
+import { SeriesStatsCalculatorService } from './game-stats-calculator/series-stats-calculator.service';
 
 @Injectable({
   providedIn: 'root',
@@ -14,8 +14,8 @@ export class StatsPersistenceService {
   constructor(
     private storageService: StorageService,
     private utilsService: UtilsService,
-    private statsCalculationService: StatsCalculationService,
-    private seriesStatsService: SeriesStatsService,
+    private overallStatsCalculatorService: OverallStatsCalculatorService,
+    private seriesStatsCalculatorService: SeriesStatsCalculatorService,
   ) {}
 
   private mapStatsToPrevStats(stats: Stats): PrevStats {
@@ -100,8 +100,8 @@ export class StatsPersistenceService {
 
     const filteredGameHistory = gameHistory.filter((game) => !this.utilsService.isSameDay(game.date, today));
 
-    const seriesStats = this.seriesStatsService.calculateSeriesStats(filteredGameHistory);
-    const stats: Stats = this.statsCalculationService.calculateBowlingStats(filteredGameHistory, seriesStats) as Stats;
+    const seriesStats = this.seriesStatsCalculatorService.calculateSeriesStats(filteredGameHistory);
+    const stats: Stats = this.overallStatsCalculatorService.calculateBowlingStats(filteredGameHistory, seriesStats) as Stats;
 
     let prevStats: PrevStats = this.getDefaultPrevStats();
 

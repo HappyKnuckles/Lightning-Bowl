@@ -3,14 +3,14 @@
 import { Injectable } from '@angular/core';
 import { Game } from 'src/app/core/models/game.model';
 import { SeriesStats, SessionStats, Stats } from 'src/app/core/models/stats.model';
-import { BowlingGameValidationService } from '../game-utils/bowling-game-validation.service';
+import { BowlingGameValidationService } from '../../game-utils/bowling-game-validation.service';
 
 const MAX_FRAMES = 10;
 
 @Injectable({
   providedIn: 'root',
 })
-export class StatsCalculationService {
+export class OverallStatsCalculatorService {
   constructor(private validationService: BowlingGameValidationService) {}
 
   private getRate(converted: number, missed: number): number {
@@ -27,6 +27,7 @@ export class StatsCalculationService {
     const pinCounts = Array(11).fill(0);
     const missedCounts = Array(11).fill(0);
     let firstThrowCount = 0;
+    let totalFirstThrowCount = 0;
     let perfectGameCount = 0;
     let cleanGameCount = 0;
     let longestStrikeStreak = 0;
@@ -37,7 +38,6 @@ export class StatsCalculationService {
     let varipapa300Count = 0;
     let strikeoutCount = 0;
     let allSparesGameCount = 0;
-
     let pocketHits = 0;
     let totalFirstBalls = 0;
     let singlePinSpares = 0;
@@ -50,9 +50,16 @@ export class StatsCalculationService {
     let splitOpportunities = 0;
     let makeableSplits = 0;
     let makeableSplitOpportunities = 0;
-
-    // Track most common leaves for "most left" statistics
-    // const leaveMap = new Map<string, { pins: number[]; occurrences: number; pickups: number }>();
+    let strikeFollowUps = 0;
+    let strikeFollowUpsPossible = 0;
+    let previousWasStrike = false;
+    let highGame = 0;
+    let lowGame = 300;
+    let totalPins = 0;
+    const distinctDays = new Set<string>();
+    let minT: number | null = null;
+    let maxT: number | null = null;
+    let previousGameDate: string | null = null;
 
     // Streak counts for exactly n consecutive strikes (3 to 11)
     const streakCounts = Array(12).fill(0);
@@ -60,20 +67,40 @@ export class StatsCalculationService {
       if (len >= 3 && len <= 11) streakCounts[len]++;
     };
 
-    // Strike-to-strike metrics
-    let strikeOpportunities = 0;
-    let strikeFollowUps = 0;
-    let previousWasStrike = false;
-
-    // Track date boundaries
-    let previousGameDate: string | null = null;
-
-    // Process each game
     gameHistory.forEach((game) => {
-      if (game.isClean) {
-        cleanGameCount++;
-        if (game.isPerfect) perfectGameCount++;
+      let strikesInThisGame = 0;
+      let isAllSpares = true;
+      let dutchOk = true;
+      let patternStartsWithStrike = false;
+      totalFirstThrowCount += 10;
+      totalPins += game.totalScore;
+
+      if (game.totalScore === 200) {
+        const firstFrame = game.frames[0];
+        const firstThrows = firstFrame.throws.map((t: any) => parseInt(t.value, 10));
+        const firstIsStrike = firstThrows[0] === 10;
+        const firstIsSpare = !firstIsStrike && firstThrows.length > 1 && firstThrows[0] + firstThrows[1] === 10;
+
+        if (firstIsStrike) {
+          patternStartsWithStrike = true;
+        } else if (firstIsSpare) {
+          patternStartsWithStrike = false;
+        } else {
+          dutchOk = false;
+        }
       }
+
+      const gameDay = new Date(game.date).toDateString();
+      distinctDays.add(gameDay);
+      const t = new Date(game.date).getTime();
+      if (minT === null || t < minT) minT = t;
+      if (maxT === null || t > maxT) maxT = t;
+
+      if (game.totalScore > highGame) highGame = game.totalScore;
+      if (game.totalScore < lowGame) lowGame = game.totalScore;
+      if (game.isClean) cleanGameCount++;
+      if (game.isPerfect) perfectGameCount++;
+
       const gameDate = new Date(game.date).toDateString();
       if (gameDate !== previousGameDate) {
         recordStrikeStreak(currentStrikeStreak);
@@ -81,11 +108,8 @@ export class StatsCalculationService {
         currentStrikeStreak = 0;
         currentOpenStreak = 0;
         previousGameDate = gameDate;
-        previousWasStrike = false; // reset for strike-to-strike
+        previousWasStrike = false;
       }
-
-      let strikesInThisGame = 0;
-      let isAllSpares = true;
 
       game.frames.forEach((frame: { throws: any[] }, idx: number) => {
         const throws = frame.throws.map((t: any) => parseInt(t.value, 10));
@@ -95,15 +119,63 @@ export class StatsCalculationService {
         const throw3 = throws.length > 2 ? throws[2] : undefined;
 
         const isStrike = throw1 === 10;
+        const isSecondStrike = throw2 === 10;
+        const isThirdStrike = throw3 === 10;
+        const isStrikeOut = isStrike && isSecondStrike && isThirdStrike;
         const isSpare = !isStrike && throw2 !== undefined && throw1 + throw2 === 10;
         const isOpen = !isStrike && !isSpare;
 
-        // Strike-to-strike tracking
         if (previousWasStrike) {
-          strikeOpportunities++;
+          strikeFollowUpsPossible++;
           if (isStrike) strikeFollowUps++;
         }
         previousWasStrike = isStrike;
+
+        if (game.totalScore === 200) {
+          const shouldBeStrike = patternStartsWithStrike ? idx % 2 === 0 : idx % 2 !== 0;
+          if (idx < 9) {
+            if (shouldBeStrike && !isStrike) {
+              dutchOk = false;
+            } else if (!shouldBeStrike && !isSpare) {
+              dutchOk = false;
+            }
+          } else {
+            const ninthFrameShouldHaveBeenStrike = patternStartsWithStrike ? 8 % 2 === 0 : 8 % 2 !== 0;
+
+            if (ninthFrameShouldHaveBeenStrike) {
+              if (!(isSpare && throws.length >= 3 && throws[2] === 10)) {
+                dutchOk = false;
+              }
+            } else {
+              const isFillBallSpare = throws.length >= 3 && throws[1] + throws[2] === 10;
+              if (!(isStrike && isFillBallSpare)) {
+                dutchOk = false;
+              }
+            }
+          }
+        }
+
+        if (idx === MAX_FRAMES - 1 && isStrike) {
+          if (throw2 !== undefined) {
+            firstThrowCount += throw2;
+            totalFirstThrowCount++;
+
+            if (throw1 === 10) {
+              strikeFollowUpsPossible++;
+              if (throw2 === 10) strikeFollowUps++;
+            }
+          }
+
+          if (throw3 !== undefined) {
+            firstThrowCount += throw3;
+            totalFirstThrowCount++;
+
+            if (throw2 === 10) {
+              strikeFollowUpsPossible++;
+              if (throw3 === 10) strikeFollowUps++;
+            }
+          }
+        }
 
         if (isStrike || !isSpare) isAllSpares = false;
 
@@ -115,24 +187,37 @@ export class StatsCalculationService {
           currentOpenStreak = 0;
         }
 
+        // Pin counts
+        if (isSpare) {
+          pinCounts[10 - throw1]++;
+        } else if (isOpen) {
+          missedCounts[10 - throw1]++;
+        }
+        if (idx === MAX_FRAMES - 1 && isStrike && throw2 !== undefined && throw2 < 10) {
+          if (throw3 !== undefined) {
+            if (throw2 + throw3 === 10) pinCounts[10 - throw2]++;
+            else if (throw2 + throw3 < 10) missedCounts[10 - throw2]++;
+          } else {
+            missedCounts[10 - throw2]++;
+          }
+        }
+
         // Strike streak
         if (isStrike) {
           totalStrikes++;
           currentStrikeStreak++;
           strikesInThisGame++;
-          if (idx === MAX_FRAMES - 1 && throws.length >= 2) {
-            if (throw2 === 10) {
-              totalStrikes++;
-              currentStrikeStreak++;
-              strikesInThisGame++;
-            }
-            if (throw3 === 10) {
-              totalStrikes++;
-              currentStrikeStreak++;
-              strikesInThisGame++;
-            }
-            if (throw1 === 10 && throw2 === 10 && throw3 === 10) strikeoutCount++;
+          if (isSecondStrike) {
+            totalStrikes++;
+            currentStrikeStreak++;
+            strikesInThisGame++;
           }
+          if (isThirdStrike) {
+            totalStrikes++;
+            currentStrikeStreak++;
+            strikesInThisGame++;
+          }
+          if (isStrikeOut) strikeoutCount++;
           if (currentStrikeStreak === 12 && strikesInThisGame < 12) varipapa300Count++;
         } else {
           recordStrikeStreak(currentStrikeStreak);
@@ -143,40 +228,6 @@ export class StatsCalculationService {
           }
         }
         longestStrikeStreak = Math.max(longestStrikeStreak, currentStrikeStreak);
-
-        // Pin counts
-        if (isSpare) {
-          // Frame was a spare on the first two balls (e.g., 7 /)
-          // This applies to frames 1-9 and the first two balls of the 10th if throw1 < 10.
-          pinCounts[10 - throw1]++;
-        } else if (isOpen) {
-          // Frame was open on the first one or two balls (e.g., 7 2 or 7 -)
-          // This applies to frames 1-9 and the first two balls of the 10th if throw1 < 10.
-          missedCounts[10 - throw1]++;
-        }
-        // If `isStrike` is true, the above `isSpare` and `isOpen` are false.
-        // We then need to check the 10th frame specifically for a spare/open opportunity
-        // on the 2nd and 3rd balls if the first was a strike.
-        if (isStrike && idx === MAX_FRAMES - 1) {
-          // First ball was a strike in the 10th frame.
-          // Check for spare/open on the 2nd and 3rd balls.
-          if (throw2 !== undefined && throw2 < 10) {
-            // Second ball was not a strike
-            if (throw3 !== undefined) {
-              if (throw2 + throw3 === 10) {
-                // Spare on 2nd/3rd balls (e.g., X 7 /)
-                pinCounts[10 - throw2]++;
-              } else if (throw2 + throw3 < 10) {
-                // Open on 2nd/3rd balls (e.g., X 7 2)
-                missedCounts[10 - throw2]++;
-              }
-            } else {
-              // Only two balls after initial strike, second was not a strike (e.g. X 7 -)
-              missedCounts[10 - throw2]++;
-            }
-          }
-          // If throw2 was also a strike (X X ...), then throw3 is a fill ball; no new spare/open opportunity here.
-        }
 
         // Pin-specific statistics (only for pin mode games)
         if (game.isPinMode && frame.throws) {
@@ -195,6 +246,11 @@ export class StatsCalculationService {
                 pocketHits++;
               }
             }
+          }
+          if (idx === 9) {
+            totalFirstBalls++;
+            if (isStrike) totalFirstBalls++;
+            if (isSecondStrike) totalFirstBalls++;
           }
 
           // Process first throw if not a strike
@@ -239,7 +295,7 @@ export class StatsCalculationService {
           }
 
           // Process 10th frame additional throws
-          if (idx === MAX_FRAMES - 1 && isStrike && throw2 !== undefined && throw2 < 10 && frame.throws[1] && frame.throws[1].pinsLeftStanding) {
+          if (idx === MAX_FRAMES - 1 && isStrike && throw2 !== undefined && !isSecondStrike && frame.throws[1] && frame.throws[1].pinsLeftStanding) {
             const pinsLeft = frame.throws[1].pinsLeftStanding;
             const pinsLeftCount = pinsLeft.length;
             const isSplit = this.validationService.isSplit(pinsLeft);
@@ -282,21 +338,7 @@ export class StatsCalculationService {
       });
 
       if (isAllSpares) allSparesGameCount++;
-
-      // Dutch 200 detection
-      if (game.totalScore === 200) {
-        let ok = true;
-        game.frames.forEach((frame: { throws: any[] }, idx: number) => {
-          const arr = frame.throws.map((t: any) => parseInt(t.value, 10));
-          if (idx < 9) {
-            const want = idx % 2 === 0 ? arr[0] === 10 : arr.length >= 2 && arr[0] !== 10 && arr[0] + arr[1] === 10;
-            if (!want) ok = false;
-          } else {
-            if (arr.length < 3 || arr[0] + arr[1] !== 10 || arr[2] !== 10) ok = false;
-          }
-        });
-        if (ok) dutch200Count++;
-      }
+      if (dutchOk && game.totalScore === 200) dutch200Count++;
     });
 
     // Finalize streaks
@@ -310,43 +352,35 @@ export class StatsCalculationService {
     }
 
     // Core aggregated stats
-    const totalPins = gameHistory.reduce((s, g) => s + g.totalScore, 0);
     const totalGames = gameHistory.length;
     const averageScore = totalPins / totalGames || 0;
-    const highGame = Math.max(0, ...gameHistory.map((g) => g.totalScore));
-    const lowGame = Math.min(300, ...gameHistory.map((g) => g.totalScore));
     const cleanGamePercentage = (cleanGameCount / totalGames) * 100 || 0;
-    const totalFrames = totalGames * 10;
-    const strikeChances = totalGames * 12;
     const averageStrikesPerGame = totalStrikes / totalGames || 0;
     const averageSparesPerGame = totalSparesConverted / totalGames || 0;
     const averageOpensPerGame = totalSparesMissed / totalGames || 0;
-    const strikePercentage = (totalStrikes / strikeChances) * 100 || 0;
-    const sparePercentage = (totalSparesConverted / totalFrames) * 100 || 0;
-    const openPercentage = (totalSparesMissed / totalFrames) * 100 || 0;
-    const averageFirstCount = firstThrowCount / totalFrames;
+    const strikePercentage = (totalStrikes / totalFirstThrowCount) * 100 || 0;
+    const sparePercentage = (totalSparesConverted / totalFirstThrowCount) * 100 || 0;
+    const openPercentage = (totalSparesMissed / totalFirstThrowCount) * 100 || 0;
+    const averageFirstCount = firstThrowCount / totalFirstThrowCount;
     const spareRates = pinCounts.map((c, i) => this.getRate(c, missedCounts[i]));
     const overallSpareRate = this.getRate(totalSparesConverted, totalSparesMissed);
     const spareConversionPercentage = (totalSparesConverted / (totalSparesConverted + totalSparesMissed)) * 100;
     const overallMissedRate = totalSparesMissed > 0 ? 100 - overallSpareRate : 0;
-    const markPercentage = ((totalFrames - totalSparesMissed) / totalFrames) * 100 || 0;
+    // TODO maybe use totalframes here
+    const markPercentage = ((totalFirstThrowCount - totalSparesMissed) / totalFirstThrowCount) * 100 || 0;
 
     const msPerDay = 1000 * 60 * 60 * 24;
-    const times = gameHistory.map((g) => new Date(g.date).getTime());
-    const minT = times.length > 0 ? Math.min(...times) : 0;
-    const maxT = times.length > 0 ? Math.max(...times) : 0;
-    const totalDays = times.length > 0 ? Math.ceil((maxT - minT) / msPerDay) + 1 : 0;
+    const totalDays = minT !== null && maxT !== null ? Math.ceil((maxT - minT) / msPerDay) + 1 : 0;
     const weeks = totalDays / 7;
     const months = totalDays / 30;
-    const distinctDays = new Set(gameHistory.map((g) => new Date(g.date).toDateString())).size;
     const averageGamesPerWeek = totalGames / weeks || 0;
     const averageGamesPerMonth = totalGames / months || 0;
-    const averageSessionsPerWeek = distinctDays / weeks || 0;
-    const averageSessionsPerMonth = distinctDays / months || 0;
-    const averageGamesPerSession = totalGames / distinctDays || 0;
+    const averageSessionsPerWeek = distinctDays.size / weeks || 0;
+    const averageSessionsPerMonth = distinctDays.size / months || 0;
+    const averageGamesPerSession = totalGames / distinctDays.size || 0;
 
     // Strike-to-strike percentage
-    const strikeToStrikePercentage = strikeOpportunities ? (strikeFollowUps / strikeOpportunities) * 100 : 0;
+    const strikeToStrikePercentage = strikeFollowUpsPossible ? (strikeFollowUps / strikeFollowUpsPossible) * 100 : 0;
 
     // Pin-specific percentages
     const pocketHitPercentage = totalFirstBalls > 0 ? (pocketHits / totalFirstBalls) * 100 : 0;

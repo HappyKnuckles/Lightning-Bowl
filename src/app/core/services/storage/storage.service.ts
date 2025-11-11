@@ -72,6 +72,44 @@ export class StorageService {
     private analyticsService: AnalyticsService,
   ) {
     this.init();
+
+    // const games: Game[] = [];
+    // const baseTimestamp = Date.now();
+
+    // for (let i = 0; i < 10000; i++) {
+    //   const gameId = `${baseTimestamp}_${i}_${Math.random().toString(36).substring(2, 8)}`;
+    //   const seriesId = `series_${baseTimestamp}_${i}_${Math.random().toString(36).substring(2, 6)}`;
+
+    //   const frames = Array.from({ length: 10 }, (_, idx) => ({
+    //     frameIndex: idx + 1,
+    //     throws: [
+    //       { throwIndex: 1, value: Math.floor(Math.random() * 11), pinsLeftStanding: [] },
+    //       { throwIndex: 2, value: Math.floor(Math.random() * 11), pinsLeftStanding: [] },
+    //     ],
+    //     length: 2,
+    //   }));
+
+    //   const totalScore = frames.reduce((sum, f) => sum + f.throws.reduce((s, t) => s + t.value, 0), 0);
+
+    //   games.push({
+    //     gameId,
+    //     seriesId,
+    //     date: baseTimestamp + i * 1000, // unique timestamp per game
+    //     frames,
+    //     frameScores: frames.map(f => f.throws.reduce((s, t) => s + t.value, 0)),
+    //     totalScore,
+    //     isClean: false,
+    //     isPerfect: false,
+    //     isPinMode: true,
+    //     isPractice: false,
+    //     isSeries: false,
+    //     league: 'TestLeague',
+    //     note: '',
+    //     balls: ['TestBall'],
+    //     patterns: [],
+    //   } as Game);
+    // }
+    // this.saveGamesToLocalStorage(games);
     // this.highScoreAlertService.displayHighScoreAlert({ type: 'single_game', newRecord: 150, previousRecord: 110, details: { league: 'Monday Night', patterns: ['THS', 'Sport'], balls: ['Storm', 'Hammer'], date: '1/15/2025' }, gameOrSeries: []});
   }
 

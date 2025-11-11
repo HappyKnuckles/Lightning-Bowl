@@ -85,50 +85,18 @@
           [currentStats]="statsService.currentStats()"
           [prevStats]="statsService.prevStats()">
         </app-stat-display>
+        <ion-list-header style="margin-bottom: 4px"> Score Analysis</ion-list-header>
         <div class="stat-container">
           <canvas #scoreChart class="score" style="width: 300px; height: 400px; max-height: 700px"></canvas>
         </div>
+        <ion-list-header style="margin-bottom: 4px"> Average Score</ion-list-header>
         <div class="stat-container">
           <canvas #averageScoreChart class="average-score" style="width: 300px; height: 400px; max-height: 700px"></canvas>
         </div>
+        <ion-list-header style="margin-bottom: 4px"> Score Distribution</ion-list-header>
         <div class="stat-container">
           <canvas #scoreDistributionChart style="width: 300px; height: 400px; max-height: 700px"></canvas>
         </div>
-      </section>
-    </ion-segment-content>
-
-    <ion-segment-content id="Spares">
-      <section class="tab" *ngIf="gameFilterService.filteredGames().length > 0">
-        <ion-list-header style="margin-bottom: 4px">Spare Overview</ion-list-header>
-        <app-spare-display [stats]="statsService.currentStats()" [prevStats]="statsService.prevStats()" id="overalSpareStats"></app-spare-display>
-        <div class="stat-container">
-          <canvas #pinChart class="spares" style="width: 300px; height: 400px; max-height: 700px"></canvas>
-        </div>
-        <div class="stat-container">
-          <canvas #spareDistributionChart style="width: 300px; height: 400px; max-height: 700px"></canvas>
-        </div>
-      </section>
-    </ion-segment-content>
-
-    <ion-segment-content id="Pins">
-      <section class="tab" *ngIf="gameFilterService.filteredGames().length > 0">
-        @if (statsService.currentStats().singlePinSpareOpportunities === 0 && statsService.currentStats().multiPinSpareOpportunities === 0) {
-          <div class="no-game-text" style="padding: 20px; text-align: center">
-            <ion-text color="medium">
-              <p>Play games in pin mode to see detailed pin statistics</p>
-            </ion-text>
-          </div>
-        } @else {
-          <app-stat-display
-            [title]="'Pin Stats'"
-            [statDefinitions]="pinStatDefinitions"
-            [currentStats]="statsService.currentStats()"
-            [prevStats]="statsService.prevStats()">
-          </app-stat-display>
-          @if (mostCommonLeaves().length > 0) {
-            <app-pin-leave-stats [title]="'Most Common Leaves'" [leaveStats]="mostCommonLeaves()"> </app-pin-leave-stats>
-          }
-        }
       </section>
     </ion-segment-content>
 
@@ -146,9 +114,48 @@
           [currentStats]="statsService.currentStats()"
           [prevStats]="statsService.prevStats()">
         </app-stat-display>
+        <ion-list-header style="margin-bottom: 4px"> Throw Distribution </ion-list-header>
         <div class="stat-container">
           <canvas #throwChart class="throws" style="width: 300px; height: 400px; max-height: 700px"></canvas>
         </div>
+      </section>
+    </ion-segment-content>
+
+    <ion-segment-content id="Spares">
+      <section class="tab" *ngIf="gameFilterService.filteredGames().length > 0">
+        <app-spare-display
+          [title]="'Spare Stats'"
+          [stats]="statsService.currentStats()"
+          [prevStats]="statsService.prevStats()"
+          id="overalSpareStats"></app-spare-display>
+        <app-stat-display
+          [title]="'Spare Conversion by Pin Count'"
+          [statDefinitions]="spareStatDefinitions"
+          [currentStats]="statsService.currentStats()"
+          [prevStats]="statsService.prevStats()">
+        </app-stat-display>
+        <ion-list-header style="margin-bottom: 4px"> Converted vs Missed Spares</ion-list-header>
+        <div class="stat-container">
+          <canvas #pinChart class="spares" style="width: 300px; height: 400px; max-height: 700px"></canvas>
+        </div>
+        <ion-list-header style="margin-bottom: 4px"> Spare Distribution</ion-list-header>
+        <div class="stat-container">
+          <canvas #spareDistributionChart style="width: 300px; height: 400px; max-height: 700px"></canvas>
+        </div>
+      </section>
+    </ion-segment-content>
+
+    <ion-segment-content id="Pins">
+      <section class="tab" *ngIf="gameFilterService.filteredGames().length > 0">
+        <app-stat-display
+          [title]="'Pin Stats'"
+          [statDefinitions]="pinStatDefinitions"
+          [currentStats]="statsService.currentStats()"
+          [prevStats]="statsService.prevStats()">
+        </app-stat-display>
+        @if (mostCommonLeaves().length > 0) {
+          <app-pin-leave-stats [title]="'Most Common Leaves'" [leaveStats]="mostCommonLeaves()"> </app-pin-leave-stats>
+        }
       </section>
     </ion-segment-content>
 

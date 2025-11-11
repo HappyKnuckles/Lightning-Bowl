@@ -2,12 +2,12 @@
 
 import { Injectable } from '@angular/core';
 import { Game } from 'src/app/core/models/game.model';
-import { SeriesStats } from '../../models/stats.model';
+import { SeriesStats } from '../../../models/stats.model';
 
 @Injectable({
   providedIn: 'root',
 })
-export class SeriesStatsService {
+export class SeriesStatsCalculatorService {
   seriesStats: SeriesStats = {
     seriesTotal: 0,
     seriesDate: '',
