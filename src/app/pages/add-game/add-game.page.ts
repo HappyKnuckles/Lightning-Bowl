@@ -212,8 +212,8 @@ export class AddGamePage implements OnInit {
     } else {
       this.gameGrids.forEach((trackGrid: GameGridComponent) => {
         trackGrid.leagueSelector.selectedLeague = league;
-        trackGrid.game().league = league;
-        trackGrid.game().isPractice = isPractice;
+        trackGrid.game.league = league;
+        trackGrid.game.isPractice = isPractice;
         trackGrid.checkbox.checked = isPractice;
         trackGrid.checkbox.disabled = !isPractice;
       });
@@ -222,7 +222,7 @@ export class AddGamePage implements OnInit {
 
   onIsPracticeChange(isPractice: boolean): void {
     this.gameGrids.forEach((trackGrid: GameGridComponent) => {
-      trackGrid.game().isPractice = isPractice;
+      trackGrid.game.isPractice = isPractice;
     });
   }
 
@@ -232,7 +232,7 @@ export class AddGamePage implements OnInit {
       patterns = patterns.slice(-2);
     }
     this.gameGrids.forEach((trackGrid: GameGridComponent) => {
-      trackGrid.game().patterns = [...patterns];
+      trackGrid.game.patterns = [...patterns];
     });
   }
 
@@ -316,7 +316,7 @@ export class AddGamePage implements OnInit {
     }
 
     try {
-      const perfectGame = gameGridArray.some((grid: GameGridComponent) => grid.game().totalScore === 300);
+      const perfectGame = gameGridArray.some((grid: GameGridComponent) => grid.game.totalScore === 300);
 
       const savePromises = gameGridArray.map((grid: GameGridComponent) => grid.saveGameToLocalStorage(isSeries, this.seriesId));
       const savedGames = await Promise.all(savePromises);
@@ -390,12 +390,12 @@ export class AddGamePage implements OnInit {
 
     const captureGameData = () =>
       this.gameGrids.map((gameGrid: GameGridComponent) => ({
-        frames: gameGrid.game().frames,
-        league: gameGrid.game().league,
-        note: gameGrid.game().note,
-        balls: gameGrid.game().balls,
-        patterns: gameGrid.game().patterns,
-        isPractice: gameGrid.game().isPractice,
+        frames: gameGrid.game.frames,
+        league: gameGrid.game.league,
+        note: gameGrid.game.note,
+        balls: gameGrid.game.balls,
+        patterns: gameGrid.game.patterns,
+        isPractice: gameGrid.game.isPractice,
       }));
 
     actionSheet.onWillDismiss().then(() => {
@@ -407,11 +407,11 @@ export class AddGamePage implements OnInit {
       this.gameGrids.forEach((gameGrid: GameGridComponent, index: number) => {
         const data = gameData[index];
         if (!data) return;
-        gameGrid.game().frames = data.frames;
-        gameGrid.game().note = data.note!;
-        gameGrid.game().balls = data.balls!;
-        gameGrid.game().isPractice = data.isPractice!;
-        gameGrid.game().patterns = data.patterns!;
+        gameGrid.game.frames = data.frames;
+        gameGrid.game.note = data.note!;
+        gameGrid.game.balls = data.balls!;
+        gameGrid.game.isPractice = data.isPractice!;
+        gameGrid.game.patterns = data.patterns!;
         gameGrid.onPatternChanged(data.patterns!);
         gameGrid.onLeagueChanged(data.league!);
         gameGrid.updateScores();

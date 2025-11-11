@@ -477,8 +477,6 @@ out center;`;
               }
             }
           });
-
-          // Use console.warn instead of console.log per linting rules
         }
       } catch (error) {
         console.error(`Error in fallback search with radius ${radius}:`, error);

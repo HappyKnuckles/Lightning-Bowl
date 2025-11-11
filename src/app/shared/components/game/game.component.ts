@@ -324,7 +324,7 @@ export class GameComponent implements OnChanges, OnInit {
 
   async saveEdit(game: Game): Promise<void> {
     try {
-      const editedGameFromGrid = this.gameGrid.game();
+      const editedGameFromGrid = this.gameGrid.game;
 
       if (game.isPinMode) {
         const alert = await this.alertController.create({

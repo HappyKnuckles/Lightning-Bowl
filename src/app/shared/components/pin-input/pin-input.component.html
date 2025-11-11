@@ -61,8 +61,7 @@
     </ion-row>
     <div style="height: 24px" *ngIf="game().frames[frameIndex][0] === undefined"></div>
 
-    <app-pin-deck-frame-row *ngIf="game().frames[frameIndex][0] !== undefined" [frame]="game().frames[frameIndex]" [frameIndex]="frameIndex">
-    </app-pin-deck-frame-row>
+    <app-pin-deck-frame-row *ngIf="game().frames[frameIndex][0] !== undefined" [game]="game()" [frameIndex]="frameIndex"> </app-pin-deck-frame-row>
 
     <ion-row>
       <ion-col class="middle count">

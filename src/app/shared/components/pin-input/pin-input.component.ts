@@ -31,7 +31,6 @@ export interface PinThrowEvent {
   imports: [IonButton, IonIcon, IonGrid, IonRow, IonCol, IonInput, NgFor, NgIf, PinDeckFrameRowComponent],
 })
 export class PinInputComponent {
-  frames = input<number[][]>([]);
   throwsData = input<ThrowData[][]>([]);
   currentFrameIndex = input<number>(0);
   currentThrowIndex = input<number>(0);
@@ -42,7 +41,12 @@ export class PinInputComponent {
   throwUndone = output<void>();
   selectedPins: number[] = [];
   pinsLeftStanding = computed(() => {
-    return this.validationService.getPinsLeftFromPreviousThrow(this.currentFrameIndex(), this.currentThrowIndex(), this.frames(), this.throwsData());
+    return this.validationService.getPinsLeftFromPreviousThrow(
+      this.currentFrameIndex(),
+      this.currentThrowIndex(),
+      this.game().frames,
+      this.throwsData(),
+    );
   });
   pinsKnockedDownPreviously = computed(() => {
     const allPins = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
@@ -106,11 +110,11 @@ export class PinInputComponent {
   }
 
   canRecordStrike(): boolean {
-    return this.validationService.canRecordStrike(this.currentFrameIndex(), this.currentThrowIndex(), this.frames());
+    return this.validationService.canRecordStrike(this.currentFrameIndex(), this.currentThrowIndex(), this.game().frames);
   }
 
   canRecordSpare(): boolean {
-    return this.validationService.canRecordSpare(this.currentFrameIndex(), this.currentThrowIndex(), this.frames());
+    return this.validationService.canRecordSpare(this.currentFrameIndex(), this.currentThrowIndex(), this.game().frames);
   }
 
   recordStrike(): void {
@@ -126,7 +130,7 @@ export class PinInputComponent {
   }
 
   canUndoLastThrow(): boolean {
-    return this.validationService.canUndoLastThrow(this.frames());
+    return this.validationService.canUndoLastThrow(this.game().frames);
   }
 
   isPinSelected(pinNumber: number): boolean {
@@ -142,7 +146,7 @@ export class PinInputComponent {
   }
 
   getFrameValue(frameIndex: number, throwIndex: number): string {
-    return this.formatterService.formatThrowValue(frameIndex, throwIndex, this.frames());
+    return this.formatterService.formatThrowValue(frameIndex, throwIndex, this.game().frames);
   }
 
   isNumber(value: unknown): boolean {
@@ -150,6 +154,6 @@ export class PinInputComponent {
   }
 
   isGameComplete(): boolean {
-    return this.validationService.isGameComplete(this.frames());
+    return this.validationService.isGameComplete(this.game().frames);
   }
 }
