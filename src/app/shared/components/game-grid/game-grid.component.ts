@@ -61,7 +61,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
   // Input signals
   ballSelectorId = input<string>();
   showMetadata = input<boolean>(true);
-  patternId = input.required<string>();
+  patternModalId = input.required<string>();
   game = input<Game>({
     frames: [],
     totalScore: 0,

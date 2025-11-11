@@ -12,6 +12,9 @@ export class CacheService {
    * Store data in cache with metadata
    */
   async set<T>(key: string, data: T, ttl?: number): Promise<void> {
+    if (Array.isArray(data) && data.length === 0) {
+      return;
+    }
     const now = Date.now();
     const cacheEntry: CacheEntry<T> = {
       data,

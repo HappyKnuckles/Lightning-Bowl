@@ -6,5 +6,5 @@ export const environment = {
   emailServiceID: 'service_4zwqeji',
   emailUserID: 'mkI2Kqg6m34U7GL8m',
   patternEndpoint: 'http://localhost:5000/api/',
-  analyticsEndpoint: 'https://analytics-backend-beryl.vercel.app/api/',
+  analyticsEndpoint: 'https://analytics.nicolas-hoffmann.dev/api/',
 };
