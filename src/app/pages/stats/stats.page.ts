@@ -48,6 +48,7 @@ import {
   playFrequencyStatDefinitions,
   specialStatDefinitions,
   strikeStatDefinitions,
+  spareStatDefinitions,
 } from '../../core/constants/stats.definitions.constants';
 import { GameFilterService } from 'src/app/core/services/game-filter/game-filter.service';
 import { UtilsService } from 'src/app/core/services/utils/utils.service';
@@ -99,6 +100,7 @@ export class StatsPage implements OnInit, AfterViewInit {
   overallStatDefinitions = overallStatDefinitions;
   seriesStatDefinitions = seriesStatDefinitions;
   throwStatDefinitions = throwStatDefinitions;
+  spareStatDefinitions = spareStatDefinitions;
   sessionStatDefinitions = sessionStatDefinitions;
   playFrequencyStatDefinitions = playFrequencyStatDefinitions;
   specialStatDefinitions = specialStatDefinitions;
@@ -127,7 +129,7 @@ export class StatsPage implements OnInit, AfterViewInit {
   chartViewMode: 'week' | 'game' | 'monthly' | 'yearly' = 'game';
   averageChartViewMode: 'daily' | 'weekly' | 'monthly' | 'yearly' = 'monthly';
   selectedSegment = 'Overall';
-  segments: string[] = ['Overall', 'Spares', 'Throws', 'Sessions'];
+  segments: string[] = ['Overall', 'Throws', 'Spares', 'Sessions'];
   // Viewchilds and Instances
   @ViewChild('scoreChart', { static: false }) scoreChart?: ElementRef;
   @ViewChild('averageScoreChart', { static: false }) averageScoreChart?: ElementRef;

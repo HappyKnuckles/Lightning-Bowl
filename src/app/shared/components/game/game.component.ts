@@ -46,7 +46,6 @@ import {
 } from 'ionicons/icons';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { Game } from 'src/app/core/models/game.model';
-import { GameUtilsService } from 'src/app/core/services/game-utils/game-utils.service';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
@@ -63,6 +62,7 @@ import { GameGridComponent } from '../game-grid/game-grid.component';
 import { BallSelectComponent } from '../ball-select/ball-select.component';
 import { alertEnterAnimation, alertLeaveAnimation } from '../../animations/alert.animation';
 import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
+import { BowlingGameValidationService } from 'src/app/core/services/game-utils/bowling-game-validation.service';
 
 @Component({
   selector: 'app-game',
@@ -172,12 +172,12 @@ export class GameComponent implements OnChanges, OnInit {
     private datePipe: DatePipe,
     private hapticService: HapticService,
     private renderer: Renderer2,
-    private gameUtilsService: GameUtilsService,
     private utilsService: UtilsService,
     private router: Router,
     private modalCtrl: ModalController,
     private patternService: PatternService,
     private analyticsService: AnalyticsService,
+    private validationService: BowlingGameValidationService,
   ) {
     addIcons({
       trashOutline,
@@ -438,7 +438,7 @@ export class GameComponent implements OnChanges, OnInit {
   }
 
   isGameValid(game: Game): boolean {
-    return this.gameUtilsService.isGameValid(game);
+    return this.validationService.isGameValid(game);
   }
 
   parseIntValue(value: unknown): number {

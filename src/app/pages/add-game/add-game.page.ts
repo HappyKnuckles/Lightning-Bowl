@@ -44,6 +44,8 @@ import { GameGridComponent } from 'src/app/shared/components/game-grid/game-grid
 import { HighScoreAlertService } from 'src/app/core/services/high-score-alert/high-score-alert.service';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
+import { BowlingGameValidationService } from 'src/app/core/services/game-utils/bowling-game-validation.service';
+import { GameScoreToolbarComponent } from 'src/app/shared/components/game-score-toolbar/game-score-toolbar.component';
 
 const enum SeriesMode {
   Single = 'Single',
@@ -82,6 +84,7 @@ defineCustomElements(window);
     NgFor,
     NgStyle,
     GameGridComponent,
+    GameScoreToolbarComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
@@ -131,6 +134,7 @@ export class AddGamePage implements OnInit {
     private adService: AdService,
     private hapticService: HapticService,
     private gameUtilsService: GameUtilsService,
+    private validationService: BowlingGameValidationService,
     private highScoreAlertService: HighScoreAlertService,
     private storageService: StorageService,
     private analyticsService: AnalyticsService,
@@ -270,7 +274,7 @@ export class AddGamePage implements OnInit {
   }
 
   isGameValid(game: Game): boolean {
-    return this.gameUtilsService.isGameValid(game);
+    return this.validationService.isGameValid(game);
   }
 
   updateFrameScore(event: InputCustomEvent, index: number): void {

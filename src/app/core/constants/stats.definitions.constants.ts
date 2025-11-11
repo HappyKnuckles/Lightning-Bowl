@@ -114,6 +114,38 @@ export const playFrequencyStatDefinitions: StatDefinition[] = [
   },
 ];
 
+export const spareStatDefinitions: StatDefinition[] = [
+  {
+    label: 'Single pin spares',
+    key: 'singlePinSpares',
+    id: 'singlePinSpares',
+    secondaryKey: 'singlePinSpareOpportunities',
+    toolTip: 'Number of spares made when only one pin was left standing after the first ball.',
+  },
+  {
+    label: 'Multi pin spares',
+    key: 'multiPinSpares',
+    id: 'multiPinSpares',
+    secondaryKey: 'multiPinSpareOpportunities',
+    toolTip: 'Number of spares made when multiple pins were left standing after the first ball.',
+  },
+  {
+    label: 'Single pin spare %',
+    key: 'singlePinSparePercentage',
+
+    id: 'singlePinSparePercentage',
+    isPercentage: true,
+    prevKey: 'singlePinSparePercentage',
+  },
+  {
+    label: 'Multi pin spare %',
+    key: 'multiPinSparePercentage',
+    id: 'multiPinSparePercentage',
+    isPercentage: true,
+    prevKey: 'multiPinSparePercentage',
+  },
+];
+
 export const seriesStatDefinitions: StatDefinition[] = [
   { label: 'Average 3-series score', key: 'average3SeriesScore', id: 'average3SeriesScore', prevKey: 'average3SeriesScore' },
   { label: 'High 3-series', key: 'high3Series', id: 'high3Series' },

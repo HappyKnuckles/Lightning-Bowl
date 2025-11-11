@@ -9,7 +9,6 @@ import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { ImpactStyle } from '@capacitor/haptics';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { LeagueSelectorComponent } from '../league-selector/league-selector.component';
-import { GameUtilsService } from 'src/app/core/services/game-utils/game-utils.service';
 import { GameScoreCalculatorService } from 'src/app/core/services/game-score-calculator/game-score-calculator.service';
 import { GameDataTransformerService } from 'src/app/core/services/game-transform/game-data-transform.service';
 import { InputCustomEvent } from '@ionic/angular';
@@ -27,6 +26,9 @@ import { chevronExpandOutline } from 'ionicons/icons';
 import { BallSelectComponent } from '../ball-select/ball-select.component';
 import { alertEnterAnimation, alertLeaveAnimation } from '../../animations/alert.animation';
 import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
+import { BowlingGameValidationService } from 'src/app/core/services/game-utils/bowling-game-validation.service';
+import { BowlingFrameFormatterService } from 'src/app/core/services/game-utils/bowling-frame-formatter.service';
+import { GameScoreToolbarComponent } from '../game-score-toolbar/game-score-toolbar.component';
 
 @Component({
   selector: 'app-game-grid',
@@ -51,6 +53,7 @@ import { AnalyticsService } from 'src/app/core/services/analytics/analytics.serv
     GenericTypeaheadComponent,
     IonLabel,
     BallSelectComponent,
+    GameScoreToolbarComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
@@ -108,17 +111,32 @@ export class GameGridComponent implements OnInit, OnDestroy {
   private usingVisualViewportListener = false;
   private resizeSubscription: Subscription | undefined;
 
+  get isStrikeDisabled(): boolean {
+    if (this.currentFrameIndex === null || this.currentRollIndex === null) {
+      return true;
+    }
+    return !this.validationService.canRecordStrike(this.currentFrameIndex, this.currentRollIndex, this.game().frames);
+  }
+
+  get isSpareDisabled(): boolean {
+    if (this.currentFrameIndex === null || this.currentRollIndex === null) {
+      return true;
+    }
+    return !this.validationService.canRecordSpare(this.currentFrameIndex, this.currentRollIndex, this.game().frames);
+  }
+
   constructor(
     private gameScoreCalculatorService: GameScoreCalculatorService,
     public storageService: StorageService,
     private transformGameService: GameDataTransformerService,
     private toastService: ToastService,
     private hapticService: HapticService,
-    private gameUtilsService: GameUtilsService,
+    private formatterService: BowlingFrameFormatterService,
     private utilsService: UtilsService,
     private platform: Platform,
     private patternService: PatternService,
     private analyticsService: AnalyticsService,
+    private validationService: BowlingGameValidationService,
   ) {
     this.initializeKeyboardListeners();
     addIcons({ chevronExpandOutline });
@@ -285,18 +303,18 @@ export class GameGridComponent implements OnInit, OnDestroy {
 
   simulateScore(event: InputCustomEvent, frameIndex: number, inputIndex: number): void {
     const inputValue = event.detail.value!;
-    const parsedValue = this.gameUtilsService.parseInputValue(inputValue, frameIndex, inputIndex, this.game().frames);
+    const parsedValue = this.formatterService.parseInputValue(inputValue, frameIndex, inputIndex, this.game().frames);
 
     if (inputValue.length === 0) {
       this.game().frames[frameIndex].splice(inputIndex, 1);
       this.updateScores();
       return;
     }
-    if (!this.isValidNumber0to10(parsedValue)) {
+    if (!this.validationService.isValidNumber0to10(parsedValue)) {
       this.handleInvalidInput(event);
       return;
     }
-    if (!this.gameUtilsService.isValidFrameScore(parsedValue, frameIndex, inputIndex, this.game().frames)) {
+    if (!this.validationService.isValidFrameScore(parsedValue, frameIndex, inputIndex, this.game().frames)) {
       this.handleInvalidInput(event);
       return;
     }
@@ -378,7 +396,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
   }
 
   isGameValid(): boolean {
-    return this.gameUtilsService.isGameValid(undefined, this.game().frames);
+    return this.validationService.isGameValid(undefined, this.game().frames);
   }
 
   isNumber(value: unknown): boolean {
@@ -442,10 +460,6 @@ export class GameGridComponent implements OnInit, OnDestroy {
       default:
         return true;
     }
-  }
-
-  private isValidNumber0to10(value: number): boolean {
-    return !isNaN(value) && value >= 0 && value <= 10;
   }
 
   private handleInvalidInput(event: InputCustomEvent): void {

@@ -1,3 +1,12 @@
+<app-game-score-toolbar
+  [show]="showButtonToolbar"
+  [offset]="keyboardOffset"
+  [strikeDisabled]="isStrikeDisabled"
+  [spareDisabled]="isSpareDisabled"
+  (strikeClick)="selectSpecialScore('X')"
+  (spareClick)="selectSpecialScore('/')">
+</app-game-score-toolbar>
+
 <div class="grid-container">
   <ion-grid fixed="true" *ngFor="let i of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; let frameIndex = index">
     <ion-row>

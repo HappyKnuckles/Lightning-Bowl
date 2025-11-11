@@ -5,4 +5,5 @@ export interface StatDefinition {
   isPercentage?: boolean;
   toolTip?: string;
   prevKey?: string;
+  secondaryKey?: string;
 }

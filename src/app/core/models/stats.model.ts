@@ -26,6 +26,12 @@ export interface Stats {
   spareRates: number[];
   overallSpareRate: number;
   overallMissedRate: number;
+  singlePinSpares?: number;
+  singlePinSpareOpportunities?: number;
+  multiPinSpares?: number;
+  multiPinSpareOpportunities?: number;
+  singlePinSparePercentage?: number;
+  multiPinSparePercentage?: number;
   longesStrikeStreak?: number;
   longestOpenStreak?: number;
   dutch200Count?: number;
