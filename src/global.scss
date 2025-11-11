@@ -38,7 +38,11 @@ ion-segment-view {
   border-radius: 7px;
   background-color: #141414;
   padding: 4px 0;
+  canvas{
+    touch-action: pinch-zoom pan-y;
+  }
 }
+
 
 canvas {
   margin: 0 8px;
