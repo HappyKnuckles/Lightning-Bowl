@@ -38,6 +38,10 @@ ion-segment-view {
   border-radius: 7px;
   background-color: #141414;
   padding: 4px 0;
+
+  canvas {
+    touch-action: pinch-zoom pan-y;
+  }
 }
 
 canvas {
@@ -50,7 +54,8 @@ canvas {
 
 ion-input {
   --highlight-color-focused: color-contrast(var(--ion-input-background) vs var(--ion-color-primary),
-        var(--ion-color-primary-contrast)) !important;}
+      var(--ion-color-primary-contrast)) !important;
+}
 
 .no-game-text {
   width: 60%;

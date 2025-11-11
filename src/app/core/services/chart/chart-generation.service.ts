@@ -162,12 +162,16 @@ export class ChartGenerationService {
 
       const plugins: Plugin<'line' | 'bar'>[] = [];
       const options: ChartOptions<'line' | 'bar'> = {
+        layout: {
+          padding: {
+            top: 40,
+          },
+        },
         scales: {
           y: { beginAtZero: true, suggestedMax: 300, ticks: { font: { size: 14 } } },
           y1: { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false }, ticks: { font: { size: 14 } } },
         },
         plugins: {
-          title: { display: true, text: 'Score Analysis', color: 'white', font: { size: 20 } },
           legend: {
             display: true,
             labels: { font: { size: 15 } },
@@ -194,24 +198,15 @@ export class ChartGenerationService {
           id: 'toggleButton',
           afterDraw: (chart: Chart) => {
             const { ctx } = chart;
-            const titleBlock = (chart as { titleBlock?: { top: number; height: number } }).titleBlock;
 
-            if (!titleBlock || !titleBlock.height) {
-              return;
-            }
-
-            const baseRatio = 35;
-            const minFontSize = 10;
-            const maxFontSize = 14;
+            const fontSize = Math.max(10, Math.min(14, chart.width / 35));
             const padding = 10;
-
-            const fontSize = Math.max(minFontSize, Math.min(maxFontSize, chart.width / baseRatio));
-            ctx.font = `bold ${fontSize}px Arial`;
 
             const buttonTextMap: Record<string, string> = {
               game: 'Weekly',
               week: 'Monthly',
-              monthly: 'By Game',
+              monthly: 'Yearly',
+              yearly: 'By Game',
             };
             const buttonText = buttonTextMap[viewMode] || 'By Game';
             const textMetrics = ctx.measureText(buttonText);
@@ -220,12 +215,13 @@ export class ChartGenerationService {
               width: textMetrics.width + padding * 2,
               height: fontSize + padding,
               x: chart.width - (textMetrics.width + padding * 2) - 10,
-              y: titleBlock.top + (titleBlock.height - (fontSize + padding)) / 2,
+              y: 10,
             };
 
             (chart as { toggleButtonBounds?: typeof button }).toggleButtonBounds = button;
 
             ctx.save();
+            ctx.font = `bold ${fontSize}px Arial`;
             ctx.fillStyle = 'rgba(153, 102, 255, 0.8)';
             ctx.strokeStyle = 'rgba(153, 102, 255, 1)';
             ctx.lineWidth = 1;
@@ -402,12 +398,6 @@ export class ChartGenerationService {
               },
             },
             plugins: {
-              title: {
-                display: true,
-                text: 'Score Distribution',
-                color: 'white',
-                font: { size: 20 },
-              },
               legend: { display: false },
             },
           },
@@ -438,12 +428,16 @@ export class ChartGenerationService {
 
       const plugins: Plugin<'line' | 'bar'>[] = [];
       const options: ChartOptions<'line' | 'bar'> = {
+        layout: {
+          padding: {
+            top: 40,
+          },
+        },
         scales: {
           y: { beginAtZero: true, suggestedMax: 300, ticks: { font: { size: 14 } } },
           y1: { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false }, ticks: { font: { size: 14 } } },
         },
         plugins: {
-          title: { display: true, text: `Average Score`, color: 'white', font: { size: 20 } },
           legend: { display: true, labels: { font: { size: 15 } } },
         },
       };
@@ -451,13 +445,9 @@ export class ChartGenerationService {
       if (onToggleView) {
         const toggleButtonPlugin: Plugin<'line' | 'bar'> = {
           id: 'toggleButton',
+
           afterDraw: (chart: Chart) => {
             const { ctx } = chart;
-            const titleBlock = (chart as { titleBlock?: { top: number; height: number } }).titleBlock;
-
-            if (!titleBlock || !titleBlock.height) {
-              return;
-            }
 
             const baseRatio = 35;
             const minFontSize = 10;
@@ -476,7 +466,7 @@ export class ChartGenerationService {
               width: textMetrics.width + padding * 2,
               height: fontSize + padding,
               x: chart.width - (textMetrics.width + padding * 2) - 10,
-              y: titleBlock.top + (titleBlock.height - (fontSize + padding)) / 2,
+              y: 10,
             };
 
             (chart as { toggleButtonBounds?: typeof button }).toggleButtonBounds = button;
@@ -658,14 +648,6 @@ export class ChartGenerationService {
                   },
                 },
               },
-              title: {
-                display: true,
-                text: 'Converted vs Missed spares',
-                color: 'white',
-                font: {
-                  size: 20,
-                },
-              },
               legend: {
                 display: true,
                 labels: {
@@ -757,7 +739,7 @@ export class ChartGenerationService {
             },
             plugins: {
               title: {
-                display: true,
+                display: false,
                 text: 'Spare Distribution',
                 color: 'white',
                 font: {
@@ -849,14 +831,6 @@ export class ChartGenerationService {
               },
             },
             plugins: {
-              title: {
-                display: true,
-                text: 'Throw Distribution',
-                color: 'white',
-                font: {
-                  size: 20,
-                },
-              },
               legend: {
                 display: false,
               },
