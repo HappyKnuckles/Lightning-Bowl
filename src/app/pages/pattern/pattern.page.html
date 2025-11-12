@@ -143,9 +143,26 @@
               </ion-button>
             </ion-buttons>
             <ion-title>{{ pattern.title }}</ion-title>
+            <ion-buttons slot="end">
+              <ion-button id="download"><ion-icon slot="icon-only" name="ellipsis-vertical-outline"></ion-icon></ion-button>
+            </ion-buttons>
           </ion-toolbar>
         </ion-header>
         <ion-content [fullscreen]="true">
+          <ion-popover trigger="download">
+            <ng-template>
+              <ion-content>
+                <ion-item button [href]="pattern.pdf_url" target="_blank">
+                  <ion-icon name="document-outline" slot="start"></ion-icon>
+                  <ion-label>Download PDF</ion-label>
+                </ion-item>
+                <ion-item button [href]="pattern.kosi_url" target="_blank">
+                  <ion-icon name="link-outline" slot="start"></ion-icon>
+                  <ion-label>Download Kosi</ion-label>
+                </ion-item>
+              </ion-content>
+            </ng-template>
+          </ion-popover>
           <app-pattern-info [pattern]="pattern"></app-pattern-info>
         </ion-content>
       </ng-template>

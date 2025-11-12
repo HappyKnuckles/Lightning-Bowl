@@ -9,6 +9,7 @@ export interface ForwardsData {
   buf: string;
   tank: string;
   total_oil: string;
+
   // this is the y-axis, start from foul line and end 60ft total
   distance_start: string;
   distance_end: string;
@@ -39,6 +40,8 @@ export interface Pattern {
   reverse: string;
   pump: string;
   tanks?: string;
+  pdf_url: string;
+  kosi_url: string;
   forwards_data: ForwardsData[];
   reverse_data: ReverseData[];
   chart_standard: string;

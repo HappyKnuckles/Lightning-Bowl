@@ -25,6 +25,9 @@ import {
   IonIcon,
   ModalController,
   IonImg,
+  IonPopover,
+  IonItem,
+  IonLabel,
 } from '@ionic/angular/standalone';
 import { Pattern } from 'src/app/core/models/pattern.model';
 import { PatternService } from 'src/app/core/services/pattern/pattern.service';
@@ -36,7 +39,18 @@ import { ImpactStyle } from '@capacitor/haptics';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { PatternInfoComponent } from 'src/app/shared/components/pattern-info/pattern-info.component';
 import { addIcons } from 'ionicons';
-import { chevronBack, add, addOutline, arrowUpOutline, arrowDownOutline, heart, heartOutline } from 'ionicons/icons';
+import {
+  chevronBack,
+  add,
+  addOutline,
+  arrowUpOutline,
+  arrowDownOutline,
+  heart,
+  heartOutline,
+  ellipsisVerticalOutline,
+  documentOutline,
+  linkOutline,
+} from 'ionicons/icons';
 import { ChartGenerationService } from 'src/app/core/services/chart/chart-generation.service';
 import { DomSanitizer } from '@angular/platform-browser';
 import { PatternFormComponent } from '../../shared/components/pattern-form/pattern-form.component';
@@ -54,6 +68,9 @@ import { AnalyticsService } from 'src/app/core/services/analytics/analytics.serv
   styleUrls: ['./pattern.page.scss'],
   standalone: true,
   imports: [
+    IonLabel,
+    IonItem,
+    IonPopover,
     IonImg,
     IonIcon,
     IonButton,
@@ -126,7 +143,18 @@ export class PatternPage implements OnInit {
     public favoritesService: FavoritesService,
     private analyticsService: AnalyticsService,
   ) {
-    addIcons({ addOutline, arrowUpOutline, arrowDownOutline, chevronBack, add, heart, heartOutline });
+    addIcons({
+      addOutline,
+      documentOutline,
+      linkOutline,
+      arrowUpOutline,
+      arrowDownOutline,
+      chevronBack,
+      add,
+      heart,
+      heartOutline,
+      ellipsisVerticalOutline,
+    });
   }
   async ngOnInit() {
     this.loadFavoritesFirstSetting();

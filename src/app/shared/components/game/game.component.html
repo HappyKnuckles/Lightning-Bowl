@@ -143,7 +143,7 @@
                   </ion-grid>
                 </div>
               } @else {
-                <ion-item class="league">
+                <ion-item class="league" [disabled]="leagues().length === 0">
                   <ion-icon name="medal-outline" slot="start"></ion-icon>
                   <ion-select
                     name="league"
@@ -170,7 +170,12 @@
                     </app-generic-typeahead>
                   </ng-template>
                 </ion-modal>
-                <ion-item class="arsenal" id="ball-selector-{{ game.gameId }}" button detailIcon="chevron-expand-outline">
+                <ion-item
+                  class="arsenal"
+                  id="ball-selector-{{ game.gameId }}"
+                  button
+                  detailIcon="chevron-expand-outline"
+                  [disabled]="storageService.arsenal().length === 0">
                   <ion-icon name="bowling-ball-outline" slot="start"></ion-icon>
                   <!-- <ion-select [(ngModel)]="game.balls" multiple="true" name="balls" label="Balls">
                     <ion-select-option *ngFor="let ball of storageService.arsenal()" [value]="ball.ball_name">
