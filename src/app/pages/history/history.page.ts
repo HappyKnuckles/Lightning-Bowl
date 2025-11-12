@@ -13,6 +13,7 @@ import {
   IonButtons,
   IonAccordionGroup,
   IonRefresherContent,
+  IonSpinner,
 } from '@ionic/angular/standalone';
 import { Filesystem } from '@capacitor/filesystem';
 import { addIcons } from 'ionicons';
@@ -43,6 +44,7 @@ import { GAME_FILTER_CONFIGS } from 'src/app/core/configs/filter-configs';
 import { GameFilterComponent } from 'src/app/shared/components/game-filter/game-filter.component';
 import { GameComponent } from 'src/app/shared/components/game/game.component';
 import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
+import { FileHeaderButtonsComponent } from 'src/app/shared/components/file-header-buttons/file-header-buttons.component';
 
 @Component({
   selector: 'app-history',
@@ -51,6 +53,7 @@ import { AnalyticsService } from 'src/app/core/services/analytics/analytics.serv
   standalone: true,
   providers: [DatePipe, ModalController],
   imports: [
+    IonSpinner,
     IonRefresherContent,
     IonButtons,
     IonHeader,
@@ -68,6 +71,7 @@ import { AnalyticsService } from 'src/app/core/services/analytics/analytics.serv
     FormsModule,
     GameComponent,
     GenericFilterActiveComponent,
+    FileHeaderButtonsComponent,
   ],
 })
 export class HistoryPage {
