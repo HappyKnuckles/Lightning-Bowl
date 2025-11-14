@@ -27,7 +27,6 @@ import { AnalyticsService } from './core/services/analytics/analytics.service';
 export class AppComponent implements OnInit, OnDestroy {
   private readonly GREETING_THROTTLE_DURATION_MS = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
   private pwaInstallSubscription: Subscription;
-  username = '';
   private updateInterval: any;
   showPwaInstallPrompt = false;
   canInstallPwa = false;
@@ -164,7 +163,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   private async greetUser(): Promise<void> {
     if (environment.production) {
-      if (!this.username) {
+      if (!this.userService.username()) {
         await this.showEnterNameAlert();
       } else {
         // Check if we should show the greeting based on last greeting time
@@ -185,7 +184,7 @@ export class AppComponent implements OnInit, OnDestroy {
         }
 
         if (shouldShowGreeting) {
-          this.presentGreetingAlert(this.username);
+          this.presentGreetingAlert(this.userService.username());
         }
       }
     }
@@ -210,7 +209,7 @@ export class AppComponent implements OnInit, OnDestroy {
             const newName = data.username.trim();
             if (newName !== '') {
               this.userService.setUsername(newName);
-              this.toastService.showToast(`Name updated to ${this.username}`, 'reload-outline');
+              this.toastService.showToast(`Name updated to ${this.userService.username()}`, 'reload-outline');
             }
           },
         },
