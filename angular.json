@@ -144,18 +144,35 @@
     "analytics": false
   },
   "schematics": {
-    "@ionic/angular-toolkit:component": {
-      "styleext": "scss",
-      "standalone": true
-    },
-    "@ionic/angular-toolkit:page": {
-      "styleext": "scss",
-      "standalone": true
-    },
-    "@angular-eslint/schematics:application": {
-      "setParserOptionsProject": true
-    },
-    "@angular-eslint/schematics:library": {
+      "@schematics/angular:component": {
+        "path": "src/app/shared/components",
+        "style": "scss",
+        "flat": false
+      },
+      "@schematics/angular:page": {
+        "path": "src/app/pages",
+        "style": "scss",
+        "flat": false
+      },
+      "@schematics/angular:service": {
+        "path": "src/app/core/services",
+        "flat": false
+      },
+      "@schematics/angular:pipe": {
+        "path": "src/app/shared/pipes",
+        "flat": false
+      },
+      "@schematics/angular:directive": {
+        "path": "src/app/core/directives",
+        "flat": false
+      },
+      "@schematics/angular:class": {
+        "path": "src/app/core/models"
+      },
+      "@angular-eslint/schematics:application": {
+        "setParserOptionsProject": true
+      },
+      "@angular-eslint/schematics:library": {
       "setParserOptionsProject": true
     }
   }

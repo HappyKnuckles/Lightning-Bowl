@@ -1,4 +1,4 @@
-import { enableProdMode, importProvidersFrom, isDevMode } from '@angular/core';
+import { importProvidersFrom, isDevMode } from '@angular/core';
 import { environment } from './environments/environment';
 import { PreloadAllModules, provideRouter, RouteReuseStrategy, withPreloading } from '@angular/router';
 import { IonicRouteStrategy, provideIonicAngular } from '@ionic/angular/standalone';
@@ -20,7 +20,6 @@ if (environment.production) {
   if (typeof window !== 'undefined') {
     (window as any).__APP_STARTUP_TIME__ = appStartTime;
   }
-  enableProdMode();
   injectSpeedInsights();
   inject();
 }
