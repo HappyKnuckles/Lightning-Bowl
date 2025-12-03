@@ -5,7 +5,7 @@ import { isPlatform } from '@ionic/angular';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { ImpactStyle } from '@capacitor/haptics';
-import { Game } from 'src/app/core/models/game.model';
+import { Frame, Game } from 'src/app/core/models/game.model';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { SortUtilsService } from '../sort-utils/sort-utils.service';
 import { GameFilterService } from '../game-filter/game-filter.service';
@@ -140,9 +140,9 @@ export class ExcelService {
 
       for (let i = 1; i < data.length; i++) {
         const row = data[i];
-        const frames = [];
+        const frames: Frame[] = [];
         for (let j = 1; j <= 10; j++) {
-          const frame: { frameIndex: number; throws: { value: number; throwIndex: number }[] } = {
+          const frame: Frame = {
             frameIndex: j,
             throws: [],
           };

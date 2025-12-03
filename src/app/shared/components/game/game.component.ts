@@ -1,5 +1,5 @@
 import { NgIf, NgFor, DatePipe } from '@angular/common';
-import { Component, Input, Renderer2, ViewChild, OnChanges, SimpleChanges, computed, OnInit } from '@angular/core';
+import { Component, Input, Renderer2, ViewChild, ViewChildren, QueryList, OnChanges, SimpleChanges, computed, OnInit } from '@angular/core';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { ImpactStyle } from '@capacitor/haptics';
@@ -118,10 +118,14 @@ export class GameComponent implements OnChanges, OnInit {
   @Input() isLeaguePage?: boolean = false;
   @Input() gameCount?: number;
   @ViewChild('accordionGroup') accordionGroup!: IonAccordionGroup;
-  @ViewChild(GameGridComponent) gameGrid!: GameGridComponent;
+  @ViewChildren(GameGridComponent) gameGrids!: QueryList<GameGridComponent>;
+
+  // Store references to game grids by gameId for editing
+  private gameGridMap = new Map<string, GameGridComponent>();
 
   leagues = computed(() => {
     const savedLeagues = this.storageService.leagues();
+    if (!this.games) return savedLeagues;
     const leagueKeys = this.games.reduce((acc: string[], game: Game) => {
       if (game.league && !acc.includes(game.league)) {
         acc.push(game.league);
@@ -320,39 +324,53 @@ export class GameComponent implements OnChanges, OnInit {
 
   async saveEdit(game: Game): Promise<void> {
     try {
-      const editedGameFromGrid = this.gameGrid.game();
+      // Find the grid for this specific game
+      const gameGrid = this.gameGrids?.find((grid) => grid.game()?.gameId === game.gameId);
+
+      if (!gameGrid) {
+        this.toastService.showToast(ToastMessages.gameUpdateError, 'bug', true);
+        console.error('Could not find game grid for game:', game.gameId);
+        return;
+      }
+
+      // Get current state from the grid
+      const gridState = gameGrid.getCurrentGameState();
+
+      // Build the updated game object
+      const updatedGame: Game = {
+        ...game,
+        frames: gridState.frames,
+        frameScores: gridState.frameScores,
+        totalScore: gridState.totalScore,
+        isPractice: !game.league,
+      };
 
       // 1) Validate using the current data from the grid
-      if (!this.isGameValid(editedGameFromGrid)) {
+      if (!this.isGameValid(updatedGame)) {
         this.hapticService.vibrate(ImpactStyle.Heavy);
         this.toastService.showToast(ToastMessages.invalidInput, 'bug', true);
         return;
       }
 
-      // 2) Clean up per‐frame flags on the current grid data
-      editedGameFromGrid.frames.forEach((f: any) => delete f.isInvalid);
-
-      // 3) Compute isPractice on the current grid data
-      editedGameFromGrid.isPractice = !editedGameFromGrid.league;
-
-      // 4) Did we change league or patterns? Compare original with current grid data.
+      // 2) Did we change league or patterns? Compare original with current grid data.
       const originalGameSnapshot = this.originalGameState[game.gameId];
-      const leagueChanged = originalGameSnapshot && originalGameSnapshot.league !== editedGameFromGrid.league;
-      const patternsChanged = originalGameSnapshot && JSON.stringify(originalGameSnapshot.patterns) !== JSON.stringify(editedGameFromGrid.patterns);
-      // 5) If part of a series and league/patterns changed → update everyone
-      if (editedGameFromGrid.isSeries && (leagueChanged || patternsChanged)) {
-        const seriesIdToUpdate = editedGameFromGrid.seriesId;
-        const newLeague = editedGameFromGrid.league;
-        const newPatterns = editedGameFromGrid.patterns;
+      const leagueChanged = originalGameSnapshot && originalGameSnapshot.league !== updatedGame.league;
+      const patternsChanged = originalGameSnapshot && JSON.stringify(originalGameSnapshot.patterns) !== JSON.stringify(updatedGame.patterns);
+
+      // 3) If part of a series and league/patterns changed → update everyone
+      if (updatedGame.isSeries && (leagueChanged || patternsChanged)) {
+        const seriesIdToUpdate = updatedGame.seriesId;
+        const newLeague = updatedGame.league;
+        const newPatterns = updatedGame.patterns;
         const newIsPractice = !newLeague;
 
         // First, save the primary edited game
-        await this.gameGrid.saveGameToLocalStorage(editedGameFromGrid.isSeries!, seriesIdToUpdate!);
+        await this.storageService.saveGameToLocalStorage(updatedGame);
 
         // Then, update other games in the same series
         const gamesToUpdateInStorage = this.storageService
           .games()
-          .filter((g) => g.seriesId === seriesIdToUpdate && g.gameId !== editedGameFromGrid.gameId)
+          .filter((g) => g.seriesId === seriesIdToUpdate && g.gameId !== updatedGame.gameId)
           .map((g) => ({
             ...g,
             league: newLeague,
@@ -361,7 +379,7 @@ export class GameComponent implements OnChanges, OnInit {
           }));
         await this.storageService.saveGamesToLocalStorage(gamesToUpdateInStorage);
       } else {
-        await this.gameGrid.saveGameToLocalStorage(editedGameFromGrid.isSeries!, editedGameFromGrid.seriesId!);
+        await this.storageService.saveGameToLocalStorage(updatedGame);
       }
 
       this.toastService.showToast(ToastMessages.gameUpdateSuccess, 'refresh-outline');

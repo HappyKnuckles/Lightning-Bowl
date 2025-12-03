@@ -22,10 +22,10 @@ import {
   IonCheckbox,
 } from '@ionic/angular/standalone';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
-import { Game } from 'src/app/core/models/game.model';
+import { Game, Frame, createEmptyGame, numberArraysToFrames } from 'src/app/core/models/game.model';
 import { addIcons } from 'ionicons';
 import { add, chevronDown, chevronUp, cameraOutline, documentTextOutline, medalOutline } from 'ionicons/icons';
-import { NgIf, NgFor, NgStyle } from '@angular/common';
+import { NgIf, NgFor } from '@angular/common';
 import { ImpactStyle } from '@capacitor/haptics';
 import { AdService } from 'src/app/core/services/ad/ad.service';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
@@ -82,7 +82,6 @@ defineCustomElements(window);
     IonSegmentView,
     NgIf,
     NgFor,
-    NgStyle,
     GameGridComponent,
     GameScoreToolbarComponent,
   ],
@@ -101,6 +100,10 @@ export class AddGamePage implements OnInit {
   is300 = false;
   gameData!: Game;
   deviceId = '';
+
+  // Parent-owned game state - array of games for series mode
+  // Initialize immediately so the template always has valid game objects
+  games: Game[] = Array.from({ length: 19 }, () => createEmptyGame());
 
   // Toolbar state
   showScoreToolbar = false;
@@ -145,6 +148,98 @@ export class AddGamePage implements OnInit {
   async ngOnInit(): Promise<void> {
     this.deviceId = (await Device.getId()).identifier;
     this.presentingElement = document.querySelector('.ion-page')!;
+    // games are already initialized in the class declaration
+  }
+
+  /**
+   * Initialize empty game objects for all possible series slots
+   */
+  private initializeGames(): void {
+    this.games = Array.from({ length: 19 }, () => createEmptyGame());
+  }
+
+  /**
+   * Handle game state changes from child GameGridComponent
+   */
+  onGameChanged(game: Game, index: number): void {
+    this.games[index] = { ...game };
+  }
+
+  /**
+   * Handle note changes from child GameGridComponent
+   */
+  onNoteChanged(note: string, index: number): void {
+    this.games[index] = { ...this.games[index], note };
+  }
+
+  /**
+   * Handle balls changes from child GameGridComponent
+   */
+  onBallsChanged(balls: string[], index: number): void {
+    this.games[index] = { ...this.games[index], balls };
+  }
+
+  /**
+   * Handle frames cleared event from child GameGridComponent
+   */
+  onFramesCleared(event: { clearMetadata: boolean }, index: number): void {
+    if (event.clearMetadata) {
+      this.games[index] = createEmptyGame();
+    } else {
+      this.games[index] = {
+        ...this.games[index],
+        frames: Array.from({ length: 10 }, (_, i) => ({ frameIndex: i + 1, throws: [] })),
+        frameScores: [],
+        totalScore: 0,
+      };
+    }
+  }
+
+  /**
+   * Handle league changes for modal game
+   */
+  onModalLeagueChange(league: string): void {
+    const isPractice = league === '' || league === 'New';
+    this.gameData = {
+      ...this.gameData,
+      league,
+      isPractice,
+    };
+  }
+
+  /**
+   * Handle practice toggle changes for modal game
+   */
+  onModalIsPracticeChange(isPractice: boolean): void {
+    this.gameData = { ...this.gameData, isPractice };
+  }
+
+  /**
+   * Handle game state changes for modal game
+   */
+  onModalGameChanged(game: Game): void {
+    this.gameData = { ...game };
+  }
+
+  /**
+   * Handle note changes for modal game
+   */
+  onModalNoteChanged(note: string): void {
+    this.gameData = { ...this.gameData, note };
+  }
+
+  /**
+   * Handle balls changes for modal game
+   */
+  onModalBallsChanged(balls: string[]): void {
+    this.gameData = { ...this.gameData, balls };
+  }
+
+  /**
+   * Handle pattern changes for modal game
+   */
+  onModalPatternChanged(patterns: string[]): void {
+    this.gameData = { ...this.gameData, patterns };
   }
 
   async handleImageUpload(): Promise<void> {
@@ -202,10 +297,21 @@ export class AddGamePage implements OnInit {
       this.modalCheckbox.checked = isPractice;
       this.modalCheckbox.disabled = !isPractice;
     } else {
+      // Update parent-owned games array
+      const activeModeIndex = this.seriesMode.findIndex((mode) => mode);
+      const trackIndexes = this.trackIndexes[activeModeIndex] || [0];
+
+      trackIndexes.forEach((trackIndex) => {
+        this.games[trackIndex] = {
+          ...this.games[trackIndex],
+          league,
+          isPractice,
+        };
+      });
+
+      // Update UI elements in child components
       this.gameGrids.forEach((trackGrid: GameGridComponent) => {
         trackGrid.leagueSelector.selectedLeague = league;
-        trackGrid.game().league = league;
-        trackGrid.game().isPractice = isPractice;
         trackGrid.checkbox.checked = isPractice;
         trackGrid.checkbox.disabled = !isPractice;
       });
@@ -213,8 +319,15 @@ export class AddGamePage implements OnInit {
   }
 
   onIsPracticeChange(isPractice: boolean): void {
-    this.gameGrids.forEach((trackGrid: GameGridComponent) => {
-      trackGrid.game().isPractice = isPractice;
+    // Update parent-owned games array
+    const activeModeIndex = this.seriesMode.findIndex((mode) => mode);
+    const trackIndexes = this.trackIndexes[activeModeIndex] || [0];
+
+    trackIndexes.forEach((trackIndex) => {
+      this.games[trackIndex] = {
+        ...this.games[trackIndex],
+        isPractice,
+      };
     });
   }
 
@@ -223,8 +336,16 @@ export class AddGamePage implements OnInit {
     if (patterns.length > 2) {
       patterns = patterns.slice(-2);
     }
-    this.gameGrids.forEach((trackGrid: GameGridComponent) => {
-      trackGrid.game().patterns = [...patterns];
+
+    // Update parent-owned games array
+    const activeModeIndex = this.seriesMode.findIndex((mode) => mode);
+    const trackIndexes = this.trackIndexes[activeModeIndex] || [0];
+
+    trackIndexes.forEach((trackIndex) => {
+      this.games[trackIndex] = {
+        ...this.games[trackIndex],
+        patterns: [...patterns],
+      };
     });
   }
 
@@ -234,22 +355,36 @@ export class AddGamePage implements OnInit {
         this.hapticService.vibrate(ImpactStyle.Heavy);
         this.toastService.showToast(ToastMessages.invalidInput, 'bug', true);
         return;
-      } else {
-        const savedGame = await this.modalGrid.saveGameToLocalStorage(false, '');
-
-        // Check for high scores after the game is saved
-        if (savedGame) {
-          const allGames = this.storageService.games();
-          await this.highScoreAlertService.checkAndDisplayHighScoreAlerts(savedGame, allGames);
-
-          await this.analyticsService.trackGameSaved({
-            score: savedGame.totalScore,
-          });
-        }
-
-        this.toastService.showToast(ToastMessages.gameSaveSuccess, 'add');
-        this.modal.dismiss(null, 'confirm');
       }
+
+      // Get the current game state from the modal grid and save from parent
+      const gridState = this.modalGrid.getCurrentGameState();
+      const savedGame = await this.saveGame(
+        gridState.frames,
+        gridState.frameScores,
+        gridState.totalScore,
+        this.gameData.isPractice,
+        this.gameData.league || '',
+        false,
+        '',
+        this.gameData.note || '',
+        this.gameData.patterns || [],
+        this.gameData.balls || [],
+        this.gameData.gameId,
+        this.gameData.date,
+      );
+
+      if (savedGame) {
+        const allGames = this.storageService.games();
+        await this.highScoreAlertService.checkAndDisplayHighScoreAlerts(savedGame, allGames);
+
+        await this.analyticsService.trackGameSaved({
+          score: savedGame.totalScore,
+        });
+      }
+
+      this.toastService.showToast(ToastMessages.gameSaveSuccess, 'add');
+      this.modal.dismiss(null, 'confirm');
     } catch (error) {
       this.toastService.showToast(ToastMessages.gameSaveError, 'bug', true);
       console.error(error);
@@ -308,12 +443,31 @@ export class AddGamePage implements OnInit {
     }
 
     try {
-      const perfectGame = gameGridArray.some((grid: GameGridComponent) => grid.game().totalScore === 300);
+      const perfectGame = gameGridArray.some((grid: GameGridComponent) => {
+        const state = grid.getCurrentGameState();
+        return state.totalScore === 300;
+      });
 
-      const savePromises = gameGridArray.map((grid: GameGridComponent) => grid.saveGameToLocalStorage(isSeries, this.seriesId));
+      // Save all games from parent - get state from each grid
+      const savePromises = gameGridArray.map((grid: GameGridComponent, index: number) => {
+        const state = grid.getCurrentGameState();
+        const game = this.games[this.getGameIndexFromGridIndex(index)];
+        return this.saveGame(
+          state.frames,
+          state.frameScores,
+          state.totalScore,
+          game.isPractice,
+          game.league || '',
+          isSeries,
+          this.seriesId,
+          game.note || '',
+          game.patterns || [],
+          game.balls || [],
+        );
+      });
       const savedGames = await Promise.all(savePromises);
 
-      const validSavedGames = savedGames.filter((game): game is Game => game !== null);
+      const validSavedGames = savedGames.filter((game: Game | null): game is Game => game !== null);
 
       if (validSavedGames.length > 0) {
         const allGames = this.storageService.games();
@@ -325,11 +479,71 @@ export class AddGamePage implements OnInit {
         setTimeout(() => (this.is300 = false), 4000);
       }
 
+      // Clear all games after successful save
+      this.initializeGames();
+      gameGridArray.forEach((grid: GameGridComponent) => grid.clearFrames(true));
+
       this.hapticService.vibrate(ImpactStyle.Medium);
       this.toastService.showToast(ToastMessages.gameSaveSuccess, 'add');
     } catch (error) {
       console.error(error);
       this.toastService.showToast(ToastMessages.gameSaveError, 'bug', true);
+    }
+  }
+
+  /**
+   * Get the game index from the grid index based on the current series mode
+   */
+  private getGameIndexFromGridIndex(gridIndex: number): number {
+    const activeModeIndex = this.seriesMode.findIndex((mode) => mode);
+    const trackIndexes = this.trackIndexes[activeModeIndex] || [0];
+    return trackIndexes[gridIndex] ?? 0;
+  }
+
+  /**
+   * Save a game to local storage - persistence logic owned by parent
+   * Frames are already in Frame[] format from getCurrentGameState()
+   */
+  private async saveGame(
+    frames: Frame[],
+    frameScores: number[],
+    totalScore: number,
+    isPractice: boolean,
+    league: string,
+    isSeries: boolean,
+    seriesId: string,
+    note: string,
+    patterns: string[],
+    balls: string[],
+    gameId?: string,
+    date?: number,
+  ): Promise<Game | null> {
+    try {
+      if (league === 'New') {
+        this.toastService.showToast(ToastMessages.selectLeague, 'bug', true);
+        return null;
+      }
+      const gameData = this.transformGameService.transformGameData(
+        frames,
+        frameScores,
+        totalScore,
+        isPractice,
+        league,
+        isSeries,
+        seriesId,
+        note,
+        patterns,
+        balls,
+        gameId,
+        date,
+      );
+      await this.storageService.saveGameToLocalStorage(gameData);
+      this.analyticsService.trackGameSaved({ score: gameData.totalScore });
+      return gameData;
+    } catch (error) {
+      console.error('Error saving game to local storage:', error);
+      this.analyticsService.trackError('game_save_error', error instanceof Error ? error.message : String(error));
+      return null;
     }
   }
 
@@ -380,15 +594,26 @@ export class AddGamePage implements OnInit {
 
     let gameData: Partial<Game>[] = [];
 
-    const captureGameData = () =>
-      this.gameGrids.map((gameGrid: GameGridComponent) => ({
-        frames: gameGrid.game().frames,
-        league: gameGrid.game().league,
-        note: gameGrid.game().note,
-        balls: gameGrid.game().balls,
-        patterns: gameGrid.game().patterns,
-        isPractice: gameGrid.game().isPractice,
-      }));
+    const captureGameData = () => {
+      // Capture game data from parent-owned games array
+      const activeModeIndex = this.seriesMode.findIndex((mode) => mode);
+      const trackIndexes = this.trackIndexes[activeModeIndex] || [0];
+      return trackIndexes.map((trackIndex) => {
+        const game = this.games[trackIndex];
+        const grid = this.gameGrids.toArray()[trackIndexes.indexOf(trackIndex)];
+        const state = grid?.getCurrentGameState();
+        return {
+          frames: state?.frames || game.frames,
+          frameScores: state?.frameScores || game.frameScores,
+          totalScore: state?.totalScore || game.totalScore,
+          league: game.league,
+          note: game.note,
+          balls: game.balls,
+          patterns: game.patterns,
+          isPractice: game.isPractice,
+        };
+      });
+    };
 
     actionSheet.onWillDismiss().then(() => {
       gameData = captureGameData();
@@ -396,17 +621,26 @@ export class AddGamePage implements OnInit {
       this.updateSegments();
     });
     actionSheet.onDidDismiss().then(() => {
-      this.gameGrids.forEach((gameGrid: GameGridComponent, index: number) => {
-        const data = gameData[index];
+      // Restore game data to parent-owned games array after mode switch
+      const activeModeIndex = this.seriesMode.findIndex((mode) => mode);
+      const trackIndexes = this.trackIndexes[activeModeIndex] || [0];
+
+      trackIndexes.forEach((trackIndex, gridIndex) => {
+        const data = gameData[gridIndex];
         if (!data) return;
-        gameGrid.game().frames = data.frames;
-        gameGrid.game().note = data.note!;
-        gameGrid.game().balls = data.balls!;
-        gameGrid.game().isPractice = data.isPractice!;
-        gameGrid.game().patterns = data.patterns!;
-        gameGrid.onPatternChanged(data.patterns!);
-        gameGrid.onLeagueChanged(data.league!);
-        gameGrid.updateScores();
+
+        // Update parent-owned games array
+        this.games[trackIndex] = {
+          ...this.games[trackIndex],
+          frames: data.frames || [],
+          frameScores: data.frameScores || [],
+          totalScore: data.totalScore || 0,
+          note: data.note || '',
+          balls: data.balls || [],
+          isPractice: data.isPractice ?? true,
+          patterns: data.patterns || [],
+          league: data.league || '',
+        };
       });
     });
 
@@ -490,7 +724,9 @@ export class AddGamePage implements OnInit {
   private parseBowlingScores(input: string): void {
     try {
       const { frames, frameScores, totalScore } = this.gameUtilsService.parseBowlingScores(input, this.userService.username());
-      this.gameData = this.transformGameService.transformGameData(frames, frameScores, totalScore, false, '', false, '', '', [], []);
+      // Convert number[][] from OCR parsing to Frame[] format
+      const framesAsFrameArray = numberArraysToFrames(frames);
+      this.gameData = this.transformGameService.transformGameData(framesAsFrameArray, frameScores, totalScore, false, '', false, '', '', [], []);
       this.gameData.isPractice = true;
       if (this.gameData.frames.length === 10 && this.gameData.frameScores.length === 10 && this.gameData.totalScore <= 300) {
         this.isModalOpen = true;

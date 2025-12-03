@@ -62,6 +62,7 @@
       <ion-segment-content *ngFor="let trackIndex of trackIndexes[i]; let j = index" [id]="segments[j]">
         <app-game-grid
           #gameGrid
+          [game]="games[trackIndex]"
           (maxScoreChanged)="onMaxScoreChanged($event, trackIndex)"
           (totalScoreChanged)="onTotalScoreChange($event, trackIndex)"
           (leagueChanged)="onLeagueChange($event)"
@@ -69,6 +70,10 @@
           (isPracticeChanged)="onIsPracticeChange($event)"
           (toolbarStateChanged)="onToolbarStateChanged($event)"
           (toolbarDisabledState)="onToolbarDisabledStateChanged($event)"
+          (gameChanged)="onGameChanged($event, trackIndex)"
+          (noteChanged)="onNoteChanged($event, trackIndex)"
+          (ballsChanged)="onBallsChanged($event, trackIndex)"
+          (framesCleared)="onFramesCleared($event, trackIndex)"
           [patternModalId]="j.toString()"
           [ballSelectorId]="'modal-ball-selector' + j"></app-game-grid>
         <ion-grid *ngIf="i !== 0">
@@ -118,7 +123,7 @@
         </ion-buttons>
         <ion-title>Your game</ion-title>
         <ion-buttons slot="end">
-          <ion-button (click)="confirm()" [strong]="true" [disabled]="!isGameValid(modalGrid.game())">Save</ion-button>
+          <ion-button (click)="confirm()" [strong]="true" [disabled]="!isGameValid(gameData)">Save</ion-button>
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
@@ -127,9 +132,13 @@
       <app-game-grid
         #modalGrid
         [ballSelectorId]="gameData.gameId + '-modal-ball-selector'"
-        (leagueChanged)="onLeagueChange($event)"
-        (isPracticeChanged)="onIsPracticeChange($event)"
         [game]="gameData"
+        (leagueChanged)="onModalLeagueChange($event)"
+        (isPracticeChanged)="onModalIsPracticeChange($event)"
+        (gameChanged)="onModalGameChanged($event)"
+        (noteChanged)="onModalNoteChanged($event)"
+        (ballsChanged)="onModalBallsChanged($event)"
+        (patternChanged)="onModalPatternChanged($event)"
         [patternModalId]="gameData.gameId"></app-game-grid>
     </ion-content>
   </ng-template>
