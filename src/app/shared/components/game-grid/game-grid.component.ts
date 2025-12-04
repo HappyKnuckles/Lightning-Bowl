@@ -1,16 +1,4 @@
-import {
-  Component,
-  OnInit,
-  OnDestroy,
-  QueryList,
-  ViewChildren,
-  ViewChild,
-  CUSTOM_ELEMENTS_SCHEMA,
-  input,
-  output,
-  SimpleChanges,
-  OnChanges,
-} from '@angular/core';
+import { Component, OnInit, OnDestroy, QueryList, ViewChildren, ViewChild, CUSTOM_ELEMENTS_SCHEMA, input, output, computed } from '@angular/core';
 import { Platform } from '@ionic/angular';
 import { Subscription } from 'rxjs';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
@@ -41,11 +29,11 @@ import { GameScoreToolbarComponent } from '../game-score-toolbar/game-score-tool
 
 /**
  * GameGridComponent is a PRESENTATIONAL component.
- * It receives game data via @Input and emits all changes via @Output events.
+ * It receives game data via input signals and emits all changes via output events.
  * The parent component (AddGamePage or GameComponent) owns the game state and handles persistence.
  *
- * IMPORTANT: Frame[] is the SINGLE SOURCE OF TRUTH for game state.
- * No number[][] arrays are used.
+ * IMPORTANT: The parent owns the Game state. This component only displays and emits changes.
+ * All frame data is derived from the input game signal using computed().
  */
 @Component({
   selector: 'app-game-grid',
@@ -74,12 +62,17 @@ import { GameScoreToolbarComponent } from '../game-score-toolbar/game-score-tool
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
-export class GameGridComponent implements OnInit, OnDestroy, OnChanges {
-  // Input signals
+export class GameGridComponent implements OnInit, OnDestroy {
+  // Input signals - game state owned by parent
   ballSelectorId = input<string>();
   showMetadata = input<boolean>(true);
   patternModalId = input.required<string>();
   game = input<Game>(createEmptyGame());
+
+  // Computed values derived from input game - NO local state copy
+  frames = computed(() => this.game()?.frames ?? createEmptyFrames());
+  frameScores = computed(() => this.game()?.frameScores ?? []);
+  totalScore = computed(() => this.game()?.totalScore ?? 0);
 
   // Output signals - emit all changes to parent
   maxScoreChanged = output<number>();
@@ -105,17 +98,8 @@ export class GameGridComponent implements OnInit, OnDestroy, OnChanges {
 
   enterAnimation = alertEnterAnimation;
   leaveAnimation = alertLeaveAnimation;
-  maxScore = 300;
   presentingElement?: HTMLElement;
   patternTypeaheadConfig!: TypeaheadConfig<Partial<Pattern>>;
-
-  /**
-   * LOCAL FRAME STATE - Frame[] is the SINGLE SOURCE OF TRUTH
-   * All state management derives from this Frame[] array
-   */
-  private localFrames: Frame[] = createEmptyFrames();
-  localFrameScores: number[] = [];
-  private localTotalScore = 0;
 
   // Keyboard toolbar state
   showButtonToolbar = false;
@@ -157,6 +141,15 @@ export class GameGridComponent implements OnInit, OnDestroy, OnChanges {
     return this.game() || createEmptyGame();
   }
 
+  /**
+   * Calculate max score from current frames
+   */
+  maxScore = computed(() => {
+    const currentFrames = this.frames();
+    const currentTotal = this.totalScore();
+    return this.gameScoreCalculatorService.calculateMaxScoreFromFrames(currentFrames, currentTotal);
+  });
+
   constructor(
     private gameScoreCalculatorService: GameScoreCalculatorService,
     public storageService: StorageService,
@@ -172,34 +165,9 @@ export class GameGridComponent implements OnInit, OnDestroy, OnChanges {
     addIcons({ chevronExpandOutline });
   }
 
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['game']) {
-      this.syncLocalStateFromGame();
-    }
-  }
-
   async ngOnInit(): Promise<void> {
-    this.syncLocalStateFromGame();
     this.presentingElement = document.querySelector('.ion-page')!;
     this.patternTypeaheadConfig = createPartialPatternTypeaheadConfig((searchTerm: string) => this.patternService.searchPattern(searchTerm));
-  }
-
-  /**
-   * Sync local Frame[] state from the input game signal
-   */
-  private syncLocalStateFromGame(): void {
-    const currentGame = this.game();
-    if (!currentGame) {
-      this.localFrames = createEmptyFrames();
-      this.localFrameScores = [];
-      this.localTotalScore = 0;
-      return;
-    }
-
-    // Deep clone frames to avoid mutating the input
-    this.localFrames = cloneFrames(currentGame.frames);
-    this.localFrameScores = [...(currentGame.frameScores || [])];
-    this.localTotalScore = currentGame.totalScore || 0;
   }
 
   ngOnDestroy() {
@@ -285,10 +253,10 @@ export class GameGridComponent implements OnInit, OnDestroy, OnChanges {
 
   /**
    * Get the display value for a throw (X for strike, / for spare, number otherwise)
-   * Reads directly from Frame[] - the single source of truth
+   * Reads directly from computed frames - derived from parent's game state
    */
   getFrameValue(frameIndex: number, throwIndex: number): string {
-    const frame = this.localFrames[frameIndex];
+    const frame = this.frames()[frameIndex];
     if (!frame) return '';
 
     const val = getThrowValue(frame, throwIndex);
@@ -333,32 +301,32 @@ export class GameGridComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   /**
-   * Get frame score for display
+   * Get frame score for display - derived from parent's game state
    */
   getFrameScore(frameIndex: number): number | undefined {
-    return this.localFrameScores[frameIndex];
+    return this.frameScores()[frameIndex];
   }
 
   /**
-   * Get total score for display
+   * Get total score for display - derived from parent's game state
    */
   getTotalScore(): number {
-    return this.localTotalScore;
+    return this.totalScore();
   }
 
   /**
-   * Get local frames for template iteration
+   * Get frames for template iteration - derived from parent's game state
    */
   getLocalFrames(): Frame[] {
-    return this.localFrames;
+    return this.frames();
   }
 
   /**
-   * Safely get a throw value from local frames
+   * Safely get a throw value from frames
    * Used by template for disabled state checks and score display
    */
   getLocalFrameValue(frameIndex: number, throwIndex: number): number | undefined {
-    return getThrowValue(this.localFrames[frameIndex], throwIndex);
+    return getThrowValue(this.frames()[frameIndex], throwIndex);
   }
 
   emitToolbarDisabledState() {
@@ -382,17 +350,18 @@ export class GameGridComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   /**
-   * Handle score input - updates Frame[] directly
-   * This is the main entry point for recording throws
+   * Handle score input - creates updated game and emits to parent
+   * Parent owns the state, we just calculate and emit the new state
    */
   simulateScore(event: InputCustomEvent, frameIndex: number, throwIndex: number): void {
     const inputValue = event.detail.value!;
-    const parsedValue = this.parseInputValue(inputValue, frameIndex, throwIndex);
+    const currentFrames = this.frames();
+    const parsedValue = this.parseInputValue(inputValue, frameIndex, throwIndex, currentFrames);
 
     if (inputValue.length === 0) {
-      // Remove the throw from the frame
-      this.removeThrow(frameIndex, throwIndex);
-      this.updateScores();
+      // Remove the throw from the frame and emit updated game
+      const newFrames = this.removeThrow(cloneFrames(currentFrames), frameIndex, throwIndex);
+      this.emitUpdatedGame(newFrames);
       return;
     }
 
@@ -401,24 +370,24 @@ export class GameGridComponent implements OnInit, OnDestroy, OnChanges {
       return;
     }
 
-    if (!this.isValidFrameScore(parsedValue, frameIndex, throwIndex)) {
+    if (!this.isValidFrameScore(parsedValue, frameIndex, throwIndex, currentFrames)) {
       this.handleInvalidInput(event);
       return;
     }
 
-    // Record the throw in the Frame
-    this.recordThrow(frameIndex, throwIndex, parsedValue);
-    this.updateScores();
+    // Record the throw and emit updated game to parent
+    const newFrames = this.recordThrow(cloneFrames(currentFrames), frameIndex, throwIndex, parsedValue);
+    this.emitUpdatedGame(newFrames);
     this.focusNextInput(frameIndex, throwIndex);
     this.emitToolbarDisabledState();
   }
 
   /**
-   * Record a throw in a frame - mutates localFrames directly
+   * Record a throw in a frame - returns new frames array (immutable)
    */
-  private recordThrow(frameIndex: number, throwIndex: number, value: number): void {
-    const frame = this.localFrames[frameIndex];
-    if (!frame) return;
+  private recordThrow(frames: Frame[], frameIndex: number, throwIndex: number, value: number): Frame[] {
+    const frame = frames[frameIndex];
+    if (!frame) return frames;
 
     // Ensure throws array has enough elements
     while (frame.throws.length <= throwIndex) {
@@ -427,14 +396,15 @@ export class GameGridComponent implements OnInit, OnDestroy, OnChanges {
 
     // Update the throw
     frame.throws[throwIndex] = createThrow(value, throwIndex + 1);
+    return frames;
   }
 
   /**
-   * Remove a throw from a frame
+   * Remove a throw from a frame - returns new frames array (immutable)
    */
-  private removeThrow(frameIndex: number, throwIndex: number): void {
-    const frame = this.localFrames[frameIndex];
-    if (!frame || !frame.throws) return;
+  private removeThrow(frames: Frame[], frameIndex: number, throwIndex: number): Frame[] {
+    const frame = frames[frameIndex];
+    if (!frame || !frame.throws) return frames;
 
     if (throwIndex >= 0 && throwIndex < frame.throws.length) {
       frame.throws.splice(throwIndex, 1);
@@ -443,12 +413,34 @@ export class GameGridComponent implements OnInit, OnDestroy, OnChanges {
         t.throwIndex = idx + 1;
       });
     }
+    return frames;
+  }
+
+  /**
+   * Calculate scores and emit updated game to parent
+   */
+  private emitUpdatedGame(newFrames: Frame[]): void {
+    const scoreResult = this.gameScoreCalculatorService.calculateScoreFromFrames(newFrames);
+    const newMaxScore = this.gameScoreCalculatorService.calculateMaxScoreFromFrames(newFrames, scoreResult.totalScore);
+
+    const currentGame = this.game();
+    const updatedGame: Game = {
+      ...currentGame,
+      frames: newFrames,
+      frameScores: scoreResult.frameScores,
+      totalScore: scoreResult.totalScore,
+    };
+
+    // Emit to parent - parent will update its state
+    this.gameChanged.emit(updatedGame);
+    this.totalScoreChanged.emit(scoreResult.totalScore);
+    this.maxScoreChanged.emit(newMaxScore);
   }
 
   /**
    * Parse input value (handles X, /, and numeric values)
    */
-  private parseInputValue(input: string, frameIndex: number, throwIndex: number): number {
+  private parseInputValue(input: string, frameIndex: number, throwIndex: number, frames: Frame[]): number {
     const upperInput = input.toUpperCase();
 
     if (upperInput === 'X') {
@@ -456,12 +448,12 @@ export class GameGridComponent implements OnInit, OnDestroy, OnChanges {
     }
 
     if (upperInput === '/') {
-      const firstThrow = getThrowValue(this.localFrames[frameIndex], 0);
+      const firstThrow = getThrowValue(frames[frameIndex], 0);
       if (firstThrow !== undefined && throwIndex > 0) {
         // For 10th frame, handle the spare calculation based on the previous throw in that specific context
         if (frameIndex === 9 && throwIndex === 2) {
-          const secondThrow = getThrowValue(this.localFrames[frameIndex], 1);
-          if (getThrowValue(this.localFrames[frameIndex], 0) === 10 && secondThrow !== undefined) {
+          const secondThrow = getThrowValue(frames[frameIndex], 1);
+          if (getThrowValue(frames[frameIndex], 0) === 10 && secondThrow !== undefined) {
             return 10 - secondThrow;
           }
         }
@@ -483,8 +475,8 @@ export class GameGridComponent implements OnInit, OnDestroy, OnChanges {
   /**
    * Validate that a frame score is valid
    */
-  private isValidFrameScore(inputValue: number, frameIndex: number, throwIndex: number): boolean {
-    const frame = this.localFrames[frameIndex];
+  private isValidFrameScore(inputValue: number, frameIndex: number, throwIndex: number, frames: Frame[]): boolean {
+    const frame = frames[frameIndex];
 
     if (throwIndex === 1 && getThrowValue(frame, 0) === undefined) {
       return false;
@@ -533,7 +525,7 @@ export class GameGridComponent implements OnInit, OnDestroy, OnChanges {
       return throwIndex === 0;
     }
 
-    const frame = this.localFrames[9];
+    const frame = this.frames()[9];
     const first = getThrowValue(frame, 0);
     const second = getThrowValue(frame, 1);
 
@@ -554,12 +546,14 @@ export class GameGridComponent implements OnInit, OnDestroy, OnChanges {
   private canRecordSpare(frameIndex: number, throwIndex: number): boolean {
     if (throwIndex === 0) return false;
 
+    const currentFrames = this.frames();
+
     if (frameIndex < 9) {
-      const first = getThrowValue(this.localFrames[frameIndex], 0);
+      const first = getThrowValue(currentFrames[frameIndex], 0);
       return first !== undefined && first !== 10;
     } else {
-      const first = getThrowValue(this.localFrames[9], 0);
-      const second = getThrowValue(this.localFrames[9], 1);
+      const first = getThrowValue(currentFrames[9], 0);
+      const second = getThrowValue(currentFrames[9], 1);
 
       if (throwIndex === 1) return first !== undefined && first !== 10;
       if (throwIndex === 2) {
@@ -571,14 +565,9 @@ export class GameGridComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   /**
-   * Clear frames - resets to empty Frame[]
+   * Clear frames - emits cleared state to parent
    */
   clearFrames(clearMetadata: boolean): void {
-    this.localFrames = createEmptyFrames();
-    this.localFrameScores = [];
-    this.localTotalScore = 0;
-    this.maxScore = 300;
-
     this.inputs.forEach((input) => {
       input.value = '';
     });
@@ -593,37 +582,6 @@ export class GameGridComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   /**
-   * Update scores from Frame[] - uses the new Frame-based calculator
-   */
-  updateScores(): void {
-    const scoreResult = this.gameScoreCalculatorService.calculateScoreFromFrames(this.localFrames);
-    this.localTotalScore = scoreResult.totalScore;
-    this.localFrameScores = scoreResult.frameScores;
-
-    this.maxScore = this.gameScoreCalculatorService.calculateMaxScoreFromFrames(this.localFrames, this.localTotalScore);
-    this.totalScoreChanged.emit(this.localTotalScore);
-    this.maxScoreChanged.emit(this.maxScore);
-
-    // Emit full game state change for parent to handle
-    this.emitGameChanged();
-  }
-
-  /**
-   * Emit the current game state to parent
-   * Frames are already in Frame[] format - no conversion needed
-   */
-  private emitGameChanged(): void {
-    const currentGame = this.game();
-    const updatedGame: Game = {
-      ...currentGame,
-      frames: cloneFrames(this.localFrames),
-      frameScores: [...this.localFrameScores],
-      totalScore: this.localTotalScore,
-    };
-    this.gameChanged.emit(updatedGame);
-  }
-
-  /**
    * Request parent to save the game
    */
   requestSave(isSeries: boolean, seriesId: string): void {
@@ -632,13 +590,13 @@ export class GameGridComponent implements OnInit, OnDestroy, OnChanges {
 
   /**
    * Get the current game state for parent to use when saving
-   * Returns Frame[] format - the single source of truth
+   * Returns current state from parent's game
    */
   getCurrentGameState(): { frames: Frame[]; frameScores: number[]; totalScore: number } {
     return {
-      frames: cloneFrames(this.localFrames),
-      frameScores: [...this.localFrameScores],
-      totalScore: this.localTotalScore,
+      frames: cloneFrames(this.frames()),
+      frameScores: [...this.frameScores()],
+      totalScore: this.totalScore(),
     };
   }
 
@@ -646,7 +604,7 @@ export class GameGridComponent implements OnInit, OnDestroy, OnChanges {
    * Validate if the game is complete and valid
    */
   isGameValid(): boolean {
-    return this.validationService.isGameValidFromFrames(this.localFrames);
+    return this.validationService.isGameValidFromFrames(this.frames());
   }
 
   isNumber(value: unknown): boolean {

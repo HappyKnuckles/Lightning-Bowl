@@ -2,15 +2,10 @@
  * Represents a single throw/ball in a bowling frame
  */
 export interface Throw {
-  /** The number of pins knocked down (0-10) */
   value: number;
-  /** 1-based index of this throw within the frame */
   throwIndex: number;
-  /** Whether this throw resulted in a split */
   isSplit?: boolean;
-  /** Array of pin numbers still standing after this throw */
   pinsLeftStanding?: number[];
-  /** Array of pin numbers knocked down by this throw */
   pinsHit?: number[];
 }
 
@@ -18,11 +13,8 @@ export interface Throw {
  * Represents a single frame in a bowling game
  */
 export interface Frame {
-  /** 1-based index of this frame (1-10) */
   frameIndex: number;
-  /** Array of throws in this frame */
   throws: Throw[];
-  /** Whether this frame is invalid (used for validation UI) */
   isInvalid?: boolean;
 }
 
@@ -30,33 +22,19 @@ export interface Frame {
  * Represents a complete bowling game
  */
 export interface Game {
-  /** Unique identifier for the game */
   gameId: string;
-  /** Timestamp when the game was played */
   date: number;
-  /** Array of 10 frames */
   frames: Frame[];
-  /** Total score for the game */
   totalScore: number;
-  /** Cumulative scores for each frame */
   frameScores: number[];
-  /** Whether all frames were strikes or spares (no open frames) */
   isClean: boolean;
-  /** Whether the game is a perfect 300 */
   isPerfect: boolean;
-  /** Whether this is a practice game */
   isPractice: boolean;
-  /** Whether this game is part of a series */
   isSeries?: boolean;
-  /** Unique identifier for the series this game belongs to */
   seriesId?: string;
-  /** Optional notes about the game */
   note?: string;
-  /** League or tournament name */
   league?: string;
-  /** Oil patterns used during the game */
   patterns: string[];
-  /** Bowling balls used during the game */
   balls?: string[];
 }
 

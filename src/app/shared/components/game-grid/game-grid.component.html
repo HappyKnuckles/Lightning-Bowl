@@ -75,13 +75,13 @@
             (getLocalFrameValue(frameIndex, 0) !== undefined ||
               getLocalFrameValue(frameIndex, 1) !== undefined ||
               (i === 10 && getLocalFrameValue(frameIndex, 0) !== undefined && getLocalFrameValue(frameIndex, 1) !== undefined)) &&
-            isNumber(localFrameScores[i - 1])
+            isNumber(frameScores()[i - 1])
           ">
-          {{ localFrameScores[i - 1] }}
+          {{ frameScores()[i - 1] }}
         </ng-container>
 
         <ng-container *ngIf="i === 10 && (getLocalFrameValue(frameIndex, 0) === undefined || getLocalFrameValue(frameIndex, 1) === undefined)">
-          <span style="color: var(--ion-color-secondary)"> ({{ maxScore }}) </span>
+          <span style="color: var(--ion-color-secondary)"> ({{ maxScore() }}) </span>
         </ng-container>
       </ion-col>
 
@@ -91,7 +91,7 @@
             (getLocalFrameValue(frameIndex, 0) !== undefined ||
               getLocalFrameValue(frameIndex, 1) !== undefined ||
               (i === 10 && getLocalFrameValue(frameIndex, 0) !== undefined)) &&
-            isNumber(localFrameScores[i - 1])
+            isNumber(frameScores()[i - 1])
           ) && !(i === 10 && getLocalFrameValue(frameIndex, 0) === undefined)
         "
         class="middle count"
@@ -114,7 +114,7 @@
       <app-league-selector [isAddPage]="true" (leagueChanged)="onLeagueChanged($event)" #leagueSelector></app-league-selector>
       <ion-item [id]="patternModalId()" button [disabled]="storageService.allPatterns().length === 0">
         <ion-label>Patterns</ion-label>
-        <span class="ion-text-right">{{ currentGame.patterns?.join(", ") || "None" }}</span>
+        <span class="ion-text-right">{{ currentGame.patterns.join(", ") || "None" }}</span>
       </ion-item>
       <ion-modal [presentingElement]="presentingElement" [trigger]="patternModalId()">
         <ng-template>
