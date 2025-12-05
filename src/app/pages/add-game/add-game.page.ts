@@ -1,4 +1,4 @@
-import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit, QueryList, ViewChild, ViewChildren } from '@angular/core';
+import { Component, computed, CUSTOM_ELEMENTS_SCHEMA, OnInit, QueryList, signal, ViewChild, ViewChildren } from '@angular/core';
 import {
   ActionSheetController,
   AlertController,
@@ -19,10 +19,9 @@ import {
   IonSegmentButton,
   IonSegmentView,
   IonSegmentContent,
-  IonCheckbox,
 } from '@ionic/angular/standalone';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
-import { Game, Frame, createEmptyGame, numberArraysToFrames } from 'src/app/core/models/game.model';
+import { Game, Frame, createEmptyGame, numberArraysToFrames, cloneFrames, createThrow } from 'src/app/core/models/game.model';
 import { addIcons } from 'ionicons';
 import { add, chevronDown, chevronUp, cameraOutline, documentTextOutline, medalOutline } from 'ionicons/icons';
 import { NgIf, NgFor } from '@angular/common';
@@ -88,33 +87,41 @@ defineCustomElements(window);
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class AddGamePage implements OnInit {
-  totalScores: number[] = new Array(19).fill(0);
-  maxScores: number[] = new Array(19).fill(300);
   seriesMode: boolean[] = [true, false, false, false, false];
   seriesId = '';
   selectedMode: SeriesMode = SeriesMode.Single;
-  trackIndexes: number[][] = [[0], [1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11, 12], [13, 14, 15, 16, 17, 18]];
+  trackIndexes: number[][] = [[0], [0, 1, 2], [0, 1, 2, 3], [0, 1, 2, 3, 4], [0, 1, 2, 3, 4, 5]];
   sheetOpen = false;
   isAlertOpen = false;
   isModalOpen = false;
   is300 = false;
   gameData!: Game;
   deviceId = '';
+  games = signal(Array.from({ length: 19 }, () => createEmptyGame()));
+  totalScores = signal(new Array(19).fill(0));
+  maxScores = signal(new Array(19).fill(300));
+  seriesMaxscore = computed(() => {
+    const activeModeIndex = this.seriesMode.findIndex((mode) => mode);
+    const trackIndexes = this.trackIndexes[activeModeIndex] || [0];
+    return trackIndexes.reduce((acc, idx) => acc + this.maxScores()[idx], 0);
+  });
 
-  // Parent-owned game state - array of games for series mode
-  // Initialize immediately so the template always has valid game objects
-  games: Game[] = Array.from({ length: 19 }, () => createEmptyGame());
+  seriesCurrentScore = computed(() => {
+    const activeModeIndex = this.seriesMode.findIndex((mode) => mode);
+    const trackIndexes = this.trackIndexes[activeModeIndex] || [0];
+    return trackIndexes.reduce((acc, idx) => acc + this.totalScores()[idx], 0);
+  });
 
-  // Toolbar state
   showScoreToolbar = false;
   toolbarOffset = 0;
   toolbarDisabledState = { strikeDisabled: true, spareDisabled: true };
   activeGameGrid: GameGridComponent | null = null;
+  private activeGameIndex = 0;
+  private currentFocusedFrame: number | null = null;
+  private currentFocusedThrow: number | null = null;
 
   @ViewChildren(GameGridComponent) gameGrids!: QueryList<GameGridComponent>;
-  @ViewChild(IonModal) modal!: IonModal;
   @ViewChild('modalGrid', { static: false }) modalGrid!: GameGridComponent;
-  @ViewChild('modalCheckbox') modalCheckbox!: IonCheckbox;
   selectedSegment = 'Game 1';
   segments: string[] = ['Game 1'];
   presentingElement!: HTMLElement;
@@ -138,7 +145,7 @@ export class AddGamePage implements OnInit {
     private hapticService: HapticService,
     private gameUtilsService: GameUtilsService,
     private validationService: BowlingGameValidationService,
-    private highScoreAlertService: HighScoreAlertService,
+    private highScroreAlertService: HighScoreAlertService,
     private storageService: StorageService,
     private analyticsService: AnalyticsService,
   ) {
@@ -148,117 +155,135 @@ export class AddGamePage implements OnInit {
   async ngOnInit(): Promise<void> {
     this.deviceId = (await Device.getId()).identifier;
     this.presentingElement = document.querySelector('.ion-page')!;
-    // games are already initialized in the class declaration
   }
 
-  /**
-   * Initialize empty game objects for all possible series slots
-   */
-  private initializeGames(): void {
-    this.games = Array.from({ length: 19 }, () => createEmptyGame());
-  }
-
-  /**
-   * Handle game state changes from child GameGridComponent
-   */
-  onGameChanged(game: Game, index: number): void {
-    this.games[index] = { ...game };
-  }
-
-  /**
-   * Handle note changes from child GameGridComponent
-   */
-  onNoteChanged(note: string, index: number): void {
-    this.games[index] = { ...this.games[index], note };
-  }
-
-  /**
-   * Handle balls changes from child GameGridComponent
-   */
-  onBallsChanged(balls: string[], index: number): void {
-    this.games[index] = { ...this.games[index], balls };
-  }
-
-  /**
-   * Handle frames cleared event from child GameGridComponent
-   */
-  onFramesCleared(event: { clearMetadata: boolean }, index: number): void {
-    if (event.clearMetadata) {
-      this.games[index] = createEmptyGame();
+  onGameChange(game: Game, index = 0, isModal = false): void {
+    if (isModal) {
+      this.gameData = { ...game };
     } else {
-      this.games[index] = {
-        ...this.games[index],
-        frames: Array.from({ length: 10 }, (_, i) => ({ frameIndex: i + 1, throws: [] })),
-        frameScores: [],
-        totalScore: 0,
-      };
+      this.games.update((games) => games.map((g, i) => (i === index ? { ...game } : g)));
     }
   }
 
-  /**
-   * Handle league changes for modal game
-   */
-  onModalLeagueChange(league: string): void {
+  onNoteChange(note: string, index = 0, isModal = false): void {
+    if (isModal) {
+      this.gameData = { ...this.gameData, note };
+    } else {
+      this.games.update((games) => games.map((g, i) => (i === index ? { ...g, note } : g)));
+    }
+  }
+
+  onBallsChange(balls: string[], index = 0, isModal = false): void {
+    if (isModal) {
+      this.gameData = { ...this.gameData, balls };
+    } else {
+      this.games.update((games) => games.map((g, i) => (i === index ? { ...g, balls } : g)));
+    }
+  }
+
+  onLeagueChange(league: string, isModal = false): void {
     const isPractice = league === '' || league === 'New';
-    this.gameData = {
-      ...this.gameData,
-      league,
-      isPractice,
-    };
+
+    if (isModal) {
+      this.gameData.league = league;
+      this.gameData.isPractice = isPractice;
+      this.modalGrid.checkbox.checked = isPractice;
+      this.modalGrid.checkbox.disabled = !isPractice;
+    } else {
+      const activeModeIndex = this.seriesMode.findIndex((mode) => mode);
+      const trackIndexes = this.trackIndexes[activeModeIndex] || [0];
+
+      trackIndexes.forEach((trackIndex) => {
+        this.games.update((games) => games.map((g, i) => (i === trackIndex ? { ...g, league, isPractice } : g)));
+      });
+
+      this.gameGrids.forEach((trackGrid: GameGridComponent) => {
+        trackGrid.leagueSelector.selectedLeague = league;
+        trackGrid.checkbox.checked = isPractice;
+        trackGrid.checkbox.disabled = !isPractice;
+      });
+    }
   }
 
-  /**
-   * Handle practice toggle changes for modal game
-   */
-  onModalIsPracticeChange(isPractice: boolean): void {
-    this.gameData = { ...this.gameData, isPractice };
+  onIsPracticeChange(isPractice: boolean, isModal = false): void {
+    if (isModal) {
+      this.gameData = { ...this.gameData, isPractice };
+    } else {
+      const activeModeIndex = this.seriesMode.findIndex((mode) => mode);
+      const trackIndexes = this.trackIndexes[activeModeIndex] || [0];
+
+      trackIndexes.forEach((trackIndex) => {
+        this.games.update((games) => games.map((g, i) => (i === trackIndex ? { ...g, isPractice } : g)));
+      });
+    }
   }
 
-  /**
-   * Handle game state changes for modal game
-   */
-  onModalGameChanged(game: Game): void {
-    this.gameData = { ...game };
+  onPatternChange(patterns: string[], isModal = false): void {
+    if (patterns.length > 2) {
+      patterns = patterns.slice(-2);
+    }
+
+    if (isModal) {
+      this.gameData = { ...this.gameData, patterns };
+    } else {
+      const activeModeIndex = this.seriesMode.findIndex((mode) => mode);
+      const trackIndexes = this.trackIndexes[activeModeIndex] || [0];
+
+      trackIndexes.forEach((trackIndex) => {
+        this.games.update((games) => games.map((g, i) => (i === trackIndex ? { ...g, patterns: [...patterns] } : g)));
+      });
+    }
   }
 
-  /**
-   * Handle note changes for modal game
-   */
-  onModalNoteChanged(note: string): void {
-    this.gameData = { ...this.gameData, note };
+  handleThrowInput(event: { frameIndex: number; throwIndex: number; value: string }, index: number, isModal = false): void {
+    const { frameIndex, throwIndex, value } = event;
+    const currentGame = isModal ? this.gameData : this.games()[index];
+    const frames = cloneFrames(currentGame.frames);
+
+    if (value.length === 0) {
+      this.removeThrow(frames, frameIndex, throwIndex);
+      this.updateGameState(frames, index, isModal);
+      return;
+    }
+
+    const parsedValue = this.validationService.parseInputValue(value, frameIndex, throwIndex, frames);
+
+    const isValidNumber = this.validationService.isValidNumber0to10(parsedValue);
+    const isValidScore = this.validationService.isValidFrameScore(parsedValue, frameIndex, throwIndex, frames);
+
+    if (!isValidNumber || !isValidScore) {
+      this.handleInvalidInputUI(index, frameIndex, throwIndex, isModal);
+      return;
+    }
+
+    this.recordThrow(frames, frameIndex, throwIndex, parsedValue);
+    this.updateGameState(frames, index, isModal);
+    this.focusNextInputUI(index, frameIndex, throwIndex, isModal);
   }
 
-  /**
-   * Handle balls changes for modal game
-   */
-  onModalBallsChanged(balls: string[]): void {
-    this.gameData = { ...this.gameData, balls };
+  onInputFocused(event: { frameIndex: number; throwIndex: number }, index: number): void {
+    this.activeGameIndex = index;
+    this.currentFocusedFrame = event.frameIndex;
+    this.currentFocusedThrow = event.throwIndex;
+    this.updateToolbarDisabledState(index);
   }
 
-  /**
-   * Handle pattern changes for modal game
-   */
-  onModalPatternChanged(patterns: string[]): void {
-    this.gameData = { ...this.gameData, patterns };
+  canRecordStrike(index: number): boolean {
+    if (this.currentFocusedFrame === null || this.currentFocusedThrow === null) return false;
+    return this.validationService.canRecordStrike(this.currentFocusedFrame, this.currentFocusedThrow, this.games()[index].frames);
+  }
+
+  canRecordSpare(index: number): boolean {
+    if (this.currentFocusedFrame === null || this.currentFocusedThrow === null) return false;
+    return this.validationService.canRecordSpare(this.currentFocusedFrame, this.currentFocusedThrow, this.games()[index].frames);
   }
 
   async handleImageUpload(): Promise<void> {
-    // if (!this.allowedDeviceIds.includes(this.deviceId)) {
-    //   this.toastService.showToast('You are not allowed to use this feature yet.', 'bug', true);
-    //   return;
-    // }
     const alertData = localStorage.getItem('alert');
     if (alertData) {
       const { value, expiration } = JSON.parse(alertData);
       if (value === 'true' && new Date().getTime() < expiration) {
         try {
-          // if ((isPlatform('android') || isPlatform('ios')) && !isPlatform('mobileweb')) {
-          //   const adWatched = await this.showAdAlert();
-          //   if (!adWatched) {
-          //     this.toastService.showToast('You need to watch the ad to use this service.', 'bug', true);
-          //     return;
-          //   }
-          // }
           const imageUrl: File | Blob | undefined = await this.takeOrChoosePicture();
           if (imageUrl instanceof File) {
             this.loadingService.setLoading(true);
@@ -284,72 +309,7 @@ export class AddGamePage implements OnInit {
     }
   }
 
-  cancel(): void {
-    this.modal.dismiss(null, 'cancel');
-  }
-
-  onLeagueChange(league: string, isModal = false): void {
-    const isPractice = league === '' || league === 'New';
-
-    if (isModal) {
-      this.gameData.league = league;
-      this.gameData.isPractice = isPractice;
-      this.modalCheckbox.checked = isPractice;
-      this.modalCheckbox.disabled = !isPractice;
-    } else {
-      // Update parent-owned games array
-      const activeModeIndex = this.seriesMode.findIndex((mode) => mode);
-      const trackIndexes = this.trackIndexes[activeModeIndex] || [0];
-
-      trackIndexes.forEach((trackIndex) => {
-        this.games[trackIndex] = {
-          ...this.games[trackIndex],
-          league,
-          isPractice,
-        };
-      });
-
-      // Update UI elements in child components
-      this.gameGrids.forEach((trackGrid: GameGridComponent) => {
-        trackGrid.leagueSelector.selectedLeague = league;
-        trackGrid.checkbox.checked = isPractice;
-        trackGrid.checkbox.disabled = !isPractice;
-      });
-    }
-  }
-
-  onIsPracticeChange(isPractice: boolean): void {
-    // Update parent-owned games array
-    const activeModeIndex = this.seriesMode.findIndex((mode) => mode);
-    const trackIndexes = this.trackIndexes[activeModeIndex] || [0];
-
-    trackIndexes.forEach((trackIndex) => {
-      this.games[trackIndex] = {
-        ...this.games[trackIndex],
-        isPractice,
-      };
-    });
-  }
-
-  onPatternChange(patterns: string[]): void {
-    // Limit to maximum of 2 patterns
-    if (patterns.length > 2) {
-      patterns = patterns.slice(-2);
-    }
-
-    // Update parent-owned games array
-    const activeModeIndex = this.seriesMode.findIndex((mode) => mode);
-    const trackIndexes = this.trackIndexes[activeModeIndex] || [0];
-
-    trackIndexes.forEach((trackIndex) => {
-      this.games[trackIndex] = {
-        ...this.games[trackIndex],
-        patterns: [...patterns],
-      };
-    });
-  }
-
-  async confirm(): Promise<void> {
+  async confirm(modal: IonModal): Promise<void> {
     try {
       if (!this.isGameValid(this.gameData)) {
         this.hapticService.vibrate(ImpactStyle.Heavy);
@@ -357,12 +317,10 @@ export class AddGamePage implements OnInit {
         return;
       }
 
-      // Get the current game state from the modal grid and save from parent
-      const gridState = this.modalGrid.getCurrentGameState();
       const savedGame = await this.saveGame(
-        gridState.frames,
-        gridState.frameScores,
-        gridState.totalScore,
+        this.gameData.frames,
+        this.gameData.frameScores,
+        this.gameData.totalScore,
         this.gameData.isPractice,
         this.gameData.league || '',
         false,
@@ -376,7 +334,7 @@ export class AddGamePage implements OnInit {
 
       if (savedGame) {
         const allGames = this.storageService.games();
-        await this.highScoreAlertService.checkAndDisplayHighScoreAlerts(savedGame, allGames);
+        await this.highScroreAlertService.checkAndDisplayHighScoreAlerts(savedGame, allGames);
 
         await this.analyticsService.trackGameSaved({
           score: savedGame.totalScore,
@@ -384,7 +342,7 @@ export class AddGamePage implements OnInit {
       }
 
       this.toastService.showToast(ToastMessages.gameSaveSuccess, 'add');
-      this.modal.dismiss(null, 'confirm');
+      modal.dismiss();
     } catch (error) {
       this.toastService.showToast(ToastMessages.gameSaveError, 'bug', true);
       console.error(error);
@@ -392,17 +350,13 @@ export class AddGamePage implements OnInit {
     }
   }
 
-  onToolbarStateChanged(state: { show: boolean; offset: number }): void {
+  onToolbarStateChange(state: { show: boolean; offset: number }): void {
     this.showScoreToolbar = state.show;
     this.toolbarOffset = state.offset;
   }
 
-  onToolbarDisabledStateChanged(state: { strikeDisabled: boolean; spareDisabled: boolean }): void {
-    this.toolbarDisabledState = state;
-  }
-
   onToolbarButtonClick(char: string): void {
-    const activeGrid = this.gameGrids.toArray().find((grid) => grid.showButtonToolbar);
+    const activeGrid = this.gameGrids.toArray().find((_, i) => i === this.activeGameIndex);
     if (activeGrid) {
       activeGrid.selectSpecialScore(char);
     }
@@ -417,14 +371,10 @@ export class AddGamePage implements OnInit {
   }
 
   clearFrames(index?: number): void {
-    if (index !== undefined && index >= 0 && index < this.gameGrids.length) {
-      // Clear frames for the specified index
-      this.gameGrids.toArray()[index].clearFrames(false);
+    if (index !== undefined && index >= 0) {
+      this.games.update((games) => games.map((g, i) => (i === index ? createEmptyGame() : g)));
     } else {
-      // Clear frames for all components
-      this.gameGrids.forEach((trackGrid: GameGridComponent) => {
-        trackGrid.clearFrames(false);
-      });
+      this.initializeGames();
     }
     this.toastService.showToast(ToastMessages.gameResetSuccess, 'refresh-outline');
   }
@@ -435,27 +385,24 @@ export class AddGamePage implements OnInit {
       this.seriesId = this.generateUniqueSeriesId();
     }
 
-    const gameGridArray = this.gameGrids.toArray();
-    if (!gameGridArray.every((grid: GameGridComponent) => grid.isGameValid())) {
+    const activeModeIndex = this.seriesMode.findIndex((mode) => mode);
+    const trackIndexes = this.trackIndexes[activeModeIndex] || [0];
+    const gamesToSave = trackIndexes.map((idx) => this.games()[idx]);
+
+    if (!gamesToSave.every((game) => this.isGameValid(game))) {
       this.hapticService.vibrate(ImpactStyle.Heavy);
       this.isAlertOpen = true;
       return;
     }
 
     try {
-      const perfectGame = gameGridArray.some((grid: GameGridComponent) => {
-        const state = grid.getCurrentGameState();
-        return state.totalScore === 300;
-      });
+      const perfectGame = gamesToSave.some((game) => game.totalScore === 300);
 
-      // Save all games from parent - get state from each grid
-      const savePromises = gameGridArray.map((grid: GameGridComponent, index: number) => {
-        const state = grid.getCurrentGameState();
-        const game = this.games[this.getGameIndexFromGridIndex(index)];
+      const savePromises = gamesToSave.map((game) => {
         return this.saveGame(
-          state.frames,
-          state.frameScores,
-          state.totalScore,
+          game.frames,
+          game.frameScores,
+          game.totalScore,
           game.isPractice,
           game.league || '',
           isSeries,
@@ -471,7 +418,7 @@ export class AddGamePage implements OnInit {
 
       if (validSavedGames.length > 0) {
         const allGames = this.storageService.games();
-        await this.highScoreAlertService.checkAndDisplayHighScoreAlertsForMultipleGames(validSavedGames, allGames);
+        await this.highScroreAlertService.checkAndDisplayHighScoreAlertsForMultipleGames(validSavedGames, allGames);
       }
 
       if (perfectGame) {
@@ -479,9 +426,7 @@ export class AddGamePage implements OnInit {
         setTimeout(() => (this.is300 = false), 4000);
       }
 
-      // Clear all games after successful save
       this.initializeGames();
-      gameGridArray.forEach((grid: GameGridComponent) => grid.clearFrames(true));
 
       this.hapticService.vibrate(ImpactStyle.Medium);
       this.toastService.showToast(ToastMessages.gameSaveSuccess, 'add');
@@ -491,19 +436,178 @@ export class AddGamePage implements OnInit {
     }
   }
 
-  /**
-   * Get the game index from the grid index based on the current series mode
-   */
-  private getGameIndexFromGridIndex(gridIndex: number): number {
-    const activeModeIndex = this.seriesMode.findIndex((mode) => mode);
-    const trackIndexes = this.trackIndexes[activeModeIndex] || [0];
-    return trackIndexes[gridIndex] ?? 0;
+  async presentActionSheet(): Promise<void> {
+    // TODO this method needs to update all series games pattern, league and isPractice
+    const buttons = [];
+    this.hapticService.vibrate(ImpactStyle.Medium);
+    this.sheetOpen = true;
+
+    const modes = [SeriesMode.Single, SeriesMode.Series3, SeriesMode.Series4, SeriesMode.Series5, SeriesMode.Series6];
+
+    modes.forEach((mode, index) => {
+      if (!this.seriesMode[index]) {
+        buttons.push({
+          text: mode,
+          handler: () => {
+            this.seriesMode = this.seriesMode.map((_, i) => i === index);
+            this.selectedMode = mode;
+          },
+        });
+      }
+    });
+
+    buttons.push({
+      text: 'Cancel',
+      role: 'cancel',
+    });
+
+    const actionSheet = await this.actionSheetCtrl.create({
+      header: 'Choose series mode',
+      buttons,
+    });
+
+    actionSheet.onWillDismiss().then(() => {
+      this.sheetOpen = false;
+      this.updateSegments();
+    });
+    await actionSheet.present();
   }
 
-  /**
-   * Save a game to local storage - persistence logic owned by parent
-   * Frames are already in Frame[] format from getCurrentGameState()
-   */
+  async presentWarningAlert() {
+    localStorage.removeItem('alert');
+    const alert = await this.alertController.create({
+      header: 'Warning!',
+      subHeader: 'Experimental Feature',
+      message: 'It only works in certain alleys and will probably NOT work in yours!',
+      buttons: [
+        {
+          text: 'Dismiss',
+          role: 'cancel',
+        },
+        {
+          text: 'OK',
+          role: 'confirm',
+        },
+      ],
+    });
+    await alert.present();
+    alert.onDidDismiss().then((data) => {
+      const expirationDate = new Date();
+      expirationDate.setDate(expirationDate.getDate() + 7);
+      const alertData = { value: 'true', expiration: expirationDate.getTime() };
+      localStorage.setItem('alert', JSON.stringify(alertData));
+      if (data.role === 'confirm') {
+        this.handleImageUpload();
+      }
+    });
+  }
+
+  private updateGameState(frames: Frame[], index: number, isModal: boolean): void {
+    const scoreResult = this.gameScoreCalculatorService.calculateScoreFromFrames(frames);
+    const maxScore = this.gameScoreCalculatorService.calculateMaxScoreFromFrames(frames, scoreResult.totalScore);
+
+    const updatedGameData = {
+      frames,
+      frameScores: scoreResult.frameScores,
+      totalScore: scoreResult.totalScore,
+    };
+
+    if (isModal) {
+      this.gameData = { ...this.gameData, ...updatedGameData };
+    } else {
+      this.games.update((games) => games.map((g, i) => (i === index ? { ...g, ...updatedGameData } : g)));
+      this.totalScores.update((scores) => {
+        const newScores = [...scores];
+        newScores[index] = scoreResult.totalScore;
+        return newScores;
+      });
+      this.maxScores.update((scores) => {
+        const newScores = [...scores];
+        newScores[index] = maxScore;
+        return newScores;
+      });
+    }
+  }
+
+  private recordThrow(frames: Frame[], frameIndex: number, throwIndex: number, value: number): void {
+    const frame = frames[frameIndex];
+    if (!frame) return;
+
+    while (frame.throws.length <= throwIndex) {
+      frame.throws.push(createThrow(0, frame.throws.length + 1));
+    }
+
+    frame.throws[throwIndex] = createThrow(value, throwIndex + 1);
+  }
+
+  private removeThrow(frames: Frame[], frameIndex: number, throwIndex: number): void {
+    const frame = frames[frameIndex];
+    if (!frame || !frame.throws) return;
+
+    if (throwIndex >= 0 && throwIndex < frame.throws.length) {
+      frame.throws.splice(throwIndex, 1);
+      frame.throws.forEach((t, idx) => {
+        t.throwIndex = idx + 1;
+      });
+    }
+  }
+
+  private parseBowlingScores(input: string): void {
+    try {
+      const { frames, frameScores, totalScore } = this.gameUtilsService.parseBowlingScores(input, this.userService.username());
+      const framesAsFrameArray = numberArraysToFrames(frames);
+      this.gameData = this.transformGameService.transformGameData(framesAsFrameArray, frameScores, totalScore, false, '', false, '', '', [], []);
+      this.gameData.isPractice = true;
+      if (this.gameData.frames.length === 10 && this.gameData.frameScores.length === 10 && this.gameData.totalScore <= 300) {
+        this.isModalOpen = true;
+      } else {
+        this.isModalOpen = true;
+      }
+    } catch (error) {
+      this.toastService.showToast(ToastMessages.unexpectedError, 'bug', true);
+      console.error(error);
+    }
+  }
+
+  private initializeGames(): void {
+    this.games.set(Array.from({ length: 19 }, () => createEmptyGame()));
+  }
+
+  private handleInvalidInputUI(index: number, frameIndex: number, throwIndex: number, isModal: boolean): void {
+    this.hapticService.vibrate(ImpactStyle.Heavy);
+    const grid = isModal ? this.modalGrid : this.gameGrids.toArray()[index];
+    if (grid) {
+      grid.handleInvalidInput(frameIndex, throwIndex);
+    }
+  }
+
+  private focusNextInputUI(index: number, frameIndex: number, throwIndex: number, isModal: boolean): void {
+    const grid = isModal ? this.modalGrid : this.gameGrids.toArray()[index];
+    if (grid) {
+      grid.focusNextInput(frameIndex, throwIndex);
+    }
+  }
+
+  private updateToolbarDisabledState(index: number): void {
+    this.toolbarDisabledState = {
+      strikeDisabled: !this.canRecordStrike(index),
+      spareDisabled: !this.canRecordSpare(index),
+    };
+  }
+
+  private updateSegments(): void {
+    let numberOfGames = 1;
+
+    if (this.selectedMode !== SeriesMode.Single) {
+      const match = this.selectedMode.match(/\d+/);
+      if (match) {
+        numberOfGames = parseInt(match[0], 10);
+      }
+
+      this.segments = Array.from({ length: numberOfGames }, (_, i) => `Game ${i + 1}`);
+    }
+  }
+
   private async saveGame(
     frames: Frame[],
     frameScores: number[],
@@ -547,217 +651,8 @@ export class AddGamePage implements OnInit {
     }
   }
 
-  onMaxScoreChanged(maxScore: number, index: number): void {
-    this.maxScores[index] = maxScore;
-  }
-
-  onTotalScoreChange(totalScore: number, index: number): void {
-    this.totalScores[index] = totalScore;
-  }
-
-  getSeriesMaxScore(index: number): number {
-    return this.gameScoreCalculatorService.getSeriesMaxScore(index, this.maxScores);
-  }
-
-  getSeriesCurrentScore(index: number): number {
-    return this.gameScoreCalculatorService.getSeriesCurrentScore(index, this.totalScores);
-  }
-
-  async presentActionSheet(): Promise<void> {
-    const buttons = [];
-    this.hapticService.vibrate(ImpactStyle.Medium);
-    this.sheetOpen = true;
-
-    const modes = [SeriesMode.Single, SeriesMode.Series3, SeriesMode.Series4, SeriesMode.Series5, SeriesMode.Series6];
-
-    modes.forEach((mode, index) => {
-      if (!this.seriesMode[index]) {
-        buttons.push({
-          text: mode,
-          handler: () => {
-            this.seriesMode = this.seriesMode.map((_, i) => i === index);
-            this.selectedMode = mode;
-          },
-        });
-      }
-    });
-
-    buttons.push({
-      text: 'Cancel',
-      role: 'cancel',
-    });
-
-    const actionSheet = await this.actionSheetCtrl.create({
-      header: 'Choose series mode',
-      buttons,
-    });
-
-    let gameData: Partial<Game>[] = [];
-
-    const captureGameData = () => {
-      // Capture game data from parent-owned games array
-      const activeModeIndex = this.seriesMode.findIndex((mode) => mode);
-      const trackIndexes = this.trackIndexes[activeModeIndex] || [0];
-      return trackIndexes.map((trackIndex) => {
-        const game = this.games[trackIndex];
-        const grid = this.gameGrids.toArray()[trackIndexes.indexOf(trackIndex)];
-        const state = grid?.getCurrentGameState();
-        return {
-          frames: state?.frames || game.frames,
-          frameScores: state?.frameScores || game.frameScores,
-          totalScore: state?.totalScore || game.totalScore,
-          league: game.league,
-          note: game.note,
-          balls: game.balls,
-          patterns: game.patterns,
-          isPractice: game.isPractice,
-        };
-      });
-    };
-
-    actionSheet.onWillDismiss().then(() => {
-      gameData = captureGameData();
-      this.sheetOpen = false;
-      this.updateSegments();
-    });
-    actionSheet.onDidDismiss().then(() => {
-      // Restore game data to parent-owned games array after mode switch
-      const activeModeIndex = this.seriesMode.findIndex((mode) => mode);
-      const trackIndexes = this.trackIndexes[activeModeIndex] || [0];
-
-      trackIndexes.forEach((trackIndex, gridIndex) => {
-        const data = gameData[gridIndex];
-        if (!data) return;
-
-        // Update parent-owned games array
-        this.games[trackIndex] = {
-          ...this.games[trackIndex],
-          frames: data.frames || [],
-          frameScores: data.frameScores || [],
-          totalScore: data.totalScore || 0,
-          note: data.note || '',
-          balls: data.balls || [],
-          isPractice: data.isPractice ?? true,
-          patterns: data.patterns || [],
-          league: data.league || '',
-        };
-      });
-    });
-
-    await actionSheet.present();
-  }
-
-  async presentWarningAlert() {
-    localStorage.removeItem('alert');
-    const alert = await this.alertController.create({
-      header: 'Warning!',
-      subHeader: 'Experimental Feature',
-      message: 'It only works in certain alleys and will probably NOT work in yours!',
-      buttons: [
-        {
-          text: 'Dismiss',
-          role: 'cancel',
-        },
-        {
-          text: 'OK',
-          role: 'confirm',
-        },
-      ],
-    });
-    await alert.present();
-    alert.onDidDismiss().then((data) => {
-      const expirationDate = new Date();
-      expirationDate.setDate(expirationDate.getDate() + 7);
-      const alertData = { value: 'true', expiration: expirationDate.getTime() };
-      localStorage.setItem('alert', JSON.stringify(alertData));
-      if (data.role === 'confirm') {
-        this.handleImageUpload();
-      }
-    });
-  }
-
-  private updateSegments(): void {
-    let numberOfGames = 1;
-
-    if (this.selectedMode !== SeriesMode.Single) {
-      const match = this.selectedMode.match(/\d+/);
-      if (match) {
-        numberOfGames = parseInt(match[0], 10);
-      }
-
-      this.segments = Array.from({ length: numberOfGames }, (_, i) => `Game ${i + 1}`);
-    }
-  }
-
-  // private showAdAlert(): Promise<boolean> {
-  //   return new Promise((resolve) => {
-  //     this.alertController
-  //       .create({
-  //         header: 'Ad required',
-  //         message: 'To use this service, you need to watch an ad.',
-  //         buttons: [
-  //           {
-  //             text: 'Watch ad',
-  //             handler: async () => {
-  //               try {
-  //                 await this.adService.showRewardedAd();
-  //                 resolve(true);
-  //               } catch (error) {
-  //                 console.error(error);
-  //                 resolve(false);
-  //               }
-  //             },
-  //           },
-  //           {
-  //             text: 'Cancel',
-  //             role: 'cancel',
-  //             handler: () => {
-  //               resolve(false);
-  //             },
-  //           },
-  //         ],
-  //       })
-  //       .then((alert) => alert.present());
-  //   });
-  // }
-
-  private parseBowlingScores(input: string): void {
-    try {
-      const { frames, frameScores, totalScore } = this.gameUtilsService.parseBowlingScores(input, this.userService.username());
-      // Convert number[][] from OCR parsing to Frame[] format
-      const framesAsFrameArray = numberArraysToFrames(frames);
-      this.gameData = this.transformGameService.transformGameData(framesAsFrameArray, frameScores, totalScore, false, '', false, '', '', [], []);
-      this.gameData.isPractice = true;
-      if (this.gameData.frames.length === 10 && this.gameData.frameScores.length === 10 && this.gameData.totalScore <= 300) {
-        this.isModalOpen = true;
-      } else {
-        // this.toastService.showToast('Spielinhalt wurde nicht richtig erkannt! Probiere einen anderen Winkel.', 'bug-outline', true);
-        this.isModalOpen = true;
-      }
-    } catch (error) {
-      this.toastService.showToast(ToastMessages.unexpectedError, 'bug', true);
-      console.error(error);
-    }
-  }
-
-  private async openFileInput(): Promise<File | undefined> {
-    return new Promise((resolve) => {
-      try {
-        const fileInput = document.getElementById('upload') as HTMLInputElement;
-        fileInput.value = '';
-
-        fileInput.addEventListener('change', () => {
-          const selectedFile = fileInput.files?.[0];
-          resolve(selectedFile);
-        });
-
-        fileInput.click();
-      } catch (error) {
-        console.error('Fehler beim Öffnen des Datei-Uploads:', error);
-        this.toastService.showToast(ToastMessages.unexpectedError, 'bug', true);
-        resolve(undefined);
-      }
-    });
+  private generateUniqueSeriesId(): string {
+    return 'series-' + Math.random().toString(36).substring(2, 15);
   }
 
   private async takeOrChoosePicture(): Promise<File | Blob | undefined> {
@@ -795,6 +690,26 @@ export class AddGamePage implements OnInit {
     return;
   }
 
+  private async openFileInput(): Promise<File | undefined> {
+    return new Promise((resolve) => {
+      try {
+        const fileInput = document.getElementById('upload') as HTMLInputElement;
+        fileInput.value = '';
+
+        fileInput.addEventListener('change', () => {
+          const selectedFile = fileInput.files?.[0];
+          resolve(selectedFile);
+        });
+
+        fileInput.click();
+      } catch (error) {
+        console.error('Fehler beim Öffnen des Datei-Uploads:', error);
+        this.toastService.showToast(ToastMessages.unexpectedError, 'bug', true);
+        resolve(undefined);
+      }
+    });
+  }
+
   private async showPermissionDeniedAlert(): Promise<void> {
     const alert = await this.alertController.create({
       header: 'Permission Denied',
@@ -812,9 +727,5 @@ export class AddGamePage implements OnInit {
       ],
     });
     await alert.present();
-  }
-
-  private generateUniqueSeriesId(): string {
-    return 'series-' + Math.random().toString(36).substring(2, 15);
   }
 }

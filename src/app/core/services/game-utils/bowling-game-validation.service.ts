@@ -206,6 +206,35 @@ export class BowlingGameValidationService {
   }
 
   /**
+   * Parse input value (handles X, /, and numeric values)
+   * Converts string input to a numeric value based on bowling rules
+   */
+  parseInputValue(input: string, frameIndex: number, throwIndex: number, frames: Frame[]): number {
+    const upperInput = input.toUpperCase();
+
+    if (upperInput === 'X') {
+      return 10;
+    }
+
+    if (upperInput === '/') {
+      const firstThrow = getThrowValue(frames[frameIndex], 0);
+      if (firstThrow !== undefined && throwIndex > 0) {
+        // For 10th frame third throw after a strike, calculate spare based on second throw
+        if (frameIndex === 9 && throwIndex === 2) {
+          const secondThrow = getThrowValue(frames[frameIndex], 1);
+          if (getThrowValue(frames[frameIndex], 0) === 10 && secondThrow !== undefined) {
+            return 10 - secondThrow;
+          }
+        }
+        return 10 - firstThrow;
+      }
+      return 0;
+    }
+
+    return parseInt(input, 10) || 0;
+  }
+
+  /**
    * Validate that a frame score is valid based on bowling rules
    */
   isValidFrameScore(inputValue: number, frameIndex: number, inputIndex: number, frames: Frame[]): boolean {

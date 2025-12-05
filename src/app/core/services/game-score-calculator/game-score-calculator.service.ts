@@ -5,17 +5,6 @@ import { Frame, getThrowValue } from '../../models/game.model';
   providedIn: 'root',
 })
 export class GameScoreCalculatorService {
-  private seriesConfig: Record<number, number[]> = {
-    1: [1, 2, 3],
-    2: [4, 5, 6, 7],
-    3: [8, 9, 10, 11, 12],
-    4: [13, 14, 15, 16, 17, 18],
-  };
-
-  /**
-   * Calculate score from Frame[] - the single source of truth
-   * Iterates over Frame objects directly, no conversion needed
-   */
   calculateScoreFromFrames(frames: Frame[]): { totalScore: number; frameScores: number[] } {
     if (!frames || frames.length === 0) {
       return { totalScore: 0, frameScores: [] };
@@ -206,22 +195,5 @@ export class GameScoreCalculatorService {
     }
 
     return maxScore;
-  }
-
-  // Series score calculation methods
-  getSeriesScore(index: number, scores: number[], defaultValue = 0): number {
-    const indices = this.seriesConfig[index];
-    if (!indices) {
-      return defaultValue;
-    }
-    return indices.reduce((sum: number, gameIndex: number) => sum + (scores[gameIndex] || 0), 0);
-  }
-
-  getSeriesMaxScore(index: number, maxScores: number[]): number {
-    return this.getSeriesScore(index, maxScores, 900);
-  }
-
-  getSeriesCurrentScore(index: number, totalScores: number[]): number {
-    return this.getSeriesScore(index, totalScores, 0);
   }
 }

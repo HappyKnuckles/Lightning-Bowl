@@ -1,5 +1,5 @@
 import { NgIf, NgFor, DatePipe } from '@angular/common';
-import { Component, Input, Renderer2, ViewChild, ViewChildren, QueryList, OnChanges, SimpleChanges, computed, OnInit } from '@angular/core';
+import { Component, Input, Renderer2, ViewChild, ViewChildren, QueryList, OnChanges, SimpleChanges, computed, OnInit, input } from '@angular/core';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { ImpactStyle } from '@capacitor/haptics';
@@ -45,7 +45,7 @@ import {
   gridOutline,
 } from 'ionicons/icons';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
-import { Game } from 'src/app/core/models/game.model';
+import { Game, Frame, cloneFrames, createThrow } from 'src/app/core/models/game.model';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
@@ -63,6 +63,7 @@ import { BallSelectComponent } from '../ball-select/ball-select.component';
 import { alertEnterAnimation, alertLeaveAnimation } from '../../animations/alert.animation';
 import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
 import { BowlingGameValidationService } from 'src/app/core/services/game-utils/bowling-game-validation.service';
+import { GameScoreCalculatorService } from 'src/app/core/services/game-score-calculator/game-score-calculator.service';
 
 @Component({
   selector: 'app-game',
@@ -114,19 +115,16 @@ import { BowlingGameValidationService } from 'src/app/core/services/game-utils/b
 })
 export class GameComponent implements OnChanges, OnInit {
   @ViewChild('modal', { static: false }) modal!: IonModal;
-  @Input() games!: Game[];
+  games = input.required<Game[]>();
   @Input() isLeaguePage?: boolean = false;
   @Input() gameCount?: number;
   @ViewChild('accordionGroup') accordionGroup!: IonAccordionGroup;
   @ViewChildren(GameGridComponent) gameGrids!: QueryList<GameGridComponent>;
 
-  // Store references to game grids by gameId for editing
-  private gameGridMap = new Map<string, GameGridComponent>();
-
   leagues = computed(() => {
     const savedLeagues = this.storageService.leagues();
     if (!this.games) return savedLeagues;
-    const leagueKeys = this.games.reduce((acc: string[], game: Game) => {
+    const leagueKeys = this.games().reduce((acc: string[], game: Game) => {
       if (game.league && !acc.includes(game.league)) {
         acc.push(game.league);
       }
@@ -165,6 +163,7 @@ export class GameComponent implements OnChanges, OnInit {
   private closeTimers: Record<string, NodeJS.Timeout> = {};
   public delayedCloseMap: Record<string, boolean> = {};
   private originalGameState: Record<string, Game> = {};
+  private editedGameStates: Record<string, Game> = {};
   patternTypeaheadConfig!: TypeaheadConfig<Partial<Pattern>>;
   enterAnimation = alertEnterAnimation;
   leaveAnimation = alertLeaveAnimation;
@@ -182,6 +181,7 @@ export class GameComponent implements OnChanges, OnInit {
     private patternService: PatternService,
     private analyticsService: AnalyticsService,
     private validationService: BowlingGameValidationService,
+    private gameScoreCalculatorService: GameScoreCalculatorService,
   ) {
     addIcons({
       trashOutline,
@@ -204,7 +204,7 @@ export class GameComponent implements OnChanges, OnInit {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['games'] && this.games) {
-      this.sortedGames = [...this.games].sort((a, b) => b.date - a.date);
+      this.sortedGames = [...this.games()].sort((a, b) => b.date - a.date);
       this.showingGames = this.sortedGames.slice(0, this.batchSize);
       this.loadedCount += this.batchSize;
     }
@@ -293,6 +293,9 @@ export class GameComponent implements OnChanges, OnInit {
       delete this.originalGameState[game.gameId];
     }
 
+    // Clear edited state
+    delete this.editedGameStates[game.gameId];
+
     if (game.isSeries) {
       this.updateSeries(game, game.league, game.patterns);
     }
@@ -303,6 +306,97 @@ export class GameComponent implements OnChanges, OnInit {
     const wasOpen = this.delayedCloseMap[game.gameId];
     this.openExpansionPanel(wasOpen ? game.gameId : undefined);
     delete this.delayedCloseMap[game.gameId];
+  }
+
+  getEditedGameState(game: Game): Game {
+    if (!this.editedGameStates[game.gameId]) {
+      this.editedGameStates[game.gameId] = structuredClone(game);
+    }
+    return this.editedGameStates[game.gameId];
+  }
+
+  onEditThrowInput(event: { frameIndex: number; throwIndex: number; value: string }, game: Game): void {
+    const { frameIndex, throwIndex, value } = event;
+
+    // Get or create the edited state
+    const editedGame = this.getEditedGameState(game);
+    const frames = cloneFrames(editedGame.frames);
+
+    // Handle empty input (remove throw)
+    if (value.length === 0) {
+      this.removeThrow(frames, frameIndex, throwIndex);
+      this.updateEditedGameWithNewFrames(game.gameId, frames);
+      return;
+    }
+
+    // Parse the input value using validation service
+    const parsedValue = this.validationService.parseInputValue(value, frameIndex, throwIndex, frames);
+
+    // Validate the input using validation service
+    if (!this.validationService.isValidNumber0to10(parsedValue)) {
+      this.handleEditInvalidInput(game.gameId, frameIndex, throwIndex);
+      return;
+    }
+
+    if (!this.validationService.isValidFrameScore(parsedValue, frameIndex, throwIndex, frames)) {
+      this.handleEditInvalidInput(game.gameId, frameIndex, throwIndex);
+      return;
+    }
+
+    // Record the throw
+    this.recordThrow(frames, frameIndex, throwIndex, parsedValue);
+    this.updateEditedGameWithNewFrames(game.gameId, frames);
+
+    // Focus next input in the grid
+    const grid = this.gameGrids.find((g) => g.game()?.gameId === game.gameId);
+    if (grid) {
+      grid.focusNextInput(frameIndex, throwIndex);
+    }
+  }
+
+  private handleEditInvalidInput(gameId: string, frameIndex: number, throwIndex: number): void {
+    this.hapticService.vibrate(ImpactStyle.Heavy);
+    const grid = this.gameGrids.find((g) => g.game()?.gameId === gameId);
+    if (grid) {
+      grid.handleInvalidInput(frameIndex, throwIndex);
+    }
+  }
+
+  private recordThrow(frames: Frame[], frameIndex: number, throwIndex: number, value: number): void {
+    const frame = frames[frameIndex];
+    if (!frame) return;
+
+    while (frame.throws.length <= throwIndex) {
+      frame.throws.push(createThrow(0, frame.throws.length + 1));
+    }
+
+    frame.throws[throwIndex] = createThrow(value, throwIndex + 1);
+  }
+
+  private removeThrow(frames: Frame[], frameIndex: number, throwIndex: number): void {
+    const frame = frames[frameIndex];
+    if (!frame || !frame.throws) return;
+
+    if (throwIndex >= 0 && throwIndex < frame.throws.length) {
+      frame.throws.splice(throwIndex, 1);
+      frame.throws.forEach((t, idx) => {
+        t.throwIndex = idx + 1;
+      });
+    }
+  }
+
+  private updateEditedGameWithNewFrames(gameId: string, frames: Frame[]): void {
+    const scoreResult = this.gameScoreCalculatorService.calculateScoreFromFrames(frames);
+    const editedGame = this.editedGameStates[gameId];
+
+    if (editedGame) {
+      this.editedGameStates[gameId] = {
+        ...editedGame,
+        frames,
+        frameScores: scoreResult.frameScores,
+        totalScore: scoreResult.totalScore,
+      };
+    }
   }
 
   updateSeries(game: Game, league?: string, patterns?: string[]): void {
@@ -324,35 +418,29 @@ export class GameComponent implements OnChanges, OnInit {
 
   async saveEdit(game: Game): Promise<void> {
     try {
-      // Find the grid for this specific game
-      const gameGrid = this.gameGrids?.find((grid) => grid.game()?.gameId === game.gameId);
+      const editedState = this.editedGameStates[game.gameId];
 
-      if (!gameGrid) {
-        this.toastService.showToast(ToastMessages.gameUpdateError, 'bug', true);
-        console.error('Could not find game grid for game:', game.gameId);
-        return;
-      }
+      const updatedGame: Game = editedState
+        ? {
+            ...game,
+            frames: editedState.frames,
+            frameScores: editedState.frameScores,
+            totalScore: editedState.totalScore,
+            isPractice: !game.league,
+          }
+        : {
+            ...game,
+            isPractice: !game.league,
+          };
 
-      // Get current state from the grid
-      const gridState = gameGrid.getCurrentGameState();
-
-      // Build the updated game object
-      const updatedGame: Game = {
-        ...game,
-        frames: gridState.frames,
-        frameScores: gridState.frameScores,
-        totalScore: gridState.totalScore,
-        isPractice: !game.league,
-      };
-
-      // 1) Validate using the current data from the grid
+      // 1) Validate using the current data
       if (!this.isGameValid(updatedGame)) {
         this.hapticService.vibrate(ImpactStyle.Heavy);
         this.toastService.showToast(ToastMessages.invalidInput, 'bug', true);
         return;
       }
 
-      // 2) Did we change league or patterns? Compare original with current grid data.
+      // 2) Did we change league or patterns? Compare original with current data.
       const originalGameSnapshot = this.originalGameState[game.gameId];
       const leagueChanged = originalGameSnapshot && originalGameSnapshot.league !== updatedGame.league;
       const patternsChanged = originalGameSnapshot && JSON.stringify(originalGameSnapshot.patterns) !== JSON.stringify(updatedGame.patterns);
@@ -391,6 +479,7 @@ export class GameComponent implements OnChanges, OnInit {
 
       this.analyticsService.trackGameEdited();
       delete this.originalGameState[game.gameId];
+      delete this.editedGameStates[game.gameId];
       delete this.delayedCloseMap[game.gameId];
     } catch (error) {
       this.toastService.showToast(ToastMessages.gameUpdateError, 'bug', true);

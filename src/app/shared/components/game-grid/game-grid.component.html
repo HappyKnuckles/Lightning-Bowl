@@ -1,8 +1,8 @@
 <app-game-score-toolbar
   [show]="showButtonToolbar"
   [offset]="keyboardOffset"
-  [strikeDisabled]="isStrikeDisabled"
-  [spareDisabled]="isSpareDisabled"
+  [strikeDisabled]="strikeDisabled()"
+  [spareDisabled]="spareDisabled()"
   (strikeClick)="selectSpecialScore('X')"
   (spareClick)="selectSpecialScore('/')">
 </app-game-score-toolbar>
@@ -21,9 +21,8 @@
           inputmode="numeric"
           autocapitalize="on"
           [value]="getFrameValue(frameIndex, 0)"
-          (ionInput)="simulateScore($event, frameIndex, 0)"
-          (ionFocus)="handleInputFocus(frameIndex, 0)"
-          (ionBlur)="handleInputBlur()">
+          (ionInput)="onScoreInput($event, frameIndex, 0)"
+          (ionFocus)="handleInputFocus(frameIndex, 0)">
         </ion-input>
       </ion-col>
       <ion-col class="input-col" *ngIf="i !== 10">
@@ -34,9 +33,8 @@
           autocapitalize="on"
           [disabled]="getLocalFrameValue(frameIndex, 0) === 10 && i !== 10"
           [value]="getFrameValue(frameIndex, 1)"
-          (ionInput)="simulateScore($event, frameIndex, 1)"
-          (ionFocus)="handleInputFocus(frameIndex, 1)"
-          (ionBlur)="handleInputBlur()">
+          (ionInput)="onScoreInput($event, frameIndex, 1)"
+          (ionFocus)="handleInputFocus(frameIndex, 1)">
         </ion-input>
       </ion-col>
       <ion-col class="input-col" *ngIf="i === 10">
@@ -47,9 +45,8 @@
           autocapitalize="on"
           [disabled]="getLocalFrameValue(frameIndex, 0) === 10 && i !== 10"
           [value]="getFrameValue(frameIndex, 1)"
-          (ionInput)="simulateScore($event, frameIndex, 1)"
-          (ionFocus)="handleInputFocus(frameIndex, 1)"
-          (ionBlur)="handleInputBlur()">
+          (ionInput)="onScoreInput($event, frameIndex, 1)"
+          (ionFocus)="handleInputFocus(frameIndex, 1)">
         </ion-input>
       </ion-col>
       <ion-col class="input-col" *ngIf="i === 10">
@@ -62,9 +59,8 @@
           [disabled]="
             getLocalFrameValue(frameIndex, 0) !== 10 && (getLocalFrameValue(frameIndex, 0) ?? 0) + (getLocalFrameValue(frameIndex, 1) ?? 0) !== 10
           "
-          (ionInput)="simulateScore($event, frameIndex, 2)"
-          (ionFocus)="handleInputFocus(frameIndex, 2)"
-          (ionBlur)="handleInputBlur()">
+          (ionInput)="onScoreInput($event, frameIndex, 2)"
+          (ionFocus)="handleInputFocus(frameIndex, 2)">
         </ion-input>
       </ion-col>
     </ion-row>
