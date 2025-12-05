@@ -1,4 +1,4 @@
-import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit, QueryList, ViewChild, ViewChildren } from '@angular/core';
+import { Component, computed, CUSTOM_ELEMENTS_SCHEMA, OnInit, QueryList, signal, ViewChild, ViewChildren } from '@angular/core';
 import {
   ActionSheetController,
   AlertController,
@@ -19,22 +19,19 @@ import {
   IonSegmentButton,
   IonSegmentView,
   IonSegmentContent,
-  IonCheckbox,
 } from '@ionic/angular/standalone';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
-import { Game } from 'src/app/core/models/game.model';
+import { Game, Frame, createEmptyGame, numberArraysToFrames, cloneFrames, createThrow } from 'src/app/core/models/game.model';
 import { addIcons } from 'ionicons';
 import { add, chevronDown, chevronUp, cameraOutline, documentTextOutline, medalOutline } from 'ionicons/icons';
-import { NgIf, NgFor, NgStyle } from '@angular/common';
+import { NgIf, NgFor } from '@angular/common';
 import { ImpactStyle } from '@capacitor/haptics';
-import { AdService } from 'src/app/core/services/ad/ad.service';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { ImageProcesserService } from 'src/app/core/services/image-processer/image-processer.service';
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { UserService } from 'src/app/core/services/user/user.service';
 import { defineCustomElements } from '@teamhive/lottie-player/loader';
-import { Device } from '@capacitor/device';
 import { GameUtilsService } from 'src/app/core/services/game-utils/game-utils.service';
 import { GameScoreCalculatorService } from 'src/app/core/services/game-score-calculator/game-score-calculator.service';
 import { GameDataTransformerService } from 'src/app/core/services/game-transform/game-data-transform.service';
@@ -82,45 +79,49 @@ defineCustomElements(window);
     IonSegmentView,
     NgIf,
     NgFor,
-    NgStyle,
     GameGridComponent,
     GameScoreToolbarComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class AddGamePage implements OnInit {
-  totalScores: number[] = new Array(19).fill(0);
-  maxScores: number[] = new Array(19).fill(300);
-  seriesMode: boolean[] = [true, false, false, false, false];
-  seriesId = '';
+  // UI State
   selectedMode: SeriesMode = SeriesMode.Single;
-  trackIndexes: number[][] = [[0], [1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11, 12], [13, 14, 15, 16, 17, 18]];
   sheetOpen = false;
   isAlertOpen = false;
   isModalOpen = false;
   is300 = false;
-  gameData!: Game;
-  deviceId = '';
-
-  // Toolbar state
+  selectedSegment = 'Game 1';
+  segments: string[] = ['Game 1'];
   showScoreToolbar = false;
   toolbarOffset = 0;
   toolbarDisabledState = { strikeDisabled: true, spareDisabled: true };
-  activeGameGrid: GameGridComponent | null = null;
 
+  // Game Data State
+  gameData!: Game; // For Modal
+  games = signal(Array.from({ length: 19 }, () => createEmptyGame())); // For Series
+  totalScores = signal(new Array(19).fill(0));
+  maxScores = signal(new Array(19).fill(300));
+
+  // Computed State
+  seriesMaxscore = computed(() => {
+    return this.getActiveTrackIndexes().reduce((acc, idx) => acc + this.maxScores()[idx], 0);
+  });
+
+  seriesCurrentScore = computed(() => {
+    return this.getActiveTrackIndexes().reduce((acc, idx) => acc + this.totalScores()[idx], 0);
+  });
+
+  // Accessors
   @ViewChildren(GameGridComponent) gameGrids!: QueryList<GameGridComponent>;
-  @ViewChild(IonModal) modal!: IonModal;
   @ViewChild('modalGrid', { static: false }) modalGrid!: GameGridComponent;
-  @ViewChild('modalCheckbox') modalCheckbox!: IonCheckbox;
-  selectedSegment = 'Game 1';
-  segments: string[] = ['Game 1'];
   presentingElement!: HTMLElement;
-  private allowedDeviceIds = [
-    '820fabe8-d29b-45c2-89b3-6bcc0e149f2b',
-    '21330a3a-9cff-41ce-981a-00208c21d883',
-    'b376db84-c3a4-4c65-8c59-9710b7d05791',
-    '01c1e0d1-3469-4091-96a0-76beb68a6f97',
-  ];
+
+  // Internal Logic State
+  private seriesId = '';
+  private activeGameIndex = 0;
+  private currentFocusedFrame: number | null = null;
+  private currentFocusedThrow: number | null = null;
 
   constructor(
     private actionSheetCtrl: ActionSheetController,
@@ -131,11 +132,11 @@ export class AddGamePage implements OnInit {
     private transformGameService: GameDataTransformerService,
     private loadingService: LoadingService,
     private userService: UserService,
-    private adService: AdService,
+    // private adService: AdService, // Unused?
     private hapticService: HapticService,
     private gameUtilsService: GameUtilsService,
     private validationService: BowlingGameValidationService,
-    private highScoreAlertService: HighScoreAlertService,
+    private highScroreAlertService: HighScoreAlertService,
     private storageService: StorageService,
     private analyticsService: AnalyticsService,
   ) {
@@ -143,210 +144,143 @@ export class AddGamePage implements OnInit {
   }
 
   async ngOnInit(): Promise<void> {
-    this.deviceId = (await Device.getId()).identifier;
     this.presentingElement = document.querySelector('.ion-page')!;
   }
 
-  async handleImageUpload(): Promise<void> {
-    // if (!this.allowedDeviceIds.includes(this.deviceId)) {
-    //   this.toastService.showToast('You are not allowed to use this feature yet.', 'bug', true);
-    //   return;
-    // }
-    const alertData = localStorage.getItem('alert');
-    if (alertData) {
-      const { value, expiration } = JSON.parse(alertData);
-      if (value === 'true' && new Date().getTime() < expiration) {
-        try {
-          // if ((isPlatform('android') || isPlatform('ios')) && !isPlatform('mobileweb')) {
-          //   const adWatched = await this.showAdAlert();
-          //   if (!adWatched) {
-          //     this.toastService.showToast('You need to watch the ad to use this service.', 'bug', true);
-          //     return;
-          //   }
-          // }
-          const imageUrl: File | Blob | undefined = await this.takeOrChoosePicture();
-          if (imageUrl instanceof File) {
-            this.loadingService.setLoading(true);
-            const gameText = await this.imageProcessingService.performOCR(imageUrl);
-            this.parseBowlingScores(gameText!);
+  // UPDATE HANDLERS (Generic)
 
-            await this.analyticsService.trackOCRUsed(!!gameText);
-          } else {
-            this.toastService.showToast(ToastMessages.noImage, 'bug', true);
-          }
-        } catch (error) {
-          this.toastService.showToast(ToastMessages.imageUploadError, 'bug', true);
-          console.error(error);
-          await this.analyticsService.trackError('ocr_error', error instanceof Error ? error.message : String(error));
-        } finally {
-          this.loadingService.setLoading(false);
-        }
-      } else {
-        await this.presentWarningAlert();
-      }
-    } else {
-      await this.presentWarningAlert();
-    }
-  }
-
-  cancel(): void {
-    this.modal.dismiss(null, 'cancel');
-  }
-
-  onLeagueChange(league: string, isModal = false): void {
-    const isPractice = league === '' || league === 'New';
-
+  onGameChange(game: Game, index = 0, isModal = false): void {
     if (isModal) {
-      this.gameData.league = league;
-      this.gameData.isPractice = isPractice;
-      this.modalCheckbox.checked = isPractice;
-      this.modalCheckbox.disabled = !isPractice;
+      this.gameData = { ...game };
     } else {
-      this.gameGrids.forEach((trackGrid: GameGridComponent) => {
-        trackGrid.leagueSelector.selectedLeague = league;
-        trackGrid.game().league = league;
-        trackGrid.game().isPractice = isPractice;
-        trackGrid.checkbox.checked = isPractice;
-        trackGrid.checkbox.disabled = !isPractice;
-      });
+      this.games.update((games) => games.map((g, i) => (i === index ? { ...game } : g)));
     }
   }
 
-  onIsPracticeChange(isPractice: boolean): void {
-    this.gameGrids.forEach((trackGrid: GameGridComponent) => {
-      trackGrid.game().isPractice = isPractice;
-    });
-  }
-
-  onPatternChange(patterns: string[]): void {
-    // Limit to maximum of 2 patterns
-    if (patterns.length > 2) {
-      patterns = patterns.slice(-2);
+  updateSingleGameProperty(key: keyof Game, value: any, index: number, isModal: boolean): void {
+    if (isModal) {
+      this.gameData = { ...this.gameData, [key]: value };
+    } else {
+      this.games.update((games) => games.map((g, i) => (i === index ? { ...g, [key]: value } : g)));
     }
-    this.gameGrids.forEach((trackGrid: GameGridComponent) => {
-      trackGrid.game().patterns = [...patterns];
-    });
   }
 
-  async confirm(): Promise<void> {
-    try {
-      if (!this.isGameValid(this.gameData)) {
-        this.hapticService.vibrate(ImpactStyle.Heavy);
-        this.toastService.showToast(ToastMessages.invalidInput, 'bug', true);
-        return;
-      } else {
-        const savedGame = await this.modalGrid.saveGameToLocalStorage(false, '');
+  updateSeriesProperty(key: keyof Game, value: any, isModal: boolean): void {
+    if (isModal) {
+      this.gameData = { ...this.gameData, [key]: value };
 
-        // Check for high scores after the game is saved
-        if (savedGame) {
-          const allGames = this.storageService.games();
-          await this.highScoreAlertService.checkAndDisplayHighScoreAlerts(savedGame, allGames);
-
-          await this.analyticsService.trackGameSaved({
-            score: savedGame.totalScore,
-          });
+      // Special Handling for Modal Side Effects
+      if (key === 'league') {
+        const isPractice = value === '' || value === 'New';
+        this.gameData.isPractice = isPractice;
+        if (this.modalGrid && this.modalGrid.checkbox) {
+          this.modalGrid.checkbox.checked = isPractice;
+          this.modalGrid.checkbox.disabled = !isPractice;
         }
-
-        this.toastService.showToast(ToastMessages.gameSaveSuccess, 'add');
-        this.modal.dismiss(null, 'confirm');
       }
-    } catch (error) {
-      this.toastService.showToast(ToastMessages.gameSaveError, 'bug', true);
-      console.error(error);
-      await this.analyticsService.trackError('game_save_confirm_error', error instanceof Error ? error.message : String(error));
+    } else {
+      const trackIndexes = this.getActiveTrackIndexes();
+
+      // Update Data Model
+      this.games.update((games) =>
+        games.map((g, i) => {
+          if (trackIndexes.includes(i)) {
+            const updates: Partial<Game> = { [key]: value };
+
+            // Special Logic: League changes imply Practice status
+            if (key === 'league') {
+              updates.isPractice = value === '' || value === 'New';
+            }
+            // Special Logic: Patterns slicing
+            if (key === 'patterns' && Array.isArray(value) && value.length > 2) {
+              updates.patterns = value.slice(-2);
+            }
+            return { ...g, ...updates };
+          }
+          return g;
+        }),
+      );
+
+      // Update UI Components if needed (Side Effects)
+      if (key === 'league') {
+        const isPractice = value === '' || value === 'New';
+        this.gameGrids.forEach((grid, i) => {
+          if (trackIndexes.includes(i)) {
+            grid.leagueSelector.selectedLeague = value;
+            grid.checkbox.checked = isPractice;
+            grid.checkbox.disabled = !isPractice;
+          }
+        });
+      }
     }
   }
 
-  onToolbarStateChanged(state: { show: boolean; offset: number }): void {
-    this.showScoreToolbar = state.show;
-    this.toolbarOffset = state.offset;
+  // Wrapper methods for Template Binding to keep HTML clean
+  onNoteChange(note: string, index = 0, isModal = false) {
+    this.updateSingleGameProperty('note', note, index, isModal);
+  }
+  onBallsChange(balls: string[], index = 0, isModal = false) {
+    this.updateSingleGameProperty('balls', balls, index, isModal);
+  }
+  onIsPracticeChange(isPractice: boolean, index = 0, isModal = false) {
+    this.updateSingleGameProperty('isPractice', isPractice, index, isModal);
   }
 
-  onToolbarDisabledStateChanged(state: { strikeDisabled: boolean; spareDisabled: boolean }): void {
-    this.toolbarDisabledState = state;
+  onLeagueChange(league: string, isModal = false) {
+    this.updateSeriesProperty('league', league, isModal);
+  }
+  onPatternChange(patterns: string[], isModal = false) {
+    this.updateSeriesProperty('patterns', patterns, isModal);
   }
 
-  onToolbarButtonClick(char: string): void {
-    const activeGrid = this.gameGrids.toArray().find((grid) => grid.showButtonToolbar);
-    if (activeGrid) {
-      activeGrid.selectSpecialScore(char);
+  // INPUT & SCORING LOGIC
+  handleThrowInput(event: { frameIndex: number; throwIndex: number; value: string }, index: number, isModal = false): void {
+    const { frameIndex, throwIndex, value } = event;
+    const currentGame = isModal ? this.gameData : this.games()[index];
+    const frames = cloneFrames(currentGame.frames);
+
+    if (value.length === 0) {
+      this.removeThrow(frames, frameIndex, throwIndex);
+      this.updateGameState(frames, index, isModal);
+      return;
     }
-  }
 
-  isGameValid(game: Game): boolean {
-    return this.validationService.isGameValid(game);
+    const parsedValue = this.validationService.parseInputValue(value, frameIndex, throwIndex, frames);
+    const isValidNumber = this.validationService.isValidNumber0to10(parsedValue);
+    const isValidScore = this.validationService.isValidFrameScore(parsedValue, frameIndex, throwIndex, frames);
+
+    if (!isValidNumber || !isValidScore) {
+      this.handleInvalidInputUI(index, frameIndex, throwIndex, isModal);
+      return;
+    }
+
+    this.recordThrow(frames, frameIndex, throwIndex, parsedValue);
+    this.updateGameState(frames, index, isModal);
+    this.focusNextInputUI(index, frameIndex, throwIndex, isModal);
   }
 
   updateFrameScore(event: InputCustomEvent, index: number): void {
     this.gameData.frameScores[index] = parseInt(event.detail.value!, 10);
   }
 
-  clearFrames(index?: number): void {
-    if (index !== undefined && index >= 0 && index < this.gameGrids.length) {
-      // Clear frames for the specified index
-      this.gameGrids.toArray()[index].clearFrames(false);
-    } else {
-      // Clear frames for all components
-      this.gameGrids.forEach((trackGrid: GameGridComponent) => {
-        trackGrid.clearFrames(false);
-      });
+  // UI INTERACTION (Toolbar, Focus, Actions)
+  onInputFocused(event: { frameIndex: number; throwIndex: number }, index: number): void {
+    this.activeGameIndex = index;
+    this.currentFocusedFrame = event.frameIndex;
+    this.currentFocusedThrow = event.throwIndex;
+    this.updateToolbarDisabledState(index);
+  }
+
+  onToolbarStateChange(state: { show: boolean; offset: number }): void {
+    this.showScoreToolbar = state.show;
+    this.toolbarOffset = state.offset;
+  }
+
+  onToolbarButtonClick(char: string): void {
+    const activeGrid = this.gameGrids.toArray().find((_, i) => i === this.activeGameIndex);
+    if (activeGrid) {
+      activeGrid.selectSpecialScore(char);
     }
-    this.toastService.showToast(ToastMessages.gameResetSuccess, 'refresh-outline');
-  }
-
-  async calculateScore(): Promise<void> {
-    const isSeries = this.seriesMode.some((mode, i) => mode && i !== 0);
-    if (isSeries) {
-      this.seriesId = this.generateUniqueSeriesId();
-    }
-
-    const gameGridArray = this.gameGrids.toArray();
-    if (!gameGridArray.every((grid: GameGridComponent) => grid.isGameValid())) {
-      this.hapticService.vibrate(ImpactStyle.Heavy);
-      this.isAlertOpen = true;
-      return;
-    }
-
-    try {
-      const perfectGame = gameGridArray.some((grid: GameGridComponent) => grid.game().totalScore === 300);
-
-      const savePromises = gameGridArray.map((grid: GameGridComponent) => grid.saveGameToLocalStorage(isSeries, this.seriesId));
-      const savedGames = await Promise.all(savePromises);
-
-      const validSavedGames = savedGames.filter((game): game is Game => game !== null);
-
-      if (validSavedGames.length > 0) {
-        const allGames = this.storageService.games();
-        await this.highScoreAlertService.checkAndDisplayHighScoreAlertsForMultipleGames(validSavedGames, allGames);
-      }
-
-      if (perfectGame) {
-        this.is300 = true;
-        setTimeout(() => (this.is300 = false), 4000);
-      }
-
-      this.hapticService.vibrate(ImpactStyle.Medium);
-      this.toastService.showToast(ToastMessages.gameSaveSuccess, 'add');
-    } catch (error) {
-      console.error(error);
-      this.toastService.showToast(ToastMessages.gameSaveError, 'bug', true);
-    }
-  }
-
-  onMaxScoreChanged(maxScore: number, index: number): void {
-    this.maxScores[index] = maxScore;
-  }
-
-  onTotalScoreChange(totalScore: number, index: number): void {
-    this.totalScores[index] = totalScore;
-  }
-
-  getSeriesMaxScore(index: number): number {
-    return this.gameScoreCalculatorService.getSeriesMaxScore(index, this.maxScores);
-  }
-
-  getSeriesCurrentScore(index: number): number {
-    return this.gameScoreCalculatorService.getSeriesCurrentScore(index, this.totalScores);
   }
 
   async presentActionSheet(): Promise<void> {
@@ -356,60 +290,29 @@ export class AddGamePage implements OnInit {
 
     const modes = [SeriesMode.Single, SeriesMode.Series3, SeriesMode.Series4, SeriesMode.Series5, SeriesMode.Series6];
 
-    modes.forEach((mode, index) => {
-      if (!this.seriesMode[index]) {
+    modes.forEach((mode) => {
+      if (mode !== this.selectedMode) {
         buttons.push({
           text: mode,
           handler: () => {
-            this.seriesMode = this.seriesMode.map((_, i) => i === index);
             this.selectedMode = mode;
+            this.propagateMetadataToSeries();
           },
         });
       }
     });
 
-    buttons.push({
-      text: 'Cancel',
-      role: 'cancel',
-    });
+    buttons.push({ text: 'Cancel', role: 'cancel' });
 
     const actionSheet = await this.actionSheetCtrl.create({
       header: 'Choose series mode',
       buttons,
     });
 
-    let gameData: Partial<Game>[] = [];
-
-    const captureGameData = () =>
-      this.gameGrids.map((gameGrid: GameGridComponent) => ({
-        frames: gameGrid.game().frames,
-        league: gameGrid.game().league,
-        note: gameGrid.game().note,
-        balls: gameGrid.game().balls,
-        patterns: gameGrid.game().patterns,
-        isPractice: gameGrid.game().isPractice,
-      }));
-
     actionSheet.onWillDismiss().then(() => {
-      gameData = captureGameData();
       this.sheetOpen = false;
       this.updateSegments();
     });
-    actionSheet.onDidDismiss().then(() => {
-      this.gameGrids.forEach((gameGrid: GameGridComponent, index: number) => {
-        const data = gameData[index];
-        if (!data) return;
-        gameGrid.game().frames = data.frames;
-        gameGrid.game().note = data.note!;
-        gameGrid.game().balls = data.balls!;
-        gameGrid.game().isPractice = data.isPractice!;
-        gameGrid.game().patterns = data.patterns!;
-        gameGrid.onPatternChanged(data.patterns!);
-        gameGrid.onLeagueChanged(data.league!);
-        gameGrid.updateScores();
-      });
-    });
-
     await actionSheet.present();
   }
 
@@ -420,14 +323,8 @@ export class AddGamePage implements OnInit {
       subHeader: 'Experimental Feature',
       message: 'It only works in certain alleys and will probably NOT work in yours!',
       buttons: [
-        {
-          text: 'Dismiss',
-          role: 'cancel',
-        },
-        {
-          text: 'OK',
-          role: 'confirm',
-        },
+        { text: 'Dismiss', role: 'cancel' },
+        { text: 'OK', role: 'confirm' },
       ],
     });
     await alert.present();
@@ -442,65 +339,311 @@ export class AddGamePage implements OnInit {
     });
   }
 
-  private updateSegments(): void {
-    let numberOfGames = 1;
+  // SAVE & RESET LOGIC
+  clearFrames(index?: number): void {
+    if (index !== undefined && index >= 0) {
+      this.games.update((games) => games.map((g, i) => (i === index ? createEmptyGame() : g)));
+    } else {
+      this.initializeGames();
+    }
+    this.toastService.showToast(ToastMessages.gameResetSuccess, 'refresh-outline');
+  }
 
-    if (this.selectedMode !== SeriesMode.Single) {
-      const match = this.selectedMode.match(/\d+/);
-      if (match) {
-        numberOfGames = parseInt(match[0], 10);
+  async confirm(modal: IonModal): Promise<void> {
+    const success = await this.processAndSaveGames([this.gameData]);
+    if (success) modal.dismiss();
+  }
+
+  async calculateScore(): Promise<void> {
+    const activeIndexes = this.getActiveTrackIndexes();
+    const gamesToSave = activeIndexes.map((idx) => this.games()[idx]);
+    const isSeries = this.selectedMode !== SeriesMode.Single;
+
+    if (isSeries) {
+      this.seriesId = this.generateUniqueSeriesId();
+    }
+
+    const success = await this.processAndSaveGames(gamesToSave, isSeries, this.seriesId);
+    if (success) {
+      // Check for 300 animation logic specifically for list view
+      const perfectGame = gamesToSave.some((g) => g.totalScore === 300);
+      if (perfectGame) {
+        this.is300 = true;
+        setTimeout(() => (this.is300 = false), 4000);
       }
-
-      this.segments = Array.from({ length: numberOfGames }, (_, i) => `Game ${i + 1}`);
+      this.initializeGames();
     }
   }
 
-  // private showAdAlert(): Promise<boolean> {
-  //   return new Promise((resolve) => {
-  //     this.alertController
-  //       .create({
-  //         header: 'Ad required',
-  //         message: 'To use this service, you need to watch an ad.',
-  //         buttons: [
-  //           {
-  //             text: 'Watch ad',
-  //             handler: async () => {
-  //               try {
-  //                 await this.adService.showRewardedAd();
-  //                 resolve(true);
-  //               } catch (error) {
-  //                 console.error(error);
-  //                 resolve(false);
-  //               }
-  //             },
-  //           },
-  //           {
-  //             text: 'Cancel',
-  //             role: 'cancel',
-  //             handler: () => {
-  //               resolve(false);
-  //             },
-  //           },
-  //         ],
-  //       })
-  //       .then((alert) => alert.present());
-  //   });
-  // }
+  private async processAndSaveGames(games: Game[], isSeries = false, seriesId = ''): Promise<boolean> {
+    if (!games.every((g) => this.isGameValid(g))) {
+      this.hapticService.vibrate(ImpactStyle.Heavy);
+      this.isAlertOpen = true;
+      return false;
+    }
 
-  private parseBowlingScores(input: string): void {
     try {
-      const { frames, frameScores, totalScore } = this.gameUtilsService.parseBowlingScores(input, this.userService.username());
-      this.gameData = this.transformGameService.transformGameData(frames, frameScores, totalScore, false, '', false, '', '', [], []);
-      this.gameData.isPractice = true;
-      if (this.gameData.frames.length === 10 && this.gameData.frameScores.length === 10 && this.gameData.totalScore <= 300) {
-        this.isModalOpen = true;
-      } else {
-        // this.toastService.showToast('Spielinhalt wurde nicht richtig erkannt! Probiere einen anderen Winkel.', 'bug-outline', true);
-        this.isModalOpen = true;
+      const savePromises = games.map((game) =>
+        this.saveGame(
+          game.frames,
+          game.frameScores,
+          game.totalScore,
+          game.isPractice,
+          game.league || '',
+          isSeries,
+          seriesId,
+          game.note || '',
+          game.patterns || [],
+          game.balls || [],
+          game.gameId,
+          game.date,
+        ),
+      );
+
+      const savedGames = (await Promise.all(savePromises)).filter((g): g is Game => g !== null);
+
+      if (savedGames.length > 0) {
+        const allGames = this.storageService.games();
+        if (savedGames.length === 1) {
+          await this.highScroreAlertService.checkAndDisplayHighScoreAlerts(savedGames[0], allGames);
+        } else {
+          await this.highScroreAlertService.checkAndDisplayHighScoreAlertsForMultipleGames(savedGames, allGames);
+        }
+        this.hapticService.vibrate(ImpactStyle.Medium);
+        this.toastService.showToast(ToastMessages.gameSaveSuccess, 'add');
+        return true;
       }
     } catch (error) {
-      this.toastService.showToast(ToastMessages.unexpectedError, 'bug', true);
       console.error(error);
+      this.toastService.showToast(ToastMessages.gameSaveError, 'bug', true);
+      await this.analyticsService.trackError('game_save_error', error instanceof Error ? error.message : String(error));
+    }
+    return false;
+  }
+
+  // PRIVATE HELPERS - GAME STATE
+  private updateGameState(frames: Frame[], index: number, isModal: boolean): void {
+    const scoreResult = this.gameScoreCalculatorService.calculateScoreFromFrames(frames);
+    const maxScore = this.gameScoreCalculatorService.calculateMaxScoreFromFrames(frames, scoreResult.totalScore);
+    const updatedGameData = { frames, frameScores: scoreResult.frameScores, totalScore: scoreResult.totalScore };
+
+    if (isModal) {
+      this.gameData = { ...this.gameData, ...updatedGameData };
+    } else {
+      this.games.update((games) => games.map((g, i) => (i === index ? { ...g, ...updatedGameData } : g)));
+      this.totalScores.update((scores) => {
+        const s = [...scores];
+        s[index] = scoreResult.totalScore;
+        return s;
+      });
+      this.maxScores.update((scores) => {
+        const s = [...scores];
+        s[index] = maxScore;
+        return s;
+      });
+    }
+  }
+
+  private initializeGames(): void {
+    this.games.set(Array.from({ length: 19 }, () => createEmptyGame()));
+  }
+
+  private getActiveTrackIndexes(): number[] {
+    const countMatch = this.selectedMode.match(/\d+/);
+    const count = countMatch ? parseInt(countMatch[0], 10) : 1;
+    return Array.from({ length: count }, (_, i) => i);
+  }
+
+  private propagateMetadataToSeries(): void {
+    const activeIndexes = this.getActiveTrackIndexes();
+    const sourceGame = this.games()[0];
+
+    this.games.update((games) =>
+      games.map((g, i) => {
+        if (activeIndexes.includes(i) && i !== 0) {
+          return {
+            ...g,
+            league: sourceGame.league,
+            isPractice: sourceGame.isPractice,
+            patterns: [...sourceGame.patterns],
+          };
+        }
+        return g;
+      }),
+    );
+
+    setTimeout(() => {
+      this.gameGrids.forEach((grid, i) => {
+        if (activeIndexes.includes(i) && i !== 0) {
+          if (grid.leagueSelector) {
+            grid.leagueSelector.selectedLeague = sourceGame.league || '';
+          }
+
+          if (grid.checkbox) {
+            grid.checkbox.checked = sourceGame.isPractice;
+            grid.checkbox.disabled = !sourceGame.isPractice;
+          }
+        }
+      });
+    }, 50);
+  }
+
+  private updateSegments(): void {
+    const activeIndexes = this.getActiveTrackIndexes();
+    this.segments = activeIndexes.map((i) => `Game ${i + 1}`);
+  }
+
+  // PRIVATE HELPERS - LOGIC
+  isGameValid(game: Game): boolean {
+    return this.validationService.isGameValid(game);
+  }
+
+  canRecordStrike(index: number): boolean {
+    if (this.currentFocusedFrame === null || this.currentFocusedThrow === null) return false;
+    return this.validationService.canRecordStrike(this.currentFocusedFrame, this.currentFocusedThrow, this.games()[index].frames);
+  }
+
+  canRecordSpare(index: number): boolean {
+    if (this.currentFocusedFrame === null || this.currentFocusedThrow === null) return false;
+    return this.validationService.canRecordSpare(this.currentFocusedFrame, this.currentFocusedThrow, this.games()[index].frames);
+  }
+
+  private recordThrow(frames: Frame[], frameIndex: number, throwIndex: number, value: number): void {
+    const frame = frames[frameIndex];
+    if (!frame) return;
+    while (frame.throws.length <= throwIndex) {
+      frame.throws.push(createThrow(0, frame.throws.length + 1));
+    }
+    frame.throws[throwIndex] = createThrow(value, throwIndex + 1);
+  }
+
+  private removeThrow(frames: Frame[], frameIndex: number, throwIndex: number): void {
+    const frame = frames[frameIndex];
+    if (!frame || !frame.throws) return;
+    if (throwIndex >= 0 && throwIndex < frame.throws.length) {
+      frame.throws.splice(throwIndex, 1);
+      frame.throws.forEach((t, idx) => {
+        t.throwIndex = idx + 1;
+      });
+    }
+  }
+
+  private async saveGame(
+    frames: Frame[],
+    frameScores: number[],
+    totalScore: number,
+    isPractice: boolean,
+    league: string,
+    isSeries: boolean,
+    seriesId: string,
+    note: string,
+    patterns: string[],
+    balls: string[],
+    gameId?: string,
+    date?: number,
+  ): Promise<Game | null> {
+    if (league === 'New') {
+      this.toastService.showToast(ToastMessages.selectLeague, 'bug', true);
+      return null;
+    }
+    try {
+      const gameData = this.transformGameService.transformGameData(
+        frames,
+        frameScores,
+        totalScore,
+        isPractice,
+        league,
+        isSeries,
+        seriesId,
+        note,
+        patterns,
+        balls,
+        gameId,
+        date,
+      );
+      await this.storageService.saveGameToLocalStorage(gameData);
+      this.analyticsService.trackGameSaved({ score: gameData.totalScore });
+      return gameData;
+    } catch (error) {
+      console.error('Error saving game:', error);
+      throw error;
+    }
+  }
+
+  private generateUniqueSeriesId(): string {
+    return 'series-' + Math.random().toString(36).substring(2, 15);
+  }
+
+  private handleInvalidInputUI(index: number, frameIndex: number, throwIndex: number, isModal: boolean): void {
+    this.hapticService.vibrate(ImpactStyle.Heavy);
+    const grid = isModal ? this.modalGrid : this.gameGrids.toArray()[index];
+    if (grid) grid.handleInvalidInput(frameIndex, throwIndex);
+  }
+
+  private focusNextInputUI(index: number, frameIndex: number, throwIndex: number, isModal: boolean): void {
+    const grid = isModal ? this.modalGrid : this.gameGrids.toArray()[index];
+    if (grid) grid.focusNextInput(frameIndex, throwIndex);
+  }
+
+  private updateToolbarDisabledState(index: number): void {
+    this.toolbarDisabledState = {
+      strikeDisabled: !this.canRecordStrike(index),
+      spareDisabled: !this.canRecordSpare(index),
+    };
+  }
+
+  // CAMERA / OCR LOGIC (Consider moving to Service)
+  async handleImageUpload(): Promise<void> {
+    const alertData = localStorage.getItem('alert');
+    if (!alertData) {
+      await this.presentWarningAlert();
+      return;
+    }
+
+    const { value, expiration } = JSON.parse(alertData);
+    if (value !== 'true' || new Date().getTime() >= expiration) {
+      await this.presentWarningAlert();
+      return;
+    }
+
+    try {
+      const imageUrl: File | Blob | undefined = await this.takeOrChoosePicture();
+      if (imageUrl instanceof File) {
+        this.loadingService.setLoading(true);
+        const gameText = await this.imageProcessingService.performOCR(imageUrl);
+        this.parseBowlingScores(gameText!);
+        await this.analyticsService.trackOCRUsed(!!gameText);
+      } else {
+        this.toastService.showToast(ToastMessages.noImage, 'bug', true);
+      }
+    } catch (error) {
+      this.toastService.showToast(ToastMessages.imageUploadError, 'bug', true);
+      console.error(error);
+      await this.analyticsService.trackError('ocr_error', error instanceof Error ? error.message : String(error));
+    } finally {
+      this.loadingService.setLoading(false);
+    }
+  }
+
+  private async takeOrChoosePicture(): Promise<File | Blob | undefined> {
+    if ((isPlatform('android') || isPlatform('ios')) && !isPlatform('mobileweb')) {
+      const permissionRequestResult = await Camera.checkPermissions();
+      if (permissionRequestResult.photos === 'prompt' || permissionRequestResult.photos === 'denied') {
+        const permissions = await Camera.requestPermissions();
+        if (!permissions.photos) {
+          await this.showPermissionDeniedAlert();
+          return undefined;
+        }
+      }
+      const image = await Camera.getPhoto({
+        quality: 90,
+        allowEditing: false,
+        resultType: CameraResultType.Uri,
+        source: CameraSource.Prompt,
+      });
+      return await fetch(image.webPath!).then((r) => r.blob());
+    } else {
+      return await this.openFileInput();
     }
   }
 
@@ -509,68 +652,26 @@ export class AddGamePage implements OnInit {
       try {
         const fileInput = document.getElementById('upload') as HTMLInputElement;
         fileInput.value = '';
-
-        fileInput.addEventListener('change', () => {
-          const selectedFile = fileInput.files?.[0];
-          resolve(selectedFile);
-        });
-
+        fileInput.onchange = () => resolve(fileInput.files?.[0]);
         fileInput.click();
       } catch (error) {
-        console.error('Fehler beim Öffnen des Datei-Uploads:', error);
+        console.error('Upload Error:', error);
         this.toastService.showToast(ToastMessages.unexpectedError, 'bug', true);
         resolve(undefined);
       }
     });
   }
 
-  private async takeOrChoosePicture(): Promise<File | Blob | undefined> {
-    if ((isPlatform('android') || isPlatform('ios')) && !isPlatform('mobileweb')) {
-      const permissionRequestResult = await Camera.checkPermissions();
-
-      if (permissionRequestResult.photos === 'prompt') {
-        const permissions = await Camera.requestPermissions();
-        if (permissions.photos) {
-          await this.handleImageUpload();
-        } else {
-          await this.showPermissionDeniedAlert();
-        }
-      } else if (permissionRequestResult.photos === 'denied') {
-        await this.showPermissionDeniedAlert();
-      } else {
-        const image = await Camera.getPhoto({
-          quality: 90,
-          allowEditing: false,
-          resultType: CameraResultType.Uri,
-          source: CameraSource.Prompt,
-        });
-
-        const blob = await fetch(image.webPath!).then((r) => r.blob());
-
-        return blob;
-      }
-    } else {
-      const file = await this.openFileInput();
-      if (file) {
-        return file;
-      }
-    }
-
-    return;
-  }
-
   private async showPermissionDeniedAlert(): Promise<void> {
     const alert = await this.alertController.create({
       header: 'Permission Denied',
-      message: 'To take or choose a picture, you need to grant camera access permission. Please enable camera access in your device settings.',
+      message: 'To take or choose a picture, you need to grant camera access.',
       buttons: [
         {
           text: 'OK',
           handler: async () => {
-            const permissionRequestResult = await Camera.requestPermissions();
-            if (permissionRequestResult.photos === 'granted') {
-              this.takeOrChoosePicture();
-            }
+            const res = await Camera.requestPermissions();
+            if (res.photos === 'granted') this.takeOrChoosePicture();
           },
         },
       ],
@@ -578,7 +679,16 @@ export class AddGamePage implements OnInit {
     await alert.present();
   }
 
-  private generateUniqueSeriesId(): string {
-    return 'series-' + Math.random().toString(36).substring(2, 15);
+  private parseBowlingScores(input: string): void {
+    try {
+      const { frames, frameScores, totalScore } = this.gameUtilsService.parseBowlingScores(input, this.userService.username());
+      const framesAsFrameArray = numberArraysToFrames(frames);
+      this.gameData = this.transformGameService.transformGameData(framesAsFrameArray, frameScores, totalScore, false, '', false, '', '', [], []);
+      this.gameData.isPractice = true;
+      this.isModalOpen = true;
+    } catch (error) {
+      this.toastService.showToast(ToastMessages.unexpectedError, 'bug', true);
+      console.error(error);
+    }
   }
 }

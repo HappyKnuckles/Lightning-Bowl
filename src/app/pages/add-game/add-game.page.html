@@ -18,7 +18,7 @@
 
   @if (selectedMode !== "Single") {
     <ion-toolbar>
-      <ion-segment [value]="selectedSegment" [scrollable]="true">
+      <ion-segment [value]="selectedSegment" [scrollable]="true" (ionChange)="selectedSegment = $any($event).detail.value">
         <ion-segment-button *ngFor="let segment of segments" [value]="segment" [contentId]="segment">
           <ion-label class="segment-label">{{ segment }}</ion-label>
         </ion-segment-button>
@@ -56,69 +56,75 @@
   <lottie-player slot="end" autoplay loop src="https://lottie.host/7b3bdd2a-221b-463e-9f59-d95964639389/duMcnXopMJ.json"></lottie-player>
 </div>
 
-<ng-container *ngFor="let mode of seriesMode; let i = index">
-  <ion-content [fullscreen]="true" *ngIf="mode">
-    <ion-segment-view>
-      <ion-segment-content *ngFor="let trackIndex of trackIndexes[i]; let j = index" [id]="segments[j]">
-        <app-game-grid
-          #gameGrid
-          (maxScoreChanged)="onMaxScoreChanged($event, trackIndex)"
-          (totalScoreChanged)="onTotalScoreChange($event, trackIndex)"
-          (leagueChanged)="onLeagueChange($event)"
-          (patternChanged)="onPatternChange($event)"
-          (isPracticeChanged)="onIsPracticeChange($event)"
-          (toolbarStateChanged)="onToolbarStateChanged($event)"
-          (toolbarDisabledState)="onToolbarDisabledStateChanged($event)"
-          [patternModalId]="j.toString()"
-          [ballSelectorId]="'modal-ball-selector' + j"></app-game-grid>
-        <ion-grid *ngIf="i !== 0">
-          <ion-row class="button-row">
-            <ion-col>
-              <ion-button (click)="clearFrames(j)">Clear Score</ion-button>
-            </ion-col>
-          </ion-row>
-        </ion-grid>
-      </ion-segment-content>
-    </ion-segment-view>
+<ion-content [fullscreen]="true">
+  <ion-segment-view>
+    <ion-segment-content *ngFor="let segment of segments; let i = index" [id]="segment">
+      <app-game-grid
+        #gameGrid
+        [game]="games()[i]"
+        [strikeDisabled]="toolbarDisabledState.strikeDisabled"
+        [spareDisabled]="toolbarDisabledState.spareDisabled"
+        [maxScore]="maxScores()[i]"
+        (throwInput)="handleThrowInput($event, i)"
+        (leagueChanged)="onLeagueChange($event)"
+        (patternChanged)="onPatternChange($event)"
+        (isPracticeChanged)="onIsPracticeChange($event, i)"
+        (toolbarStateChanged)="onToolbarStateChange($event)"
+        (noteChanged)="onNoteChange($event, i)"
+        (ballsChanged)="onBallsChange($event, i)"
+        (inputFocused)="onInputFocused($event, i)"
+        [patternModalId]="i.toString()"
+        [ballSelectorId]="'modal-ball-selector' + i">
+      </app-game-grid>
 
-    <ion-grid *ngIf="i === 0">
-      <ion-row class="button-row">
-        <ion-col>
-          <ion-button (click)="clearFrames()">Clear Score</ion-button>
-        </ion-col>
-        <ion-col>
-          <ion-button (click)="calculateScore()">Save Score</ion-button>
-        </ion-col>
-      </ion-row>
-    </ion-grid>
+      <ion-grid *ngIf="selectedMode !== 'Single'">
+        <ion-row class="button-row">
+          <ion-col>
+            <ion-button (click)="clearFrames(i)">Clear Score {{ i + 1 }}</ion-button>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+    </ion-segment-content>
+  </ion-segment-view>
 
-    <ion-grid *ngIf="i !== 0">
-      <ion-row>
-        <ion-col class="middle count">Score Series: {{ getSeriesCurrentScore(i) }}</ion-col>
-        <ion-col class="middle count">Max Series: {{ getSeriesMaxScore(i) }}</ion-col>
-      </ion-row>
-      <ion-row class="button-row">
-        <ion-col>
-          <ion-button (click)="clearFrames()">Clear Scores</ion-button>
-        </ion-col>
-        <ion-col>
-          <ion-button (click)="calculateScore()">Save Series</ion-button>
-        </ion-col>
-      </ion-row>
-    </ion-grid>
-  </ion-content>
-</ng-container>
+  <ion-grid *ngIf="selectedMode === 'Single'">
+    <ion-row class="button-row">
+      <ion-col>
+        <ion-button (click)="clearFrames()">Clear Score</ion-button>
+      </ion-col>
+      <ion-col>
+        <ion-button (click)="calculateScore()">Save Score</ion-button>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
 
-<ion-modal [isOpen]="isModalOpen" (didDismiss)="isModalOpen = false">
+  <ion-grid *ngIf="selectedMode !== 'Single'">
+    <ion-row>
+      <ion-col class="middle count">Score Series: {{ seriesCurrentScore() }}</ion-col>
+      <ion-col class="middle count">Max Series: {{ seriesMaxscore() }}</ion-col>
+    </ion-row>
+    <ion-row class="button-row">
+      <ion-col>
+        <ion-button (click)="clearFrames()">Clear All</ion-button>
+      </ion-col>
+      <ion-col>
+        <ion-button (click)="calculateScore()">Save Series</ion-button>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+</ion-content>
+
+<!-- Modal for OCR -->
+<ion-modal [isOpen]="isModalOpen" (didDismiss)="isModalOpen = false" #modal>
   <ng-template>
     <ion-header>
       <ion-toolbar>
         <ion-buttons slot="start">
-          <ion-button (click)="cancel()">Cancel</ion-button>
+          <ion-button (click)="modal.dismiss()">Cancel</ion-button>
         </ion-buttons>
         <ion-title>Your game</ion-title>
         <ion-buttons slot="end">
-          <ion-button (click)="confirm()" [strong]="true" [disabled]="!isGameValid(modalGrid.game())">Save</ion-button>
+          <ion-button (click)="confirm(modal)" [strong]="true" [disabled]="!isGameValid(gameData)">Save</ion-button>
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
@@ -127,10 +133,15 @@
       <app-game-grid
         #modalGrid
         [ballSelectorId]="gameData.gameId + '-modal-ball-selector'"
-        (leagueChanged)="onLeagueChange($event)"
-        (isPracticeChanged)="onIsPracticeChange($event)"
         [game]="gameData"
-        [patternModalId]="gameData.gameId"></app-game-grid>
+        (throwInput)="handleThrowInput($event, 0, true)"
+        (leagueChanged)="onLeagueChange($event, true)"
+        (isPracticeChanged)="onIsPracticeChange($event, 0, true)"
+        (noteChanged)="onNoteChange($event, 0, true)"
+        (ballsChanged)="onBallsChange($event, 0, true)"
+        (patternChanged)="onPatternChange($event, true)"
+        [patternModalId]="gameData.gameId">
+      </app-game-grid>
     </ion-content>
   </ng-template>
 </ion-modal>

@@ -1,11 +1,11 @@
-<app-game-score-toolbar
+<!-- <app-game-score-toolbar
   [show]="showButtonToolbar"
   [offset]="keyboardOffset"
-  [strikeDisabled]="isStrikeDisabled"
-  [spareDisabled]="isSpareDisabled"
+  [strikeDisabled]="strikeDisabled()"
+  [spareDisabled]="spareDisabled()"
   (strikeClick)="selectSpecialScore('X')"
   (spareClick)="selectSpecialScore('/')">
-</app-game-score-toolbar>
+</app-game-score-toolbar> -->
 
 <div class="grid-container">
   <ion-grid fixed="true" *ngFor="let i of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; let frameIndex = index">
@@ -20,10 +20,10 @@
           clearOnEdit="true"
           inputmode="numeric"
           autocapitalize="on"
+          [debounce]="showMetadata() ? 0 : 500"
           [value]="getFrameValue(frameIndex, 0)"
-          (ionInput)="simulateScore($event, frameIndex, 0)"
-          (ionFocus)="handleInputFocus(frameIndex, 0)"
-          (ionBlur)="handleInputBlur()">
+          (ionInput)="onScoreInput($event, frameIndex, 0)"
+          (ionFocus)="handleInputFocus(frameIndex, 0)">
         </ion-input>
       </ion-col>
       <ion-col class="input-col" *ngIf="i !== 10">
@@ -32,11 +32,11 @@
           clearOnEdit="true"
           inputmode="numeric"
           autocapitalize="on"
-          [disabled]="game().frames[frameIndex][0] === 10 && i !== 10"
+          [debounce]="showMetadata() ? 0 : 500"
+          [disabled]="getLocalFrameValue(frameIndex, 0) === 10 && i !== 10"
           [value]="getFrameValue(frameIndex, 1)"
-          (ionInput)="simulateScore($event, frameIndex, 1)"
-          (ionFocus)="handleInputFocus(frameIndex, 1)"
-          (ionBlur)="handleInputBlur()">
+          (ionInput)="onScoreInput($event, frameIndex, 1)"
+          (ionFocus)="handleInputFocus(frameIndex, 1)">
         </ion-input>
       </ion-col>
       <ion-col class="input-col" *ngIf="i === 10">
@@ -45,11 +45,11 @@
           clearOnEdit="true"
           inputmode="numeric"
           autocapitalize="on"
-          [disabled]="game().frames[frameIndex][0] === 10 && i !== 10"
+          [debounce]="showMetadata() ? 0 : 500"
+          [disabled]="getLocalFrameValue(frameIndex, 0) === 10 && i !== 10"
           [value]="getFrameValue(frameIndex, 1)"
-          (ionInput)="simulateScore($event, frameIndex, 1)"
-          (ionFocus)="handleInputFocus(frameIndex, 1)"
-          (ionBlur)="handleInputBlur()">
+          (ionInput)="onScoreInput($event, frameIndex, 1)"
+          (ionFocus)="handleInputFocus(frameIndex, 1)">
         </ion-input>
       </ion-col>
       <ion-col class="input-col" *ngIf="i === 10">
@@ -58,11 +58,13 @@
           clearOnEdit="true"
           inputmode="numeric"
           autocapitalize="on"
+          [debounce]="showMetadata() ? 0 : 500"
           [value]="getFrameValue(frameIndex, 2)"
-          [disabled]="game().frames[frameIndex][0] !== 10 && game().frames[frameIndex][0] + (game().frames[frameIndex][1] || 0) !== 10"
-          (ionInput)="simulateScore($event, frameIndex, 2)"
-          (ionFocus)="handleInputFocus(frameIndex, 2)"
-          (ionBlur)="handleInputBlur()">
+          [disabled]="
+            getLocalFrameValue(frameIndex, 0) !== 10 && (getLocalFrameValue(frameIndex, 0) ?? 0) + (getLocalFrameValue(frameIndex, 1) ?? 0) !== 10
+          "
+          (ionInput)="onScoreInput($event, frameIndex, 2)"
+          (ionFocus)="handleInputFocus(frameIndex, 2)">
         </ion-input>
       </ion-col>
     </ion-row>
@@ -70,27 +72,27 @@
       <ion-col class="middle count">
         <ng-container
           *ngIf="
-            (game().frames[frameIndex][0] !== undefined ||
-              game().frames[frameIndex][1] !== undefined ||
-              (i === 10 && game().frames[frameIndex][0] !== undefined && game().frames[frameIndex][1] !== undefined)) &&
-            isNumber(game().frameScores[i - 1])
+            (getLocalFrameValue(frameIndex, 0) !== undefined ||
+              getLocalFrameValue(frameIndex, 1) !== undefined ||
+              (i === 10 && getLocalFrameValue(frameIndex, 0) !== undefined && getLocalFrameValue(frameIndex, 1) !== undefined)) &&
+            isNumber(frameScores()[i - 1])
           ">
-          {{ game().frameScores[i - 1] }}
+          {{ frameScores()[i - 1] }}
         </ng-container>
 
-        <ng-container *ngIf="i === 10 && (game().frames[frameIndex][0] === undefined || game().frames[frameIndex][1] === undefined)">
-          <span style="color: var(--ion-color-secondary)"> ({{ maxScore }}) </span>
+        <ng-container *ngIf="i === 10 && (getLocalFrameValue(frameIndex, 0) === undefined || getLocalFrameValue(frameIndex, 1) === undefined)">
+          <span style="color: var(--ion-color-secondary)"> ({{ maxScore() }}) </span>
         </ng-container>
       </ion-col>
 
       <ion-col
         *ngIf="
           !(
-            (game().frames[frameIndex][0] !== undefined ||
-              game().frames[frameIndex][1] !== undefined ||
-              (i === 10 && game().frames[frameIndex][0] !== undefined)) &&
-            isNumber(game().frameScores[i - 1])
-          ) && !(i === 10 && game().frames[frameIndex][0] === undefined)
+            (getLocalFrameValue(frameIndex, 0) !== undefined ||
+              getLocalFrameValue(frameIndex, 1) !== undefined ||
+              (i === 10 && getLocalFrameValue(frameIndex, 0) !== undefined)) &&
+            isNumber(frameScores()[i - 1])
+          ) && !(i === 10 && getLocalFrameValue(frameIndex, 0) === undefined)
         "
         class="middle count"
         style="color: var(--ion-color-quartiary)"
@@ -100,11 +102,11 @@
   </ion-grid>
 </div>
 
-@if (showMetadata()) {
+@if (showMetadata() && currentGame) {
   <div style="margin: 0 5px">
     <ion-list lines="full" style="border-radius: 7px">
       <ion-item>
-        <ion-checkbox [(ngModel)]="game().isPractice" name="isPractice" #checkbox (ionChange)="isPracticeChanged.emit(game().isPractice)"
+        <ion-checkbox [checked]="currentGame.isPractice" name="isPractice" #checkbox (ionChange)="onIsPracticeChange($any($event.target).checked)"
           >Practice</ion-checkbox
         >
       </ion-item>
@@ -112,14 +114,14 @@
       <app-league-selector [isAddPage]="true" (leagueChanged)="onLeagueChanged($event)" #leagueSelector></app-league-selector>
       <ion-item [id]="patternModalId()" button [disabled]="storageService.allPatterns().length === 0">
         <ion-label>Patterns</ion-label>
-        <span class="ion-text-right">{{ game().patterns.join(", ") || "None" }}</span>
+        <span class="ion-text-right">{{ currentGame.patterns.join(", ") || "None" }}</span>
       </ion-item>
       <ion-modal [presentingElement]="presentingElement" [trigger]="patternModalId()">
         <ng-template>
           <app-generic-typeahead
             [items]="storageService.allPatterns()"
             [config]="patternTypeaheadConfig"
-            [prevSelectedItems]="game().patterns"
+            [prevSelectedItems]="currentGame.patterns || []"
             (selectedItemsChange)="onPatternChanged($event)">
           </app-generic-typeahead>
         </ng-template>
@@ -130,14 +132,15 @@
       </ion-item>
       <ion-modal [enterAnimation]="enterAnimation" [leaveAnimation]="leaveAnimation" #modal [trigger]="ballSelectorId()" class="ball-modal">
         <ng-template>
-          <app-ball-select (ballSelect)="onBallSelect($event, modal)" [selectedBalls]="game().balls"></app-ball-select>
+          <app-ball-select (ballSelect)="onBallSelect($event, modal)" [selectedBalls]="currentGame.balls || []"></app-ball-select>
         </ng-template>
       </ion-modal>
       <ion-item lines="none">
         <ion-textarea
           label="Note"
           type="text"
-          [(ngModel)]="game().note"
+          [value]="currentGame.note || ''"
+          (ionInput)="onNoteChange($any($event).detail.value)"
           name="note"
           [autoGrow]="true"
           placeholder="today knee pain, lanes dry af, i fucking suck today"></ion-textarea>
