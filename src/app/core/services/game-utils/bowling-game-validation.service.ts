@@ -413,36 +413,54 @@ export class BowlingGameValidationService {
    * is left standing with a gap between standing pins
    */
   isSplit(pinsLeftStanding: number[]): boolean {
-    if (!pinsLeftStanding?.length || pinsLeftStanding.length < 2) {
+    const numPins = pinsLeftStanding?.length ?? 0;
+
+    // 1. Less than 2 pins cannot be a split
+    if (numPins < 2) {
       return false;
     }
 
-    // Headpin (1) must be down for a split
+    // 2. Headpin (1) must be down for a split
     if (pinsLeftStanding.includes(1)) {
       return false;
     }
 
-    // Adjacency map for 10-pin bowling
-    const adjacencies: Record<number, number[]> = {
-      1: [2, 3],
-      2: [1, 4, 5],
-      3: [1, 5, 6],
-      4: [2, 7, 8],
-      5: [2, 3, 8, 9],
-      6: [3, 9, 10],
-      7: [4, 8],
-      8: [4, 5, 7, 9],
-      9: [5, 6, 8, 10],
-      10: [6, 9],
+    // 3. Map pins to their specific columns (1 through 7, left to right)
+    // Col 1: Pin 7
+    // Col 2: Pin 4
+    // Col 3: Pin 2, 8
+    // Col 4: Pin 1, 5  (Note: Pin 1 is handled above, but 5 remains)
+    // Col 5: Pin 3, 9
+    // Col 6: Pin 6
+    // Col 7: Pin 10
+    const pinToColumn: Record<number, number> = {
+      7: 1,
+      4: 2,
+      2: 3,
+      8: 3,
+      1: 4,
+      5: 4,
+      3: 5,
+      9: 5,
+      6: 6,
+      10: 7,
     };
 
-    const standing = new Set(pinsLeftStanding);
+    // 4. Determine which columns still have pins standing
+    const occupiedColumns = new Set<number>();
+    for (const pin of pinsLeftStanding) {
+      const col = pinToColumn[pin];
+      if (col) occupiedColumns.add(col);
+    }
 
-    // If at least one pin is isolated (no adjacent standing pins) → it's a split
-    for (const pin of standing) {
-      const adjacentPins = adjacencies[pin] ?? [];
-      const hasAdjacentStanding = adjacentPins.some((adj) => standing.has(adj));
-      if (!hasAdjacentStanding) {
+    // 5. Sort the occupied columns to check for gaps
+    const sortedCols = Array.from(occupiedColumns).sort((a, b) => a - b);
+
+    // 6. Check for a gap between columns
+    // If the difference between adjacent occupied columns is > 1,
+    // it means there is an empty column in between.
+    for (let i = 0; i < sortedCols.length - 1; i++) {
+      if (sortedCols[i + 1] - sortedCols[i] > 1) {
         return true;
       }
     }

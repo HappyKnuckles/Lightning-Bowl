@@ -28,12 +28,10 @@ export class GameDataTransformerService {
       const date = existingDate || Date.now();
       const isPerfect = totalScore === 300;
 
-      // Calculate isClean directly from Frame[] - no open frames means clean game
       const isClean = this.calculateIsClean(frames);
 
       // Ensure frames are in proper Frame[] format
       const normalizedFrames: Frame[] = frames.map((frame, frameIndex) => {
-        // Handle both old format (number[]) and new format (Frame)
         if (Array.isArray(frame) && typeof frame[0] === 'number') {
           // Old format: number[]
           const numberArray = frame as unknown as number[];
@@ -90,10 +88,6 @@ export class GameDataTransformerService {
     }
   }
 
-  /**
-   * Calculate if a game is "clean" (no open frames - all strikes or spares)
-   * Uses Frame[] directly
-   */
   private calculateIsClean(frames: Frame[]): boolean {
     for (let i = 0; i < Math.min(frames.length, 10); i++) {
       const frame = frames[i];
