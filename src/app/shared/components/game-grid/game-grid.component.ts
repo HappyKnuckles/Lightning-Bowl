@@ -10,7 +10,7 @@ import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { LeagueSelectorComponent } from '../league-selector/league-selector.component';
 import { InputCustomEvent } from '@ionic/angular';
 import { UtilsService } from 'src/app/core/services/utils/utils.service';
-import { Game, Frame, createEmptyGame, createEmptyFrames, getThrowValue } from 'src/app/core/models/game.model';
+import { Game, createEmptyGame, getThrowValue } from 'src/app/core/models/game.model';
 import { GenericTypeaheadComponent } from '../generic-typeahead/generic-typeahead.component';
 import { createPartialPatternTypeaheadConfig } from '../generic-typeahead/typeahead-configs';
 import { TypeaheadConfig } from '../generic-typeahead/typeahead-config.interface';
@@ -68,9 +68,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
   @ViewChildren(IonInput) inputs!: QueryList<IonInput>;
   @ViewChild('leagueSelector') leagueSelector!: LeagueSelectorComponent;
   @ViewChild('checkbox') checkbox!: IonCheckbox;
-  frames = computed(() => this.game()?.frames ?? createEmptyFrames());
   frameScores = computed(() => this.game()?.frameScores ?? []);
-  totalScore = computed(() => this.game()?.totalScore ?? 0);
   enterAnimation = alertEnterAnimation;
   leaveAnimation = alertLeaveAnimation;
   presentingElement?: HTMLElement;
@@ -198,7 +196,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
   }
 
   getFrameValue(frameIndex: number, throwIndex: number): string {
-    const frame = this.frames()[frameIndex];
+    const frame = this.game().frames[frameIndex];
     if (!frame) return '';
 
     const val = getThrowValue(frame, throwIndex);
@@ -242,40 +240,22 @@ export class GameGridComponent implements OnInit, OnDestroy {
     return val.toString();
   }
 
-  getFrameScore(frameIndex: number): number | undefined {
-    return this.frameScores()[frameIndex];
-  }
-
-  getTotalScore(): number {
-    return this.totalScore();
-  }
-
-  getLocalFrames(): Frame[] {
-    return this.frames();
-  }
-
   getLocalFrameValue(frameIndex: number, throwIndex: number): number | undefined {
-    return getThrowValue(this.frames()[frameIndex], throwIndex);
+    return getThrowValue(this.game().frames[frameIndex], throwIndex);
   }
 
   isNumber(value: unknown): boolean {
     return this.utilsService.isNumber(value);
   }
 
-  async focusNextInput(frameIndex: number, throwIndex: number): Promise<void> {
-    await new Promise((resolve) => setTimeout(resolve, 50));
-    const inputArray = this.inputs.toArray();
-    const currentInputPosition = frameIndex * 2 + throwIndex;
+  focusNextInput(frameIndex: number, throwIndex: number): void {
+    requestAnimationFrame(() => {
+      const inputs = this.inputs.toArray();
+      const startIndex = this.getInputPosition(frameIndex, throwIndex) + 1;
 
-    for (let i = currentInputPosition + 1; i < inputArray.length; i++) {
-      const nextInput = inputArray[i];
-      const nextInputElement = await nextInput.getInputElement();
-
-      if (!nextInputElement.disabled) {
-        nextInput.setFocus();
-        break;
-      }
-    }
+      const nextInput = inputs.slice(startIndex).find((input) => !input.disabled);
+      nextInput?.setFocus();
+    });
   }
 
   handleInvalidInput(frameIndex: number, throwIndex: number): void {
