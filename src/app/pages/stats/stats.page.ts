@@ -35,7 +35,7 @@ import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import { FormsModule } from '@angular/forms';
 import { addIcons } from 'ionicons';
 import { calendarNumber, calendarNumberOutline, filterOutline, cloudUploadOutline, cloudDownloadOutline } from 'ionicons/icons';
-import { SessionStats } from 'src/app/core/models/stats.model';
+import { LeaveStats, SessionStats } from 'src/app/core/models/stats.model';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { AlertController, ModalController, RefresherCustomEvent, SegmentCustomEvent } from '@ionic/angular';
 import { SortUtilsService } from 'src/app/core/services/sort-utils/sort-utils.service';
@@ -48,6 +48,7 @@ import {
   playFrequencyStatDefinitions,
   specialStatDefinitions,
   strikeStatDefinitions,
+  pinStatDefinitions,
   spareStatDefinitions,
 } from '../../core/constants/stats.definitions.constants';
 import { GameFilterService } from 'src/app/core/services/game-filter/game-filter.service';
@@ -62,7 +63,7 @@ import { GameFilterComponent } from 'src/app/shared/components/game-filter/game-
 import { SpareDisplayComponent } from 'src/app/shared/components/spare-display/spare-display.component';
 import { StatDisplayComponent } from 'src/app/shared/components/stat-display/stat-display.component';
 import { BallStatsComponent } from '../../shared/components/ball-stats/ball-stats.component';
-import { FileHeaderButtonsComponent } from 'src/app/shared/components/file-header-buttons/file-header-buttons.component';
+import { PinLeaveStatsComponent } from '../../shared/components/pin-leave-stats/pin-leave-stats.component';
 
 @Component({
   selector: 'app-stats',
@@ -93,7 +94,7 @@ import { FileHeaderButtonsComponent } from 'src/app/shared/components/file-heade
     SpareDisplayComponent,
     GenericFilterActiveComponent,
     BallStatsComponent,
-    FileHeaderButtonsComponent,
+    PinLeaveStatsComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -102,11 +103,12 @@ export class StatsPage implements OnInit, AfterViewInit {
   overallStatDefinitions = overallStatDefinitions;
   seriesStatDefinitions = seriesStatDefinitions;
   throwStatDefinitions = throwStatDefinitions;
-  spareStatDefinitions = spareStatDefinitions;
   sessionStatDefinitions = sessionStatDefinitions;
   playFrequencyStatDefinitions = playFrequencyStatDefinitions;
   specialStatDefinitions = specialStatDefinitions;
   strikeStatDefinitions = strikeStatDefinitions;
+  spareStatDefinitions = spareStatDefinitions;
+  pinStatDefinitions = pinStatDefinitions;
   uniqueSortedDates: Signal<number[]> = computed(() => {
     const dateSet = new Set<number>();
 
@@ -131,7 +133,72 @@ export class StatsPage implements OnInit, AfterViewInit {
   chartViewMode: 'week' | 'game' | 'monthly' | 'yearly' = 'game';
   averageChartViewMode: 'daily' | 'weekly' | 'monthly' | 'yearly' = 'monthly';
   selectedSegment = 'Overall';
-  segments: string[] = ['Overall', 'Throws', 'Spares', 'Sessions'];
+  segments: string[] = ['Overall', 'Throws', 'Spares', 'Pins', 'Sessions'];
+
+  // Most common leaves computed signal
+  mostCommonLeaves: Signal<LeaveStats[]> = computed(() => {
+    const games = this.gameFilterService.filteredGames().filter((game) => game.isPinMode);
+    const leaveMap = new Map<string, { pins: number[]; occurrences: number; pickups: number }>();
+
+    games.forEach((game) => {
+      game.frames.forEach((frame: any, idx: number) => {
+        if (frame.throws && frame.throws.length > 0) {
+          const firstThrow = frame.throws[0];
+
+          // Check first throw (not a strike)
+          if (firstThrow && firstThrow.value !== 10 && firstThrow.pinsLeftStanding) {
+            const pinsLeft = firstThrow.pinsLeftStanding.sort((a: number, b: number) => a - b);
+            const key = pinsLeft.join(',');
+
+            if (!leaveMap.has(key)) {
+              leaveMap.set(key, { pins: pinsLeft, occurrences: 0, pickups: 0 });
+            }
+
+            const leave = leaveMap.get(key)!;
+            leave.occurrences++;
+
+            // Check if spare was made
+            const secondThrow = frame.throws[1];
+            if (secondThrow && firstThrow.value + secondThrow.value === 10) {
+              leave.pickups++;
+            }
+          }
+
+          // Check 10th frame second throw if first was strike
+          if (idx === 9 && firstThrow && firstThrow.value === 10 && frame.throws[1]) {
+            const secondThrow = frame.throws[1];
+            if (secondThrow && secondThrow.value !== 10 && secondThrow.pinsLeftStanding) {
+              const pinsLeft = secondThrow.pinsLeftStanding.sort((a: number, b: number) => a - b);
+              const key = pinsLeft.join(',');
+
+              if (!leaveMap.has(key)) {
+                leaveMap.set(key, { pins: pinsLeft, occurrences: 0, pickups: 0 });
+              }
+
+              const leave = leaveMap.get(key)!;
+              leave.occurrences++;
+
+              // Check if spare was made
+              const thirdThrow = frame.throws[2];
+              if (thirdThrow && secondThrow.value + thirdThrow.value === 10) {
+                leave.pickups++;
+              }
+            }
+          }
+        }
+      });
+    });
+
+    // Convert to array and add pickup percentage
+    const leavesArray: LeaveStats[] = Array.from(leaveMap.values()).map((leave) => ({
+      ...leave,
+      pickupPercentage: leave.occurrences > 0 ? (leave.pickups / leave.occurrences) * 100 : 0,
+    }));
+
+    // Sort by occurrences (most common first) and take top 10
+    return leavesArray.sort((a, b) => b.occurrences - a.occurrences).slice(0, 10);
+  });
+
   // Viewchilds and Instances
   @ViewChild('scoreChart', { static: false }) scoreChart?: ElementRef;
   @ViewChild('averageScoreChart', { static: false }) averageScoreChart?: ElementRef;

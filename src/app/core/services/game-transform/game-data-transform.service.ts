@@ -5,10 +5,6 @@ import { Game, Frame, Throw, getThrowValue } from 'src/app/core/models/game.mode
   providedIn: 'root',
 })
 export class GameDataTransformerService {
-  /**
-   * Transform game data for storage
-   * Accepts Frame[] format (from getCurrentGameState) and returns a complete Game object
-   */
   transformGameData(
     frames: Frame[],
     frameScores: number[],
@@ -22,6 +18,7 @@ export class GameDataTransformerService {
     balls?: string[],
     existingGameId?: string,
     existingDate?: number,
+    isPinMode?: boolean,
   ): Game {
     try {
       const gameId = existingGameId || Date.now() + '_' + Math.random().toString(36).slice(2, 9);
@@ -45,7 +42,6 @@ export class GameDataTransformerService {
             ),
           };
         } else if (frame && 'throws' in frame) {
-          // New format: Frame - ensure proper structure
           return {
             frameIndex: frame.frameIndex || frameIndex + 1,
             throws: (frame.throws || []).map(
@@ -54,7 +50,7 @@ export class GameDataTransformerService {
                 throwIndex: t.throwIndex || throwIndex + 1,
                 isSplit: t.isSplit,
                 pinsLeftStanding: t.pinsLeftStanding,
-                pinsHit: t.pinsHit,
+                pinsKnockedDown: t.pinsKnockedDown,
               }),
             ),
           };
@@ -77,6 +73,7 @@ export class GameDataTransformerService {
         seriesId,
         note,
         isPractice,
+        isPinMode: isPinMode ?? false,
         league,
         isClean,
         isPerfect,

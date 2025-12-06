@@ -1,3 +1,5 @@
+// src/app/core/services/series-stats/series-stats.service.ts
+
 import { Injectable } from '@angular/core';
 import { Game } from 'src/app/core/models/game.model';
 import { SeriesStats } from '../../../models/stats.model';

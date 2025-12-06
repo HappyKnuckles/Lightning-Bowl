@@ -48,6 +48,7 @@ import { GameStatsService } from 'src/app/core/services/game-stats/game-stats.se
 import { AlertController, InputCustomEvent } from '@ionic/angular';
 import { GithubIssuesModalComponent } from 'src/app/shared/components/github-issues-modal/github-issues-modal.component';
 import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
+import { StorageService } from 'src/app/core/services/storage/storage.service';
 
 @Component({
   selector: 'app-settings',
@@ -85,7 +86,6 @@ import { AnalyticsService } from 'src/app/core/services/analytics/analytics.serv
   ],
 })
 export class SettingsPage implements OnInit {
-  username: string | null = '';
   currentColor: string | null = '';
   optionsWithClasses: { name: string; class: string }[] = [
     { name: 'Blue', class: 'blue-option' },
@@ -105,6 +105,7 @@ export class SettingsPage implements OnInit {
     private statsService: GameStatsService,
     private alertCtrl: AlertController,
     private analyticsService: AnalyticsService,
+    public storageService: StorageService,
   ) {
     addIcons({
       personCircleOutline,
@@ -130,6 +131,10 @@ export class SettingsPage implements OnInit {
     if (username) {
       this.userService.setUsername(username);
     }
+  }
+
+  savePinInputMode(pinMode: string): void {
+    this.storageService.savePinInputMode(pinMode);
   }
 
   async getGameCountForAverage(event: InputCustomEvent): Promise<void> {

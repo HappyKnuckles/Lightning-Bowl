@@ -1,0 +1,75 @@
+.pin-input-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+  max-width: 500px;
+  margin: 0 auto;
+  background-color: var(--ion-item-background);
+  margin: 0 5px;
+  border-radius: 7px;
+  margin: 0 5px 5px;
+}
+
+.pin-row {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.pin {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 50px;
+  min-height: 0;
+  height: 50px;
+  --background: rgb(226, 226, 226);
+  --background-activated: var(--ion-color-quartiary);
+  --padding-top: 0;
+  --padding-bottom: 0;
+  --padding-start: 0;
+  --padding-end: 0;
+  --border-radius: 100%;
+  cursor: pointer;
+  transition: color 0.3s ease, background-color 0.3s ease;
+  color: black;
+  font-size: 1.25rem;
+  margin: 0;
+
+  &.active {
+    --background: var(--ion-color-quartiary);
+    color: white;
+    font-weight: bold;
+  }
+
+  &.disabled {
+    opacity: 0.3;
+  }
+
+  &.knocked-down {
+    --background: var(--ion-color-medium);
+    color: var(--ion-color-medium-contrast);
+    opacity: 0.4;
+    text-decoration: line-through;
+  }
+}
+
+.pin-actions {
+  margin-top: 20px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.quick-actions {
+  display: flex;
+  gap: 10px;
+
+  ion-button {
+    min-width: 55px;
+    min-height: 35px;
+    flex: 1;
+    margin: 0;
+  }
+}

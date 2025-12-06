@@ -1,12 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Game, Frame, getThrowValue } from '../../models/game.model';
 
-export interface ThrowData {
-  value: number;
-  pinsLeftStanding: number[];
-  pinsKnockedDown: number[];
-}
-
 @Injectable({
   providedIn: 'root',
 })
@@ -107,98 +101,6 @@ export class BowlingGameValidationService {
   }
 
   /**
-   * Check if a pin is available to be knocked down
-   */
-  isPinAvailable(pinNumber: number, frameIndex: number, throwIndex: number, frames: Frame[], throwsData: ThrowData[][]): boolean {
-    const availablePins = this.getPinsLeftFromPreviousThrow(frameIndex, throwIndex, frames, throwsData);
-    return availablePins.includes(pinNumber);
-  }
-
-  /**
-   * Get pins left standing from the previous throw
-   */
-  getPinsLeftFromPreviousThrow(frameIndex: number, throwIndex: number, frames: Frame[], throwsData: ThrowData[][]): number[] {
-    const allPins = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-
-    if (throwIndex === 0) {
-      return allPins;
-    }
-
-    const prevThrowIndex = throwIndex - 1;
-    const frame = frames[frameIndex];
-
-    // Special handling for 10th frame - pins can reset mid-frame
-    if (frameIndex === 9 && frame) {
-      const first = getThrowValue(frame, 0);
-      const second = getThrowValue(frame, 1);
-
-      if (prevThrowIndex === 0) {
-        // After first throw in 10th frame
-        if (first === 10) {
-          // Strike on first throw - all pins reset for second throw
-          return allPins;
-        } else {
-          // Not a strike - use throwsData if available, otherwise calculate from score
-          if (throwsData[frameIndex] && throwsData[frameIndex][prevThrowIndex]) {
-            return throwsData[frameIndex][prevThrowIndex].pinsLeftStanding;
-          }
-          return first !== undefined ? allPins.slice(first) : allPins;
-        }
-      } else if (prevThrowIndex === 1) {
-        // After second throw in 10th frame
-        if (first === 10) {
-          // First throw was a strike
-          if (second === 10) {
-            // Second throw was also a strike - all pins reset for third throw
-            return allPins;
-          } else {
-            // Second throw was not a strike - use throwsData if available, otherwise calculate
-            if (throwsData[frameIndex] && throwsData[frameIndex][prevThrowIndex]) {
-              return throwsData[frameIndex][prevThrowIndex].pinsLeftStanding;
-            }
-            return second !== undefined ? allPins.slice(second) : allPins;
-          }
-        } else {
-          // First throw was not a strike
-          if (first !== undefined && second !== undefined && first + second === 10) {
-            // Spare - all pins reset for third throw
-            return allPins;
-          } else {
-            // No spare - no third throw allowed
-            return [];
-          }
-        }
-      }
-    }
-
-    // For frames 1-9, use throwsData if available
-    if (throwsData[frameIndex] && throwsData[frameIndex][prevThrowIndex]) {
-      return throwsData[frameIndex][prevThrowIndex].pinsLeftStanding;
-    }
-
-    // Fallback: calculate from score (grid input mode)
-    const prevValue = getThrowValue(frame, prevThrowIndex);
-    if (prevValue !== undefined) {
-      if (prevValue === 10) {
-        // Strike in frames 1-9 - all pins reset (but this shouldn't be used for second throw in same frame)
-        return allPins;
-      }
-
-      // Not a strike - remaining pins for second throw
-      return allPins.slice(prevValue);
-    }
-
-    return allPins;
-  }
-
-  /**
-   * Check if a pin was knocked down in a previous throw
-   */
-  isPinKnockedDownPreviously(pinNumber: number, frameIndex: number, throwIndex: number, frames: Frame[], throwsData: ThrowData[][]): boolean {
-    return !this.isPinAvailable(pinNumber, frameIndex, throwIndex, frames, throwsData);
-  }
-
-  /**
    * Validate that a number is between 0 and 10
    */
   isValidNumber0to10(value: number): boolean {
@@ -278,62 +180,6 @@ export class BowlingGameValidationService {
         default:
           return false;
       }
-    }
-  }
-
-  /**
-   * Check if strike button should be disabled
-   */
-  isStrikeButtonDisabled(frameIndex: number | null, rollIndex: number | null, frames: Frame[]): boolean {
-    if (frameIndex === null || rollIndex === null) return true;
-
-    if (frameIndex < 9) {
-      return rollIndex !== 0;
-    }
-
-    const frame = frames[9];
-    const first = getThrowValue(frame, 0);
-    const second = getThrowValue(frame, 1);
-
-    switch (rollIndex) {
-      case 0:
-        return false;
-      case 1:
-        return first !== 10;
-      case 2:
-        return !(
-          (first === 10 && second === 10) ||
-          (first !== undefined && second !== undefined && first + second === 10 && first !== 10 && second !== 10) ||
-          (first !== 10 && second === 10)
-        );
-      default:
-        return true;
-    }
-  }
-
-  /**
-   * Check if spare button should be disabled
-   */
-  isSpareButtonDisabled(frameIndex: number | null, rollIndex: number | null, frames: Frame[]): boolean {
-    if (frameIndex === null || rollIndex === null) return true;
-
-    if (frameIndex < 9) {
-      return rollIndex !== 1;
-    }
-
-    const frame = frames[9];
-    const first = getThrowValue(frame, 0);
-    const second = getThrowValue(frame, 1);
-
-    switch (rollIndex) {
-      case 0:
-        return true;
-      case 1:
-        return first === 10;
-      case 2:
-        return (first === 10 && second === 10) || (first !== undefined && second !== undefined && first !== 10 && first + second === 10);
-      default:
-        return true;
     }
   }
 
@@ -463,23 +309,6 @@ export class BowlingGameValidationService {
       if (sortedCols[i + 1] - sortedCols[i] > 1) {
         return true;
       }
-    }
-
-    return false;
-  }
-
-  /**
-   * Checks if a specific throw resulted in a split
-   * Only works in pin mode when throwsData is available
-   */
-  isThrowSplit(frameIndex: number, throwIndex: number, throwsData: ThrowData[][], isPinMode?: boolean): boolean {
-    if (!isPinMode || !throwsData || !throwsData[frameIndex]) {
-      return false;
-    }
-
-    const throwData = throwsData[frameIndex][throwIndex];
-    if (throwData) {
-      return this.isSplit(throwData.pinsLeftStanding);
     }
 
     return false;

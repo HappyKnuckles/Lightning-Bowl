@@ -1,0 +1,20 @@
+<div class="pin-input-container" [style.transform]="'scale(' + scale() + ')'">
+  <div class="pin-row">
+    <div class="pin" [class.active]="isPinSelected(7)"></div>
+    <div class="pin" [class.active]="isPinSelected(8)"></div>
+    <div class="pin" [class.active]="isPinSelected(9)"></div>
+    <div class="pin" [class.active]="isPinSelected(10)"></div>
+  </div>
+  <div class="pin-row">
+    <div class="pin" [class.active]="isPinSelected(4)"></div>
+    <div class="pin" [class.active]="isPinSelected(5)"></div>
+    <div class="pin" [class.active]="isPinSelected(6)"></div>
+  </div>
+  <div class="pin-row">
+    <div class="pin" [class.active]="isPinSelected(2)"></div>
+    <div class="pin" [class.active]="isPinSelected(3)"></div>
+  </div>
+  <div class="pin-row">
+    <div class="pin" [class.active]="isPinSelected(1)"></div>
+  </div>
+</div>

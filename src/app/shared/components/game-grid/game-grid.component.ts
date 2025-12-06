@@ -21,7 +21,8 @@ import { addIcons } from 'ionicons';
 import { chevronExpandOutline } from 'ionicons/icons';
 import { BallSelectComponent } from '../ball-select/ball-select.component';
 import { alertEnterAnimation, alertLeaveAnimation } from '../../animations/alert.animation';
-import { GameScoreToolbarComponent } from '../game-score-toolbar/game-score-toolbar.component';
+import { PinInputComponent, ThrowConfirmedEvent } from '../pin-input/pin-input.component';
+import { PinDeckFrameRowComponent } from '../pin-deck-frame-row/pin-deck-frame-row.component';
 
 @Component({
   selector: 'app-game-grid',
@@ -45,11 +46,13 @@ import { GameScoreToolbarComponent } from '../game-score-toolbar/game-score-tool
     GenericTypeaheadComponent,
     IonLabel,
     BallSelectComponent,
-    GameScoreToolbarComponent,
+    PinInputComponent,
+    PinDeckFrameRowComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class GameGridComponent implements OnInit, OnDestroy {
+  // --- Inputs ---
   ballSelectorId = input<string>();
   showMetadata = input<boolean>(true);
   patternModalId = input.required<string>();
@@ -57,6 +60,18 @@ export class GameGridComponent implements OnInit, OnDestroy {
   maxScore = input<number>(300);
   strikeDisabled = input<boolean>(true);
   spareDisabled = input<boolean>(true);
+  isPinInputMode = input<boolean>(false);
+
+  // Pin Input Mode
+  pinsLeftStanding = input<number[]>([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+  currentFrameIndex = input<number>(0);
+  currentThrowIndex = input<number>(0);
+  canStrike = input<boolean>(false);
+  canSpare = input<boolean>(false);
+  canUndo = input<boolean>(false);
+  pinInputGameComplete = input<boolean>(false);
+
+  // --- Outputs ---
   throwInput = output<{ frameIndex: number; throwIndex: number; value: string }>();
   leagueChanged = output<string>();
   isPracticeChanged = output<boolean>();
@@ -65,23 +80,36 @@ export class GameGridComponent implements OnInit, OnDestroy {
   ballsChanged = output<string[]>();
   toolbarStateChanged = output<{ show: boolean; offset: number }>();
   inputFocused = output<{ frameIndex: number; throwIndex: number }>();
+
+  // Pin Input Mode - Events from Child to Parent
+  pinThrowConfirmed = output<ThrowConfirmedEvent>();
+  pinUndoRequested = output<void>();
+
+  // --- View Children ---
   @ViewChildren(IonInput) inputs!: QueryList<IonInput>;
   @ViewChild('leagueSelector') leagueSelector!: LeagueSelectorComponent;
   @ViewChild('checkbox') checkbox!: IonCheckbox;
+
+  // --- Computed State ---
+  frames = computed(() => this.game()?.frames ?? []);
   frameScores = computed(() => this.game()?.frameScores ?? []);
+
+  // --- Local UI State ---
   enterAnimation = alertEnterAnimation;
   leaveAnimation = alertLeaveAnimation;
   presentingElement?: HTMLElement;
   patternTypeaheadConfig!: TypeaheadConfig<Partial<Pattern>>;
+
   showButtonToolbar = false;
-  currentFrameIndex: number | null = null;
-  currentThrowIndex: number | null = null;
   keyboardOffset = 0;
   isLandScapeMode = false;
+
   private isFrameInputFocused = false;
+  private focusTimer: ReturnType<typeof setTimeout> | undefined;
+  private localFrameIndex = 0;
+  private localThrowIndex = 0;
   private keyboardShowSubscription: Subscription | undefined;
   private keyboardHideSubscription: Subscription | undefined;
-  private usingVisualViewportListener = false;
   private resizeSubscription: Subscription | undefined;
 
   get currentGame(): Game {
@@ -91,7 +119,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
   constructor(
     public storageService: StorageService,
     private hapticService: HapticService,
-    private utilsService: UtilsService,
+    public utilsService: UtilsService,
     private platform: Platform,
     private patternService: PatternService,
   ) {
@@ -105,20 +133,25 @@ export class GameGridComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    if (this.keyboardShowSubscription) {
-      this.keyboardShowSubscription.unsubscribe();
-    }
-    if (this.keyboardHideSubscription) {
-      this.keyboardHideSubscription.unsubscribe();
-    }
-    if (this.resizeSubscription) {
-      this.resizeSubscription.unsubscribe();
-    }
-    if (this.usingVisualViewportListener && 'visualViewport' in window && window.visualViewport) {
+    if (this.keyboardShowSubscription) this.keyboardShowSubscription.unsubscribe();
+    if (this.keyboardHideSubscription) this.keyboardHideSubscription.unsubscribe();
+    if (this.resizeSubscription) this.resizeSubscription.unsubscribe();
+    if (this.focusTimer) clearTimeout(this.focusTimer);
+    if ('visualViewport' in window && window.visualViewport) {
       window.visualViewport.removeEventListener('resize', this.onViewportResize);
     }
   }
 
+  // PIN INPUT MODE - PASS-THROUGH HANDLERS
+  onPinThrowConfirmed(event: ThrowConfirmedEvent): void {
+    this.pinThrowConfirmed.emit(event);
+  }
+
+  onPinUndoRequested(): void {
+    this.pinUndoRequested.emit();
+  }
+
+  // STANDARD GRID MODE LOGIC
   initializeKeyboardListeners() {
     if (this.platform.is('mobile') && !this.platform.is('mobileweb')) {
       Keyboard.addListener('keyboardWillShow', (info) => {
@@ -128,7 +161,6 @@ export class GameGridComponent implements OnInit, OnDestroy {
           this.toolbarStateChanged.emit({ show: true, offset: this.keyboardOffset });
         }
       });
-
       Keyboard.addListener('keyboardWillHide', () => {
         this.keyboardOffset = 0;
         this.showButtonToolbar = false;
@@ -143,8 +175,8 @@ export class GameGridComponent implements OnInit, OnDestroy {
   }
 
   handleInputFocus(frameIndex: number, throwIndex: number): void {
-    this.currentFrameIndex = frameIndex;
-    this.currentThrowIndex = throwIndex;
+    this.localFrameIndex = frameIndex;
+    this.localThrowIndex = throwIndex;
     this.isFrameInputFocused = true;
     this.inputFocused.emit({ frameIndex, throwIndex });
   }
@@ -155,44 +187,20 @@ export class GameGridComponent implements OnInit, OnDestroy {
   }
 
   selectSpecialScore(char: string): void {
-    if (this.currentFrameIndex === null || this.currentThrowIndex === null) {
+    if (this.localFrameIndex === null || this.localThrowIndex === null) {
       this.showButtonToolbar = false;
       return;
     }
     this.throwInput.emit({
-      frameIndex: this.currentFrameIndex,
-      throwIndex: this.currentThrowIndex,
+      frameIndex: this.localFrameIndex,
+      throwIndex: this.localThrowIndex,
       value: char,
     });
   }
 
-  onLeagueChanged(league: string): void {
-    this.leagueChanged.emit(league);
-  }
-
-  onPatternChanged(patterns: string[]): void {
-    if (patterns.length > 2) {
-      patterns = patterns.slice(-2);
-    }
-    this.patternChanged.emit(patterns);
-  }
-
-  onBallSelect(selectedBalls: string[], modal: IonModal): void {
-    modal.dismiss();
-    this.ballsChanged.emit(selectedBalls);
-  }
-
-  onNoteChange(note: string): void {
-    this.noteChanged.emit(note);
-  }
-
-  onIsPracticeChange(isPractice: boolean): void {
-    this.isPracticeChanged.emit(isPractice);
-  }
-
-  getSelectedBallsText(): string {
-    const balls = this.currentGame?.balls || [];
-    return balls.length > 0 ? balls.join(', ') : 'None';
+  // --- Helpers for Template ---
+  getLocalFrameValue(frameIndex: number, throwIndex: number): number | undefined {
+    return getThrowValue(this.game().frames[frameIndex], throwIndex);
   }
 
   getFrameValue(frameIndex: number, throwIndex: number): string {
@@ -240,72 +248,94 @@ export class GameGridComponent implements OnInit, OnDestroy {
     return val.toString();
   }
 
-  getLocalFrameValue(frameIndex: number, throwIndex: number): number | undefined {
-    return getThrowValue(this.game().frames[frameIndex], throwIndex);
-  }
-
-  isNumber(value: unknown): boolean {
-    return this.utilsService.isNumber(value);
-  }
-
   focusNextInput(frameIndex: number, throwIndex: number): void {
-    requestAnimationFrame(() => {
+    if (this.focusTimer) clearTimeout(this.focusTimer);
+
+    const executeFocus = () => {
       const inputs = this.inputs.toArray();
       const startIndex = this.getInputPosition(frameIndex, throwIndex) + 1;
-
       const nextInput = inputs.slice(startIndex).find((input) => !input.disabled);
       nextInput?.setFocus();
-    });
+    };
+
+    if (!this.showMetadata()) {
+      this.focusTimer = setTimeout(() => executeFocus(), 300);
+    } else {
+      requestAnimationFrame(() => executeFocus());
+    }
   }
 
   handleInvalidInput(frameIndex: number, throwIndex: number): void {
     this.hapticService.vibrate(ImpactStyle.Heavy);
-
-    // Reset the input to display the current valid value from game state
     const inputArray = this.inputs.toArray();
     const inputPosition = this.getInputPosition(frameIndex, throwIndex);
 
     if (inputPosition >= 0 && inputPosition < inputArray.length) {
       const input = inputArray[inputPosition];
-      // Reset to the valid value from the game state
-      const validValue = this.getFrameValue(frameIndex, throwIndex);
-      input.value = validValue;
+      input.value = '';
     }
   }
 
   private getInputPosition(frameIndex: number, throwIndex: number): number {
-    if (frameIndex < 9) {
-      return frameIndex * 2 + throwIndex;
-    } else {
-      // 10th frame starts at position 18 (9 frames * 2 inputs)
-      return 18 + throwIndex;
-    }
+    return frameIndex < 9 ? frameIndex * 2 + throwIndex : 18 + throwIndex;
   }
 
   private onViewportResize = () => {
     if (!window.visualViewport) return;
-
     const viewportHeight = window.visualViewport.height;
     const fullHeight = window.innerHeight;
     const keyboardActualHeight = fullHeight - viewportHeight;
 
     if (keyboardActualHeight > 100) {
       this.keyboardOffset = this.isLandScapeMode ? Math.max(0, keyboardActualHeight - 72) : Math.max(0, keyboardActualHeight - 85);
-
       if (this.isFrameInputFocused) {
-        if (!this.showButtonToolbar) {
-          this.showButtonToolbar = true;
-          this.toolbarStateChanged.emit({ show: true, offset: this.keyboardOffset });
-        } else {
-          this.toolbarStateChanged.emit({ show: true, offset: this.keyboardOffset });
-        }
+        this.showButtonToolbar = true;
+        this.toolbarStateChanged.emit({ show: true, offset: this.keyboardOffset });
       }
     } else {
       this.keyboardOffset = 0;
-      if (this.showButtonToolbar) {
-        this.showButtonToolbar = false;
-        this.toolbarStateChanged.emit({ show: false, offset: this.keyboardOffset });
-      }
+      this.showButtonToolbar = false;
+      this.toolbarStateChanged.emit({ show: false, offset: this.keyboardOffset });
     }
   };
+
+  // --- Passthrough Event Emitters ---
+  onLeagueChanged(league: string) {
+    this.leagueChanged.emit(league);
+  }
+  onPatternChanged(patterns: string[]) {
+    this.patternChanged.emit(patterns.length > 2 ? patterns.slice(-2) : patterns);
+  }
+  onBallSelect(selectedBalls: string[], modal: IonModal) {
+    modal.dismiss();
+    this.ballsChanged.emit(selectedBalls);
+  }
+  onNoteChange(note: string) {
+    this.noteChanged.emit(note);
+  }
+  onIsPracticeChange(isPractice: boolean) {
+    this.isPracticeChanged.emit(isPractice);
+  }
+
+  // --- Template Getters ---
+  getSelectedBallsText(): string {
+    const balls = this.currentGame?.balls || [];
+    return balls.length > 0 ? balls.join(', ') : 'None';
+  }
+
+  isNumber(value: unknown): boolean {
+    return this.utilsService.isNumber(value);
+  }
+
+  isThrowSplit(frameIndex: number, throwIndex: number): boolean {
+    const frame = this.game()?.frames?.[frameIndex];
+    if (!frame || !frame.throws || throwIndex >= frame.throws.length) {
+      return false;
+    }
+    return frame.throws[throwIndex]?.isSplit ?? false;
+  }
+
+  trackByFrameIndex(index: number): number {
+    return index;
+  }
 }

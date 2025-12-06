@@ -26,6 +26,12 @@ export class StorageService {
 
   #isUsingCache = signal<boolean>(false);
 
+  #pinInputMode = signal<boolean>(true);
+
+  get pinInputMode() {
+    return this.#pinInputMode;
+  }
+
   get usingCacheStatus() {
     return computed(() => ({
       isOffline: this.networkService.isOffline,
@@ -66,6 +72,44 @@ export class StorageService {
     private analyticsService: AnalyticsService,
   ) {
     this.init();
+
+    // const games: Game[] = [];
+    // const baseTimestamp = Date.now();
+
+    // for (let i = 0; i < 10000; i++) {
+    //   const gameId = `${baseTimestamp}_${i}_${Math.random().toString(36).substring(2, 8)}`;
+    //   const seriesId = `series_${baseTimestamp}_${i}_${Math.random().toString(36).substring(2, 6)}`;
+
+    //   const frames = Array.from({ length: 10 }, (_, idx) => ({
+    //     frameIndex: idx + 1,
+    //     throws: [
+    //       { throwIndex: 1, value: Math.floor(Math.random() * 11), pinsLeftStanding: [] },
+    //       { throwIndex: 2, value: Math.floor(Math.random() * 11), pinsLeftStanding: [] },
+    //     ],
+    //     length: 2,
+    //   }));
+
+    //   const totalScore = frames.reduce((sum, f) => sum + f.throws.reduce((s, t) => s + t.value, 0), 0);
+
+    //   games.push({
+    //     gameId,
+    //     seriesId,
+    //     date: baseTimestamp + i * 1000, // unique timestamp per game
+    //     frames,
+    //     frameScores: frames.map(f => f.throws.reduce((s, t) => s + t.value, 0)),
+    //     totalScore,
+    //     isClean: false,
+    //     isPerfect: false,
+    //     isPinMode: true,
+    //     isPractice: false,
+    //     isSeries: false,
+    //     league: 'TestLeague',
+    //     note: '',
+    //     balls: ['TestBall'],
+    //     patterns: [],
+    //   } as Game);
+    // }
+    // this.saveGamesToLocalStorage(games);
     // this.highScoreAlertService.displayHighScoreAlert({ type: 'single_game', newRecord: 150, previousRecord: 110, details: { league: 'Monday Night', patterns: ['THS', 'Sport'], balls: ['Storm', 'Hammer'], date: '1/15/2025' }, gameOrSeries: []});
   }
 
@@ -171,6 +215,12 @@ export class StorageService {
     } finally {
       this.loadingService.setLoading(false);
     }
+  }
+
+  loadPinInputMode(): void {
+    const mode = localStorage.getItem('pin-input-mode');
+    const pinInputMode = mode === null ? true : mode === 'hit';
+    this.#pinInputMode.set(pinInputMode);
   }
 
   async loadAllBalls(updated?: string, weight?: number, forceRefresh = false): Promise<void> {
@@ -285,6 +335,12 @@ export class StorageService {
     } catch (error) {
       console.error('Background refresh failed for patterns:', error);
     }
+  }
+
+  savePinInputMode(pinMode: string): void {
+    this.#pinInputMode.set(pinMode === 'hit');
+    const mode = pinMode === 'hit' ? 'hit' : 'missing';
+    localStorage.setItem('pin-input-mode', mode);
   }
 
   async saveBallToArsenal(ball: Ball) {
@@ -447,6 +503,7 @@ export class StorageService {
 
   private async loadInitialData(weight: number): Promise<void> {
     try {
+      this.loadPinInputMode();
       await Promise.all([
         this.loadAllPatterns(),
         this.loadAllBalls(undefined, weight),

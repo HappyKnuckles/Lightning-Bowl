@@ -64,6 +64,7 @@ import { alertEnterAnimation, alertLeaveAnimation } from '../../animations/alert
 import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
 import { BowlingGameValidationService } from 'src/app/core/services/game-utils/bowling-game-validation.service';
 import { GameScoreCalculatorService } from 'src/app/core/services/game-score-calculator/game-score-calculator.service';
+import { PinDeckFrameRowComponent } from '../pin-deck-frame-row/pin-deck-frame-row.component';
 
 @Component({
   selector: 'app-game',
@@ -110,6 +111,7 @@ import { GameScoreCalculatorService } from 'src/app/core/services/game-score-cal
     GameGridComponent,
     GenericTypeaheadComponent,
     BallSelectComponent,
+    PinDeckFrameRowComponent,
   ],
   standalone: true,
 })

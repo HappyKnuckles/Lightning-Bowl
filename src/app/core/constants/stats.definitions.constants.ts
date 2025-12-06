@@ -114,38 +114,6 @@ export const playFrequencyStatDefinitions: StatDefinition[] = [
   },
 ];
 
-export const spareStatDefinitions: StatDefinition[] = [
-  {
-    label: 'Single pin spares',
-    key: 'singlePinSpares',
-    id: 'singlePinSpares',
-    secondaryKey: 'singlePinSpareOpportunities',
-    toolTip: 'Number of spares made when only one pin was left standing after the first ball.',
-  },
-  {
-    label: 'Multi pin spares',
-    key: 'multiPinSpares',
-    id: 'multiPinSpares',
-    secondaryKey: 'multiPinSpareOpportunities',
-    toolTip: 'Number of spares made when multiple pins were left standing after the first ball.',
-  },
-  {
-    label: 'Single pin spare %',
-    key: 'singlePinSparePercentage',
-
-    id: 'singlePinSparePercentage',
-    isPercentage: true,
-    prevKey: 'singlePinSparePercentage',
-  },
-  {
-    label: 'Multi pin spare %',
-    key: 'multiPinSparePercentage',
-    id: 'multiPinSparePercentage',
-    isPercentage: true,
-    prevKey: 'multiPinSparePercentage',
-  },
-];
-
 export const seriesStatDefinitions: StatDefinition[] = [
   { label: 'Average 3-series score', key: 'average3SeriesScore', id: 'average3SeriesScore', prevKey: 'average3SeriesScore' },
   { label: 'High 3-series', key: 'high3Series', id: 'high3Series' },
@@ -240,7 +208,7 @@ export const strikeStatDefinitions: StatDefinition[] = [
   { label: '8-baggers', key: 'bagger8Count', id: 'bagger8Count', toolTip: 'Number of times you threw exactly 8 strikes in a row.' },
   { label: '9-baggers', key: 'bagger9Count', id: 'bagger9Count', toolTip: 'Number of times you threw exactly 9 strikes in a row.' },
   { label: '10-baggers', key: 'bagger10Count', id: 'bagger10Count', toolTip: 'Number of times you threw exactly 10 strikes in a row.' },
-  { label: '11-baggers', key: 'bagger11Count', id: 'bagger11Count', toolTip: 'Number of times you threw exactly 11 strikes in a row.' },
+  { label: '11-baggers', key: 'bagger10Count', id: 'bagger11Count', toolTip: 'Number of times you threw exactly 11 strikes in a row.' },
   {
     label: 'Longest strike streak',
     key: 'longestStrikeStreak',
@@ -259,6 +227,97 @@ export const strikeStatDefinitions: StatDefinition[] = [
     key: 'strikeoutCount',
     id: 'strikeoutCount',
     toolTip: 'This is the amount of times you threw 3-strikes in tenth frame.',
+  },
+];
+
+export const spareStatDefinitions: StatDefinition[] = [
+  {
+    label: 'Single pin spares',
+    key: 'singlePinSpares',
+    id: 'singlePinSpares',
+    secondaryKey: 'singlePinSpareOpportunities',
+    toolTip: 'Number of spares made when only one pin was left standing after the first ball.',
+  },
+  {
+    label: 'Multi pin spares',
+    key: 'multiPinSpares',
+    id: 'multiPinSpares',
+    secondaryKey: 'multiPinSpareOpportunities',
+    toolTip: 'Number of spares made when multiple pins were left standing after the first ball.',
+  },
+  {
+    label: 'Single pin spare %',
+    key: 'singlePinSparePercentage',
+
+    id: 'singlePinSparePercentage',
+    isPercentage: true,
+    prevKey: 'singlePinSparePercentage',
+  },
+  {
+    label: 'Multi pin spare %',
+    key: 'multiPinSparePercentage',
+    id: 'multiPinSparePercentage',
+    isPercentage: true,
+    prevKey: 'multiPinSparePercentage',
+  },
+];
+
+export const pinStatDefinitions: StatDefinition[] = [
+  {
+    label: 'Pocket hits',
+    key: 'pocketHits',
+    id: 'pocketHits',
+    secondaryKey: 'totalFirstBalls',
+    toolTip: 'Number of times you hit the pocket on the first ball (knocked down at least pins 1 and 2, or 1 and 3).',
+  },
+  {
+    label: 'Pocket hit %',
+    key: 'pocketHitPercentage',
+    id: 'pocketHitPercentage',
+    isPercentage: true,
+    prevKey: 'pocketHitPercentage',
+    toolTip: 'Percentage of first balls where you hit the pocket.',
+  },
+  {
+    label: 'Non-split spares',
+    key: 'nonSplitSpares',
+    id: 'nonSplitSpares',
+    secondaryKey: 'nonSplitSpareOpportunities',
+  },
+  {
+    label: 'Non-split spare %',
+    key: 'nonSplitSparePercentage',
+    id: 'nonSplitSparePercentage',
+    isPercentage: true,
+    prevKey: 'nonSplitSparePercentage',
+  },
+  {
+    label: 'Split conversions',
+    key: 'splits',
+    id: 'splits',
+    secondaryKey: 'splitOpportunities',
+  },
+  {
+    label: 'Split conversion %',
+    key: 'splitConversionPercentage',
+    id: 'splitConversionPercentage',
+    isPercentage: true,
+    prevKey: 'splitConversionPercentage',
+  },
+  {
+    label: 'Makeable split conversions',
+    key: 'makeableSplits',
+    id: 'makeableSplits',
+    secondaryKey: 'makeableSplitOpportunities',
+    toolTip: 'Number of makeable splits converted (excludes impossible splits like 7-10, 4-6, etc.).',
+  },
+  {
+    label: 'Makeable split %',
+    key: 'makeableSplitPercentage',
+    prevKey: 'makeableSplitPercentage',
+    id: 'makeableSplitPercentage',
+    isPercentage: true,
+    toolTip: 'Percentage of makeable splits that were successfully converted.',
   },
 ];
 

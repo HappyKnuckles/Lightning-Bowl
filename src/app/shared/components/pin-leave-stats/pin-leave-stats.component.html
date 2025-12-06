@@ -1,0 +1,31 @@
+<ion-list>
+  <ion-list-header>
+    {{ title() }}
+  </ion-list-header>
+
+  <div class="stat-container">
+    @for (leave of leaveStats(); track $index) {
+      <ion-item lines="none" class="leave-item">
+        <div class="leave-container">
+          <div class="pin-deck-wrapper">
+            <app-pin-deck [activePins]="leave.pins" [scale]="0.7"></app-pin-deck>
+          </div>
+          <div class="leave-stats">
+            <ion-label>
+              <h3>Occurrences</h3>
+              <p>{{ leave.occurrences }}</p>
+            </ion-label>
+            <ion-label>
+              <h3>Pickups</h3>
+              <p>{{ leave.pickups }}</p>
+            </ion-label>
+            <ion-label>
+              <h3>Pickup %</h3>
+              <p [style.color]="getPickupColor(leave.pickupPercentage)">{{ leave.pickupPercentage.toFixed(0) }}%</p>
+            </ion-label>
+          </div>
+        </div>
+      </ion-item>
+    }
+  </div>
+</ion-list>
