@@ -219,6 +219,8 @@ ion-item {
       ion-input {
         border: 2px solid var(--ion-color-primary);
         box-shadow: 0 0 8px rgba(var(--ion-color-primary-rgb), 0.5);
+        display: flex;
+        align-items: center;
       }
     }
   }

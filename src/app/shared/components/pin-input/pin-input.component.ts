@@ -90,6 +90,12 @@ export class PinInputComponent {
     this.selectedPins = [];
   }
 
+  recordGutter(): void {
+    if (this.isGameComplete()) return;
+    this.throwConfirmed.emit({ pinsKnockedDown: [] });
+    this.selectedPins = [];
+  }
+
   isPinSelected(pinNumber: number): boolean {
     return this.selectedPins.includes(pinNumber);
   }

@@ -15,10 +15,10 @@
       </ion-row>
       <ion-row>
         <ion-col class="input-col" *ngIf="i !== 10"></ion-col>
-        <ion-col class="input-col" [class.current-throw]="frameIndex === currentFrameIndex() && currentThrowIndex() === 0">
+        <ion-col class="input-col" [class.current-throw]="isCellFocused(frameIndex, 0)" (click)="onScoreCellClicked(frameIndex, 0)">
           <ion-input type="text" readonly="true" [value]="getFrameValue(frameIndex, 0)" [class.is-split]="isThrowSplit(frameIndex, 0)"></ion-input>
         </ion-col>
-        <ion-col class="input-col" *ngIf="i !== 10" [class.current-throw]="frameIndex === currentFrameIndex() && currentThrowIndex() === 1">
+        <ion-col class="input-col" *ngIf="i !== 10" [class.current-throw]="isCellFocused(frameIndex, 1)" (click)="onScoreCellClicked(frameIndex, 1)">
           <ion-input
             type="text"
             readonly="true"
@@ -26,10 +26,10 @@
             [value]="getFrameValue(frameIndex, 1)"
             [class.is-split]="isThrowSplit(frameIndex, 1)"></ion-input>
         </ion-col>
-        <ion-col class="input-col" *ngIf="i === 10" [class.current-throw]="frameIndex === currentFrameIndex() && currentThrowIndex() === 1">
+        <ion-col class="input-col" *ngIf="i === 10" [class.current-throw]="isCellFocused(frameIndex, 1)" (click)="onScoreCellClicked(frameIndex, 1)">
           <ion-input type="text" readonly="true" [value]="getFrameValue(frameIndex, 1)" [class.is-split]="isThrowSplit(frameIndex, 1)"></ion-input>
         </ion-col>
-        <ion-col class="input-col" *ngIf="i === 10" [class.current-throw]="frameIndex === currentFrameIndex() && currentThrowIndex() === 2">
+        <ion-col class="input-col" *ngIf="i === 10" [class.current-throw]="isCellFocused(frameIndex, 2)" (click)="onScoreCellClicked(frameIndex, 2)">
           <ion-input
             type="text"
             readonly="true"
@@ -53,7 +53,7 @@
             ">
             {{ frameScores()[i - 1] }}
           </ng-container>
-          <ng-container *ngIf="i === 10 && (getLocalFrameValue(frameIndex, 0) === undefined || getLocalFrameValue(frameIndex, 1) === undefined)">
+          <ng-container *ngIf="i === 10 && !isGameComplete()">
             <span style="color: var(--ion-color-secondary)"> ({{ maxScore() }}) </span>
           </ng-container>
         </ion-col>
@@ -81,7 +81,7 @@
     [canStrike]="canStrike()"
     [canSpare]="canSpare()"
     [canUndo]="canUndo()"
-    [isGameComplete]="pinInputGameComplete()"
+    [isGameComplete]="isGameComplete()"
     [selectHitPins]="storageService.pinInputMode()"
     (throwConfirmed)="onPinThrowConfirmed($event)"
     (undoRequested)="onPinUndoRequested()">
@@ -161,7 +161,7 @@
             {{ frameScores()[i - 1] }}
           </ng-container>
 
-          <ng-container *ngIf="i === 10 && (getLocalFrameValue(frameIndex, 0) === undefined || getLocalFrameValue(frameIndex, 1) === undefined)">
+          <ng-container *ngIf="i === 10 && !isGameComplete()">
             <span style="color: var(--ion-color-secondary)"> ({{ maxScore() }}) </span>
           </ng-container>
         </ion-col>

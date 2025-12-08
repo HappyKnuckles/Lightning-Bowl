@@ -103,6 +103,8 @@
   <div class="quick-actions">
     <ion-button size="small" (click)="recordStrike()" [disabled]="!canStrike() || isGameComplete()"> X </ion-button>
     <ion-button size="small" (click)="recordSpare()" [disabled]="!canSpare() || isGameComplete()"> / </ion-button>
+    <ion-button size="small" (click)="recordGutter()" [disabled]="isGameComplete()"> - </ion-button>
+
     <ion-button size="small" (click)="clearSelectedPins()" [disabled]="selectedPins.length === 0 || isGameComplete()">
       <ion-icon slot="icon-only" name="close-circle-outline"></ion-icon>
     </ion-button>

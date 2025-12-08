@@ -65,6 +65,7 @@ import { AnalyticsService } from 'src/app/core/services/analytics/analytics.serv
 import { BowlingGameValidationService } from 'src/app/core/services/game-utils/bowling-game-validation.service';
 import { GameScoreCalculatorService } from 'src/app/core/services/game-score-calculator/game-score-calculator.service';
 import { PinDeckFrameRowComponent } from '../pin-deck-frame-row/pin-deck-frame-row.component';
+import { GameUtilsService } from 'src/app/core/services/game-utils/game-utils.service';
 
 @Component({
   selector: 'app-game',
@@ -169,6 +170,8 @@ export class GameComponent implements OnChanges, OnInit {
   patternTypeaheadConfig!: TypeaheadConfig<Partial<Pattern>>;
   enterAnimation = alertEnterAnimation;
   leaveAnimation = alertLeaveAnimation;
+  public editedFocus: Record<string, { frameIndex: number; throwIndex: number }> = {};
+
   constructor(
     private alertController: AlertController,
     private toastService: ToastService,
@@ -183,6 +186,7 @@ export class GameComponent implements OnChanges, OnInit {
     private patternService: PatternService,
     private analyticsService: AnalyticsService,
     private validationService: BowlingGameValidationService,
+    private gameUtilsService: GameUtilsService,
     private gameScoreCalculatorService: GameScoreCalculatorService,
   ) {
     addIcons({
@@ -263,6 +267,23 @@ export class GameComponent implements OnChanges, OnInit {
     if (!this.isEditMode[game.gameId]) {
       this.originalGameState[game.gameId] = structuredClone(game);
       this.enableEdit(game, game.gameId);
+
+      // If this game is pin mode, initialize focus to last frame/throw
+      if (game.isPinMode) {
+        const edited = this.getEditedGameState(game);
+        let lastFrameIndex = 9;
+        let lastThrowIndex = 0;
+        // find last non-empty frame starting from end
+        for (let i = 9; i >= 0; i--) {
+          const f = edited.frames[i];
+          if (f && f.throws && f.throws.length > 0) {
+            lastFrameIndex = i;
+            lastThrowIndex = Math.max(0, f.throws.length - 1);
+            break;
+          }
+        }
+        this.editedFocus[game.gameId] = { frameIndex: lastFrameIndex, throwIndex: lastThrowIndex };
+      }
     } else {
       this.cancelEdit(game);
     }
@@ -281,6 +302,74 @@ export class GameComponent implements OnChanges, OnInit {
   onBallSelect(selectedBalls: string[], game: Game, modal: IonModal): void {
     modal.dismiss();
     game.balls = selectedBalls;
+  }
+
+  onScoreCellClick(game: Game, frameIndex: number, throwIndex: number): void {
+    if (!this.isEditMode[game.gameId] || !game.isPinMode) return;
+
+    const editedGame = this.getEditedGameState(game);
+
+    const canClick = this.gameUtilsService.isCellAccessible(editedGame.frames, frameIndex, throwIndex);
+
+    if (canClick) {
+      this.editedFocus[game.gameId] = { frameIndex, throwIndex };
+    }
+  }
+
+  getPinsLeftStandingForEditedGame(game: Game): number[] {
+    const focus = this.editedFocus[game.gameId];
+    if (!focus) return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+    const edited = this.getEditedGameState(game);
+    const frame = edited.frames[focus.frameIndex];
+    const throws = frame.throws || [];
+
+    return this.gameUtilsService.getAvailablePins(focus.frameIndex, focus.throwIndex, throws);
+  }
+
+  canRecordStrike(game: Game): boolean {
+    const pinsLeft = this.getPinsLeftStandingForEditedGame(game);
+    return pinsLeft.length === 10;
+  }
+
+  canRecordSpare(game: Game): boolean {
+    const pinsLeft = this.getPinsLeftStandingForEditedGame(game);
+    return pinsLeft.length > 0 && pinsLeft.length < 10;
+  }
+
+  async onPinThrowConfirmed(event: { pinsKnockedDown: number[] }, game: Game): Promise<void> {
+    if (!this.isEditMode[game.gameId] || !game.isPinMode) return;
+
+    const focus = this.editedFocus[game.gameId] || { frameIndex: 0, throwIndex: 0 };
+    const editedGame = this.getEditedGameState(game);
+
+    const result = this.gameUtilsService.processPinThrow(editedGame.frames, focus.frameIndex, focus.throwIndex, event.pinsKnockedDown || []);
+
+    this.editedFocus[game.gameId] = {
+      frameIndex: result.nextFrameIndex,
+      throwIndex: result.nextThrowIndex,
+    };
+
+    this.updateEditedGameWithNewFrames(game.gameId, result.updatedFrames);
+  }
+
+  handlePinUndoRequested(game: Game): void {
+    if (!this.isEditMode[game.gameId] || !game.isPinMode) return;
+    const focus = this.editedFocus[game.gameId];
+    if (!focus) return;
+
+    const editedGame = this.getEditedGameState(game);
+
+    const result = this.gameUtilsService.applyPinModeUndo(editedGame.frames, focus.frameIndex, focus.throwIndex);
+
+    if (!result) return;
+
+    this.editedFocus[game.gameId] = {
+      frameIndex: result.nextFrameIndex,
+      throwIndex: result.nextThrowIndex,
+    };
+
+    this.updateEditedGameWithNewFrames(game.gameId, result.updatedFrames);
   }
 
   getSelectedBallsText(game: Game): string {
@@ -332,7 +421,7 @@ export class GameComponent implements OnChanges, OnInit {
     }
 
     // Parse the input value using validation service
-    const parsedValue = this.validationService.parseInputValue(value, frameIndex, throwIndex, frames);
+    const parsedValue = this.gameUtilsService.parseInputValue(value, frameIndex, throwIndex, frames);
 
     // Validate the input using validation service
     if (!this.validationService.isValidNumber0to10(parsedValue)) {

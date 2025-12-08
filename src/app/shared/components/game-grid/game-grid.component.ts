@@ -23,6 +23,7 @@ import { BallSelectComponent } from '../ball-select/ball-select.component';
 import { alertEnterAnimation, alertLeaveAnimation } from '../../animations/alert.animation';
 import { PinInputComponent, ThrowConfirmedEvent } from '../pin-input/pin-input.component';
 import { PinDeckFrameRowComponent } from '../pin-deck-frame-row/pin-deck-frame-row.component';
+import { GameUtilsService } from 'src/app/core/services/game-utils/game-utils.service';
 
 @Component({
   selector: 'app-game-grid',
@@ -69,7 +70,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
   canStrike = input<boolean>(false);
   canSpare = input<boolean>(false);
   canUndo = input<boolean>(false);
-  pinInputGameComplete = input<boolean>(false);
+  isGameComplete = input<boolean>(false);
 
   // --- Outputs ---
   throwInput = output<{ frameIndex: number; throwIndex: number; value: string }>();
@@ -84,6 +85,9 @@ export class GameGridComponent implements OnInit, OnDestroy {
   // Pin Input Mode - Events from Child to Parent
   pinThrowConfirmed = output<ThrowConfirmedEvent>();
   pinUndoRequested = output<void>();
+
+  // Pin mode edit - score cell clicked
+  scoreCellClick = output<{ frameIndex: number; throwIndex: number }>();
 
   // --- View Children ---
   @ViewChildren(IonInput) inputs!: QueryList<IonInput>;
@@ -122,6 +126,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
     public utilsService: UtilsService,
     private platform: Platform,
     private patternService: PatternService,
+    private gameUtilsService: GameUtilsService,
   ) {
     this.initializeKeyboardListeners();
     addIcons({ chevronExpandOutline });
@@ -149,6 +154,19 @@ export class GameGridComponent implements OnInit, OnDestroy {
 
   onPinUndoRequested(): void {
     this.pinUndoRequested.emit();
+  }
+
+  // Pin mode edit - handle score cell click for direct selection
+  onScoreCellClicked(frameIndex: number, throwIndex: number): void {
+    // Only emit if the cell is clickable
+    if (this.isPinInputMode()) {
+      this.scoreCellClick.emit({ frameIndex, throwIndex });
+    }
+  }
+
+  // Helper to check if a cell is the currently focused cell
+  isCellFocused(frameIndex: number, throwIndex: number): boolean {
+    return this.currentFrameIndex() === frameIndex && this.currentThrowIndex() === throwIndex;
   }
 
   // STANDARD GRID MODE LOGIC

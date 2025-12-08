@@ -10,7 +10,7 @@ import { SortUtilsService } from '../sort-utils/sort-utils.service';
 import { GameFilterService } from '../game-filter/game-filter.service';
 import { GameStatsService } from '../game-stats/game-stats.service';
 import { Stats } from 'src/app/core/models/stats.model';
-import { BowlingGameValidationService } from '../game-utils/bowling-game-validation.service';
+import { GameUtilsService } from '../game-utils/game-utils.service';
 
 type ExcelCellValue = string | number | boolean | Date | null;
 type ExcelRow = Record<string, ExcelCellValue>;
@@ -25,7 +25,7 @@ export class ExcelService {
     private sortUtils: SortUtilsService,
     private gameFilterService: GameFilterService,
     private statsService: GameStatsService,
-    private validationService: BowlingGameValidationService,
+    private gameUtilsService: GameUtilsService,
   ) {}
 
   // TODO make one folder for all and one for each league and in there have stats and game history for the league
@@ -190,7 +190,7 @@ export class ExcelService {
                 if (pinArray.length > 0) {
                   throwObj.pinsLeftStanding = pinArray;
                   if (frameIndex < 9) {
-                    if (k === 0) throwObj.isSplit = !!this.validationService.isSplit(pinArray);
+                    if (k === 0) throwObj.isSplit = !!this.gameUtilsService.isSplit(pinArray);
                   } else {
                     const prevThrow = frame.throws[k - 1];
 
@@ -207,7 +207,7 @@ export class ExcelService {
                     }
 
                     if (allowSplit) {
-                      throwObj.isSplit = this.validationService.isSplit(pinArray);
+                      throwObj.isSplit = this.gameUtilsService.isSplit(pinArray);
                     }
                   }
                 }

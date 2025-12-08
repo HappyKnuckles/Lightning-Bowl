@@ -211,7 +211,17 @@
                   [game]="getEditedGameState(game)"
                   [patternModalId]="game.gameId"
                   [showMetadata]="false"
-                  (throwInput)="onEditThrowInput($event, game)"></app-game-grid>
+                  (throwInput)="onEditThrowInput($event, game)"
+                  [isPinInputMode]="game.isPinMode"
+                  [currentFrameIndex]="editedFocus[game.gameId].frameIndex"
+                  [currentThrowIndex]="editedFocus[game.gameId].throwIndex"
+                  [pinsLeftStanding]="getPinsLeftStandingForEditedGame(game)"
+                  [canStrike]="canRecordStrike(game)"
+                  [canSpare]="canRecordSpare(game)"
+                  [canUndo]="true"
+                  (scoreCellClick)="onScoreCellClick(game, $event.frameIndex, $event.throwIndex)"
+                  (pinThrowConfirmed)="onPinThrowConfirmed($event, game)"
+                  (pinUndoRequested)="handlePinUndoRequested(game)"></app-game-grid>
                 <div class="action-row">
                   <ion-button class="left-button" (click)="cancelEdit(game)">Cancel</ion-button>
                   <ion-button class="right-button" [disabled]="!isGameValid(game)" (click)="saveEdit(game)">Save</ion-button>
