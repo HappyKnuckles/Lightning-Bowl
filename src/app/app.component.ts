@@ -78,7 +78,8 @@ export class AppComponent implements OnInit, OnDestroy {
       if (event.type === 'VERSION_READY') {
         const lastCommitDate = localStorage.getItem('lastCommitDate');
         const sinceParam = lastCommitDate ? `&since=${lastCommitDate}` : '';
-        const apiUrl = `https://api.github.com/repos/HappyKnuckles/bowling-stats/commits?sha=master${sinceParam}`;
+        const branch = (window as any).env?.GITHUB_BRANCH || 'master';
+        const apiUrl = `https://api.github.com/repos/HappyKnuckles/bowling-stats/commits?sha=${branch}${sinceParam}`;
 
         // Fetch the latest commits from the master branch on GitHub
         this.http.get(apiUrl).subscribe({
