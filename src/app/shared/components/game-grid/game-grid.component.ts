@@ -69,7 +69,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
   canStrike = input<boolean>(false);
   canSpare = input<boolean>(false);
   canUndo = input<boolean>(false);
-  pinInputGameComplete = input<boolean>(false);
+  isGameComplete = input<boolean>(false);
 
   // --- Outputs ---
   throwInput = output<{ frameIndex: number; throwIndex: number; value: string }>();
@@ -84,6 +84,9 @@ export class GameGridComponent implements OnInit, OnDestroy {
   // Pin Input Mode - Events from Child to Parent
   pinThrowConfirmed = output<ThrowConfirmedEvent>();
   pinUndoRequested = output<void>();
+
+  // Pin mode edit - score cell clicked
+  scoreCellClick = output<{ frameIndex: number; throwIndex: number }>();
 
   // --- View Children ---
   @ViewChildren(IonInput) inputs!: QueryList<IonInput>;
@@ -151,6 +154,12 @@ export class GameGridComponent implements OnInit, OnDestroy {
     this.pinUndoRequested.emit();
   }
 
+  onScoreCellClicked(frameIndex: number, throwIndex: number): void {
+    if (this.isPinInputMode()) {
+      this.scoreCellClick.emit({ frameIndex, throwIndex });
+    }
+  }
+
   // STANDARD GRID MODE LOGIC
   initializeKeyboardListeners() {
     if (this.platform.is('mobile') && !this.platform.is('mobileweb')) {
@@ -199,6 +208,10 @@ export class GameGridComponent implements OnInit, OnDestroy {
   }
 
   // --- Helpers for Template ---
+  isCellFocused(frameIndex: number, throwIndex: number): boolean {
+    return this.currentFrameIndex() === frameIndex && this.currentThrowIndex() === throwIndex;
+  }
+
   getLocalFrameValue(frameIndex: number, throwIndex: number): number | undefined {
     return getThrowValue(this.game().frames[frameIndex], throwIndex);
   }

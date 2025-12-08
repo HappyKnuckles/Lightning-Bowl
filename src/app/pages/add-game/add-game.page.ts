@@ -22,7 +22,7 @@ import {
   IonLabel,
 } from '@ionic/angular/standalone';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
-import { Game, Frame, createEmptyGame, numberArraysToFrames, cloneFrames, createThrow, getThrowValue, Throw } from 'src/app/core/models/game.model';
+import { Game, Frame, createEmptyGame, numberArraysToFrames, cloneFrames, createThrow, Throw } from 'src/app/core/models/game.model';
 import { addIcons } from 'ionicons';
 import { add, chevronDown, chevronUp, cameraOutline, documentTextOutline, medalOutline, bowlingBallOutline, bowlingBall } from 'ionicons/icons';
 import { NgIf, NgFor } from '@angular/common';
@@ -45,6 +45,7 @@ import { AnalyticsService } from 'src/app/core/services/analytics/analytics.serv
 import { BowlingGameValidationService } from 'src/app/core/services/game-utils/bowling-game-validation.service';
 import { GameScoreToolbarComponent } from 'src/app/shared/components/game-score-toolbar/game-score-toolbar.component';
 import { ThrowConfirmedEvent } from 'src/app/shared/components/pin-input/pin-input.component';
+import { UtilsService } from 'src/app/core/services/utils/utils.service';
 
 const enum SeriesMode {
   Single = 'Single',
@@ -141,8 +142,6 @@ export class AddGamePage implements OnInit {
   // Internal Logic State
   private seriesId = '';
   private activeGameIndex = 0;
-  private currentFocusedFrame: number | null = null;
-  private currentFocusedThrow: number | null = null;
 
   constructor(
     private actionSheetCtrl: ActionSheetController,
@@ -155,6 +154,7 @@ export class AddGamePage implements OnInit {
     private userService: UserService,
     private hapticService: HapticService,
     private gameUtilsService: GameUtilsService,
+    private utilsService: UtilsService,
     private validationService: BowlingGameValidationService,
     private highScroreAlertService: HighScoreAlertService,
     private storageService: StorageService,
@@ -170,62 +170,20 @@ export class AddGamePage implements OnInit {
 
   // PIN INPUT MODE - PARENT LOGIC
   getPinsLeftStanding(gameIndex: number): number[] {
-    const allPins = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
     const state = this.pinModeState()[gameIndex];
     const { currentFrameIndex, currentThrowIndex, throwsData } = state;
+    const throws = throwsData[currentFrameIndex] || [];
 
-    // First throw of any frame always has all pins
-    if (currentThrowIndex === 0) {
-      return allPins;
-    }
-
-    const frameData = throwsData[currentFrameIndex];
-
-    // 10th frame special cases
-    if (currentFrameIndex === 9) {
-      const firstThrowData = frameData?.[0];
-      const secondThrowData = frameData?.[1];
-
-      if (currentThrowIndex === 1) {
-        // Second throw of 10th frame
-        if (firstThrowData?.value === 10) {
-          return allPins; // Strike on first - pins reset
-        }
-        // Not a strike - use pins left from first throw
-        return firstThrowData?.pinsLeftStanding ?? allPins;
-      }
-
-      if (currentThrowIndex === 2) {
-        // Third throw of 10th frame
-        if (firstThrowData?.value === 10 && secondThrowData?.value === 10) {
-          return allPins; // Two strikes - pins reset
-        }
-        if (firstThrowData?.value === 10 && secondThrowData?.value !== 10) {
-          // Strike then non-strike - use second throw's remaining pins
-          return secondThrowData?.pinsLeftStanding ?? allPins;
-        }
-        if (firstThrowData && secondThrowData && firstThrowData.value !== 10 && firstThrowData.value + secondThrowData.value === 10) {
-          return allPins; // Spare - pins reset
-        }
-      }
-    }
-
-    // Normal frames (1-9): second throw uses pins left from first throw
-    const prevThrow = frameData?.[currentThrowIndex - 1];
-    if (prevThrow) {
-      return prevThrow.pinsLeftStanding!;
-    }
-
-    return allPins;
+    return this.gameUtilsService.getAvailablePins(currentFrameIndex, currentThrowIndex, throws);
   }
 
-  canRecordStrikeForPinMode(gameIndex: number): boolean {
+  canRecordStrike(gameIndex: number): boolean {
     const state = this.pinModeState()[gameIndex];
     const game = this.games()[gameIndex];
     return this.validationService.canRecordStrike(state.currentFrameIndex, state.currentThrowIndex, game.frames);
   }
 
-  canRecordSpareForPinMode(gameIndex: number): boolean {
+  canRecordSpare(gameIndex: number): boolean {
     const state = this.pinModeState()[gameIndex];
     const game = this.games()[gameIndex];
     return this.validationService.canRecordSpare(state.currentFrameIndex, state.currentThrowIndex, game.frames);
@@ -233,12 +191,16 @@ export class AddGamePage implements OnInit {
 
   canUndoForPinMode(gameIndex: number): boolean {
     const game = this.games()[gameIndex];
-    return this.validationService.canUndoLastThrow(game.frames);
+    const state = this.pinModeState()[gameIndex];
+
+    if (!game || !state) return false;
+
+    return this.validationService.canUndoLastThrow(game.frames, state.currentFrameIndex, state.currentThrowIndex);
   }
 
-  isGameCompleteForPinMode(gameIndex: number): boolean {
+  isGameComplete(gameIndex: number): boolean {
     const game = this.games()[gameIndex];
-    return this.validationService.isGameComplete(game.frames);
+    return this.validationService.isGameValid(game);
   }
 
   getCurrentFrameIndex(gameIndex: number): number {
@@ -249,204 +211,66 @@ export class AddGamePage implements OnInit {
     return this.pinModeState()[gameIndex].currentThrowIndex;
   }
 
-  handlePinThrowConfirmed(event: ThrowConfirmedEvent, gameIndex: number): void {
-    const { pinsKnockedDown } = event;
+  onPinThrowConfirmed(event: ThrowConfirmedEvent, gameIndex: number): void {
     const state = this.pinModeState()[gameIndex];
-    const { currentFrameIndex, currentThrowIndex, throwsData } = state;
-
-    // 1. Calculate pins left standing
-    const availablePins = this.getPinsLeftStanding(gameIndex);
-    const pinsLeftStanding = availablePins.filter((pin) => !pinsKnockedDown.includes(pin));
-    const pinsKnockedDownCount = pinsKnockedDown.length;
-
-    // 2. Determine if this is a split (only on first throw of frame, or special 10th frame cases)
-    const isSplit = this.calculateSplit(currentFrameIndex, currentThrowIndex, pinsLeftStanding, throwsData);
-
-    // 3. Create throw data
-    const throwData: Throw = {
-      value: pinsKnockedDownCount,
-      throwIndex: currentThrowIndex + 1,
-      pinsLeftStanding,
-      pinsKnockedDown,
-      isSplit,
-    };
-
-    // 4. Update throws data
-    const newThrowsData = [...throwsData];
-    if (!newThrowsData[currentFrameIndex]) {
-      newThrowsData[currentFrameIndex] = [];
-    }
-    newThrowsData[currentFrameIndex] = [...newThrowsData[currentFrameIndex]];
-    newThrowsData[currentFrameIndex][currentThrowIndex] = throwData;
-
-    // 5. Update game frames
     const game = this.games()[gameIndex];
-    const frames = cloneFrames(game.frames);
-    const frame = frames[currentFrameIndex];
 
-    while (frame.throws.length <= currentThrowIndex) {
-      frame.throws.push(createThrow(0, frame.throws.length + 1));
-    }
-    frame.throws[currentThrowIndex] = {
-      value: pinsKnockedDownCount,
-      throwIndex: currentThrowIndex + 1,
-      isSplit,
-      pinsLeftStanding,
-      pinsKnockedDown: pinsKnockedDown,
-    };
+    const result = this.gameUtilsService.processPinThrow(game.frames, state.currentFrameIndex, state.currentThrowIndex, event.pinsKnockedDown);
 
-    // 6. Calculate next position
-    const { nextFrameIndex, nextThrowIndex } = this.calculateNextPosition(currentFrameIndex, currentThrowIndex, pinsKnockedDownCount, frames);
-
-    // 7. Update all state
     this.pinModeState.update((states) => {
       const newStates = [...states];
       newStates[gameIndex] = {
-        currentFrameIndex: nextFrameIndex,
-        currentThrowIndex: nextThrowIndex,
-        throwsData: newThrowsData,
+        currentFrameIndex: result.nextFrameIndex,
+        currentThrowIndex: result.nextThrowIndex,
+        throwsData: result.updatedFrames.map((f) => f.throws),
       };
       return newStates;
     });
 
-    // 8. Update game state (scores)
-    this.updateGameState(frames, gameIndex, false);
+    this.updateGameState(result.updatedFrames, gameIndex, false);
   }
 
   handlePinUndoRequested(gameIndex: number): void {
     const state = this.pinModeState()[gameIndex];
-    const { currentFrameIndex, currentThrowIndex, throwsData } = state;
-
-    // Find previous position
-    const { prevFrameIndex, prevThrowIndex } = this.calculatePreviousPosition(currentFrameIndex, currentThrowIndex, throwsData);
-
-    if (prevFrameIndex < 0) {
-      return; // Nothing to undo
-    }
-
-    // Clear throw data
-    const newThrowsData = [...throwsData];
-    if (newThrowsData[prevFrameIndex]) {
-      newThrowsData[prevFrameIndex] = newThrowsData[prevFrameIndex].slice(0, prevThrowIndex);
-    }
-
-    // Clear frame throw
     const game = this.games()[gameIndex];
-    const frames = cloneFrames(game.frames);
-    const frame = frames[prevFrameIndex];
-    if (frame.throws.length > prevThrowIndex) {
-      frame.throws = frame.throws.slice(0, prevThrowIndex);
-    }
 
-    // Update state
+    const result = this.gameUtilsService.applyPinModeUndo(game.frames, state.currentFrameIndex, state.currentThrowIndex);
+
+    if (!result) return;
+
     this.pinModeState.update((states) => {
       const newStates = [...states];
       newStates[gameIndex] = {
-        currentFrameIndex: prevFrameIndex,
-        currentThrowIndex: prevThrowIndex,
-        throwsData: newThrowsData,
+        currentFrameIndex: result.nextFrameIndex,
+        currentThrowIndex: result.nextThrowIndex,
+        throwsData: result.updatedFrames.map((f) => f.throws),
       };
       return newStates;
     });
 
-    // Update game state
-    this.updateGameState(frames, gameIndex, false);
+    this.updateGameState(result.updatedFrames, gameIndex, false);
   }
 
-  private calculateSplit(frameIndex: number, throwIndex: number, pinsLeftStanding: number[], throwsData: Throw[][]): boolean {
-    // Only first throw of a frame can result in a split (in normal frames)
-    if (frameIndex < 9) {
-      if (throwIndex === 0) {
-        return this.validationService.isSplit(pinsLeftStanding);
-      }
-      return false;
+  onScoreCellClick(event: { frameIndex: number; throwIndex: number }, gameIndex: number): void {
+    if (!this.isPinInputMode) return;
+
+    const { frameIndex, throwIndex } = event;
+    const game = this.games()[gameIndex];
+    const state = this.pinModeState()[gameIndex];
+
+    const canClick = this.gameUtilsService.isCellAccessible(game.frames, frameIndex, throwIndex);
+
+    if (canClick) {
+      this.pinModeState.update((states) => {
+        const newStates = [...states];
+        newStates[gameIndex] = {
+          ...state,
+          currentFrameIndex: frameIndex,
+          currentThrowIndex: throwIndex,
+        };
+        return newStates;
+      });
     }
-
-    // 10th frame special logic
-    if (frameIndex === 9) {
-      if (throwIndex === 0) {
-        return this.validationService.isSplit(pinsLeftStanding);
-      }
-
-      // Second throw after strike - pins reset, can have split
-      const firstThrowData = throwsData[9]?.[0];
-      if (throwIndex === 1 && firstThrowData?.value === 10) {
-        return this.validationService.isSplit(pinsLeftStanding);
-      }
-
-      // Third throw after two strikes or spare - pins reset, can have split
-      if (throwIndex === 2) {
-        const secondThrowData = throwsData[9]?.[1];
-        if (firstThrowData?.value === 10 && secondThrowData?.value === 10) {
-          return this.validationService.isSplit(pinsLeftStanding);
-        }
-        if (firstThrowData && secondThrowData && firstThrowData.value !== 10 && firstThrowData.value + secondThrowData.value === 10) {
-          return this.validationService.isSplit(pinsLeftStanding);
-        }
-      }
-    }
-
-    return false;
-  }
-
-  private calculateNextPosition(
-    frameIndex: number,
-    throwIndex: number,
-    pinsKnockedDown: number,
-    frames: Frame[],
-  ): { nextFrameIndex: number; nextThrowIndex: number } {
-    if (frameIndex < 9) {
-      // Frames 1-9: Strike advances to next frame, otherwise second throw
-      if (throwIndex === 0) {
-        if (pinsKnockedDown === 10) {
-          return { nextFrameIndex: frameIndex + 1, nextThrowIndex: 0 };
-        }
-        return { nextFrameIndex: frameIndex, nextThrowIndex: 1 };
-      }
-      // After second throw, move to next frame
-      return { nextFrameIndex: frameIndex + 1, nextThrowIndex: 0 };
-    }
-
-    // 10th frame logic
-    const frame = frames[9];
-    const firstThrow = getThrowValue(frame, 0);
-    const secondThrow = getThrowValue(frame, 1);
-
-    if (throwIndex === 0) {
-      return { nextFrameIndex: 9, nextThrowIndex: 1 };
-    }
-
-    if (throwIndex === 1) {
-      // Check if third throw is earned
-      if (firstThrow === 10 || (firstThrow !== undefined && secondThrow !== undefined && firstThrow + secondThrow === 10)) {
-        return { nextFrameIndex: 9, nextThrowIndex: 2 };
-      }
-      // No third throw - game complete, stay at position
-      return { nextFrameIndex: 9, nextThrowIndex: 1 };
-    }
-
-    // After third throw, stay at position (game complete)
-    return { nextFrameIndex: 9, nextThrowIndex: 2 };
-  }
-
-  private calculatePreviousPosition(
-    frameIndex: number,
-    throwIndex: number,
-    throwsData: Throw[][],
-  ): { prevFrameIndex: number; prevThrowIndex: number } {
-    if (throwIndex > 0) {
-      return { prevFrameIndex: frameIndex, prevThrowIndex: throwIndex - 1 };
-    }
-
-    if (frameIndex === 0) {
-      return { prevFrameIndex: -1, prevThrowIndex: -1 }; // Nothing to undo
-    }
-
-    // Find last throw in previous frame
-    const prevFrameData = throwsData[frameIndex - 1];
-    const prevThrowIndex = prevFrameData ? prevFrameData.length - 1 : 0;
-
-    return { prevFrameIndex: frameIndex - 1, prevThrowIndex: Math.max(0, prevThrowIndex) };
   }
 
   // GAME STATE UPDATE HANDLERS
@@ -540,8 +364,8 @@ export class AddGamePage implements OnInit {
       return;
     }
 
-    const parsedValue = this.validationService.parseInputValue(value, frameIndex, throwIndex, frames);
-    const isValidNumber = this.validationService.isValidNumber0to10(parsedValue);
+    const parsedValue = this.gameUtilsService.parseInputValue(value, frameIndex, throwIndex, frames);
+    const isValidNumber = this.utilsService.isValidNumber0to10(parsedValue);
     const isValidScore = this.validationService.isValidFrameScore(parsedValue, frameIndex, throwIndex, frames);
 
     if (!isValidNumber || !isValidScore) {
@@ -566,8 +390,15 @@ export class AddGamePage implements OnInit {
 
   onInputFocused(event: { frameIndex: number; throwIndex: number }, index: number): void {
     this.activeGameIndex = index;
-    this.currentFocusedFrame = event.frameIndex;
-    this.currentFocusedThrow = event.throwIndex;
+    this.pinModeState.update((states) => {
+      const newStates = [...states];
+      newStates[index] = {
+        ...newStates[index],
+        currentFrameIndex: event.frameIndex,
+        currentThrowIndex: event.throwIndex,
+      };
+      return newStates;
+    });
     this.updateToolbarDisabledState(index);
   }
 
@@ -640,6 +471,10 @@ export class AddGamePage implements OnInit {
   }
 
   // SAVE & RESET LOGIC
+  isGameValid(game: Game): boolean {
+    return this.validationService.isGameValid(game);
+  }
+
   clearFrames(index?: number): void {
     if (index !== undefined && index >= 0) {
       this.games.update((games) => games.map((g, i) => (i === index ? createEmptyGame() : g)));
@@ -689,6 +524,7 @@ export class AddGamePage implements OnInit {
         setTimeout(() => (this.is300 = false), 4000);
       }
       this.initializeGames();
+      this.gameGrids.forEach((grid) => (grid.checkbox.disabled = false));
       // Reset pin mode states
       this.pinModeState.set(
         Array.from({ length: 19 }, () => ({
@@ -775,6 +611,8 @@ export class AddGamePage implements OnInit {
   }
 
   private initializeGames(): void {
+    this.maxScores.set(new Array(19).fill(300));
+    this.totalScores.set(new Array(19).fill(0));
     this.games.set(Array.from({ length: 19 }, () => createEmptyGame()));
   }
 
@@ -823,19 +661,6 @@ export class AddGamePage implements OnInit {
   }
 
   // PRIVATE HELPERS - VALIDATION
-  isGameValid(game: Game): boolean {
-    return this.validationService.isGameValid(game);
-  }
-
-  canRecordStrike(index: number): boolean {
-    if (this.currentFocusedFrame === null || this.currentFocusedThrow === null) return false;
-    return this.validationService.canRecordStrike(this.currentFocusedFrame, this.currentFocusedThrow, this.games()[index].frames);
-  }
-
-  canRecordSpare(index: number): boolean {
-    if (this.currentFocusedFrame === null || this.currentFocusedThrow === null) return false;
-    return this.validationService.canRecordSpare(this.currentFocusedFrame, this.currentFocusedThrow, this.games()[index].frames);
-  }
 
   private recordThrow(frames: Frame[], frameIndex: number, throwIndex: number, value: number): void {
     const frame = frames[frameIndex];
