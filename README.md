@@ -11,7 +11,7 @@ This project is provided under a custom license. You are welcome to fork this re
 ### Add Games
 
 On the "Add" page, you can effortlessly log your games. There’s even an option to upload images of your scoresheet, allowing automatic entry of your scores (currently compatible with West-Bowl’s scoring system).
-You can select a league, pattern, ball and even a note to all your games. If you are playing a series there is the possibility to swap between single, 3-4-5-6 Series.
+You can select a league, pattern, ball and even a note to all your games. If you are playing a series there is the possibility to swap between single, 3-4-5-6 Series. It also supports detailed pin-data input with automatic split detection.
 
 <img src="src/assets/screenshots/start.png" alt="App Screenshot" width="300"/>
 
