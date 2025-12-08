@@ -189,11 +189,9 @@ export class AddGamePage implements OnInit {
     return this.validationService.canRecordSpare(state.currentFrameIndex, state.currentThrowIndex, game.frames);
   }
 
-  // game.component.ts
-
   canUndoForPinMode(gameIndex: number): boolean {
     const game = this.games()[gameIndex];
-    const state = this.pinModeState()[gameIndex]; // Get the live cursor position
+    const state = this.pinModeState()[gameIndex];
 
     if (!game || !state) return false;
 

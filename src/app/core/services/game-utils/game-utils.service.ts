@@ -38,7 +38,7 @@ export class GameUtilsService {
     10: 7,
   };
 
-  // MAIN PUBLIC API: PIN PROCESSING
+  // PIN PROCESSING
   processPinThrow(frames: Frame[], frameIndex: number, throwIndex: number, pinsKnockedDown: number[]): PinThrowResult {
     const updatedFrames: Frame[] = structuredClone(frames);
     this.ensureFrameStructure(updatedFrames, frameIndex, throwIndex);
