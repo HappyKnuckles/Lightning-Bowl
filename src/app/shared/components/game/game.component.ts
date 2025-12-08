@@ -623,8 +623,12 @@ export class GameComponent implements OnInit {
   }
 
   canUndoForPinMode(game: Game): boolean {
+    const focus = this.editedFocus[game.gameId];
+    if (!focus) return false;
+
     const editedGame = this.editedGameStates[game.gameId];
-    return this.validationService.canUndoLastThrow(editedGame.frames);
+
+    return this.validationService.canUndoLastThrow(editedGame.frames, focus.frameIndex, focus.throwIndex);
   }
 
   // INPUT HANDLING

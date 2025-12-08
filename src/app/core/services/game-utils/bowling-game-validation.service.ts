@@ -56,14 +56,28 @@ export class BowlingGameValidationService {
     return false;
   }
 
-  // adjust, this allows undo in first frame, it should check according to last throw (current pos)
-  canUndoLastThrow(frames: Frame[]): boolean {
-    for (let frameIndex = 0; frameIndex < 10; frameIndex++) {
-      const frame = frames[frameIndex];
-      if (frame && frame.throws && frame.throws.length > 0 && getThrowValue(frame, 0) !== undefined) {
-        return true;
+  canUndoLastThrow(frames: Frame[], frameIndex: number, throwIndex: number): boolean {
+    if (!frames || frameIndex < 0 || throwIndex < 0) return false;
+
+    const currentFrame = frames[frameIndex];
+    const currentValue = currentFrame?.throws?.[throwIndex]?.value;
+    if (currentValue !== undefined) {
+      return true;
+    }
+
+    if (throwIndex > 0) {
+      const prevThrowValue = currentFrame?.throws?.[throwIndex - 1]?.value;
+      return prevThrowValue !== undefined;
+    }
+
+    if (frameIndex > 0) {
+      const prevFrame = frames[frameIndex - 1];
+      if (prevFrame && prevFrame.throws && prevFrame.throws.length > 0) {
+        const lastThrowOfPrevFrame = prevFrame.throws[prevFrame.throws.length - 1];
+        return lastThrowOfPrevFrame.value !== undefined;
       }
     }
+
     return false;
   }
 
