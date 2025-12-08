@@ -74,6 +74,8 @@
         [canSpare]="canRecordSpare(i)"
         [canUndo]="canUndoForPinMode(i)"
         [isGameComplete]="isGameComplete(i)"
+        [patternModalId]="i.toString()"
+        [ballSelectorId]="'modal-ball-selector' + i"
         (throwInput)="handleThrowInput($event, i)"
         (pinThrowConfirmed)="onPinThrowConfirmed($event, i)"
         (pinUndoRequested)="handlePinUndoRequested(i)"
@@ -84,9 +86,7 @@
         (toolbarStateChanged)="onToolbarStateChange($event)"
         (noteChanged)="onNoteChange($event, i)"
         (ballsChanged)="onBallsChange($event, i)"
-        (inputFocused)="onInputFocused($event, i)"
-        [patternModalId]="i.toString()"
-        [ballSelectorId]="'modal-ball-selector' + i">
+        (inputFocused)="onInputFocused($event, i)">
       </app-game-grid>
 
       <ion-grid *ngIf="selectedMode !== 'Single'">

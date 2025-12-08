@@ -268,12 +268,11 @@ export class GameComponent implements OnChanges, OnInit {
       this.originalGameState[game.gameId] = structuredClone(game);
       this.enableEdit(game, game.gameId);
 
-      // If this game is pin mode, initialize focus to last frame/throw
       if (game.isPinMode) {
         const edited = this.getEditedGameState(game);
         let lastFrameIndex = 9;
         let lastThrowIndex = 0;
-        // find last non-empty frame starting from end
+
         for (let i = 9; i >= 0; i--) {
           const f = edited.frames[i];
           if (f && f.throws && f.throws.length > 0) {
@@ -299,6 +298,11 @@ export class GameComponent implements OnChanges, OnInit {
     }
   }
 
+  canUndoForPinMode(game: Game): boolean {
+    const editedGame = this.getEditedGameState(game);
+    return this.validationService.canUndoLastThrow(editedGame.frames);
+  }
+
   onBallSelect(selectedBalls: string[], game: Game, modal: IonModal): void {
     modal.dismiss();
     game.balls = selectedBalls;
@@ -320,8 +324,8 @@ export class GameComponent implements OnChanges, OnInit {
     const focus = this.editedFocus[game.gameId];
     if (!focus) return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
-    const edited = this.getEditedGameState(game);
-    const frame = edited.frames[focus.frameIndex];
+    const editedGame = this.getEditedGameState(game);
+    const frame = editedGame.frames[focus.frameIndex];
     const throws = frame.throws || [];
 
     return this.gameUtilsService.getAvailablePins(focus.frameIndex, focus.throwIndex, throws);
@@ -337,7 +341,7 @@ export class GameComponent implements OnChanges, OnInit {
     return pinsLeft.length > 0 && pinsLeft.length < 10;
   }
 
-  async onPinThrowConfirmed(event: { pinsKnockedDown: number[] }, game: Game): Promise<void> {
+  onPinThrowConfirmed(event: { pinsKnockedDown: number[] }, game: Game): void {
     if (!this.isEditMode[game.gameId] || !game.isPinMode) return;
 
     const focus = this.editedFocus[game.gameId] || { frameIndex: 0, throwIndex: 0 };
@@ -424,7 +428,7 @@ export class GameComponent implements OnChanges, OnInit {
     const parsedValue = this.gameUtilsService.parseInputValue(value, frameIndex, throwIndex, frames);
 
     // Validate the input using validation service
-    if (!this.validationService.isValidNumber0to10(parsedValue)) {
+    if (!this.utilsService.isValidNumber0to10(parsedValue)) {
       this.handleEditInvalidInput(game.gameId, frameIndex, throwIndex);
       return;
     }

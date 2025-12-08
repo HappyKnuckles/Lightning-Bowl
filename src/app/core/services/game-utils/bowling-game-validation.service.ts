@@ -56,6 +56,7 @@ export class BowlingGameValidationService {
     return false;
   }
 
+  // adjust, this allows undo in first frame, it should check according to last throw (current pos)
   canUndoLastThrow(frames: Frame[]): boolean {
     for (let frameIndex = 0; frameIndex < 10; frameIndex++) {
       const frame = frames[frameIndex];
@@ -64,10 +65,6 @@ export class BowlingGameValidationService {
       }
     }
     return false;
-  }
-
-  isValidNumber0to10(value: number): boolean {
-    return !isNaN(value) && value >= 0 && value <= 10;
   }
 
   isValidFrameScore(inputValue: number, frameIndex: number, inputIndex: number, frames: Frame[]): boolean {

@@ -45,6 +45,7 @@ import { AnalyticsService } from 'src/app/core/services/analytics/analytics.serv
 import { BowlingGameValidationService } from 'src/app/core/services/game-utils/bowling-game-validation.service';
 import { GameScoreToolbarComponent } from 'src/app/shared/components/game-score-toolbar/game-score-toolbar.component';
 import { ThrowConfirmedEvent } from 'src/app/shared/components/pin-input/pin-input.component';
+import { UtilsService } from 'src/app/core/services/utils/utils.service';
 
 const enum SeriesMode {
   Single = 'Single',
@@ -153,6 +154,7 @@ export class AddGamePage implements OnInit {
     private userService: UserService,
     private hapticService: HapticService,
     private gameUtilsService: GameUtilsService,
+    private utilsService: UtilsService,
     private validationService: BowlingGameValidationService,
     private highScroreAlertService: HighScoreAlertService,
     private storageService: StorageService,
@@ -209,11 +211,8 @@ export class AddGamePage implements OnInit {
     const state = this.pinModeState()[gameIndex];
     const game = this.games()[gameIndex];
 
-    // 1. Process Logic via Service
     const result = this.gameUtilsService.processPinThrow(game.frames, state.currentFrameIndex, state.currentThrowIndex, event.pinsKnockedDown);
 
-    // 2. Update UI State
-    // We map the updated frames back to throwsData for the specific pinModeState structure
     this.pinModeState.update((states) => {
       const newStates = [...states];
       newStates[gameIndex] = {
@@ -224,7 +223,6 @@ export class AddGamePage implements OnInit {
       return newStates;
     });
 
-    // 3. Save Data (Scores, etc.)
     this.updateGameState(result.updatedFrames, gameIndex, false);
   }
 
@@ -363,7 +361,7 @@ export class AddGamePage implements OnInit {
     }
 
     const parsedValue = this.gameUtilsService.parseInputValue(value, frameIndex, throwIndex, frames);
-    const isValidNumber = this.validationService.isValidNumber0to10(parsedValue);
+    const isValidNumber = this.utilsService.isValidNumber0to10(parsedValue);
     const isValidScore = this.validationService.isValidFrameScore(parsedValue, frameIndex, throwIndex, frames);
 
     if (!isValidNumber || !isValidScore) {
@@ -469,6 +467,10 @@ export class AddGamePage implements OnInit {
   }
 
   // SAVE & RESET LOGIC
+  isGameValid(game: Game): boolean {
+    return this.validationService.isGameValid(game);
+  }
+
   clearFrames(index?: number): void {
     if (index !== undefined && index >= 0) {
       this.games.update((games) => games.map((g, i) => (i === index ? createEmptyGame() : g)));
@@ -655,9 +657,6 @@ export class AddGamePage implements OnInit {
   }
 
   // PRIVATE HELPERS - VALIDATION
-  isGameValid(game: Game): boolean {
-    return this.validationService.isGameValid(game);
-  }
 
   private recordThrow(frames: Frame[], frameIndex: number, throwIndex: number, value: number): void {
     const frame = frames[frameIndex];
