@@ -278,6 +278,37 @@ export class GameUtilsService {
   }
 
   // INPUT PARSING
+  calculateIsClean(frames: Frame[]): boolean {
+    for (let i = 0; i < Math.min(frames.length, 10); i++) {
+      const frame = frames[i];
+      if (!frame || !frame.throws || frame.throws.length === 0) {
+        continue; // Skip empty frames
+      }
+
+      const first = getThrowValue(frame, 0);
+      const second = getThrowValue(frame, 1);
+
+      if (first === undefined) {
+        continue; // Skip incomplete frames
+      }
+
+      if (i < 9) {
+        // Frames 1-9: must be strike or spare
+        if (first !== 10 && (second === undefined || first + second < 10)) {
+          return false; // Open frame
+        }
+      } else {
+        // 10th frame: first two balls must add up to at least 10
+        if (second === undefined) {
+          continue; // Incomplete
+        }
+        if (first !== 10 && first + second < 10) {
+          return false; // Open frame
+        }
+      }
+    }
+    return true;
+  }
   parseInputValue(input: string, frameIndex: number, throwIndex: number, frames: Frame[]): number {
     const upperInput = input.toUpperCase();
     if (upperInput === 'X') return 10;

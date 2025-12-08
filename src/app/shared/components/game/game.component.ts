@@ -499,6 +499,8 @@ export class GameComponent implements OnInit {
             frameScores: editedState.frameScores,
             totalScore: editedState.totalScore,
             isPractice: !game.league,
+            isPerfect: editedState.totalScore === 300,
+            isClean: this.gameUtilsService.calculateIsClean(editedState.frames),
           }
         : {
             ...game,
