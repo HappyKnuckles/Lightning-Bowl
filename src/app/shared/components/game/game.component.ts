@@ -1,5 +1,5 @@
 import { NgIf, NgFor, DatePipe } from '@angular/common';
-import { Component, Input, Renderer2, ViewChild, ViewChildren, QueryList, OnChanges, SimpleChanges, computed, OnInit, input } from '@angular/core';
+import { Component, Renderer2, ViewChild, ViewChildren, QueryList, computed, OnInit, input, signal } from '@angular/core';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { ImpactStyle } from '@capacitor/haptics';
@@ -67,6 +67,11 @@ import { GameScoreCalculatorService } from 'src/app/core/services/game-score-cal
 import { PinDeckFrameRowComponent } from '../pin-deck-frame-row/pin-deck-frame-row.component';
 import { GameUtilsService } from 'src/app/core/services/game-utils/game-utils.service';
 
+interface MonthHeader {
+  name: string;
+  count: number;
+}
+
 @Component({
   selector: 'app-game',
   templateUrl: './game.component.html',
@@ -116,14 +121,18 @@ import { GameUtilsService } from 'src/app/core/services/game-utils/game-utils.se
   ],
   standalone: true,
 })
-export class GameComponent implements OnChanges, OnInit {
+export class GameComponent implements OnInit {
+  // DOM Elements
   @ViewChild('modal', { static: false }) modal!: IonModal;
-  games = input.required<Game[]>();
-  @Input() isLeaguePage?: boolean = false;
-  @Input() gameCount?: number;
   @ViewChild('accordionGroup') accordionGroup!: IonAccordionGroup;
   @ViewChildren(GameGridComponent) gameGrids!: QueryList<GameGridComponent>;
 
+  // Inputs
+  games = input.required<Game[]>();
+  isLeaguePage = input<boolean>(false);
+  gameCount = input<number | undefined>(undefined);
+
+  // Computed Signals
   leagues = computed(() => {
     const savedLeagues = this.storageService.leagues();
     if (!this.games) return savedLeagues;
@@ -136,41 +145,72 @@ export class GameComponent implements OnChanges, OnInit {
     return [...new Set([...leagueKeys, ...savedLeagues])];
   });
 
-  // leagues = computed(() => {
-  //   const savedLeagues = this.storageService.leagues();
+  sortedGames = computed(() => {
+    return [...this.games()].sort((a, b) => b.date - a.date);
+  });
 
-  //   const savedJson = localStorage.getItem('leagueSelection');
-  //   const allLeagueKeys = this.games.reduce((acc: string[], game: Game) => {
-  //     if (game.league && !acc.includes(game.league)) {
-  //       acc.push(game.league);
-  //     }
-  //     return acc;
-  //   }, []);
+  showingGames = computed(() => {
+    return this.sortedGames().slice(0, this.loadedCount());
+  });
 
-  //   if (!savedJson) {
-  //     return allLeagueKeys;
-  //   }
+  monthHeaders = computed(() => {
+    const games = this.showingGames();
+    const headers = new Map<number, MonthHeader>();
 
-  //   const savedSelection: Record<string, boolean> = savedJson ? JSON.parse(savedJson) : {};
+    if (games.length === 0) return headers;
 
-  //   const uniqueCombinedLeagues = [...new Set([...allLeagueKeys, ...savedLeagues])];
+    const getMonthKey = (timestamp: number) => {
+      const d = new Date(timestamp);
+      return `${d.getFullYear()}-${d.getMonth()}`;
+    };
 
-  //   return uniqueCombinedLeagues.filter(league => savedSelection[league] === true);
-  // });
-  sortedGames: Game[] = [];
-  showingGames: Game[] = [];
-  presentingElement?: HTMLElement;
+    const formatName = (timestamp: number) => {
+      const date = new Date(timestamp);
+      return date.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+    };
+
+    const counts = new Map<string, number>();
+    for (const game of games) {
+      const key = getMonthKey(game.date);
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+
+    const firstKey = getMonthKey(games[0].date);
+    headers.set(0, {
+      name: formatName(games[0].date),
+      count: counts.get(firstKey) || 0,
+    });
+
+    for (let i = 1; i < games.length; i++) {
+      const currentKey = getMonthKey(games[i].date);
+      const prevKey = getMonthKey(games[i - 1].date);
+
+      if (currentKey !== prevKey) {
+        headers.set(i, {
+          name: formatName(games[i].date),
+          count: counts.get(currentKey) || 0,
+        });
+      }
+    }
+
+    return headers;
+  });
+
+  // State Properties
   private batchSize = 100;
-  public loadedCount = 0;
-  isEditMode: Record<string, boolean> = {};
-  private closeTimers: Record<string, NodeJS.Timeout> = {};
+  public loadedCount = signal(this.batchSize);
+  public presentingElement?: HTMLElement;
+  public isEditMode: Record<string, boolean> = {};
   public delayedCloseMap: Record<string, boolean> = {};
   private originalGameState: Record<string, Game> = {};
-  private editedGameStates: Record<string, Game> = {};
+  public editedGameStates: Record<string, Game> = {};
+  public editedFocus: Record<string, { frameIndex: number; throwIndex: number }> = {};
+  private closeTimers: Record<string, NodeJS.Timeout> = {};
+
+  // Config
   patternTypeaheadConfig!: TypeaheadConfig<Partial<Pattern>>;
   enterAnimation = alertEnterAnimation;
   leaveAnimation = alertLeaveAnimation;
-  public editedFocus: Record<string, { frameIndex: number; throwIndex: number }> = {};
 
   constructor(
     private alertController: AlertController,
@@ -208,25 +248,58 @@ export class GameComponent implements OnChanges, OnInit {
     this.patternTypeaheadConfig = createPartialPatternTypeaheadConfig((searchTerm: string) => this.patternService.searchPattern(searchTerm));
   }
 
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['games'] && this.games) {
-      this.sortedGames = [...this.games()].sort((a, b) => b.date - a.date);
-      this.showingGames = this.sortedGames.slice(0, this.batchSize);
-      this.loadedCount += this.batchSize;
-    }
-  }
-
+  // PAGINATION
   loadMoreGames(event: InfiniteScrollCustomEvent): void {
     setTimeout(() => {
-      this.showingGames = this.sortedGames.slice(0, this.loadedCount + this.batchSize);
-      this.loadedCount += this.batchSize;
+      this.loadedCount.update((count) => count + this.batchSize);
       event.target.complete();
-      if (this.loadedCount >= this.games.length) {
+      if (this.loadedCount() >= this.games().length) {
         event.target.disabled = true;
       }
     }, 50);
   }
 
+  // NAVIGATION & UI
+  openExpansionPanel(accordionId?: string): void {
+    const nativeEl = this.accordionGroup;
+    if (nativeEl.value === accordionId) nativeEl.value = undefined;
+    else nativeEl.value = accordionId;
+  }
+
+  hideContent(event: CustomEvent): void {
+    const openGameIds: string[] = event.detail.value || [];
+
+    openGameIds.forEach((gameId) => {
+      if (this.closeTimers[gameId]) {
+        clearTimeout(this.closeTimers[gameId]);
+        delete this.closeTimers[gameId];
+      }
+      this.delayedCloseMap[gameId] = true;
+    });
+
+    Object.keys(this.delayedCloseMap).forEach((gameId) => {
+      if (!openGameIds.includes(gameId)) {
+        if (!this.closeTimers[gameId]) {
+          this.closeTimers[gameId] = setTimeout(() => {
+            if (!(this.accordionGroup?.value || []).includes(gameId)) {
+              this.delayedCloseMap[gameId] = false;
+            }
+            delete this.closeTimers[gameId];
+          }, 500);
+        }
+      }
+    });
+  }
+
+  navigateToBallsPage(balls: string[]): void {
+    const searchQuery = balls.join(', ');
+    if (this.isLeaguePage()) {
+      this.modalCtrl.dismiss();
+    }
+    this.router.navigate(['tabs/balls'], { queryParams: { search: searchQuery } });
+  }
+
+  // GAME ACTIONS (DELETE / SHARE)
   async deleteGame(gameId: string): Promise<void> {
     this.hapticService.vibrate(ImpactStyle.Heavy);
     const alert = await this.alertController.create({
@@ -236,7 +309,6 @@ export class GameComponent implements OnChanges, OnInit {
         {
           text: 'Cancel',
           role: 'cancel',
-          // handler: () => { },
         },
         {
           text: 'Delete',
@@ -256,20 +328,117 @@ export class GameComponent implements OnChanges, OnInit {
     await alert.present();
   }
 
-  // TODO this should save the state of the panel and revert to it
-  openExpansionPanel(accordionId?: string): void {
-    const nativeEl = this.accordionGroup;
-    if (nativeEl.value === accordionId) nativeEl.value = undefined;
-    else nativeEl.value = accordionId;
+  async takeScreenshotAndShare(game: Game): Promise<void> {
+    this.delayedCloseMap[game.gameId] = true;
+    const accordion = document.getElementById(game.gameId);
+    if (!accordion) {
+      throw new Error('Accordion not found');
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 30));
+
+    const scoreTemplate = accordion.querySelector('.grid-container') as HTMLElement;
+
+    if (!scoreTemplate) {
+      throw new Error('Score template not found in the accordion');
+    }
+
+    const accordionGroupEl = this.accordionGroup;
+    const accordionGroupValues = this.accordionGroup.value;
+    const accordionIsOpen = accordionGroupEl.value?.includes(game.gameId) ?? false;
+
+    if (!accordionIsOpen) {
+      this.openExpansionPanel(game.gameId);
+    }
+    const childNode = accordion.childNodes[1] as HTMLElement;
+
+    const originalWidth = childNode.style.width;
+
+    try {
+      this.loadingService.setLoading(true);
+
+      this.renderer.setStyle(childNode, 'width', '700px');
+
+      const formattedDate = this.datePipe.transform(game.date, 'dd.MM.yy');
+
+      const messageParts = [
+        game.totalScore === 300
+          ? `Look at me bitches, perfect game on ${formattedDate}! 🎳🎉.`
+          : `Check out this game from ${formattedDate}. A ${game.totalScore}.`,
+
+        game.balls && game.balls.length > 0
+          ? game.balls.length === 1
+            ? `Bowled with: ${game.balls[0]}`
+            : `Bowled with: ${game.balls.join(', ')}`
+          : null,
+
+        game.patterns && game.patterns.length > 0 ? `Patterns: ${game.patterns.join(', ')}` : null,
+      ];
+
+      const message = messageParts.filter((part) => part !== null).join('\n');
+
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      const dataUrl = await toPng(scoreTemplate, { quality: 0.7 });
+      const base64Data = dataUrl.split(',')[1];
+
+      if (navigator.share && navigator.canShare({ files: [new File([], '')] })) {
+        const blob = await (await fetch(dataUrl)).blob();
+        const filesArray = [
+          new File([blob], `score_${game.gameId}.png`, {
+            type: blob.type,
+          }),
+        ];
+
+        await navigator.share({
+          title: 'Game Score',
+          text: message,
+          files: filesArray,
+        });
+      } else {
+        const fileName = `score_${game.gameId}.png`;
+
+        await Filesystem.writeFile({
+          path: fileName,
+          data: base64Data,
+          directory: Directory.Cache,
+          encoding: Encoding.UTF8,
+        });
+
+        const fileUri = await Filesystem.getUri({
+          directory: Directory.Cache,
+          path: fileName,
+        });
+
+        await Share.share({
+          title: 'Game Score',
+          text: message,
+          url: fileUri.uri,
+          dialogTitle: 'Share Game Score',
+        });
+        this.toastService.showToast(ToastMessages.screenshotShareSuccess, 'share-social-outline');
+      }
+    } catch (error) {
+      console.error('Error taking screenshot and sharing', error);
+      this.toastService.showToast(ToastMessages.screenshotShareError, 'bug', true);
+    } finally {
+      this.renderer.setStyle(childNode, 'width', originalWidth);
+      this.accordionGroup.value = accordionGroupValues;
+      this.delayedCloseMap[game.gameId] = false;
+      this.loadingService.setLoading(false);
+    }
   }
 
+  // EDIT MODE LIFECYCLE
   saveOriginalStateAndEnableEdit(game: Game): void {
     if (!this.isEditMode[game.gameId]) {
       this.originalGameState[game.gameId] = structuredClone(game);
+      this.editedGameStates[game.gameId] = structuredClone(game);
+
       this.enableEdit(game, game.gameId);
 
       if (game.isPinMode) {
-        const edited = this.getEditedGameState(game);
+        const edited = this.editedGameStates[game.gameId];
         let lastFrameIndex = 9;
         let lastThrowIndex = 0;
 
@@ -298,21 +467,98 @@ export class GameComponent implements OnChanges, OnInit {
     }
   }
 
-  canUndoForPinMode(game: Game): boolean {
-    const editedGame = this.getEditedGameState(game);
-    return this.validationService.canUndoLastThrow(editedGame.frames);
+  cancelEdit(game: Game): void {
+    const saved = this.originalGameState[game.gameId];
+    if (saved) {
+      Object.assign(game, saved);
+      delete this.originalGameState[game.gameId];
+    }
+
+    delete this.editedGameStates[game.gameId];
+
+    if (game.isSeries) {
+      this.updateSeries(game, game.league, game.patterns);
+    }
+
+    this.isEditMode[game.gameId] = false;
+    this.hapticService.vibrate(ImpactStyle.Light);
+
+    const wasOpen = this.delayedCloseMap[game.gameId];
+    this.openExpansionPanel(wasOpen ? game.gameId : undefined);
+    delete this.delayedCloseMap[game.gameId];
   }
 
-  onBallSelect(selectedBalls: string[], game: Game, modal: IonModal): void {
-    modal.dismiss();
-    game.balls = selectedBalls;
+  async saveEdit(game: Game): Promise<void> {
+    try {
+      const editedState = this.editedGameStates[game.gameId];
+
+      const updatedGame: Game = editedState
+        ? {
+            ...game,
+            frames: editedState.frames,
+            frameScores: editedState.frameScores,
+            totalScore: editedState.totalScore,
+            isPractice: !game.league,
+          }
+        : {
+            ...game,
+            isPractice: !game.league,
+          };
+
+      if (!this.isGameValid(updatedGame)) {
+        this.hapticService.vibrate(ImpactStyle.Heavy);
+        this.toastService.showToast(ToastMessages.invalidInput, 'bug', true);
+        return;
+      }
+
+      const originalGameSnapshot = this.originalGameState[game.gameId];
+      const leagueChanged = originalGameSnapshot && originalGameSnapshot.league !== updatedGame.league;
+      const patternsChanged = originalGameSnapshot && JSON.stringify(originalGameSnapshot.patterns) !== JSON.stringify(updatedGame.patterns);
+
+      if (updatedGame.isSeries && (leagueChanged || patternsChanged)) {
+        const seriesIdToUpdate = updatedGame.seriesId;
+        const newLeague = updatedGame.league;
+        const newPatterns = updatedGame.patterns;
+        const newIsPractice = !newLeague;
+
+        await this.storageService.saveGameToLocalStorage(updatedGame);
+
+        const gamesToUpdateInStorage = this.storageService
+          .games()
+          .filter((g) => g.seriesId === seriesIdToUpdate && g.gameId !== updatedGame.gameId)
+          .map((g) => ({
+            ...g,
+            league: newLeague,
+            patterns: newPatterns,
+            isPractice: newIsPractice,
+          }));
+        await this.storageService.saveGamesToLocalStorage(gamesToUpdateInStorage);
+      } else {
+        await this.storageService.saveGameToLocalStorage(updatedGame);
+      }
+
+      this.toastService.showToast(ToastMessages.gameUpdateSuccess, 'refresh-outline');
+      this.isEditMode[game.gameId] = false;
+      this.hapticService.vibrate(ImpactStyle.Light);
+
+      const wasOpen = this.delayedCloseMap[game.gameId];
+      this.openExpansionPanel(wasOpen ? game.gameId : undefined);
+
+      this.analyticsService.trackGameEdited();
+      delete this.originalGameState[game.gameId];
+      delete this.editedGameStates[game.gameId];
+      delete this.delayedCloseMap[game.gameId];
+    } catch (error) {
+      this.toastService.showToast(ToastMessages.gameUpdateError, 'bug', true);
+      console.error('Error saving game edit:', error);
+    }
   }
 
+  // PIN MODE LOGIC & INTERACTION
   onScoreCellClick(game: Game, frameIndex: number, throwIndex: number): void {
     if (!this.isEditMode[game.gameId] || !game.isPinMode) return;
 
-    const editedGame = this.getEditedGameState(game);
-
+    const editedGame = this.editedGameStates[game.gameId];
     const canClick = this.gameUtilsService.isCellAccessible(editedGame.frames, frameIndex, throwIndex);
 
     if (canClick) {
@@ -320,32 +566,11 @@ export class GameComponent implements OnChanges, OnInit {
     }
   }
 
-  getPinsLeftStandingForEditedGame(game: Game): number[] {
-    const focus = this.editedFocus[game.gameId];
-    if (!focus) return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-
-    const editedGame = this.getEditedGameState(game);
-    const frame = editedGame.frames[focus.frameIndex];
-    const throws = frame.throws || [];
-
-    return this.gameUtilsService.getAvailablePins(focus.frameIndex, focus.throwIndex, throws);
-  }
-
-  canRecordStrike(game: Game): boolean {
-    const pinsLeft = this.getPinsLeftStandingForEditedGame(game);
-    return pinsLeft.length === 10;
-  }
-
-  canRecordSpare(game: Game): boolean {
-    const pinsLeft = this.getPinsLeftStandingForEditedGame(game);
-    return pinsLeft.length > 0 && pinsLeft.length < 10;
-  }
-
   onPinThrowConfirmed(event: { pinsKnockedDown: number[] }, game: Game): void {
     if (!this.isEditMode[game.gameId] || !game.isPinMode) return;
 
     const focus = this.editedFocus[game.gameId] || { frameIndex: 0, throwIndex: 0 };
-    const editedGame = this.getEditedGameState(game);
+    const editedGame = this.editedGameStates[game.gameId] || structuredClone(game);
 
     const result = this.gameUtilsService.processPinThrow(editedGame.frames, focus.frameIndex, focus.throwIndex, event.pinsKnockedDown || []);
 
@@ -362,7 +587,7 @@ export class GameComponent implements OnChanges, OnInit {
     const focus = this.editedFocus[game.gameId];
     if (!focus) return;
 
-    const editedGame = this.getEditedGameState(game);
+    const editedGame = this.editedGameStates[game.gameId];
 
     const result = this.gameUtilsService.applyPinModeUndo(editedGame.frames, focus.frameIndex, focus.throwIndex);
 
@@ -376,58 +601,47 @@ export class GameComponent implements OnChanges, OnInit {
     this.updateEditedGameWithNewFrames(game.gameId, result.updatedFrames);
   }
 
-  getSelectedBallsText(game: Game): string {
-    const balls = game.balls || [];
-    return balls.length > 0 ? balls.join(', ') : 'None';
+  getPinsLeftStandingForEditedGame(game: Game): number[] {
+    const focus = this.editedFocus[game.gameId];
+    if (!focus) return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+    const editedGame = this.editedGameStates[game.gameId];
+    const frame = editedGame.frames[focus.frameIndex];
+    const throws = frame.throws || [];
+
+    return this.gameUtilsService.getAvailablePins(focus.frameIndex, focus.throwIndex, throws);
   }
 
-  cancelEdit(game: Game): void {
-    const saved = this.originalGameState[game.gameId];
-    if (saved) {
-      Object.assign(game, saved);
-      delete this.originalGameState[game.gameId];
-    }
-
-    // Clear edited state
-    delete this.editedGameStates[game.gameId];
-
-    if (game.isSeries) {
-      this.updateSeries(game, game.league, game.patterns);
-    }
-
-    this.isEditMode[game.gameId] = false;
-    this.hapticService.vibrate(ImpactStyle.Light);
-
-    const wasOpen = this.delayedCloseMap[game.gameId];
-    this.openExpansionPanel(wasOpen ? game.gameId : undefined);
-    delete this.delayedCloseMap[game.gameId];
+  canRecordStrike(game: Game): boolean {
+    const pinsLeft = this.getPinsLeftStandingForEditedGame(game);
+    return pinsLeft.length === 10;
   }
 
-  getEditedGameState(game: Game): Game {
-    if (!this.editedGameStates[game.gameId]) {
-      this.editedGameStates[game.gameId] = structuredClone(game);
-    }
-    return this.editedGameStates[game.gameId];
+  canRecordSpare(game: Game): boolean {
+    const pinsLeft = this.getPinsLeftStandingForEditedGame(game);
+    return pinsLeft.length > 0 && pinsLeft.length < 10;
   }
 
+  canUndoForPinMode(game: Game): boolean {
+    const editedGame = this.editedGameStates[game.gameId];
+    return this.validationService.canUndoLastThrow(editedGame.frames);
+  }
+
+  // INPUT HANDLING
   onEditThrowInput(event: { frameIndex: number; throwIndex: number; value: string }, game: Game): void {
     const { frameIndex, throwIndex, value } = event;
 
-    // Get or create the edited state
-    const editedGame = this.getEditedGameState(game);
+    const editedGame = this.editedGameStates[game.gameId] || structuredClone(game);
     const frames = cloneFrames(editedGame.frames);
 
-    // Handle empty input (remove throw)
     if (value.length === 0) {
       this.removeThrow(frames, frameIndex, throwIndex);
       this.updateEditedGameWithNewFrames(game.gameId, frames);
       return;
     }
 
-    // Parse the input value using validation service
     const parsedValue = this.gameUtilsService.parseInputValue(value, frameIndex, throwIndex, frames);
 
-    // Validate the input using validation service
     if (!this.utilsService.isValidNumber0to10(parsedValue)) {
       this.handleEditInvalidInput(game.gameId, frameIndex, throwIndex);
       return;
@@ -438,11 +652,9 @@ export class GameComponent implements OnChanges, OnInit {
       return;
     }
 
-    // Record the throw
     this.recordThrow(frames, frameIndex, throwIndex, parsedValue);
     this.updateEditedGameWithNewFrames(game.gameId, frames);
 
-    // Focus next input in the grid
     const grid = this.gameGrids.find((g) => g.game()?.gameId === game.gameId);
     if (grid) {
       grid.focusNextInput(frameIndex, throwIndex);
@@ -457,6 +669,7 @@ export class GameComponent implements OnChanges, OnInit {
     }
   }
 
+  // GAME STATE UPDATE HANDLERS
   private recordThrow(frames: Frame[], frameIndex: number, throwIndex: number, value: number): void {
     const frame = frames[frameIndex];
     if (!frame) return;
@@ -511,134 +724,12 @@ export class GameComponent implements OnChanges, OnInit {
     );
   }
 
-  async saveEdit(game: Game): Promise<void> {
-    try {
-      const editedState = this.editedGameStates[game.gameId];
-
-      const updatedGame: Game = editedState
-        ? {
-            ...game,
-            frames: editedState.frames,
-            frameScores: editedState.frameScores,
-            totalScore: editedState.totalScore,
-            isPractice: !game.league,
-          }
-        : {
-            ...game,
-            isPractice: !game.league,
-          };
-
-      // 1) Validate using the current data
-      if (!this.isGameValid(updatedGame)) {
-        this.hapticService.vibrate(ImpactStyle.Heavy);
-        this.toastService.showToast(ToastMessages.invalidInput, 'bug', true);
-        return;
-      }
-
-      // 2) Did we change league or patterns? Compare original with current data.
-      const originalGameSnapshot = this.originalGameState[game.gameId];
-      const leagueChanged = originalGameSnapshot && originalGameSnapshot.league !== updatedGame.league;
-      const patternsChanged = originalGameSnapshot && JSON.stringify(originalGameSnapshot.patterns) !== JSON.stringify(updatedGame.patterns);
-
-      // 3) If part of a series and league/patterns changed → update everyone
-      if (updatedGame.isSeries && (leagueChanged || patternsChanged)) {
-        const seriesIdToUpdate = updatedGame.seriesId;
-        const newLeague = updatedGame.league;
-        const newPatterns = updatedGame.patterns;
-        const newIsPractice = !newLeague;
-
-        // First, save the primary edited game
-        await this.storageService.saveGameToLocalStorage(updatedGame);
-
-        // Then, update other games in the same series
-        const gamesToUpdateInStorage = this.storageService
-          .games()
-          .filter((g) => g.seriesId === seriesIdToUpdate && g.gameId !== updatedGame.gameId)
-          .map((g) => ({
-            ...g,
-            league: newLeague,
-            patterns: newPatterns,
-            isPractice: newIsPractice,
-          }));
-        await this.storageService.saveGamesToLocalStorage(gamesToUpdateInStorage);
-      } else {
-        await this.storageService.saveGameToLocalStorage(updatedGame);
-      }
-
-      this.toastService.showToast(ToastMessages.gameUpdateSuccess, 'refresh-outline');
-      this.isEditMode[game.gameId] = false;
-      this.hapticService.vibrate(ImpactStyle.Light);
-
-      const wasOpen = this.delayedCloseMap[game.gameId];
-      this.openExpansionPanel(wasOpen ? game.gameId : undefined);
-
-      this.analyticsService.trackGameEdited();
-      delete this.originalGameState[game.gameId];
-      delete this.editedGameStates[game.gameId];
-      delete this.delayedCloseMap[game.gameId];
-    } catch (error) {
-      this.toastService.showToast(ToastMessages.gameUpdateError, 'bug', true);
-      console.error('Error saving game edit:', error);
-    }
+  onBallSelect(selectedBalls: string[], game: Game, modal: IonModal): void {
+    modal.dismiss();
+    game.balls = selectedBalls;
   }
 
-  // Hides the accordion content so it renders faster
-  hideContent(event: CustomEvent): void {
-    const openGameIds: string[] = event.detail.value || [];
-
-    openGameIds.forEach((gameId) => {
-      if (this.closeTimers[gameId]) {
-        clearTimeout(this.closeTimers[gameId]);
-        delete this.closeTimers[gameId];
-      }
-      this.delayedCloseMap[gameId] = true;
-    });
-
-    Object.keys(this.delayedCloseMap).forEach((gameId) => {
-      if (!openGameIds.includes(gameId)) {
-        if (!this.closeTimers[gameId]) {
-          this.closeTimers[gameId] = setTimeout(() => {
-            if (!(this.accordionGroup?.value || []).includes(gameId)) {
-              this.delayedCloseMap[gameId] = false;
-            }
-            delete this.closeTimers[gameId];
-          }, 500);
-        }
-      }
-    });
-  }
-
-  navigateToBallsPage(balls: string[]): void {
-    const searchQuery = balls.join(', ');
-    if (this.isLeaguePage) {
-      this.modalCtrl.dismiss();
-    }
-    this.router.navigate(['tabs/balls'], { queryParams: { search: searchQuery } });
-  }
-
-  isDelayedOpen(gameId: string): boolean {
-    return this.delayedCloseMap[gameId];
-  }
-
-  isNewMonth(index: number): boolean {
-    if (index === 0) {
-      return true;
-    }
-    const currentGameDate = new Date(this.showingGames[index].date);
-    const previousGameDate = new Date(this.showingGames[index - 1].date);
-    return currentGameDate.getMonth() !== previousGameDate.getMonth() || currentGameDate.getFullYear() !== previousGameDate.getFullYear();
-  }
-
-  getMonthName(timestamp: number): string {
-    const date = new Date(timestamp);
-    const options: Intl.DateTimeFormatOptions = { month: 'long', year: 'numeric' };
-    return date.toLocaleDateString(undefined, options);
-  }
-
-  getMonthGameCount(date: number): number {
-    return this.showingGames.filter((game) => new Date(game.date).getMonth() === new Date(date).getMonth()).length;
-  }
-
+  // VALIDATION & HELPERS
   isGameValid(game: Game): boolean {
     return this.validationService.isGameValid(game);
   }
@@ -647,109 +738,8 @@ export class GameComponent implements OnChanges, OnInit {
     return this.utilsService.parseIntValue(value) as number;
   }
 
-  async takeScreenshotAndShare(game: Game): Promise<void> {
-    this.delayedCloseMap[game.gameId] = true;
-    const accordion = document.getElementById(game.gameId);
-    if (!accordion) {
-      throw new Error('Accordion not found');
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, 30));
-
-    const scoreTemplate = accordion.querySelector('.grid-container') as HTMLElement;
-
-    if (!scoreTemplate) {
-      throw new Error('Score template not found in the accordion');
-    }
-
-    const accordionGroupEl = this.accordionGroup;
-    const accordionGroupValues = this.accordionGroup.value;
-    const accordionIsOpen = accordionGroupEl.value?.includes(game.gameId) ?? false;
-
-    if (!accordionIsOpen) {
-      this.openExpansionPanel(game.gameId);
-    }
-    const childNode = accordion.childNodes[1] as HTMLElement;
-
-    const originalWidth = childNode.style.width;
-
-    try {
-      this.loadingService.setLoading(true);
-
-      // Temporarily show the panel content
-      this.renderer.setStyle(childNode, 'width', '700px');
-
-      const formattedDate = this.datePipe.transform(game.date, 'dd.MM.yy');
-
-      const messageParts = [
-        game.totalScore === 300
-          ? `Look at me bitches, perfect game on ${formattedDate}! 🎳🎉.`
-          : `Check out this game from ${formattedDate}. A ${game.totalScore}.`,
-
-        game.balls && game.balls.length > 0
-          ? game.balls.length === 1
-            ? `Bowled with: ${game.balls[0]}`
-            : `Bowled with: ${game.balls.join(', ')}`
-          : null,
-
-        game.patterns && game.patterns.length > 0 ? `Patterns: ${game.patterns.join(', ')}` : null,
-      ];
-
-      const message = messageParts.filter((part) => part !== null).join('\n');
-
-      await new Promise((resolve) => setTimeout(resolve, 100)); // Give time for layout to update
-
-      // Generate screenshot
-      const dataUrl = await toPng(scoreTemplate, { quality: 0.7 });
-      const base64Data = dataUrl.split(',')[1];
-
-      if (navigator.share && navigator.canShare({ files: [new File([], '')] })) {
-        // Web Share API is supported
-        const blob = await (await fetch(dataUrl)).blob();
-        const filesArray = [
-          new File([blob], `score_${game.gameId}.png`, {
-            type: blob.type,
-          }),
-        ];
-
-        await navigator.share({
-          title: 'Game Score',
-          text: message,
-          files: filesArray,
-        });
-      } else {
-        // Fallback for native mobile platforms
-        const fileName = `score_${game.gameId}.png`;
-
-        await Filesystem.writeFile({
-          path: fileName,
-          data: base64Data,
-          directory: Directory.Cache,
-          encoding: Encoding.UTF8,
-        });
-
-        const fileUri = await Filesystem.getUri({
-          directory: Directory.Cache,
-          path: fileName,
-        });
-
-        await Share.share({
-          title: 'Game Score',
-          text: message,
-          url: fileUri.uri,
-          dialogTitle: 'Share Game Score',
-        });
-        this.toastService.showToast(ToastMessages.screenshotShareSuccess, 'share-social-outline');
-      }
-    } catch (error) {
-      console.error('Error taking screenshot and sharing', error);
-      this.toastService.showToast(ToastMessages.screenshotShareError, 'bug', true);
-    } finally {
-      // Restore the original state
-      this.renderer.setStyle(childNode, 'width', originalWidth);
-      this.accordionGroup.value = accordionGroupValues;
-      this.delayedCloseMap[game.gameId] = false;
-      this.loadingService.setLoading(false);
-    }
+  getSelectedBallsText(game: Game): string {
+    const balls = game.balls || [];
+    return balls.length > 0 ? balls.join(', ') : 'None';
   }
 }
