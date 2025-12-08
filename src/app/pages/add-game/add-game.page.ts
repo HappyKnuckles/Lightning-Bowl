@@ -924,12 +924,13 @@ export class AddGamePage implements OnInit {
     const hasData = games.some((game) => {
       const hasThrows = game.frames.some((f) => f.throws && f.throws.length > 0);
 
-      const hasMetadata = !!game.league || (game.balls && game.balls.length > 0) || (game.patterns && game.patterns.length > 0) || !!game.note;
-
-      return hasThrows || hasMetadata;
+      return hasThrows;
     });
 
-    if (!hasData) this.clearDraft();
+    if (!hasData) {
+      this.clearDraft();
+      return;
+    }
 
     const draft: GameDraft = {
       timestamp: Date.now(),
@@ -953,7 +954,7 @@ export class AddGamePage implements OnInit {
   private restoreDraft(draft: GameDraft): void {
     this.selectedMode = draft.selectedMode;
     this.isPinInputMode = draft.isPinInputMode;
-    this.segments = draft.segments;
+    this.updateSegments();
 
     this.games.set(draft.games);
     this.totalScores.set(draft.totalScores);
