@@ -43,11 +43,29 @@ export class GameStatsService {
     return this.#mostPlayedBallStats;
   }
 
-  #leaveStats: Signal<LeaveStats[]> = computed(() => {
-    return this.pinStatsCalculatorService.calculateLeaveStats(this.gameFilterService.filteredGames());
+  #allLeaves: Signal<LeaveStats[]> = computed(() => {
+    return this.pinStatsCalculatorService.calculateRawLeaves(this.gameFilterService.filteredGames());
   });
-  get leaveStats(): Signal<LeaveStats[]> {
-    return this.#leaveStats;
+
+  #commonLeaves = computed(() => {
+    return this.pinStatsCalculatorService.getMostCommonLeaves(this.#allLeaves());
+  });
+  get commonLeaves(): Signal<LeaveStats[]> {
+    return this.#commonLeaves;
+  }
+
+  #bestLeaves = computed(() => {
+    return this.pinStatsCalculatorService.getBestSpares(this.#allLeaves());
+  });
+  get bestLeaves(): Signal<LeaveStats[]> {
+    return this.#bestLeaves;
+  }
+
+  #worstLeaves = computed(() => {
+    return this.pinStatsCalculatorService.getWorstSpares(this.#allLeaves());
+  });
+  get worstLeaves(): Signal<LeaveStats[]> {
+    return this.#worstLeaves;
   }
 
   #currentStats: Signal<Stats> = computed(() => {
@@ -74,7 +92,7 @@ export class GameStatsService {
   }
 
   calculatePinStats(gameHistory: Game[]): LeaveStats[] {
-    return this.pinStatsCalculatorService.calculateLeaveStats(gameHistory);
+    return this.pinStatsCalculatorService.calculateRawLeaves(gameHistory);
   }
 
   calculateSeriesStats(gameHistory: Game[]): SeriesStats {

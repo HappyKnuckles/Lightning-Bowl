@@ -153,8 +153,15 @@
           [currentStats]="statsService.currentStats()"
           [prevStats]="statsService.prevStats()">
         </app-stat-display>
-        @if (statsService.leaveStats().length > 0) {
-          <app-pin-leave-stats [title]="'Most Common Leaves'" [leaveStats]="statsService.leaveStats()"> </app-pin-leave-stats>
+        <!-- TODO maybe show container all the time and inside pin-leave-stats show message if nothing is input -->
+        @if (statsService.bestLeaves().length > 0) {
+          <app-pin-leave-stats [title]="'Strongest Spares'" [leaveStats]="statsService.bestLeaves()"> </app-pin-leave-stats>
+        }
+        @if (statsService.worstLeaves().length > 0) {
+          <app-pin-leave-stats [title]="'Weakest Spares'" [leaveStats]="statsService.worstLeaves()"> </app-pin-leave-stats>
+        }
+        @if (statsService.commonLeaves().length > 0) {
+          <app-pin-leave-stats [title]="'Most Common Leaves'" [leaveStats]="statsService.commonLeaves()"> </app-pin-leave-stats>
         }
       </section>
     </ion-segment-content>
