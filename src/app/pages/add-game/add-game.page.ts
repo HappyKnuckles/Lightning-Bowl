@@ -1,4 +1,4 @@
-import { Component, computed, CUSTOM_ELEMENTS_SCHEMA, OnInit, QueryList, signal, ViewChild, ViewChildren } from '@angular/core';
+import { Component, computed, CUSTOM_ELEMENTS_SCHEMA, OnInit, QueryList, signal, ViewChild, ViewChildren, effect, untracked } from '@angular/core';
 import {
   ActionSheetController,
   AlertController,
@@ -55,6 +55,17 @@ const enum SeriesMode {
   Series6 = '6 Series',
 }
 
+interface GameDraft {
+  timestamp: number;
+  games: Game[];
+  pinModeState: { currentFrameIndex: number; currentThrowIndex: number; throwsData: Throw[][] }[];
+  totalScores: number[];
+  maxScores: number[];
+  isPinInputMode: boolean;
+  selectedMode: SeriesMode;
+  segments: string[];
+}
+
 defineCustomElements(window);
 
 @Component({
@@ -102,15 +113,14 @@ export class AddGamePage implements OnInit {
   toolbarDisabledState = { strikeDisabled: true, spareDisabled: true };
 
   // Game Data State
-  gameData!: Game; // For OCR Modal
+  gameData!: Game;
   games = signal(Array.from({ length: 19 }, () => createEmptyGame()));
   totalScores = signal(new Array(19).fill(0));
   maxScores = signal(new Array(19).fill(300));
 
-  // Pin Input Mode State
+  // Pin input mode state
   isPinInputMode = false;
 
-  // Per-game pin mode state
   pinModeState = signal<
     {
       currentFrameIndex: number;
@@ -125,7 +135,7 @@ export class AddGamePage implements OnInit {
     })),
   );
 
-  // Computed State
+  // computed state
   seriesMaxscore = computed(() => {
     return this.getActiveTrackIndexes().reduce((acc, idx) => acc + this.maxScores()[idx], 0);
   });
@@ -142,6 +152,8 @@ export class AddGamePage implements OnInit {
   // Internal Logic State
   private seriesId = '';
   private activeGameIndex = 0;
+  private readonly DRAFT_KEY = 'bowling_game_draft';
+  private readonly DRAFT_TTL = 4 * 60 * 60 * 1000;
 
   constructor(
     private actionSheetCtrl: ActionSheetController,
@@ -161,14 +173,28 @@ export class AddGamePage implements OnInit {
     private analyticsService: AnalyticsService,
   ) {
     addIcons({ cameraOutline, bowlingBallOutline, bowlingBall, chevronDown, chevronUp, medalOutline, documentTextOutline, add });
+
+    effect(() => {
+      const gameState = this.games();
+      const pinState = this.pinModeState();
+      const totals = this.totalScores();
+      const maxs = this.maxScores();
+
+      const mode = untracked(() => this.selectedMode);
+      const isPinMode = untracked(() => this.isPinInputMode);
+      const segments = untracked(() => this.segments);
+
+      this.saveDraft(gameState, pinState, totals, maxs, mode, isPinMode, segments);
+    });
   }
 
   async ngOnInit(): Promise<void> {
     this.presentingElement = document.querySelector('.ion-page')!;
     this.loadPinInputMode();
+    await this.checkAndRestoreDraft();
   }
 
-  // PIN INPUT MODE - PARENT LOGIC
+  // PIN INPUT MODE
   getPinsLeftStanding(gameIndex: number): number[] {
     const state = this.pinModeState()[gameIndex];
     const { currentFrameIndex, currentThrowIndex, throwsData } = state;
@@ -478,7 +504,6 @@ export class AddGamePage implements OnInit {
   clearFrames(index?: number): void {
     if (index !== undefined && index >= 0) {
       this.games.update((games) => games.map((g, i) => (i === index ? createEmptyGame() : g)));
-      // Reset pin mode state for this game
       this.pinModeState.update((states) => {
         const newStates = [...states];
         newStates[index] = {
@@ -490,7 +515,6 @@ export class AddGamePage implements OnInit {
       });
     } else {
       this.initializeGames();
-      // Reset all pin mode states
       this.pinModeState.set(
         Array.from({ length: 19 }, () => ({
           currentFrameIndex: 0,
@@ -498,6 +522,7 @@ export class AddGamePage implements OnInit {
           throwsData: Array.from({ length: 10 }, () => []),
         })),
       );
+      this.clearDraft();
     }
     this.toastService.showToast(ToastMessages.gameResetSuccess, 'refresh-outline');
   }
@@ -518,6 +543,7 @@ export class AddGamePage implements OnInit {
 
     const success = await this.processAndSaveGames(gamesToSave, isSeries, this.seriesId);
     if (success) {
+      this.clearDraft();
       const perfectGame = gamesToSave.some((g) => g.totalScore === 300);
       if (perfectGame) {
         this.is300 = true;
@@ -525,7 +551,6 @@ export class AddGamePage implements OnInit {
       }
       this.initializeGames();
       this.gameGrids.forEach((grid) => (grid.checkbox.disabled = false));
-      // Reset pin mode states
       this.pinModeState.set(
         Array.from({ length: 19 }, () => ({
           currentFrameIndex: 0,
@@ -642,7 +667,7 @@ export class AddGamePage implements OnInit {
 
     setTimeout(() => {
       this.gameGrids.forEach((grid, i) => {
-        if (activeIndexes.includes(i) && i !== 0) {
+        if (activeIndexes.includes(i)) {
           if (grid.leagueSelector) {
             grid.leagueSelector.selectedLeague = sourceGame.league || '';
           }
@@ -661,7 +686,6 @@ export class AddGamePage implements OnInit {
   }
 
   // PRIVATE HELPERS - VALIDATION
-
   private recordThrow(frames: Frame[], frameIndex: number, throwIndex: number, value: number): void {
     const frame = frames[frameIndex];
     if (!frame) return;
@@ -846,5 +870,100 @@ export class AddGamePage implements OnInit {
       this.toastService.showToast(ToastMessages.unexpectedError, 'bug', true);
       console.error(error);
     }
+  }
+
+  // SESSION DRAFT LOGIC
+  private async checkAndRestoreDraft(): Promise<void> {
+    const draftJson = localStorage.getItem(this.DRAFT_KEY);
+    if (!draftJson) return;
+
+    try {
+      const draft: GameDraft = JSON.parse(draftJson);
+      const now = Date.now();
+
+      if (now - draft.timestamp > this.DRAFT_TTL) {
+        this.clearDraft();
+        return;
+      }
+
+      const isSeries = draft.selectedMode !== SeriesMode.Single;
+      const typeText = isSeries ? 'series' : 'game';
+
+      const alert = await this.alertController.create({
+        header: 'Resume Session?',
+        message: `We found an unfinished ${typeText} from earlier. Do you want to restore it?`,
+        backdropDismiss: false,
+        buttons: [
+          {
+            text: 'No, Start New',
+            role: 'cancel',
+            handler: () => this.clearDraft(),
+          },
+          {
+            text: 'Yes, Resume',
+            handler: () => this.restoreDraft(draft),
+          },
+        ],
+      });
+      await alert.present();
+    } catch (e) {
+      console.error('Error parsing draft', e);
+      this.clearDraft();
+    }
+  }
+
+  private saveDraft(
+    games: Game[],
+    pinModeState: any[],
+    totalScores: number[],
+    maxScores: number[],
+    selectedMode: SeriesMode,
+    isPinInputMode: boolean,
+    segments: string[],
+  ): void {
+    const hasData = games.some((game) => {
+      const hasThrows = game.frames.some((f) => f.throws && f.throws.length > 0);
+
+      const hasMetadata = !!game.league || (game.balls && game.balls.length > 0) || (game.patterns && game.patterns.length > 0) || !!game.note;
+
+      return hasThrows || hasMetadata;
+    });
+
+    if (!hasData) this.clearDraft();
+
+    const draft: GameDraft = {
+      timestamp: Date.now(),
+      games,
+      pinModeState,
+      totalScores,
+      maxScores,
+      selectedMode,
+      isPinInputMode,
+      segments,
+    };
+    setTimeout(() => {
+      localStorage.setItem(this.DRAFT_KEY, JSON.stringify(draft));
+    }, 0);
+  }
+
+  private clearDraft(): void {
+    localStorage.removeItem(this.DRAFT_KEY);
+  }
+
+  private restoreDraft(draft: GameDraft): void {
+    this.selectedMode = draft.selectedMode;
+    this.isPinInputMode = draft.isPinInputMode;
+    this.segments = draft.segments;
+
+    this.games.set(draft.games);
+    this.totalScores.set(draft.totalScores);
+    this.maxScores.set(draft.maxScores);
+    this.pinModeState.set(draft.pinModeState);
+
+    setTimeout(() => {
+      this.propagateMetadataToSeries();
+    }, 100);
+
+    this.toastService.showToast('Session restored successfully.', 'refresh-outline');
   }
 }
