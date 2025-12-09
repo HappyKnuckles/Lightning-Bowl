@@ -150,6 +150,7 @@ export class AddGamePage implements OnInit {
   presentingElement!: HTMLElement;
 
   // Internal Logic State
+  private isStorageReady = false;
   private seriesId = '';
   private activeGameIndex = 0;
   private readonly DRAFT_KEY = 'bowling_game_draft';
@@ -173,7 +174,6 @@ export class AddGamePage implements OnInit {
     private analyticsService: AnalyticsService,
   ) {
     addIcons({ cameraOutline, bowlingBallOutline, bowlingBall, chevronDown, chevronUp, medalOutline, documentTextOutline, add });
-
     effect(() => {
       const gameState = this.games();
       const pinState = this.pinModeState();
@@ -183,6 +183,8 @@ export class AddGamePage implements OnInit {
       const mode = untracked(() => this.selectedMode);
       const isPinMode = untracked(() => this.isPinInputMode);
       const segments = untracked(() => this.segments);
+
+      if (!this.isStorageReady) return;
 
       this.saveDraft(gameState, pinState, totals, maxs, mode, isPinMode, segments);
     });
@@ -875,7 +877,11 @@ export class AddGamePage implements OnInit {
   // SESSION DRAFT LOGIC
   private async checkAndRestoreDraft(): Promise<void> {
     const draftJson = localStorage.getItem(this.DRAFT_KEY);
-    if (!draftJson) return;
+
+    if (!draftJson) {
+      this.isStorageReady = true;
+      return;
+    }
 
     try {
       const draft: GameDraft = JSON.parse(draftJson);
@@ -883,6 +889,7 @@ export class AddGamePage implements OnInit {
 
       if (now - draft.timestamp > this.DRAFT_TTL) {
         this.clearDraft();
+        this.isStorageReady = true;
         return;
       }
 
@@ -897,11 +904,16 @@ export class AddGamePage implements OnInit {
           {
             text: 'No, Start New',
             role: 'cancel',
-            handler: () => this.clearDraft(),
+            handler: () => {
+              this.clearDraft();
+              this.isStorageReady = true;
+            },
           },
           {
             text: 'Yes, Resume',
-            handler: () => this.restoreDraft(draft),
+            handler: () => {
+              this.restoreDraft(draft);
+            },
           },
         ],
       });
@@ -909,9 +921,9 @@ export class AddGamePage implements OnInit {
     } catch (e) {
       console.error('Error parsing draft', e);
       this.clearDraft();
+      this.isStorageReady = true;
     }
   }
-
   private saveDraft(
     games: Game[],
     pinModeState: any[],
@@ -942,9 +954,15 @@ export class AddGamePage implements OnInit {
       isPinInputMode,
       segments,
     };
-    setTimeout(() => {
-      localStorage.setItem(this.DRAFT_KEY, JSON.stringify(draft));
-    }, 0);
+    try {
+      const tmpKey = this.DRAFT_KEY + '.tmp';
+      const payload = JSON.stringify(draft);
+      localStorage.setItem(tmpKey, payload);
+      localStorage.setItem(this.DRAFT_KEY, payload);
+      localStorage.removeItem(tmpKey);
+    } catch (err) {
+      console.error('Failed to save draft', err);
+    }
   }
 
   private clearDraft(): void {
@@ -952,6 +970,8 @@ export class AddGamePage implements OnInit {
   }
 
   private restoreDraft(draft: GameDraft): void {
+    this.isStorageReady = true;
+
     this.selectedMode = draft.selectedMode;
     this.isPinInputMode = draft.isPinInputMode;
     this.updateSegments();
