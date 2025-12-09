@@ -261,20 +261,19 @@ export class GameGridComponent implements OnInit, OnDestroy {
     return val.toString();
   }
 
-  focusNextInput(frameIndex: number, throwIndex: number): void {
-    if (this.focusTimer) clearTimeout(this.focusTimer);
+  async focusNextInput(frameIndex: number, inputIndex: number) {
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    const inputArray = this.inputs.toArray();
+    const currentInputPosition = frameIndex * 2 + inputIndex;
 
-    const executeFocus = () => {
-      const inputs = this.inputs.toArray();
-      const startIndex = this.getInputPosition(frameIndex, throwIndex) + 1;
-      const nextInput = inputs.slice(startIndex).find((input) => !input.disabled);
-      nextInput?.setFocus();
-    };
+    for (let i = currentInputPosition + 1; i < inputArray.length; i++) {
+      const nextInput = inputArray[i];
+      const nextInputElement = await nextInput.getInputElement();
 
-    if (!this.showMetadata()) {
-      this.focusTimer = setTimeout(() => executeFocus(), 300);
-    } else {
-      requestAnimationFrame(() => executeFocus());
+      if (!nextInputElement.disabled) {
+        nextInput.setFocus();
+        break;
+      }
     }
   }
 
