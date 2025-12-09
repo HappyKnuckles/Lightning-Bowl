@@ -83,6 +83,10 @@
       <ion-button slot="end"> Update </ion-button>
     </ion-item>
   </ion-list>
+
+  @if (environment.branch === "development") {
+    <div style="text-align: center; margin-top: 90%; color: gray; font-size: 13px">This is the test server. Used for experimental features.</div>
+  }
 </ion-content>
 
 <ion-modal trigger="spare-names-modal" #spareNamesModal>
