@@ -94,7 +94,7 @@ export class SettingsPage implements OnInit {
     { name: 'Red', class: 'red-option' },
     { name: 'Gray', class: 'gray-option' },
   ];
-  environment = environment;
+  isTestEnvironment = environment.branch === 'test';
   userEmail = '';
   feedbackMessage = '';
   updateAvailable = false;
