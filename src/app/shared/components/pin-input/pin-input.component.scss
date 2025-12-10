@@ -4,7 +4,8 @@
   align-items: center;
   gap: 20px;
   padding: 20px;
-  max-width: 500px;
+  // max-width: 500px;
+  width: 100%;
   margin: 0 auto;
   background-color: var(--ion-item-background);
   margin: 0 5px;
@@ -64,10 +65,10 @@
 
 .quick-actions {
   display: flex;
-  gap: 10px;
+  gap: 8px;
 
   ion-button {
-    min-width: 55px;
+    min-width: 50px;
     min-height: 35px;
     flex: 1;
     margin: 0;

@@ -2,12 +2,17 @@
   <ion-list-header>
     {{ title() }}
   </ion-list-header>
-  @if (leaveStats().length === 0) {
-    <div class="inner-stat-container">
-      <p>No leave stats available.</p>
-    </div>
-  } @else {
-    <div class="stat-container">
+
+  <div class="stat-container">
+    @if (leaveStats().length === 0) {
+      <div class="inner-stat-container">
+        <div class="leave-container">
+          <div class="leave-stats">
+            <p>No stats available.</p>
+          </div>
+        </div>
+      </div>
+    } @else {
       @for (leave of leaveStats(); track $index) {
         <ion-item lines="none" class="leave-item">
           <div class="leave-container">
@@ -31,6 +36,6 @@
           </div>
         </ion-item>
       }
-    </div>
-  }
+    }
+  </div>
 </ion-list>

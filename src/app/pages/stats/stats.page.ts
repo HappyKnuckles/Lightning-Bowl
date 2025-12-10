@@ -64,6 +64,7 @@ import { SpareDisplayComponent } from 'src/app/shared/components/spare-display/s
 import { StatDisplayComponent } from 'src/app/shared/components/stat-display/stat-display.component';
 import { BallStatsComponent } from '../../shared/components/ball-stats/ball-stats.component';
 import { PinLeaveStatsComponent } from '../../shared/components/pin-leave-stats/pin-leave-stats.component';
+import { trigger, state, style, transition, animate } from '@angular/animations';
 
 @Component({
   selector: 'app-stats',
@@ -72,6 +73,34 @@ import { PinLeaveStatsComponent } from '../../shared/components/pin-leave-stats/
   standalone: true,
   providers: [DecimalPipe, DatePipe, ModalController],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  animations: [
+    trigger('toolbarFade', [
+      state(
+        'hidden',
+        style({
+          height: '0px',
+          minHeight: '0px',
+          opacity: 0,
+          overflow: 'hidden',
+          paddingTop: '0px',
+          paddingBottom: '0px',
+          transform: 'translateY(-10px)',
+          visibility: 'hidden',
+        }),
+      ),
+      state(
+        'visible',
+        style({
+          height: '*',
+          opacity: 1,
+          transform: 'translateY(0)',
+          visibility: 'visible',
+        }),
+      ),
+      transition('hidden => visible', [style({ visibility: 'visible' }), animate('300ms 100ms ease-out')]),
+      transition('visible => hidden', [animate('300ms ease-in')]),
+    ]),
+  ],
   imports: [
     IonLabel,
     IonSegmentButton,
@@ -215,7 +244,6 @@ export class StatsPage implements OnInit, AfterViewInit {
       event.target.complete();
     }
   }
-
   onSegmentChanged(event: SegmentCustomEvent): void {
     this.selectedSegment = event.detail.value?.toString() || 'Overall';
     this.generateCharts();

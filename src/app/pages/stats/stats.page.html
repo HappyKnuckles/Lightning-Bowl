@@ -43,6 +43,23 @@
     <app-generic-filter-active [filters]="currentFilters" [defaultFilters]="defaultFilters" [filterConfigs]="gameFilterConfigs">
     </app-generic-filter-active>
   </ion-toolbar>
+
+  @if (!((gameFilterService.filteredGames().length <= 0 && !loadingService.isLoading()) || gameFilterService.filteredGames().length <= 0)) {
+    <ion-toolbar [@toolbarFade]="selectedSegment === 'Sessions' ? 'visible' : 'hidden'" class="ion-activatable ion-ripple-parent">
+      <ion-select
+        class="date-picker"
+        label="Session date"
+        toggleIcon="calendar-number-outline"
+        expandedIcon="calendar-number"
+        [value]="selectedDate()"
+        (ionChange)="_selectedDate.set($event.detail.value)">
+        <ion-select-option *ngFor="let unixDate of uniqueSortedDates()" [value]="unixDate">
+          {{ unixDate | date: "dd.MM.yyyy" }}
+        </ion-select-option>
+      </ion-select>
+      <ion-ripple-effect></ion-ripple-effect>
+    </ion-toolbar>
+  }
 </ion-header>
 
 <ion-content [fullscreen]="true">
@@ -161,19 +178,6 @@
 
     <ion-segment-content id="Sessions">
       @if (gameFilterService.filteredGames().length > 0) {
-        <ion-item class="date-picker" lines="none">
-          <ion-select
-            label="Session date"
-            toggleIcon="calendar-number-outline"
-            expandedIcon="calendar-number"
-            [value]="selectedDate()"
-            (ionChange)="_selectedDate.set($event.detail.value)">
-            <ion-select-option *ngFor="let unixDate of uniqueSortedDates()" [value]="unixDate">
-              {{ unixDate | date: "dd.MM.yyyy" }}
-            </ion-select-option>
-          </ion-select>
-        </ion-item>
-
         <section class="tab">
           <app-stat-display
             [title]="'Overall Stats'"
