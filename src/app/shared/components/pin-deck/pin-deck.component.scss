@@ -5,9 +5,14 @@
   gap: 4px;
   max-width: 500px;
   margin: 0 auto;
-}
+  
+  &.stat-mode {
+        .pin:not(.active) {
+        background-color: rgb(65, 65, 65);
+      }
+    }
 
-.pin-row {
+  .pin-row {
   display: flex;
   justify-content: center;
   gap: 4px;
@@ -31,3 +36,5 @@
     font-weight: bold;
   }
 }
+}
+

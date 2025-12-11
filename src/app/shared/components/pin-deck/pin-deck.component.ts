@@ -8,6 +8,7 @@ import { Component, input } from '@angular/core';
 })
 export class PinDeckComponent {
   activePins = input.required<number[]>();
+  isStatPage = input<boolean>(false);
   scale = input<number>(1);
 
   isPinSelected(pinNumber: number): boolean {
