@@ -20,7 +20,7 @@ export class ChartGenerationService {
     scoreChart: ElementRef,
     games: Game[],
     existingChartInstance: Chart | undefined,
-    viewMode?: 'week' | 'game' | 'monthly' | 'yearly',
+    viewMode?: 'week' | 'game' | 'session' | 'monthly' | 'yearly',
     onToggleView?: () => void,
     isReload?: boolean,
   ): Chart {
@@ -46,7 +46,7 @@ export class ChartGenerationService {
     scoreChart: ElementRef,
     games: Game[],
     existingChartInstance: Chart | undefined,
-    viewMode?: 'daily' | 'weekly' | 'monthly' | 'yearly',
+    viewMode?: 'session' | 'weekly' | 'monthly' | 'yearly',
     onToggleView?: () => void,
     isReload?: boolean,
   ): Chart {

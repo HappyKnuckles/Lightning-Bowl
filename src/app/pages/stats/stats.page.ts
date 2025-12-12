@@ -166,8 +166,8 @@ export class StatsPage implements OnInit, AfterViewInit {
 
   sessionLeaves = computed(() => this.statsService.calculateLeaveAnalytics(this.gamesForSelectedSession()));
 
-  chartViewMode: 'week' | 'game' | 'monthly' | 'yearly' = 'game';
-  averageChartViewMode: 'daily' | 'weekly' | 'monthly' | 'yearly' = 'monthly';
+  chartViewMode: 'week' | 'game' | 'session' | 'monthly' | 'yearly' = 'game';
+  averageChartViewMode: 'session' | 'weekly' | 'monthly' | 'yearly' = 'monthly';
   selectedSegment = 'Overall';
   segments: string[] = ['Overall', 'Throws', 'Spares', 'Pins', 'Sessions'];
 
@@ -357,6 +357,8 @@ export class StatsPage implements OnInit, AfterViewInit {
   }
   private toggleChartView() {
     if (this.chartViewMode === 'game') {
+      this.chartViewMode = 'session';
+    } else if (this.chartViewMode === 'session') {
       this.chartViewMode = 'week';
     } else if (this.chartViewMode === 'week') {
       this.chartViewMode = 'monthly';
@@ -370,14 +372,14 @@ export class StatsPage implements OnInit, AfterViewInit {
   }
 
   private toggleAverageChartView() {
-    if (this.averageChartViewMode === 'daily') {
+    if (this.averageChartViewMode === 'session') {
       this.averageChartViewMode = 'weekly';
     } else if (this.averageChartViewMode === 'weekly') {
       this.averageChartViewMode = 'monthly';
     } else if (this.averageChartViewMode === 'monthly') {
       this.averageChartViewMode = 'yearly';
     } else {
-      this.averageChartViewMode = 'daily';
+      this.averageChartViewMode = 'session';
     }
 
     this.generateAverageScoreChart(true);

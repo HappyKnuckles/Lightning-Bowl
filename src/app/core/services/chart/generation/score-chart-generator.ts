@@ -10,7 +10,7 @@ export function generateScoreChart(
   scoreChart: ElementRef,
   games: Game[],
   existingChartInstance: Chart | undefined,
-  viewMode?: 'week' | 'game' | 'monthly' | 'yearly',
+  viewMode?: 'week' | 'game' | 'session' | 'monthly' | 'yearly',
   onToggleView?: () => void,
   isReload?: boolean,
 ): Chart {
@@ -227,7 +227,7 @@ export function generateAverageScoreChart(
   scoreChart: ElementRef,
   games: Game[],
   existingChartInstance: Chart | undefined,
-  viewMode?: 'daily' | 'weekly' | 'monthly' | 'yearly',
+  viewMode?: 'session' | 'weekly' | 'monthly' | 'yearly',
   onToggleView?: () => void,
   isReload?: boolean,
 ): Chart {
@@ -338,7 +338,8 @@ function createToggleButtonPlugin(viewMode: string): Plugin<'line' | 'bar'> {
       const padding = 10;
 
       const buttonTextMap: Record<string, string> = {
-        game: 'Weekly',
+        game: 'By Session',
+        session: 'Weekly',
         week: 'Monthly',
         monthly: 'Yearly',
         yearly: 'By Game',
@@ -384,10 +385,10 @@ function createAverageToggleButtonPlugin(viewMode: string): Plugin<'line' | 'bar
       const padding = 10;
 
       const buttonTextMap: Record<string, string> = {
-        daily: 'Weekly',
+        session: 'Weekly',
         weekly: 'Monthly',
         monthly: 'Yearly',
-        yearly: 'Daily',
+        yearly: 'By Session',
       };
       const buttonText = buttonTextMap[viewMode] || 'Monthly';
       const textMetrics = ctx.measureText(buttonText);

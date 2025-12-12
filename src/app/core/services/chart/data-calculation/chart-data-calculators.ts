@@ -1,10 +1,12 @@
 import { Game } from 'src/app/core/models/game.model';
 import { Stats } from 'src/app/core/models/stats.model';
 
-export function calculateScoreChartData(gameHistory: Game[], viewMode: 'week' | 'game' | 'monthly' | 'yearly' = 'game') {
+export function calculateScoreChartData(gameHistory: Game[], viewMode: 'week' | 'game' | 'session' | 'monthly' | 'yearly' = 'game') {
   switch (viewMode) {
     case 'game':
       return calculatePerGameScoreChartData(gameHistory);
+    case 'session':
+      return calculateSessionScoreChartData(gameHistory);
     case 'week':
       return calculateWeeklyScoreChartData(gameHistory);
     case 'monthly':
@@ -39,6 +41,56 @@ export function calculatePerGameScoreChartData(gameHistory: Game[]) {
     const difference = game.totalScore - overallAverage;
     differences.push(Math.round(difference));
     gamesPlayedDaily.push(1);
+  });
+
+  return { gameLabels, overallAverages, differences, gamesPlayedDaily };
+}
+
+export function calculateSessionScoreChartData(gameHistory: Game[]) {
+  // Group games by date (session = all games on the same day)
+  const sessionData: Record<string, { scores: number[]; count: number; date: number }> = {};
+
+  gameHistory.forEach((game) => {
+    const gameDate = new Date(game.date);
+    gameDate.setHours(0, 0, 0, 0);
+    const dateKey = gameDate.getTime().toString();
+
+    if (!sessionData[dateKey]) {
+      sessionData[dateKey] = { scores: [], count: 0, date: gameDate.getTime() };
+    }
+    sessionData[dateKey].scores.push(game.totalScore);
+    sessionData[dateKey].count++;
+  });
+
+  // Sort sessions by date
+  const sortedSessions = Object.keys(sessionData).sort((a, b) => parseInt(a) - parseInt(b));
+  const gameLabels: string[] = [];
+  const overallAverages: number[] = [];
+  const differences: number[] = [];
+  const gamesPlayedDaily: number[] = [];
+
+  let cumulativeSum = 0;
+  let totalCount = 0;
+
+  sortedSessions.forEach((sessionKey) => {
+    const session = sessionData[sessionKey];
+    const sessionDate = new Date(session.date);
+    const formattedDate = `${sessionDate.getMonth() + 1}/${sessionDate.getDate()}/${sessionDate.getFullYear()}`;
+    gameLabels.push(formattedDate);
+
+    const sessionScores = session.scores;
+    const sessionSum = sessionScores.reduce((sum, score) => sum + score, 0);
+    cumulativeSum += sessionSum;
+    totalCount += sessionScores.length;
+
+    const overallAverage = cumulativeSum / totalCount;
+    overallAverages.push(Math.round(overallAverage));
+
+    const sessionAverage = sessionSum / sessionScores.length;
+    const difference = sessionAverage - overallAverage;
+    differences.push(Math.round(difference));
+
+    gamesPlayedDaily.push(session.count);
   });
 
   return { gameLabels, overallAverages, differences, gamesPlayedDaily };
@@ -182,10 +234,10 @@ export function calculateYearlyScoreChartData(gameHistory: Game[]) {
   return { gameLabels, overallAverages, differences, gamesPlayedDaily };
 }
 
-export function calculateAverageScoreChartData(gameHistory: Game[], viewMode: 'daily' | 'weekly' | 'monthly' | 'yearly' = 'monthly') {
+export function calculateAverageScoreChartData(gameHistory: Game[], viewMode: 'session' | 'weekly' | 'monthly' | 'yearly' = 'monthly') {
   switch (viewMode) {
-    case 'daily':
-      return calculateDailyAverageScoreData(gameHistory);
+    case 'session':
+      return calculateSessionAverageScoreData(gameHistory);
     case 'weekly':
       return calculateWeeklyAverageScoreData(gameHistory);
     case 'monthly':
@@ -197,7 +249,7 @@ export function calculateAverageScoreChartData(gameHistory: Game[], viewMode: 'd
   }
 }
 
-export function calculateDailyAverageScoreData(gameHistory: Game[]) {
+export function calculateSessionAverageScoreData(gameHistory: Game[]) {
   const dailyScores: Record<string, number[]> = {};
 
   gameHistory.forEach((game) => {
