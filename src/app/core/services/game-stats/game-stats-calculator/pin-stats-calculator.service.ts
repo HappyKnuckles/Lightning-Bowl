@@ -57,7 +57,7 @@ export class PinStatsCalculatorService {
 
   // TODO maybe make the amount be configurable
   getMostCommonLeaves(allLeaves: LeaveStats[]): LeaveStats[] {
-    return [...allLeaves].sort((a, b) => b.occurrences - a.occurrences).slice(0, 10);
+    return [...allLeaves].sort((a, b) => b.occurrences - a.occurrences).slice(0, 5);
   }
   // TODO maybe make these exclusive so that best and worst dont overlap (choose second best/worst if so)
   getBestSpares(allLeaves: LeaveStats[]): LeaveStats[] {

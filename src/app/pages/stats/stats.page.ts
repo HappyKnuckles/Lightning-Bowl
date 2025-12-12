@@ -178,12 +178,26 @@ export class StatsPage implements OnInit, AfterViewInit {
   @ViewChild('throwChart', { static: false }) throwChart?: ElementRef;
   @ViewChild('scoreDistributionChart', { static: false }) scoreDistributionChart?: ElementRef;
   @ViewChild('spareDistributionChart', { static: false }) spareDistributionChart?: ElementRef;
+  @ViewChild('leaveCategoryFrequencyChart', { static: false }) leaveCategoryFrequencyChart?: ElementRef;
+  @ViewChild('leaveCategoryPickupChart', { static: false }) leaveCategoryPickupChart?: ElementRef;
+  @ViewChild('topCommonLeavesChart', { static: false }) topCommonLeavesChart?: ElementRef;
+  @ViewChild('topWorstLeavesChart', { static: false }) topWorstLeavesChart?: ElementRef;
+  @ViewChild('leaveScatterChart', { static: false }) leaveScatterChart?: ElementRef;
+  @ViewChild('leaveParetoChart', { static: false }) leaveParetoChart?: ElementRef;
+  @ViewChild('practicePriorityChart', { static: false }) practicePriorityChart?: ElementRef;
   private spareDistributionChartInstance: Chart | null = null;
   private scoreDistributionChartInstance: Chart | null = null;
   private pinChartInstance: Chart | null = null;
   private throwChartInstance: Chart | null = null;
   private scoreChartInstance: Chart | null = null;
   private averageScoreChartInstance: Chart | null = null;
+  private leaveCategoryFrequencyChartInstance: Chart | null = null;
+  private leaveCategoryPickupChartInstance: Chart | null = null;
+  private topCommonLeavesChartInstance: Chart | null = null;
+  private topWorstLeavesChartInstance: Chart | null = null;
+  private leaveScatterChartInstance: Chart | null = null;
+  private leaveParetoChartInstance: Chart | null = null;
+  private practicePriorityChartInstance: Chart | null = null;
 
   gameFilterConfigs = GAME_FILTER_CONFIGS;
 
@@ -333,6 +347,8 @@ export class StatsPage implements OnInit, AfterViewInit {
         this.generateSpareDistributionChart(isReload);
       } else if (this.selectedSegment === 'Throws') {
         this.generateThrowChart(isReload);
+      } else if (this.selectedSegment === 'Pins') {
+        this.generateLeaveCharts(isReload);
       }
     }
   }
@@ -467,6 +483,146 @@ export class StatsPage implements OnInit, AfterViewInit {
     } catch (error) {
       this.toastService.showToast(ToastMessages.chartGenerationError, 'bug', true);
       console.error('Error generating throw chart:', error);
+    }
+  }
+
+  private generateLeaveCharts(isReload?: boolean): void {
+    this.generateLeaveCategoryFrequencyChart(isReload);
+    this.generateLeaveCategoryPickupChart(isReload);
+    this.generateTopCommonLeavesChart(isReload);
+    this.generateTopWorstLeavesChart(isReload);
+    this.generateLeaveScatterChart(isReload);
+    this.generateLeaveParetoChart(isReload);
+    this.generatePracticePriorityChart(isReload);
+  }
+
+  private generateLeaveCategoryFrequencyChart(isReload?: boolean): void {
+    try {
+      if (!this.leaveCategoryFrequencyChart) {
+        return;
+      }
+
+      this.leaveCategoryFrequencyChartInstance = this.chartService.generateLeaveCategoryFrequencyChart(
+        this.leaveCategoryFrequencyChart,
+        this.statsService.allLeaves(),
+        this.leaveCategoryFrequencyChartInstance!,
+        isReload,
+      );
+    } catch (error) {
+      this.toastService.showToast(ToastMessages.chartGenerationError, 'bug', true);
+      console.error('Error generating leave category frequency chart:', error);
+    }
+  }
+
+  private generateLeaveCategoryPickupChart(isReload?: boolean): void {
+    try {
+      if (!this.leaveCategoryPickupChart) {
+        return;
+      }
+
+      this.leaveCategoryPickupChartInstance = this.chartService.generateLeaveCategoryPickupChart(
+        this.leaveCategoryPickupChart,
+        this.statsService.allLeaves(),
+        this.leaveCategoryPickupChartInstance!,
+        isReload,
+      );
+    } catch (error) {
+      this.toastService.showToast(ToastMessages.chartGenerationError, 'bug', true);
+      console.error('Error generating leave category pickup chart:', error);
+    }
+  }
+
+  private generateTopCommonLeavesChart(isReload?: boolean): void {
+    try {
+      if (!this.topCommonLeavesChart) {
+        return;
+      }
+
+      this.topCommonLeavesChartInstance = this.chartService.generateTopCommonLeavesChart(
+        this.topCommonLeavesChart,
+        this.statsService.allLeaves(),
+        this.topCommonLeavesChartInstance!,
+        10,
+        isReload,
+      );
+    } catch (error) {
+      this.toastService.showToast(ToastMessages.chartGenerationError, 'bug', true);
+      console.error('Error generating top common leaves chart:', error);
+    }
+  }
+
+  private generateTopWorstLeavesChart(isReload?: boolean): void {
+    try {
+      if (!this.topWorstLeavesChart) {
+        return;
+      }
+
+      this.topWorstLeavesChartInstance = this.chartService.generateTopWorstLeavesChart(
+        this.topWorstLeavesChart,
+        this.statsService.allLeaves(),
+        this.topWorstLeavesChartInstance!,
+        10,
+        isReload,
+      );
+    } catch (error) {
+      this.toastService.showToast(ToastMessages.chartGenerationError, 'bug', true);
+      console.error('Error generating top worst leaves chart:', error);
+    }
+  }
+
+  private generateLeaveScatterChart(isReload?: boolean): void {
+    try {
+      if (!this.leaveScatterChart) {
+        return;
+      }
+
+      this.leaveScatterChartInstance = this.chartService.generateLeaveScatterChart(
+        this.leaveScatterChart,
+        this.statsService.allLeaves(),
+        this.leaveScatterChartInstance!,
+        isReload,
+      );
+    } catch (error) {
+      this.toastService.showToast(ToastMessages.chartGenerationError, 'bug', true);
+      console.error('Error generating leave scatter chart:', error);
+    }
+  }
+
+  private generateLeaveParetoChart(isReload?: boolean): void {
+    try {
+      if (!this.leaveParetoChart) {
+        return;
+      }
+
+      this.leaveParetoChartInstance = this.chartService.generateLeaveParetoChart(
+        this.leaveParetoChart,
+        this.statsService.allLeaves(),
+        this.leaveParetoChartInstance!,
+        15,
+        isReload,
+      );
+    } catch (error) {
+      this.toastService.showToast(ToastMessages.chartGenerationError, 'bug', true);
+      console.error('Error generating leave pareto chart:', error);
+    }
+  }
+
+  private generatePracticePriorityChart(isReload?: boolean): void {
+    try {
+      if (!this.practicePriorityChart) {
+        return;
+      }
+
+      this.practicePriorityChartInstance = this.chartService.generatePracticePriorityChart(
+        this.practicePriorityChart,
+        this.statsService.allLeaves(),
+        this.practicePriorityChartInstance!,
+        10,
+        isReload,
+      );
+    } catch (error) {
+      this.toastService.showToast(ToastMessages.chartGenerationError, 'bug', true);
+      console.error('Error generating practice priority chart:', error);
     }
   }
 

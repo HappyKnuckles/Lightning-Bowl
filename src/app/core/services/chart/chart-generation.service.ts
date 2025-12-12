@@ -1,13 +1,22 @@
 import { ElementRef, Injectable } from '@angular/core';
+import Chart from 'chart.js/auto';
 import { Game } from 'src/app/core/models/game.model';
-import { Stats } from 'src/app/core/models/stats.model';
+import { LeaveStats, Stats } from 'src/app/core/models/stats.model';
 import { Ball } from '../../models/ball.model';
 
 import { generateScoreChart, generateScoreDistributionChart, generateAverageScoreChart } from './generation/score-chart-generator';
 import { generatePinChart, generateSpareDistributionChart } from './generation/pin-spare-chart-generator';
 import { generateThrowChart } from './generation/throw-chart-generator';
 import { generateBallDistributionChart } from './generation/ball-distribution-chart-generator';
-import { Chart } from 'chart.js';
+import {
+  generateLeaveCategoryFrequencyChart as createLeaveCategoryFrequencyChart,
+  generateLeaveCategoryPickupChart as createLeaveCategoryPickupChart,
+  generateTopCommonLeavesChart as createTopCommonLeavesChart,
+  generateTopWorstLeavesChart as createTopWorstLeavesChart,
+  generateLeaveScatterChart as createLeaveScatterChart,
+  generateLeaveParetoChart as createLeaveParetoChart,
+  generatePracticePriorityChart as createPracticePriorityChart,
+} from './generation/leave-chart-generator';
 
 @Injectable({
   providedIn: 'root',
@@ -89,5 +98,93 @@ export class ChartGenerationService {
     isReload?: boolean,
   ): Chart {
     return generateBallDistributionChart(ballDistributionChartCanvas, balls, existingChartInstance, isReload);
+  }
+
+  /**
+   * Generate leave category frequency chart
+   * Shows how often each type of leave (single pin, split, etc.) occurs
+   */
+  generateLeaveCategoryFrequencyChart(
+    chartRef: ElementRef,
+    leaves: LeaveStats[],
+    existingChartInstance: Chart | undefined,
+    isReload?: boolean,
+  ): Chart {
+    return createLeaveCategoryFrequencyChart(chartRef, leaves, existingChartInstance, isReload);
+  }
+
+  /**
+   * Generate leave category pickup percentage chart
+   * Shows conversion rate by leave category (single pin, split, etc.)
+   */
+  generateLeaveCategoryPickupChart(chartRef: ElementRef, leaves: LeaveStats[], existingChartInstance: Chart | undefined, isReload?: boolean): Chart {
+    return createLeaveCategoryPickupChart(chartRef, leaves, existingChartInstance, isReload);
+  }
+
+  /**
+   * Generate top N most common leaves chart
+   * Horizontal bar chart showing the most frequently occurring leaves
+   */
+  generateTopCommonLeavesChart(
+    chartRef: ElementRef,
+    leaves: LeaveStats[],
+    existingChartInstance: Chart | undefined,
+    topN = 10,
+    isReload?: boolean,
+  ): Chart {
+    return createTopCommonLeavesChart(chartRef, leaves, existingChartInstance, topN, isReload);
+  }
+
+  /**
+   * Generate top N worst pickup percentage chart
+   * Shows the hardest leaves to convert
+   */
+  generateTopWorstLeavesChart(
+    chartRef: ElementRef,
+    leaves: LeaveStats[],
+    existingChartInstance: Chart | undefined,
+    topN = 10,
+    isReload?: boolean,
+  ): Chart {
+    return createTopWorstLeavesChart(chartRef, leaves, existingChartInstance, topN, isReload);
+  }
+
+  /**
+   * Generate leave scatter chart
+   * Shows all leaves plotted by frequency vs pickup percentage
+   * Highlights outliers (most common, best, worst)
+   */
+  generateLeaveScatterChart(chartRef: ElementRef, leaves: LeaveStats[], existingChartInstance: Chart | undefined, isReload?: boolean): Chart {
+    return createLeaveScatterChart(chartRef, leaves, existingChartInstance, isReload);
+  }
+
+  /**
+   * Generate Pareto chart for leaves
+   * Shows which leaves cause the most misses (cumulative analysis)
+   * Helps identify practice priorities
+   */
+  generateLeaveParetoChart(
+    chartRef: ElementRef,
+    leaves: LeaveStats[],
+    existingChartInstance: Chart | undefined,
+    topN = 15,
+    isReload?: boolean,
+  ): Chart {
+    return createLeaveParetoChart(chartRef, leaves, existingChartInstance, topN, isReload);
+  }
+
+  /**
+   * Generate practice priority chart
+   * Shows leaves with high frequency AND low pickup rate
+   * Best targets for practice improvement
+   */
+  generatePracticePriorityChart(
+    chartRef: ElementRef,
+    leaves: LeaveStats[],
+    existingChartInstance: Chart | undefined,
+    topN = 10,
+    isReload?: boolean,
+  ): Chart {
+    return createPracticePriorityChart(chartRef, leaves, existingChartInstance, topN, isReload);
   }
 }

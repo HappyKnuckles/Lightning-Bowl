@@ -173,6 +173,45 @@
         <app-pin-leave-stats [title]="'Strongest Spares'" [leaveStats]="statsService.bestLeaves()"> </app-pin-leave-stats>
         <app-pin-leave-stats [title]="'Weakest Spares'" [leaveStats]="statsService.worstLeaves()"> </app-pin-leave-stats>
         <app-pin-leave-stats [title]="'Most Common Leaves'" [leaveStats]="statsService.commonLeaves()"> </app-pin-leave-stats>
+
+        <!-- Leave Category Analysis -->
+        <ion-list-header style="margin-bottom: 4px">Leave Categories - Frequency</ion-list-header>
+        <div class="stat-container">
+          <canvas #leaveCategoryFrequencyChart style="width: 300px; height: 400px; max-height: 700px"></canvas>
+        </div>
+
+        <ion-list-header style="margin-bottom: 4px">Leave Categories - Pickup Rate</ion-list-header>
+        <div class="stat-container">
+          <canvas #leaveCategoryPickupChart style="width: 300px; height: 400px; max-height: 700px"></canvas>
+        </div>
+
+        <!-- Top Leaves Analysis -->
+        <ion-list-header style="margin-bottom: 4px">Most Common Leaves</ion-list-header>
+        <div class="stat-container">
+          <canvas #topCommonLeavesChart style="width: 300px; height: 500px; max-height: 700px"></canvas>
+        </div>
+
+        <ion-list-header style="margin-bottom: 4px">Hardest Leaves to Convert</ion-list-header>
+        <div class="stat-container">
+          <canvas #topWorstLeavesChart style="width: 300px; height: 500px; max-height: 700px"></canvas>
+        </div>
+
+        <!-- Comprehensive Analysis -->
+        <ion-list-header style="margin-bottom: 4px">Leave Analysis Overview</ion-list-header>
+        <div class="stat-container">
+          <canvas #leaveScatterChart style="width: 300px; height: 500px; max-height: 700px"></canvas>
+        </div>
+
+        <!-- Practice Focus -->
+        <ion-list-header style="margin-bottom: 4px">Where to Focus Practice (Pareto Analysis)</ion-list-header>
+        <div class="stat-container">
+          <canvas #leaveParetoChart style="width: 300px; height: 500px; max-height: 700px"></canvas>
+        </div>
+
+        <ion-list-header style="margin-bottom: 4px">Top Practice Priorities</ion-list-header>
+        <div class="stat-container">
+          <canvas #practicePriorityChart style="width: 300px; height: 500px; max-height: 700px"></canvas>
+        </div>
       </section>
     </ion-segment-content>
 
