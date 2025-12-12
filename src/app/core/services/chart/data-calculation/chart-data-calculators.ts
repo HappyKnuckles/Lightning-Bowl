@@ -250,32 +250,35 @@ export function calculateAverageScoreChartData(gameHistory: Game[], viewMode: 's
 }
 
 export function calculateSessionAverageScoreData(gameHistory: Game[]) {
-  const dailyScores: Record<string, number[]> = {};
+  // Group games by date (session = all games on the same day)
+  const sessionData: Record<string, { scores: number[]; date: number }> = {};
 
   gameHistory.forEach((game) => {
     const gameDate = new Date(game.date);
-    const dayKey = gameDate.toISOString().split('T')[0];
+    gameDate.setHours(0, 0, 0, 0);
+    const dateKey = gameDate.getTime().toString();
 
-    if (!dailyScores[dayKey]) {
-      dailyScores[dayKey] = [];
+    if (!sessionData[dateKey]) {
+      sessionData[dateKey] = { scores: [], date: gameDate.getTime() };
     }
-    dailyScores[dayKey].push(game.totalScore);
+    sessionData[dateKey].scores.push(game.totalScore);
   });
 
-  const sortedDays = Object.keys(dailyScores).sort();
+  const sortedSessions = Object.keys(sessionData).sort((a, b) => parseInt(a) - parseInt(b));
   const gameLabels: string[] = [];
   const averages: number[] = [];
   const gamesPlayedDaily: number[] = [];
 
-  sortedDays.forEach((dayKey) => {
-    const dayDate = new Date(dayKey);
-    const formattedDay = `${dayDate.getMonth() + 1}/${dayDate.getDate()}`;
-    gameLabels.push(formattedDay);
+  sortedSessions.forEach((sessionKey) => {
+    const session = sessionData[sessionKey];
+    const sessionDate = new Date(session.date);
+    const formattedDate = `${sessionDate.getMonth() + 1}/${sessionDate.getDate()}/${sessionDate.getFullYear()}`;
+    gameLabels.push(formattedDate);
 
-    const dayAverage = dailyScores[dayKey].reduce((sum, score) => sum + score, 0) / dailyScores[dayKey].length;
-    averages.push(Math.round(dayAverage));
+    const sessionAverage = session.scores.reduce((sum, score) => sum + score, 0) / session.scores.length;
+    averages.push(Math.round(sessionAverage));
 
-    gamesPlayedDaily.push(dailyScores[dayKey].length);
+    gamesPlayedDaily.push(session.scores.length);
   });
 
   return { gameLabels, averages, gamesPlayedDaily };
