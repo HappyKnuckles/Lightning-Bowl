@@ -4,7 +4,7 @@ import { Injectable } from '@angular/core';
   providedIn: 'root',
 })
 export class ThemeChangerService {
-  private readonly defaultTheme = 'Green';
+  private readonly defaultTheme = 'Gray';
 
   saveColorTheme(theme: string): void {
     const previousTheme = this.getCurrentTheme().toLowerCase(); // Get the current theme before saving new one

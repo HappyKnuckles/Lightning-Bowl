@@ -1,3 +1,5 @@
+// src/app/core/services/stats-persistence/stats-persistence.service.ts
+
 import { computed, Injectable, Signal } from '@angular/core';
 import { PrevStats, Stats } from 'src/app/core/models/stats.model';
 import { StorageService } from '../storage/storage.service';
@@ -34,6 +36,12 @@ export class StatsPersistenceService {
       overallSpareRate: stats.overallSpareRate,
       spareRates: stats.spareRates,
       overallMissedRate: stats.overallMissedRate,
+      pocketHitPercentage: stats.pocketHitPercentage,
+      singlePinSparePercentage: stats.singlePinSparePercentage,
+      multiPinSparePercentage: stats.multiPinSparePercentage,
+      nonSplitSparePercentage: stats.nonSplitSparePercentage,
+      splitConversionPercentage: stats.splitConversionPercentage,
+      makeableSplitPercentage: stats.makeableSplitPercentage,
       average3SeriesScore: stats.average3SeriesScore!,
       average4SeriesScore: stats.average4SeriesScore!,
       average5SeriesScore: stats.average5SeriesScore!,

@@ -72,3 +72,13 @@ ion-list {
     }
   }
 }
+
+// Pin deck frame row styling for history games
+:host ::ng-deep app-pin-deck-frame-row {
+  display: block;
+
+  .pin-deck-row {
+    height: 22px;
+    min-height: 22px;
+  }
+}

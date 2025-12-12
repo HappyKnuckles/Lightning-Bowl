@@ -33,6 +33,18 @@
       </ion-select>
     </ion-item>
 
+    <ion-item>
+      <ion-icon name="bowling-ball-outline" slot="start"></ion-icon>
+      <ion-select
+        label="Pin Input Mode"
+        interface="action-sheet"
+        [value]="storageService.pinInputMode() ? 'hit' : 'missing'"
+        (ionChange)="savePinInputMode($event.detail.value)">
+        <ion-select-option value="missing">Missing Pins</ion-select-option>
+        <ion-select-option value="hit">Hit Pins</ion-select-option>
+      </ion-select>
+    </ion-item>
+
     <app-league-selector></app-league-selector>
 
     <ion-item button id="spare-names-modal">
@@ -71,6 +83,10 @@
       <ion-button slot="end"> Update </ion-button>
     </ion-item>
   </ion-list>
+
+  @if (isTestEnvironment) {
+    <div style="text-align: center; margin-top: 90%; color: gray; font-size: 13px">This is the test server. Used for experimental features.</div>
+  }
 </ion-content>
 
 <ion-modal trigger="spare-names-modal" #spareNamesModal>

@@ -48,6 +48,7 @@ import {
   playFrequencyStatDefinitions,
   specialStatDefinitions,
   strikeStatDefinitions,
+  pinStatDefinitions,
   spareStatDefinitions,
 } from '../../core/constants/stats.definitions.constants';
 import { GameFilterService } from 'src/app/core/services/game-filter/game-filter.service';
@@ -62,7 +63,8 @@ import { GameFilterComponent } from 'src/app/shared/components/game-filter/game-
 import { SpareDisplayComponent } from 'src/app/shared/components/spare-display/spare-display.component';
 import { StatDisplayComponent } from 'src/app/shared/components/stat-display/stat-display.component';
 import { BallStatsComponent } from '../../shared/components/ball-stats/ball-stats.component';
-import { FileHeaderButtonsComponent } from 'src/app/shared/components/file-header-buttons/file-header-buttons.component';
+import { PinLeaveStatsComponent } from '../../shared/components/pin-leave-stats/pin-leave-stats.component';
+import { trigger, state, style, transition, animate } from '@angular/animations';
 
 @Component({
   selector: 'app-stats',
@@ -71,6 +73,34 @@ import { FileHeaderButtonsComponent } from 'src/app/shared/components/file-heade
   standalone: true,
   providers: [DecimalPipe, DatePipe, ModalController],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  animations: [
+    trigger('toolbarFade', [
+      state(
+        'hidden',
+        style({
+          height: '0px',
+          minHeight: '0px',
+          opacity: 0,
+          overflow: 'hidden',
+          paddingTop: '0px',
+          paddingBottom: '0px',
+          transform: 'translateY(-10px)',
+          visibility: 'hidden',
+        }),
+      ),
+      state(
+        'visible',
+        style({
+          height: '*',
+          opacity: 1,
+          transform: 'translateY(0)',
+          visibility: 'visible',
+        }),
+      ),
+      transition('hidden => visible', [style({ visibility: 'visible' }), animate('300ms 100ms ease-out')]),
+      transition('visible => hidden', [animate('300ms ease-in')]),
+    ]),
+  ],
   imports: [
     IonLabel,
     IonSegmentButton,
@@ -93,7 +123,7 @@ import { FileHeaderButtonsComponent } from 'src/app/shared/components/file-heade
     SpareDisplayComponent,
     GenericFilterActiveComponent,
     BallStatsComponent,
-    FileHeaderButtonsComponent,
+    PinLeaveStatsComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -102,11 +132,12 @@ export class StatsPage implements OnInit, AfterViewInit {
   overallStatDefinitions = overallStatDefinitions;
   seriesStatDefinitions = seriesStatDefinitions;
   throwStatDefinitions = throwStatDefinitions;
-  spareStatDefinitions = spareStatDefinitions;
   sessionStatDefinitions = sessionStatDefinitions;
   playFrequencyStatDefinitions = playFrequencyStatDefinitions;
   specialStatDefinitions = specialStatDefinitions;
   strikeStatDefinitions = strikeStatDefinitions;
+  spareStatDefinitions = spareStatDefinitions;
+  pinStatDefinitions = pinStatDefinitions;
   uniqueSortedDates: Signal<number[]> = computed(() => {
     const dateSet = new Set<number>();
 
@@ -122,16 +153,24 @@ export class StatsPage implements OnInit, AfterViewInit {
   selectedDate = computed(() => {
     return this._selectedDate() !== null ? this._selectedDate()! : this.uniqueSortedDates()[0];
   });
-  sessionStats: Signal<SessionStats> = computed(() => {
+  gamesForSelectedSession = computed(() => {
     const selDate = this.selectedDate();
-    const filteredGames = this.storageService.games().filter((game) => this.utilsService.isSameDay(game.date, selDate));
+    const allGames = this.storageService.games();
 
-    return this.statsService.calculateBowlingStats(filteredGames) as SessionStats;
+    return allGames.filter((game) => this.utilsService.isSameDay(game.date, selDate));
   });
-  chartViewMode: 'week' | 'game' | 'monthly' | 'yearly' = 'game';
-  averageChartViewMode: 'daily' | 'weekly' | 'monthly' | 'yearly' = 'monthly';
+
+  sessionStats: Signal<SessionStats> = computed(() => {
+    return this.statsService.calculateBowlingStats(this.gamesForSelectedSession()) as SessionStats;
+  });
+
+  sessionLeaves = computed(() => this.statsService.calculateLeaveAnalytics(this.gamesForSelectedSession()));
+
+  chartViewMode: 'week' | 'game' | 'session' | 'monthly' | 'yearly' = 'game';
+  averageChartViewMode: 'session' | 'weekly' | 'monthly' | 'yearly' = 'monthly';
   selectedSegment = 'Overall';
-  segments: string[] = ['Overall', 'Throws', 'Spares', 'Sessions'];
+  segments: string[] = ['Overall', 'Throws', 'Spares', 'Pins', 'Sessions'];
+
   // Viewchilds and Instances
   @ViewChild('scoreChart', { static: false }) scoreChart?: ElementRef;
   @ViewChild('averageScoreChart', { static: false }) averageScoreChart?: ElementRef;
@@ -212,7 +251,6 @@ export class StatsPage implements OnInit, AfterViewInit {
       event.target.complete();
     }
   }
-
   onSegmentChanged(event: SegmentCustomEvent): void {
     this.selectedSegment = event.detail.value?.toString() || 'Overall';
     this.generateCharts();
@@ -319,6 +357,8 @@ export class StatsPage implements OnInit, AfterViewInit {
   }
   private toggleChartView() {
     if (this.chartViewMode === 'game') {
+      this.chartViewMode = 'session';
+    } else if (this.chartViewMode === 'session') {
       this.chartViewMode = 'week';
     } else if (this.chartViewMode === 'week') {
       this.chartViewMode = 'monthly';
@@ -332,14 +372,14 @@ export class StatsPage implements OnInit, AfterViewInit {
   }
 
   private toggleAverageChartView() {
-    if (this.averageChartViewMode === 'daily') {
+    if (this.averageChartViewMode === 'session') {
       this.averageChartViewMode = 'weekly';
     } else if (this.averageChartViewMode === 'weekly') {
       this.averageChartViewMode = 'monthly';
     } else if (this.averageChartViewMode === 'monthly') {
       this.averageChartViewMode = 'yearly';
     } else {
-      this.averageChartViewMode = 'daily';
+      this.averageChartViewMode = 'session';
     }
 
     this.generateAverageScoreChart(true);

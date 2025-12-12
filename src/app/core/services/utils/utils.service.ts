@@ -49,6 +49,10 @@ export class UtilsService {
     return sortedArr1.every((value, index) => value === sortedArr2[index]);
   }
 
+  isValidNumber0to10(value: number): boolean {
+    return !isNaN(value) && value >= 0 && value <= 10;
+  }
+
   isNumber(value: unknown): boolean {
     return !isNaN(parseFloat(value as string)) && isFinite(value as number);
   }

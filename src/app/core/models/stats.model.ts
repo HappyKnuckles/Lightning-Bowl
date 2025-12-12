@@ -26,12 +26,6 @@ export interface Stats {
   spareRates: number[];
   overallSpareRate: number;
   overallMissedRate: number;
-  singlePinSpares?: number;
-  singlePinSpareOpportunities?: number;
-  multiPinSpares?: number;
-  multiPinSpareOpportunities?: number;
-  singlePinSparePercentage?: number;
-  multiPinSparePercentage?: number;
   longesStrikeStreak?: number;
   longestOpenStreak?: number;
   dutch200Count?: number;
@@ -61,6 +55,26 @@ export interface Stats {
   high5Series?: number;
   average6SeriesScore?: number;
   high6Series?: number;
+  // Pin-specific stats (only calculated if isPinMode is true)
+  // TODO add most left/hit single/multi pins stats and maybe add a separate PinStats interface
+  pocketHits?: number;
+  totalFirstBalls?: number;
+  pocketHitPercentage?: number;
+  singlePinSpares?: number;
+  singlePinSpareOpportunities?: number;
+  multiPinSpares?: number;
+  multiPinSpareOpportunities?: number;
+  nonSplitSpares?: number;
+  nonSplitSpareOpportunities?: number;
+  splits?: number;
+  splitOpportunities?: number;
+  singlePinSparePercentage?: number;
+  multiPinSparePercentage?: number;
+  nonSplitSparePercentage?: number;
+  splitConversionPercentage?: number;
+  makeableSplits?: number;
+  makeableSplitOpportunities?: number;
+  makeableSplitPercentage?: number;
   [key: string]: StatValue | undefined;
 }
 export interface SessionStats extends Stats {
@@ -94,9 +108,16 @@ export interface PrevStats {
   cleanGameCount: number;
   perfectGameCount: number;
   averageScore: number;
+  strikeToStrikePercentage?: number;
   overallSpareRate: number;
   overallMissedRate: number;
   spareRates: number[];
+  pocketHitPercentage?: number;
+  singlePinSparePercentage?: number;
+  multiPinSparePercentage?: number;
+  nonSplitSparePercentage?: number;
+  splitConversionPercentage?: number;
+  makeableSplitPercentage?: number;
   average3SeriesScore?: number;
   high3Series?: number;
   average4SeriesScore?: number;
@@ -114,6 +135,13 @@ export interface BestBallStats {
   gameCount: number;
   strikeRate?: number;
   cleanGameCount?: number;
+}
+
+export interface LeaveStats {
+  pins: number[];
+  occurrences: number;
+  pickups: number;
+  pickupPercentage: number;
 }
 
 export type GameStats = Stats | SessionStats | SeriesStats | PrevStats;

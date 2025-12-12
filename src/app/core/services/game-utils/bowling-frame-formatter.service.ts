@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { Frame } from '../../models/game.model';
 
 @Injectable({
   providedIn: 'root',
@@ -7,14 +8,14 @@ export class BowlingFrameFormatterService {
   /**
    * Formats a throw value for display (handles strikes, spares, and gutter balls)
    */
-  formatThrowValue(frameIndex: number, throwIndex: number, frames: number[][]): string {
+  formatThrowValue(frameIndex: number, throwIndex: number, frames: Frame[]): string {
     const frame = frames[frameIndex];
-    if (!frame || frame[throwIndex] === undefined || frame[throwIndex] === null) {
+    if (!frame || frame.throws[throwIndex] === undefined || frame.throws[throwIndex] === null) {
       return '';
     }
 
-    const val = frame[throwIndex];
-    const firstBall = frame[0];
+    const val = frame.throws[throwIndex].value;
+    const firstBall = frame.throws[0].value;
     const isTenth = frameIndex === 9;
 
     if (val === 0) {
@@ -32,7 +33,7 @@ export class BowlingFrameFormatterService {
       return val.toString();
     }
 
-    const secondBall = frame[1];
+    const secondBall = frame.throws[1].value;
 
     if (throwIndex === 1) {
       if (val === 10) {

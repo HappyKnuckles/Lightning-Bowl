@@ -6,7 +6,7 @@ export interface Throw {
   throwIndex: number;
   isSplit?: boolean;
   pinsLeftStanding?: number[];
-  pinsHit?: number[];
+  pinsKnockedDown?: number[];
 }
 
 /**
@@ -30,6 +30,7 @@ export interface Game {
   isClean: boolean;
   isPerfect: boolean;
   isPractice: boolean;
+  isPinMode: boolean;
   isSeries?: boolean;
   seriesId?: string;
   note?: string;
@@ -77,6 +78,7 @@ export function createEmptyGame(): Game {
     frameScores: [],
     isClean: false,
     isPerfect: false,
+    isPinMode: false,
     isPractice: true,
     note: '',
     league: '',

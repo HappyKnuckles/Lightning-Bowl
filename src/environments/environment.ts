@@ -7,4 +7,5 @@ export const environment = {
   emailUserID: 'mkI2Kqg6m34U7GL8m',
   patternEndpoint: 'http://localhost:5000/api/',
   analyticsEndpoint: 'https://analytics.nicolas-hoffmann.dev/api/',
+  branch: 'development',
 };
