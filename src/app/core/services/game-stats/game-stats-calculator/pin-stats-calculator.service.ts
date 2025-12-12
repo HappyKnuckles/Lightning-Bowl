@@ -6,7 +6,7 @@ import { Game } from 'src/app/core/models/game.model';
   providedIn: 'root',
 })
 export class PinStatsCalculatorService {
-  calculateRawLeaves(games: Game[]): LeaveStats[] {
+  calculateAllLeaves(games: Game[]): LeaveStats[] {
     const pinModeGames = games.filter((game) => game.isPinMode);
     const leaveMap = new Map<string, { pins: number[]; occurrences: number; pickups: number }>();
 
@@ -41,13 +41,27 @@ export class PinStatsCalculatorService {
     }));
   }
 
+  getLeaveAnalytics(games: Game[]): {
+    common: LeaveStats[];
+    best: LeaveStats[];
+    worst: LeaveStats[];
+  } {
+    const allLeaves = this.calculateAllLeaves(games);
+
+    return {
+      common: this.getMostCommonLeaves(allLeaves),
+      best: this.getBestSpares(allLeaves),
+      worst: this.getWorstSpares(allLeaves),
+    };
+  }
+
   // TODO maybe make the amount be configurable
   getMostCommonLeaves(allLeaves: LeaveStats[]): LeaveStats[] {
     return [...allLeaves].sort((a, b) => b.occurrences - a.occurrences).slice(0, 10);
   }
-
+  // TODO maybe make these exclusive so that best and worst dont overlap (choose second best/worst if so)
   getBestSpares(allLeaves: LeaveStats[]): LeaveStats[] {
-    const significant = allLeaves.filter((l) => l.occurrences >= 2);
+    const significant = allLeaves.filter((l) => l.occurrences >= 2 && l.pickups > 0);
     const single = this.findBest(significant.filter((l) => l.pins.length === 1));
     const multi = this.findBest(significant.filter((l) => l.pins.length > 1));
 
@@ -55,7 +69,7 @@ export class PinStatsCalculatorService {
   }
 
   getWorstSpares(allLeaves: LeaveStats[]): LeaveStats[] {
-    const significant = allLeaves.filter((l) => l.occurrences >= 2);
+    const significant = allLeaves.filter((l) => l.occurrences >= 2 && l.occurrences - l.pickups > 0);
     const single = this.findWorst(significant.filter((l) => l.pins.length === 1));
     const multi = this.findWorst(significant.filter((l) => l.pins.length > 1));
 

@@ -30,39 +30,39 @@ export class GameStatsService {
   }
 
   #bestBallStats: Signal<BestBallStats> = computed(() => {
-    return this.ballStatsCalculatorService.calculateBestBallStats(this.gameFilterService.filteredGames());
+    return this.calculateBestBallStats(this.gameFilterService.filteredGames());
   });
   get bestBallStats(): Signal<BestBallStats> {
     return this.#bestBallStats;
   }
 
   #mostPlayedBallStats: Signal<BestBallStats> = computed(() => {
-    return this.ballStatsCalculatorService.calculateMostPlayedBall(this.gameFilterService.filteredGames());
+    return this.calculateMostPlayedBallStats(this.gameFilterService.filteredGames());
   });
   get mostPlayedBallStats(): Signal<BestBallStats> {
     return this.#mostPlayedBallStats;
   }
 
   #allLeaves: Signal<LeaveStats[]> = computed(() => {
-    return this.pinStatsCalculatorService.calculateRawLeaves(this.gameFilterService.filteredGames());
+    return this.calculateAllLeaves(this.gameFilterService.filteredGames());
   });
 
   #commonLeaves = computed(() => {
-    return this.pinStatsCalculatorService.getMostCommonLeaves(this.#allLeaves());
+    return this.calculateMostCommonLeaves(this.#allLeaves());
   });
   get commonLeaves(): Signal<LeaveStats[]> {
     return this.#commonLeaves;
   }
 
   #bestLeaves = computed(() => {
-    return this.pinStatsCalculatorService.getBestSpares(this.#allLeaves());
+    return this.calculateBestSpares(this.#allLeaves());
   });
   get bestLeaves(): Signal<LeaveStats[]> {
     return this.#bestLeaves;
   }
 
   #worstLeaves = computed(() => {
-    return this.pinStatsCalculatorService.getWorstSpares(this.#allLeaves());
+    return this.calculateWorstSpares(this.#allLeaves());
   });
   get worstLeaves(): Signal<LeaveStats[]> {
     return this.#worstLeaves;
@@ -70,8 +70,7 @@ export class GameStatsService {
 
   #currentStats: Signal<Stats> = computed(() => {
     const games = this.gameFilterService.filteredGames();
-    const seriesStats = this.seriesStatsCalculatorService.calculateSeriesStats(games);
-    return this.overallStatsCalculatorService.calculateBowlingStats(games, seriesStats) as Stats;
+    return this.calculateBowlingStats(games) as Stats;
   });
   get currentStats(): Signal<Stats> {
     return this.#currentStats;
@@ -79,8 +78,7 @@ export class GameStatsService {
 
   #overallStats: Signal<Stats> = computed(() => {
     const games = this.storageService.games();
-    const seriesStats = this.seriesStatsCalculatorService.calculateSeriesStats(games);
-    return this.overallStatsCalculatorService.calculateBowlingStats(games, seriesStats) as Stats;
+    return this.calculateBowlingStats(games) as Stats;
   });
   get overallStats(): Signal<Stats> {
     return this.#overallStats;
@@ -91,17 +89,41 @@ export class GameStatsService {
     return this.seriesStatsCalculatorService.seriesStats;
   }
 
-  calculatePinStats(gameHistory: Game[]): LeaveStats[] {
-    return this.pinStatsCalculatorService.calculateRawLeaves(gameHistory);
+  calculateBowlingStats(gameHistory: Game[]): Stats {
+    const seriesStats = this.seriesStatsCalculatorService.calculateSeriesStats(gameHistory);
+    return this.overallStatsCalculatorService.calculateBowlingStats(gameHistory, seriesStats) as Stats;
+  }
+
+  calculateLeaveAnalytics(gameHistory: Game[]): {
+    common: LeaveStats[];
+    best: LeaveStats[];
+    worst: LeaveStats[];
+  } {
+    return this.pinStatsCalculatorService.getLeaveAnalytics(gameHistory);
+  }
+
+  calculateAllLeaves(gameHistory: Game[]): LeaveStats[] {
+    return this.pinStatsCalculatorService.calculateAllLeaves(gameHistory);
+  }
+
+  calculateWorstSpares(allLeaves: LeaveStats[]): LeaveStats[] {
+    return this.pinStatsCalculatorService.getWorstSpares(allLeaves);
+  }
+
+  calculateBestSpares(allLeaves: LeaveStats[]): LeaveStats[] {
+    return this.pinStatsCalculatorService.getBestSpares(allLeaves);
+  }
+
+  calculateMostCommonLeaves(allLeaves: LeaveStats[]): LeaveStats[] {
+    return this.pinStatsCalculatorService.getMostCommonLeaves(allLeaves);
   }
 
   calculateSeriesStats(gameHistory: Game[]): SeriesStats {
     return this.seriesStatsCalculatorService.calculateSeriesStats(gameHistory);
   }
 
-  calculateBowlingStats(gameHistory: Game[]): Stats {
-    const seriesStats = this.seriesStatsCalculatorService.calculateSeriesStats(gameHistory);
-    return this.overallStatsCalculatorService.calculateBowlingStats(gameHistory, seriesStats) as Stats;
+  calculateMostPlayedBallStats(gameHistory: Game[]): BestBallStats {
+    return this.ballStatsCalculatorService.calculateMostPlayedBall(gameHistory);
   }
 
   calculateBestBallStats(gameHistory: Game[]): BestBallStats {

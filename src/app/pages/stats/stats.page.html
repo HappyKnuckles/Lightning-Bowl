@@ -185,8 +185,12 @@
             [currentStats]="sessionStats()"
             [prevStats]="statsService.currentStats()">
           </app-stat-display>
+          <app-stat-display [title]="'Pin Stats'" [statDefinitions]="pinStatDefinitions" [currentStats]="sessionStats()"> </app-stat-display>
           <app-spare-display [title]="'Spare Stats'" [prevStats]="statsService.currentStats()" [stats]="sessionStats()" [id]="'sessionSpareStats'">
           </app-spare-display>
+          <app-pin-leave-stats [title]="'Strongest Spares'" [leaveStats]="sessionLeaves().best"></app-pin-leave-stats>
+          <app-pin-leave-stats [title]="'Weakest Spares'" [leaveStats]="sessionLeaves().worst"></app-pin-leave-stats>
+          <app-pin-leave-stats [title]="'Most Common Leaves'" [leaveStats]="sessionLeaves().common"></app-pin-leave-stats>
         </section>
       }
     </ion-segment-content>

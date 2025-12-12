@@ -153,12 +153,19 @@ export class StatsPage implements OnInit, AfterViewInit {
   selectedDate = computed(() => {
     return this._selectedDate() !== null ? this._selectedDate()! : this.uniqueSortedDates()[0];
   });
-  sessionStats: Signal<SessionStats> = computed(() => {
+  gamesForSelectedSession = computed(() => {
     const selDate = this.selectedDate();
-    const filteredGames = this.storageService.games().filter((game) => this.utilsService.isSameDay(game.date, selDate));
+    const allGames = this.storageService.games();
 
-    return this.statsService.calculateBowlingStats(filteredGames) as SessionStats;
+    return allGames.filter((game) => this.utilsService.isSameDay(game.date, selDate));
   });
+
+  sessionStats: Signal<SessionStats> = computed(() => {
+    return this.statsService.calculateBowlingStats(this.gamesForSelectedSession()) as SessionStats;
+  });
+
+  sessionLeaves = computed(() => this.statsService.calculateLeaveAnalytics(this.gamesForSelectedSession()));
+
   chartViewMode: 'week' | 'game' | 'monthly' | 'yearly' = 'game';
   averageChartViewMode: 'daily' | 'weekly' | 'monthly' | 'yearly' = 'monthly';
   selectedSegment = 'Overall';
