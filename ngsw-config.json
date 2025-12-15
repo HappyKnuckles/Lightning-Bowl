@@ -43,7 +43,7 @@
       }
     },
     {
-      "name": "api-calls",
+      "name": "ball-api",
       "urls": [
         "https://bowwwl.com/api/**"
       ],
@@ -51,6 +51,17 @@
         "strategy": "freshness",
         "maxSize": 100,
         "maxAge": "1h"
+      }
+    },
+    {
+      "name": "pattern-api",
+      "urls": [
+        "https://pattern.lightningbowl.de/api/**"
+      ],
+      "cacheConfig": {
+        "strategy": "performance",
+        "maxSize": 5000,
+        "maxAge": "365d"
       }
     }
   ]

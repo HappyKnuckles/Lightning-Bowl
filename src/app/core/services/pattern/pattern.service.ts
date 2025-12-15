@@ -68,6 +68,18 @@ export class PatternService {
     }
   }
 
+  async getAllPatternsStripped(): Promise<Partial<Pattern>[]> {
+    try {
+      const response = await firstValueFrom(
+        this.http.get<Partial<Pattern>[]>(`${environment.patternEndpoint}patterns/all-stripped`).pipe(retry({ count: 5, delay: 2000 })),
+      );
+      return response;
+    } catch (error) {
+      console.error('Error fetching stripped patterns:', error);
+      return [];
+    }
+  }
+
   async getAllPatterns(): Promise<Pattern[]> {
     try {
       const response = await firstValueFrom(

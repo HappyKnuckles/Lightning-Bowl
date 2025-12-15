@@ -306,7 +306,7 @@ export class StorageService {
         return;
       }
 
-      const response = await this.patternService.getAllPatterns();
+      const response = await this.patternService.getAllPatternsStripped();
       this.allPatterns.set(response);
       this.#isUsingCache.set(false);
 
@@ -325,7 +325,7 @@ export class StorageService {
 
   private async refreshPatternsInBackground(cacheKey?: string): Promise<void> {
     try {
-      const response = await this.patternService.getAllPatterns();
+      const response = await this.patternService.getAllPatternsStripped();
       this.allPatterns.set(response);
       this.#isUsingCache.set(false);
 
