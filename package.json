@@ -67,7 +67,7 @@
 
     "rxjs": "~7.8.1",
     "tslib": "^2.6.2",
-    "zone.js": "~0.14.4"
+    "zone.js": "~0.16.0"
   },
   "devDependencies": {
     "@angular/cli": "^21.0.2",
