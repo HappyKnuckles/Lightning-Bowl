@@ -82,7 +82,7 @@
 
     "angular-eslint": "^21.0.0",
 
-    "typescript": "~5.5.4",
+    "typescript": "~6.0.0",
     "typescript-eslint": "^8.23.0",
 
     "eslint": "^9.20.0",
