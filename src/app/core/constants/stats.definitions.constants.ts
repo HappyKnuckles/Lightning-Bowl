@@ -218,6 +218,7 @@ export const strikeStatDefinitions: StatDefinition[] = [
   {
     label: 'Strike to strike percentage',
     key: 'strikeToStrikePercentage',
+    prevKey: 'strikeToStrikePercentage',
     id: 'strikeToStrikePercentage',
     isPercentage: true,
     toolTip: 'This is the probability of how likely you throw a strike after a strike.',

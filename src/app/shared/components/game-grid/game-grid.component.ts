@@ -74,7 +74,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
   showMetadata = input<boolean>(true);
   patternModalId = input.required<string>();
   game = input.required<Game>();
-  maxScore = input<number>(300);
+  maxScore = input<number | undefined>(undefined);
   strikeDisabled = input<boolean>(true);
   spareDisabled = input<boolean>(true);
   isPinInputMode = input<boolean>(false);

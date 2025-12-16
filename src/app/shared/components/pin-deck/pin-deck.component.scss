@@ -1,3 +1,5 @@
+$pin-size: 8px;
+
 .pin-deck-container {
   display: flex;
   flex-direction: column;
@@ -5,36 +7,30 @@
   gap: 4px;
   max-width: 500px;
   margin: 0 auto;
-  
-  &.stat-mode {
-        .pin:not(.active) {
-        background-color: rgb(65, 65, 65);
-      }
-    }
+}
 
-  .pin-row {
+.pin-deck-container.stat-mode .pin:not(.active) {
+  background-color: rgb(65, 65, 65);
+}
+
+.pin-row {
   display: flex;
   justify-content: center;
   gap: 4px;
 }
 
 .pin {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 8px;
-  min-height: 0;
-  height: 8px;
-  border-radius: 100%;
-  margin: 0;
+  width: $pin-size;
+  height: $pin-size;
+  border-radius: 50%;
   background-color: black;
-  
-  &.active {
-    background: rgb(226, 226, 226);
-    border: 1px solid var(--ion-color-primary);
-    color: white;
-    font-weight: bold;
-  }
-}
 }
 
+.pin.active {
+  background-color: rgb(226, 226, 226);
+  border: 1px solid var(--ion-color-primary);
+}
+
+.pin.active.is-split {
+  border-color: red;
+}
