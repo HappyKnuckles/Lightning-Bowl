@@ -1,6 +1,6 @@
 // src/app/core/services/stats-calculation/stats-calculation.service.ts
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Game } from 'src/app/core/models/game.model';
 import { SeriesStats, SessionStats, Stats } from 'src/app/core/models/stats.model';
 import { BowlingGameValidationService } from '../../game-utils/bowling-game-validation.service';
@@ -11,7 +11,7 @@ const MAX_FRAMES = 10;
   providedIn: 'root',
 })
 export class OverallStatsCalculatorService {
-  constructor(private validationService: BowlingGameValidationService) {}
+  private validationService = inject(BowlingGameValidationService);
 
   private getRate(converted: number, missed: number): number {
     if (converted + missed === 0) {

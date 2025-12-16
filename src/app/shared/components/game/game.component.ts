@@ -1,5 +1,5 @@
 import { NgIf, NgFor, DatePipe } from '@angular/common';
-import { Component, Input, Renderer2, ViewChild, OnChanges, SimpleChanges, computed, OnInit } from '@angular/core';
+import { Component, Input, Renderer2, ViewChild, OnChanges, SimpleChanges, computed, OnInit, inject } from '@angular/core';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { ImpactStyle } from '@capacitor/haptics';
@@ -110,9 +110,22 @@ import { BowlingGameValidationService } from 'src/app/core/services/game-utils/b
     GenericTypeaheadComponent,
     BallSelectComponent,
   ],
-  standalone: true,
 })
 export class GameComponent implements OnChanges, OnInit {
+  private alertController = inject(AlertController);
+  private toastService = inject(ToastService);
+  storageService = inject(StorageService);
+  private loadingService = inject(LoadingService);
+  private datePipe = inject(DatePipe);
+  private hapticService = inject(HapticService);
+  private renderer = inject(Renderer2);
+  private utilsService = inject(UtilsService);
+  private router = inject(Router);
+  private modalCtrl = inject(ModalController);
+  private patternService = inject(PatternService);
+  private analyticsService = inject(AnalyticsService);
+  private validationService = inject(BowlingGameValidationService);
+
   @ViewChild('modal', { static: false }) modal!: IonModal;
   @Input() games!: Game[];
   @Input() isLeaguePage?: boolean = false;
@@ -164,21 +177,7 @@ export class GameComponent implements OnChanges, OnInit {
   patternTypeaheadConfig!: TypeaheadConfig<Partial<Pattern>>;
   enterAnimation = alertEnterAnimation;
   leaveAnimation = alertLeaveAnimation;
-  constructor(
-    private alertController: AlertController,
-    private toastService: ToastService,
-    public storageService: StorageService,
-    private loadingService: LoadingService,
-    private datePipe: DatePipe,
-    private hapticService: HapticService,
-    private renderer: Renderer2,
-    private utilsService: UtilsService,
-    private router: Router,
-    private modalCtrl: ModalController,
-    private patternService: PatternService,
-    private analyticsService: AnalyticsService,
-    private validationService: BowlingGameValidationService,
-  ) {
+  constructor() {
     addIcons({
       trashOutline,
       createOutline,

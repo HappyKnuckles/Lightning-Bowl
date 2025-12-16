@@ -1,4 +1,4 @@
-import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit, QueryList, ViewChild, ViewChildren } from '@angular/core';
+import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit, QueryList, ViewChild, ViewChildren, inject } from '@angular/core';
 import {
   ActionSheetController,
   AlertController,
@@ -61,7 +61,6 @@ defineCustomElements(window);
   selector: 'app-add-game',
   templateUrl: 'add-game.page.html',
   styleUrls: ['add-game.page.scss'],
-  standalone: true,
   providers: [ModalController],
   imports: [
     IonHeader,
@@ -89,6 +88,22 @@ defineCustomElements(window);
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class AddGamePage implements OnInit {
+  private actionSheetCtrl = inject(ActionSheetController);
+  private imageProcessingService = inject(ImageProcesserService);
+  private alertController = inject(AlertController);
+  private toastService = inject(ToastService);
+  private gameScoreCalculatorService = inject(GameScoreCalculatorService);
+  private transformGameService = inject(GameDataTransformerService);
+  private loadingService = inject(LoadingService);
+  private userService = inject(UserService);
+  private adService = inject(AdService);
+  private hapticService = inject(HapticService);
+  private gameUtilsService = inject(GameUtilsService);
+  private validationService = inject(BowlingGameValidationService);
+  private highScoreAlertService = inject(HighScoreAlertService);
+  private storageService = inject(StorageService);
+  private analyticsService = inject(AnalyticsService);
+
   totalScores: number[] = new Array(19).fill(0);
   maxScores: number[] = new Array(19).fill(300);
   seriesMode: boolean[] = [true, false, false, false, false];
@@ -122,23 +137,7 @@ export class AddGamePage implements OnInit {
     '01c1e0d1-3469-4091-96a0-76beb68a6f97',
   ];
 
-  constructor(
-    private actionSheetCtrl: ActionSheetController,
-    private imageProcessingService: ImageProcesserService,
-    private alertController: AlertController,
-    private toastService: ToastService,
-    private gameScoreCalculatorService: GameScoreCalculatorService,
-    private transformGameService: GameDataTransformerService,
-    private loadingService: LoadingService,
-    private userService: UserService,
-    private adService: AdService,
-    private hapticService: HapticService,
-    private gameUtilsService: GameUtilsService,
-    private validationService: BowlingGameValidationService,
-    private highScoreAlertService: HighScoreAlertService,
-    private storageService: StorageService,
-    private analyticsService: AnalyticsService,
-  ) {
+  constructor() {
     addIcons({ cameraOutline, chevronDown, chevronUp, medalOutline, documentTextOutline, add });
   }
 

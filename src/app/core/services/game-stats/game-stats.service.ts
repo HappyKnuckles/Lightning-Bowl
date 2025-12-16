@@ -1,4 +1,4 @@
-import { computed, Injectable, Signal } from '@angular/core';
+import { computed, Injectable, Signal, inject } from '@angular/core';
 import { Game } from 'src/app/core/models/game.model';
 import { BestBallStats, PrevStats, SeriesStats, Stats } from 'src/app/core/models/stats.model';
 
@@ -14,14 +14,12 @@ import { SeriesStatsCalculatorService } from './game-stats-calculator/series-sta
   providedIn: 'root',
 })
 export class GameStatsService {
-  constructor(
-    private gameFilterService: GameFilterService,
-    private storageService: StorageService,
-    private overallStatsCalculatorService: OverallStatsCalculatorService,
-    private seriesStatsCalculatorService: SeriesStatsCalculatorService,
-    private ballStatsCalculatorService: BallStatsCalculatorService,
-    private statsPersistenceService: StatsPersistenceService,
-  ) {}
+  private gameFilterService = inject(GameFilterService);
+  private storageService = inject(StorageService);
+  private overallStatsCalculatorService = inject(OverallStatsCalculatorService);
+  private seriesStatsCalculatorService = inject(SeriesStatsCalculatorService);
+  private ballStatsCalculatorService = inject(BallStatsCalculatorService);
+  private statsPersistenceService = inject(StatsPersistenceService);
 
   get prevStats(): Signal<PrevStats> {
     return this.statsPersistenceService.prevStats;

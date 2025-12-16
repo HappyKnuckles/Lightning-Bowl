@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Game } from 'src/app/core/models/game.model';
 import { Storage } from '@ionic/storage-angular';
 import { SortUtilsService } from '../sort-utils/sort-utils.service';
@@ -17,6 +17,16 @@ import { AnalyticsService } from '../analytics/analytics.service';
   providedIn: 'root',
 })
 export class StorageService {
+  private storage = inject(Storage);
+  private sortUtilsService = inject(SortUtilsService);
+  private loadingService = inject(LoadingService);
+  private ballService = inject(BallService);
+  private patternService = inject(PatternService);
+  private highScoreAlertService = inject(HighScoreAlertService);
+  private cacheService = inject(CacheService);
+  private networkService = inject(NetworkService);
+  private analyticsService = inject(AnalyticsService);
+
   url = 'https://bowwwl.com';
   #leagues = signal<string[]>([]);
   #games = signal<Game[]>([]);
@@ -54,17 +64,7 @@ export class StorageService {
     return this.#allPatterns;
   }
 
-  constructor(
-    private storage: Storage,
-    private sortUtilsService: SortUtilsService,
-    private loadingService: LoadingService,
-    private ballService: BallService,
-    private patternService: PatternService,
-    private highScoreAlertService: HighScoreAlertService,
-    private cacheService: CacheService,
-    private networkService: NetworkService,
-    private analyticsService: AnalyticsService,
-  ) {
+  constructor() {
     this.init();
     // this.highScoreAlertService.displayHighScoreAlert({ type: 'single_game', newRecord: 150, previousRecord: 110, details: { league: 'Monday Night', patterns: ['THS', 'Sport'], balls: ['Storm', 'Hammer'], date: '1/15/2025' }, gameOrSeries: []});
   }

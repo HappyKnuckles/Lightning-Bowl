@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, QueryList, ViewChildren, ViewChild, CUSTOM_ELEMENTS_SCHEMA, input, output } from '@angular/core';
+import { Component, OnInit, OnDestroy, QueryList, ViewChildren, ViewChild, CUSTOM_ELEMENTS_SCHEMA, input, output, inject } from '@angular/core';
 import { Platform } from '@ionic/angular';
 import { Subscription } from 'rxjs';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
@@ -35,7 +35,6 @@ import { GameScoreToolbarComponent } from '../game-score-toolbar/game-score-tool
   templateUrl: './game-grid.component.html',
   styleUrls: ['./game-grid.component.scss'],
   providers: [GameScoreCalculatorService],
-  standalone: true,
   imports: [
     NgFor,
     IonList,
@@ -58,6 +57,18 @@ import { GameScoreToolbarComponent } from '../game-score-toolbar/game-score-tool
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class GameGridComponent implements OnInit, OnDestroy {
+  private gameScoreCalculatorService = inject(GameScoreCalculatorService);
+  storageService = inject(StorageService);
+  private transformGameService = inject(GameDataTransformerService);
+  private toastService = inject(ToastService);
+  private hapticService = inject(HapticService);
+  private formatterService = inject(BowlingFrameFormatterService);
+  private utilsService = inject(UtilsService);
+  private platform = inject(Platform);
+  private patternService = inject(PatternService);
+  private analyticsService = inject(AnalyticsService);
+  private validationService = inject(BowlingGameValidationService);
+
   // Input signals
   ballSelectorId = input<string>();
   showMetadata = input<boolean>(true);
@@ -125,19 +136,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
     return !this.validationService.canRecordSpare(this.currentFrameIndex, this.currentRollIndex, this.game().frames);
   }
 
-  constructor(
-    private gameScoreCalculatorService: GameScoreCalculatorService,
-    public storageService: StorageService,
-    private transformGameService: GameDataTransformerService,
-    private toastService: ToastService,
-    private hapticService: HapticService,
-    private formatterService: BowlingFrameFormatterService,
-    private utilsService: UtilsService,
-    private platform: Platform,
-    private patternService: PatternService,
-    private analyticsService: AnalyticsService,
-    private validationService: BowlingGameValidationService,
-  ) {
+  constructor() {
     this.initializeKeyboardListeners();
     addIcons({ chevronExpandOutline });
   }

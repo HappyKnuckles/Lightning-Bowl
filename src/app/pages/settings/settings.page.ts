@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import {
   IonHeader,
   IonToolbar,
@@ -53,7 +53,6 @@ import { AnalyticsService } from 'src/app/core/services/analytics/analytics.serv
   selector: 'app-settings',
   templateUrl: './settings.page.html',
   styleUrls: ['./settings.page.scss'],
-  standalone: true,
   imports: [
     IonList,
     IonButtons,
@@ -85,6 +84,14 @@ import { AnalyticsService } from 'src/app/core/services/analytics/analytics.serv
   ],
 })
 export class SettingsPage implements OnInit {
+  userService = inject(UserService);
+  private toastService = inject(ToastService);
+  private loadingService = inject(LoadingService);
+  private themeService = inject(ThemeChangerService);
+  private statsService = inject(GameStatsService);
+  private alertCtrl = inject(AlertController);
+  private analyticsService = inject(AnalyticsService);
+
   username: string | null = '';
   currentColor: string | null = '';
   optionsWithClasses: { name: string; class: string }[] = [
@@ -97,15 +104,7 @@ export class SettingsPage implements OnInit {
   userEmail = '';
   feedbackMessage = '';
   updateAvailable = false;
-  constructor(
-    public userService: UserService,
-    private toastService: ToastService,
-    private loadingService: LoadingService,
-    private themeService: ThemeChangerService,
-    private statsService: GameStatsService,
-    private alertCtrl: AlertController,
-    private analyticsService: AnalyticsService,
-  ) {
+  constructor() {
     addIcons({
       personCircleOutline,
       colorPaletteOutline,

@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, ViewChild } from '@angular/core';
+import { Component, OnInit, signal, ViewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -66,7 +66,6 @@ import { AnalyticsService } from 'src/app/core/services/analytics/analytics.serv
   selector: 'app-pattern',
   templateUrl: './pattern.page.html',
   styleUrls: ['./pattern.page.scss'],
-  standalone: true,
   imports: [
     IonLabel,
     IonItem,
@@ -101,6 +100,18 @@ import { AnalyticsService } from 'src/app/core/services/analytics/analytics.serv
   ],
 })
 export class PatternPage implements OnInit {
+  private patternService = inject(PatternService);
+  private hapticService = inject(HapticService);
+  loadingService = inject(LoadingService);
+  private toastService = inject(ToastService);
+  private chartService = inject(ChartGenerationService);
+  private sanitizer = inject(DomSanitizer);
+  private modalCtrl = inject(ModalController);
+  sortService = inject(SortService);
+  private networkService = inject(NetworkService);
+  favoritesService = inject(FavoritesService);
+  private analyticsService = inject(AnalyticsService);
+
   @ViewChild(IonContent, { static: false }) content!: IonContent;
   patterns: Pattern[] = [];
   currentPage = 1;
@@ -130,19 +141,7 @@ export class PatternPage implements OnInit {
 
   private lastLoadTime = 0;
   private debounceMs = 300;
-  constructor(
-    private patternService: PatternService,
-    private hapticService: HapticService,
-    public loadingService: LoadingService,
-    private toastService: ToastService,
-    private chartService: ChartGenerationService,
-    private sanitizer: DomSanitizer,
-    private modalCtrl: ModalController,
-    public sortService: SortService,
-    private networkService: NetworkService,
-    public favoritesService: FavoritesService,
-    private analyticsService: AnalyticsService,
-  ) {
+  constructor() {
     addIcons({
       addOutline,
       documentOutline,

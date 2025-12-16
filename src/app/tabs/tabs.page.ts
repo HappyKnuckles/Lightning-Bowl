@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { addIcons } from 'ionicons';
 import {
   add,
@@ -22,14 +22,15 @@ import { AsyncPipe } from '@angular/common';
   selector: 'app-tabs',
   templateUrl: 'tabs.page.html',
   styleUrls: ['tabs.page.scss'],
-  standalone: true,
   imports: [IonModal, RouterModule, AsyncPipe, IonItem, IonList, IonContent, IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel],
 })
 export class TabsPage {
+  private router = inject(Router);
+
   activeMoreTab$ = new BehaviorSubject<boolean>(false);
   readonly moreTabs = ['/tabs/arsenal', '/tabs/balls', '/tabs/pattern', '/tabs/map', '/tabs/minigame', '/tabs/settings'];
 
-  constructor(private router: Router) {
+  constructor() {
     addIcons({
       add,
       statsChartOutline,
