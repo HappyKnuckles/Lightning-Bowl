@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, CUSTOM_ELEMENTS_SCHEMA, Input, OnInit } from '@angular/core';
+import { Component, computed, CUSTOM_ELEMENTS_SCHEMA, Input, OnInit, inject } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ModalController } from '@ionic/angular';
 import {
@@ -33,7 +33,6 @@ import { AnalyticsService } from 'src/app/core/services/analytics/analytics.serv
   selector: 'app-game-filter',
   templateUrl: './game-filter.component.html',
   styleUrls: ['./game-filter.component.scss'],
-  standalone: true,
   imports: [
     IonList,
     IonFooter,
@@ -59,6 +58,13 @@ import { AnalyticsService } from 'src/app/core/services/analytics/analytics.serv
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class GameFilterComponent implements OnInit {
+  private modalCtrl = inject(ModalController);
+  gameFilterService = inject(GameFilterService);
+  private sortUtilsService = inject(SortUtilsService);
+  storageService = inject(StorageService);
+  private utilsService = inject(UtilsService);
+  private analyticsService = inject(AnalyticsService);
+
   @Input() filteredGames!: Game[];
   defaultFilters = this.gameFilterService.defaultFilters;
   highlightedDates: { date: string; textColor: string; backgroundColor: string }[] = [];
@@ -70,15 +76,6 @@ export class GameFilterComponent implements OnInit {
       .flat()
       .filter((pattern, index, self) => pattern && self.indexOf(pattern) === index);
   });
-
-  constructor(
-    private modalCtrl: ModalController,
-    public gameFilterService: GameFilterService,
-    private sortUtilsService: SortUtilsService,
-    public storageService: StorageService,
-    private utilsService: UtilsService,
-    private analyticsService: AnalyticsService,
-  ) {}
 
   ngOnInit(): void {
     if (!this.gameFilterService.filters().startDate && !this.gameFilterService.filters().endDate) {

@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Pattern } from '../../models/pattern.model';
 import { firstValueFrom, retry } from 'rxjs';
 import { environment } from 'src/environments/environment';
@@ -25,11 +25,9 @@ interface AllPatternsResult {
   providedIn: 'root',
 })
 export class PatternService {
-  constructor(
-    private http: HttpClient,
-    private cacheService: CacheService,
-    private networkService: NetworkService,
-  ) {}
+  private http = inject(HttpClient);
+  private cacheService = inject(CacheService);
+  private networkService = inject(NetworkService);
 
   async getPatterns(page: number): Promise<AllPatternsResult> {
     const cacheKey = `patterns_page_${page}`;
@@ -65,6 +63,18 @@ export class PatternService {
       }
 
       return { total: 0, patterns: [] };
+    }
+  }
+
+  async getAllPatternsStripped(): Promise<Partial<Pattern>[]> {
+    try {
+      const response = await firstValueFrom(
+        this.http.get<Partial<Pattern>[]>(`${environment.patternEndpoint}patterns/all-stripped`).pipe(retry({ count: 5, delay: 2000 })),
+      );
+      return response;
+    } catch (error) {
+      console.error('Error fetching stripped patterns:', error);
+      return [];
     }
   }
 

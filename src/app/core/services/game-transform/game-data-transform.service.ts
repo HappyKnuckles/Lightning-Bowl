@@ -1,14 +1,13 @@
-import { Injectable } from '@angular/core';
-import { Game, Frame, Throw, getThrowValue } from 'src/app/core/models/game.model';
+import { Injectable, inject } from '@angular/core';
+import { Game, Frame, Throw } from 'src/app/core/models/game.model';
+import { GameUtilsService } from '../game-utils/game-utils.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class GameDataTransformerService {
-  /**
-   * Transform game data for storage
-   * Accepts Frame[] format (from getCurrentGameState) and returns a complete Game object
-   */
+  private gameUtilsService = inject(GameUtilsService);
+
   transformGameData(
     frames: Frame[],
     frameScores: number[],
@@ -22,13 +21,14 @@ export class GameDataTransformerService {
     balls?: string[],
     existingGameId?: string,
     existingDate?: number,
+    isPinMode?: boolean,
   ): Game {
     try {
       const gameId = existingGameId || Date.now() + '_' + Math.random().toString(36).slice(2, 9);
       const date = existingDate || Date.now();
       const isPerfect = totalScore === 300;
 
-      const isClean = this.calculateIsClean(frames);
+      const isClean = this.gameUtilsService.calculateIsClean(frames);
 
       // Ensure frames are in proper Frame[] format
       const normalizedFrames: Frame[] = frames.map((frame, frameIndex) => {
@@ -45,7 +45,6 @@ export class GameDataTransformerService {
             ),
           };
         } else if (frame && 'throws' in frame) {
-          // New format: Frame - ensure proper structure
           return {
             frameIndex: frame.frameIndex || frameIndex + 1,
             throws: (frame.throws || []).map(
@@ -54,7 +53,7 @@ export class GameDataTransformerService {
                 throwIndex: t.throwIndex || throwIndex + 1,
                 isSplit: t.isSplit,
                 pinsLeftStanding: t.pinsLeftStanding,
-                pinsHit: t.pinsHit,
+                pinsKnockedDown: t.pinsKnockedDown,
               }),
             ),
           };
@@ -77,6 +76,7 @@ export class GameDataTransformerService {
         seriesId,
         note,
         isPractice,
+        isPinMode: isPinMode ?? false,
         league,
         isClean,
         isPerfect,
@@ -86,37 +86,5 @@ export class GameDataTransformerService {
     } catch (error) {
       throw new Error(`Error transforming game data: ${error}`);
     }
-  }
-
-  private calculateIsClean(frames: Frame[]): boolean {
-    for (let i = 0; i < Math.min(frames.length, 10); i++) {
-      const frame = frames[i];
-      if (!frame || !frame.throws || frame.throws.length === 0) {
-        continue; // Skip empty frames
-      }
-
-      const first = getThrowValue(frame, 0);
-      const second = getThrowValue(frame, 1);
-
-      if (first === undefined) {
-        continue; // Skip incomplete frames
-      }
-
-      if (i < 9) {
-        // Frames 1-9: must be strike or spare
-        if (first !== 10 && (second === undefined || first + second < 10)) {
-          return false; // Open frame
-        }
-      } else {
-        // 10th frame: first two balls must add up to at least 10
-        if (second === undefined) {
-          continue; // Incomplete
-        }
-        if (first !== 10 && first + second < 10) {
-          return false; // Open frame
-        }
-      }
-    }
-    return true;
   }
 }

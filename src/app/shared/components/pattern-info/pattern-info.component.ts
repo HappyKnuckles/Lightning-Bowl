@@ -4,7 +4,6 @@ import { IonCol, IonRow, IonGrid, IonLabel, IonChip } from '@ionic/angular/stand
 
 @Component({
   selector: 'app-pattern-info',
-  standalone: true,
   imports: [IonChip, IonLabel, IonGrid, IonRow, IonCol],
   templateUrl: './pattern-info.component.html',
   styleUrl: './pattern-info.component.scss',

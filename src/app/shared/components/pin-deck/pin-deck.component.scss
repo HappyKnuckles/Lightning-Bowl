@@ -1,0 +1,36 @@
+$pin-size: 8px;
+
+.pin-deck-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.pin-deck-container.stat-mode .pin:not(.active) {
+  background-color: rgb(65, 65, 65);
+}
+
+.pin-row {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+}
+
+.pin {
+  width: $pin-size;
+  height: $pin-size;
+  border-radius: 50%;
+  background-color: black;
+}
+
+.pin.active {
+  background-color: rgb(226, 226, 226);
+  border: 1px solid var(--ion-color-primary);
+}
+
+.pin.active.is-split {
+  border-color: red;
+}

@@ -1,9 +1,7 @@
-// src/app/core/services/stats-calculation/stats-calculation.service.ts
-
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Game } from 'src/app/core/models/game.model';
 import { SeriesStats, SessionStats, Stats } from 'src/app/core/models/stats.model';
-import { BowlingGameValidationService } from '../../game-utils/bowling-game-validation.service';
+import { GameUtilsService } from '../../game-utils/game-utils.service';
 
 const MAX_FRAMES = 10;
 
@@ -11,7 +9,7 @@ const MAX_FRAMES = 10;
   providedIn: 'root',
 })
 export class OverallStatsCalculatorService {
-  constructor(private validationService: BowlingGameValidationService) {}
+  private gameUtilsService = inject(GameUtilsService);
 
   private getRate(converted: number, missed: number): number {
     if (converted + missed === 0) {
@@ -38,6 +36,18 @@ export class OverallStatsCalculatorService {
     let varipapa300Count = 0;
     let strikeoutCount = 0;
     let allSparesGameCount = 0;
+    let pocketHits = 0;
+    let totalFirstBalls = 0;
+    let singlePinSpares = 0;
+    let singlePinSpareOpportunities = 0;
+    let multiPinSpares = 0;
+    let multiPinSpareOpportunities = 0;
+    let nonSplitSpares = 0;
+    let nonSplitSpareOpportunities = 0;
+    let splits = 0;
+    let splitOpportunities = 0;
+    let makeableSplits = 0;
+    let makeableSplitOpportunities = 0;
     let strikeFollowUps = 0;
     let strikeFollowUpsPossible = 0;
     let previousWasStrike = false;
@@ -218,111 +228,111 @@ export class OverallStatsCalculatorService {
         longestStrikeStreak = Math.max(longestStrikeStreak, currentStrikeStreak);
 
         // Pin-specific statistics (only for pin mode games)
-        // if (game.isPinMode && frame.throws) {
-        //   // Check for pocket hit on first throw (not 10th frame bonus balls)
-        //   if (frame.throws[0] && idx < 9) {
-        //     totalFirstBalls++;
+        if (game.isPinMode && frame.throws) {
+          // Check for pocket hit on first throw (not 10th frame bonus balls)
+          if (frame.throws[0] && idx < 9) {
+            totalFirstBalls++;
 
-        //     // Pocket hit is when pin 1 is knocked down AND either pin 2 or 3 is knocked down
-        //     if (frame.throws[0].pinsLeftStanding) {
-        //       const pinsLeft = frame.throws[0].pinsLeftStanding;
-        //       const pin1Down = !pinsLeft.includes(1);
-        //       const pin2Down = !pinsLeft.includes(2);
-        //       const pin3Down = !pinsLeft.includes(3);
+            // Pocket hit is when pin 1 is knocked down AND either pin 2 or 3 is knocked down
+            if (frame.throws[0].pinsLeftStanding) {
+              const pinsLeft = frame.throws[0].pinsLeftStanding;
+              const pin1Down = !pinsLeft.includes(1);
+              const pin2Down = !pinsLeft.includes(2);
+              const pin3Down = !pinsLeft.includes(3);
 
-        //       if (pin1Down && (pin2Down || pin3Down)) {
-        //         pocketHits++;
-        //       }
-        //     }
-        //   }
-        //   if (idx === 9) {
-        //     totalFirstBalls++;
-        //     if (isStrike) totalFirstBalls++;
-        //     if (isSecondStrike) totalFirstBalls++;
-        //   }
+              if (pin1Down && (pin2Down || pin3Down)) {
+                pocketHits++;
+              }
+            }
+          }
+          if (idx === 9) {
+            totalFirstBalls++;
+            if (isStrike) totalFirstBalls++;
+            if (isSecondStrike) totalFirstBalls++;
+          }
 
-        //   // Process first throw if not a strike
-        //   if (!isStrike && frame.throws[0] && frame.throws[0].pinsLeftStanding) {
-        //     const pinsLeft = frame.throws[0].pinsLeftStanding;
-        //     const pinsLeftCount = pinsLeft.length;
-        //     const isSplit = this.validationService.isSplit(pinsLeft);
+          // Process first throw if not a strike
+          if (!isStrike && frame.throws[0] && frame.throws[0].pinsLeftStanding) {
+            const pinsLeft = frame.throws[0].pinsLeftStanding;
+            const pinsLeftCount = pinsLeft.length;
+            const isSplit = this.gameUtilsService.isSplit(pinsLeft);
 
-        //     // Count opportunity
-        //     if (pinsLeftCount === 1) {
-        //       singlePinSpareOpportunities++;
-        //     } else if (pinsLeftCount > 1) {
-        //       multiPinSpareOpportunities++;
-        //       if (!isSplit) {
-        //         nonSplitSpareOpportunities++;
-        //       } else {
-        //         splitOpportunities++;
-        //         // Check if split is makeable
-        //         if (this.validationService.isMakeableSplit(pinsLeft)) {
-        //           makeableSplitOpportunities++;
-        //         }
-        //       }
-        //     }
+            // Count opportunity
+            if (pinsLeftCount === 1) {
+              singlePinSpareOpportunities++;
+            } else if (pinsLeftCount > 1) {
+              multiPinSpareOpportunities++;
+              if (!isSplit) {
+                nonSplitSpareOpportunities++;
+              } else {
+                splitOpportunities++;
+                // Check if split is makeable
+                if (this.gameUtilsService.isMakeableSplit(pinsLeft)) {
+                  makeableSplitOpportunities++;
+                }
+              }
+            }
 
-        //     // Count conversion if spare
-        //     if (isSpare) {
-        //       if (pinsLeftCount === 1) {
-        //         singlePinSpares++;
-        //       } else if (pinsLeftCount > 1) {
-        //         multiPinSpares++;
-        //         if (!isSplit) {
-        //           nonSplitSpares++;
-        //         } else {
-        //           splits++;
-        //           // Check if makeable split was converted
-        //           if (this.validationService.isMakeableSplit(pinsLeft)) {
-        //             makeableSplits++;
-        //           }
-        //         }
-        //       }
-        //     }
-        //   }
+            // Count conversion if spare
+            if (isSpare) {
+              if (pinsLeftCount === 1) {
+                singlePinSpares++;
+              } else if (pinsLeftCount > 1) {
+                multiPinSpares++;
+                if (!isSplit) {
+                  nonSplitSpares++;
+                } else {
+                  splits++;
+                  // Check if makeable split was converted
+                  if (this.gameUtilsService.isMakeableSplit(pinsLeft)) {
+                    makeableSplits++;
+                  }
+                }
+              }
+            }
+          }
 
-        //   // Process 10th frame additional throws
-        //   if (idx === MAX_FRAMES - 1 && isStrike && throw2 !== undefined && !isSecondStrike && frame.throws[1] && frame.throws[1].pinsLeftStanding) {
-        //     const pinsLeft = frame.throws[1].pinsLeftStanding;
-        //     const pinsLeftCount = pinsLeft.length;
-        //     const isSplit = this.validationService.isSplit(pinsLeft);
+          // Process 10th frame additional throws
+          if (idx === MAX_FRAMES - 1 && isStrike && throw2 !== undefined && !isSecondStrike && frame.throws[1] && frame.throws[1].pinsLeftStanding) {
+            const pinsLeft = frame.throws[1].pinsLeftStanding;
+            const pinsLeftCount = pinsLeft.length;
+            const isSplit = this.gameUtilsService.isSplit(pinsLeft);
 
-        //     // Count opportunity
-        //     if (pinsLeftCount === 1) {
-        //       singlePinSpareOpportunities++;
-        //     } else if (pinsLeftCount > 1) {
-        //       multiPinSpareOpportunities++;
-        //       if (!isSplit) {
-        //         nonSplitSpareOpportunities++;
-        //       } else {
-        //         splitOpportunities++;
-        //         // Check if split is makeable
-        //         if (this.validationService.isMakeableSplit(pinsLeft)) {
-        //           makeableSplitOpportunities++;
-        //         }
-        //       }
-        //     }
+            // Count opportunity
+            if (pinsLeftCount === 1) {
+              singlePinSpareOpportunities++;
+            } else if (pinsLeftCount > 1) {
+              multiPinSpareOpportunities++;
+              if (!isSplit) {
+                nonSplitSpareOpportunities++;
+              } else {
+                splitOpportunities++;
+                // Check if split is makeable
+                if (this.gameUtilsService.isMakeableSplit(pinsLeft)) {
+                  makeableSplitOpportunities++;
+                }
+              }
+            }
 
-        //     // Count conversion if spare made
-        //     if (throw3 !== undefined && throw2 + throw3 === 10) {
-        //       if (pinsLeftCount === 1) {
-        //         singlePinSpares++;
-        //       } else if (pinsLeftCount > 1) {
-        //         multiPinSpares++;
-        //         if (!isSplit) {
-        //           nonSplitSpares++;
-        //         } else {
-        //           splits++;
-        //           // Check if makeable split was converted
-        //           if (this.validationService.isMakeableSplit(pinsLeft)) {
-        //             makeableSplits++;
-        //           }
-        //         }
-        //       }
-        //     }
-        //   }
-        // }
+            // Count conversion if spare made
+            if (throw3 !== undefined && throw2 + throw3 === 10) {
+              if (pinsLeftCount === 1) {
+                singlePinSpares++;
+              } else if (pinsLeftCount > 1) {
+                multiPinSpares++;
+                if (!isSplit) {
+                  nonSplitSpares++;
+                } else {
+                  splits++;
+                  // Check if makeable split was converted
+                  if (this.gameUtilsService.isMakeableSplit(pinsLeft)) {
+                    makeableSplits++;
+                  }
+                }
+              }
+            }
+          }
+        }
       });
 
       if (isAllSpares) allSparesGameCount++;
@@ -371,13 +381,12 @@ export class OverallStatsCalculatorService {
     const strikeToStrikePercentage = strikeFollowUpsPossible ? (strikeFollowUps / strikeFollowUpsPossible) * 100 : 0;
 
     // Pin-specific percentages
-    const singlePinSpareOpportunities = (pinCounts[1] || 0) + (missedCounts[1] || 0);
-    const singlePinSpares = pinCounts[1] || 0;
+    const pocketHitPercentage = totalFirstBalls > 0 ? (pocketHits / totalFirstBalls) * 100 : 0;
     const singlePinSparePercentage = singlePinSpareOpportunities > 0 ? (singlePinSpares / singlePinSpareOpportunities) * 100 : 0;
-
-    const multiPinSpareOpportunities = (pinCounts.slice(2).reduce((a, b) => a + b, 0) || 0) + (missedCounts.slice(2).reduce((a, b) => a + b, 0) || 0);
-    const multiPinSpares = pinCounts.slice(2).reduce((a, b) => a + b, 0) || 0;
     const multiPinSparePercentage = multiPinSpareOpportunities > 0 ? (multiPinSpares / multiPinSpareOpportunities) * 100 : 0;
+    const nonSplitSparePercentage = nonSplitSpareOpportunities > 0 ? (nonSplitSpares / nonSplitSpareOpportunities) * 100 : 0;
+    const splitConversionPercentage = splitOpportunities > 0 ? (splits / splitOpportunities) * 100 : 0;
+    const makeableSplitPercentage = makeableSplitOpportunities > 0 ? (makeableSplits / makeableSplitOpportunities) * 100 : 0;
 
     return {
       totalStrikes,
@@ -437,12 +446,25 @@ export class OverallStatsCalculatorService {
       averageSessionsPerMonth,
       averageGamesPerSession,
       strikeToStrikePercentage,
+      // Pin-specific stats
+      pocketHits,
+      totalFirstBalls,
+      pocketHitPercentage,
       singlePinSpares,
       singlePinSpareOpportunities,
       multiPinSpares,
       multiPinSpareOpportunities,
+      nonSplitSpares,
+      nonSplitSpareOpportunities,
+      splits,
+      splitOpportunities,
       singlePinSparePercentage,
       multiPinSparePercentage,
+      nonSplitSparePercentage,
+      splitConversionPercentage,
+      makeableSplits,
+      makeableSplitOpportunities,
+      makeableSplitPercentage,
     };
   }
 

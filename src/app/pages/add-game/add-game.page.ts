@@ -1,4 +1,16 @@
-import { Component, computed, CUSTOM_ELEMENTS_SCHEMA, OnInit, QueryList, signal, ViewChild, ViewChildren } from '@angular/core';
+import {
+  Component,
+  computed,
+  CUSTOM_ELEMENTS_SCHEMA,
+  OnInit,
+  QueryList,
+  signal,
+  ViewChild,
+  ViewChildren,
+  effect,
+  untracked,
+  inject,
+} from '@angular/core';
 import {
   ActionSheetController,
   AlertController,
@@ -19,11 +31,12 @@ import {
   IonSegmentButton,
   IonSegmentView,
   IonSegmentContent,
+  IonLabel,
 } from '@ionic/angular/standalone';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
-import { Game, Frame, createEmptyGame, numberArraysToFrames, cloneFrames, createThrow } from 'src/app/core/models/game.model';
+import { Game, Frame, createEmptyGame, numberArraysToFrames, cloneFrames, createThrow, Throw } from 'src/app/core/models/game.model';
 import { addIcons } from 'ionicons';
-import { add, chevronDown, chevronUp, cameraOutline, documentTextOutline, medalOutline } from 'ionicons/icons';
+import { add, chevronDown, chevronUp, cameraOutline, documentTextOutline, medalOutline, bowlingBallOutline, bowlingBall } from 'ionicons/icons';
 import { NgIf, NgFor } from '@angular/common';
 import { ImpactStyle } from '@capacitor/haptics';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
@@ -43,6 +56,8 @@ import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
 import { BowlingGameValidationService } from 'src/app/core/services/game-utils/bowling-game-validation.service';
 import { GameScoreToolbarComponent } from 'src/app/shared/components/game-score-toolbar/game-score-toolbar.component';
+import { ThrowConfirmedEvent } from 'src/app/shared/components/pin-input/pin-input.component';
+import { UtilsService } from 'src/app/core/services/utils/utils.service';
 
 const enum SeriesMode {
   Single = 'Single',
@@ -52,13 +67,23 @@ const enum SeriesMode {
   Series6 = '6 Series',
 }
 
+interface GameDraft {
+  timestamp: number;
+  games: Game[];
+  pinModeState: { currentFrameIndex: number; currentThrowIndex: number; throwsData: Throw[][] }[];
+  totalScores: number[];
+  maxScores: number[];
+  isPinInputMode: boolean;
+  selectedMode: SeriesMode;
+  segments: string[];
+}
+
 defineCustomElements(window);
 
 @Component({
   selector: 'app-add-game',
   templateUrl: 'add-game.page.html',
   styleUrls: ['add-game.page.scss'],
-  standalone: true,
   providers: [ModalController],
   imports: [
     IonHeader,
@@ -77,6 +102,7 @@ defineCustomElements(window);
     IonSegment,
     IonSegmentContent,
     IonSegmentView,
+    IonLabel,
     NgIf,
     NgFor,
     GameGridComponent,
@@ -85,6 +111,22 @@ defineCustomElements(window);
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class AddGamePage implements OnInit {
+  private actionSheetCtrl = inject(ActionSheetController);
+  private imageProcessingService = inject(ImageProcesserService);
+  private alertController = inject(AlertController);
+  private toastService = inject(ToastService);
+  private gameScoreCalculatorService = inject(GameScoreCalculatorService);
+  private transformGameService = inject(GameDataTransformerService);
+  private loadingService = inject(LoadingService);
+  private userService = inject(UserService);
+  private hapticService = inject(HapticService);
+  private gameUtilsService = inject(GameUtilsService);
+  private utilsService = inject(UtilsService);
+  private validationService = inject(BowlingGameValidationService);
+  private highScroreAlertService = inject(HighScoreAlertService);
+  private storageService = inject(StorageService);
+  private analyticsService = inject(AnalyticsService);
+
   // UI State
   selectedMode: SeriesMode = SeriesMode.Single;
   sheetOpen = false;
@@ -98,12 +140,29 @@ export class AddGamePage implements OnInit {
   toolbarDisabledState = { strikeDisabled: true, spareDisabled: true };
 
   // Game Data State
-  gameData!: Game; // For Modal
-  games = signal(Array.from({ length: 19 }, () => createEmptyGame())); // For Series
+  gameData!: Game;
+  games = signal(Array.from({ length: 19 }, () => createEmptyGame()));
   totalScores = signal(new Array(19).fill(0));
   maxScores = signal(new Array(19).fill(300));
 
-  // Computed State
+  // Pin input mode state
+  isPinInputMode = false;
+
+  pinModeState = signal<
+    {
+      currentFrameIndex: number;
+      currentThrowIndex: number;
+      throwsData: Throw[][];
+    }[]
+  >(
+    Array.from({ length: 19 }, () => ({
+      currentFrameIndex: 0,
+      currentThrowIndex: 0,
+      throwsData: Array.from({ length: 10 }, () => []),
+    })),
+  );
+
+  // computed state
   seriesMaxscore = computed(() => {
     return this.getActiveTrackIndexes().reduce((acc, idx) => acc + this.maxScores()[idx], 0);
   });
@@ -112,43 +171,148 @@ export class AddGamePage implements OnInit {
     return this.getActiveTrackIndexes().reduce((acc, idx) => acc + this.totalScores()[idx], 0);
   });
 
-  // Accessors
+  // View Children & DOM References
   @ViewChildren(GameGridComponent) gameGrids!: QueryList<GameGridComponent>;
   @ViewChild('modalGrid', { static: false }) modalGrid!: GameGridComponent;
   presentingElement!: HTMLElement;
 
   // Internal Logic State
+  private isStorageReady = false;
   private seriesId = '';
   private activeGameIndex = 0;
-  private currentFocusedFrame: number | null = null;
-  private currentFocusedThrow: number | null = null;
+  private readonly DRAFT_KEY = 'bowling_game_draft';
+  private readonly DRAFT_TTL = 4 * 60 * 60 * 1000;
 
-  constructor(
-    private actionSheetCtrl: ActionSheetController,
-    private imageProcessingService: ImageProcesserService,
-    private alertController: AlertController,
-    private toastService: ToastService,
-    private gameScoreCalculatorService: GameScoreCalculatorService,
-    private transformGameService: GameDataTransformerService,
-    private loadingService: LoadingService,
-    private userService: UserService,
-    // private adService: AdService, // Unused?
-    private hapticService: HapticService,
-    private gameUtilsService: GameUtilsService,
-    private validationService: BowlingGameValidationService,
-    private highScroreAlertService: HighScoreAlertService,
-    private storageService: StorageService,
-    private analyticsService: AnalyticsService,
-  ) {
-    addIcons({ cameraOutline, chevronDown, chevronUp, medalOutline, documentTextOutline, add });
+  constructor() {
+    addIcons({ cameraOutline, bowlingBallOutline, bowlingBall, chevronDown, chevronUp, medalOutline, documentTextOutline, add });
+    effect(() => {
+      const gameState = this.games();
+      const pinState = this.pinModeState();
+      const totals = this.totalScores();
+      const maxs = this.maxScores();
+
+      const mode = untracked(() => this.selectedMode);
+      const isPinMode = untracked(() => this.isPinInputMode);
+      const segments = untracked(() => this.segments);
+
+      if (!this.isStorageReady) return;
+
+      this.saveDraft(gameState, pinState, totals, maxs, mode, isPinMode, segments);
+    });
   }
 
   async ngOnInit(): Promise<void> {
     this.presentingElement = document.querySelector('.ion-page')!;
+    this.loadPinInputMode();
+    await this.checkAndRestoreDraft();
   }
 
-  // UPDATE HANDLERS (Generic)
+  // PIN INPUT MODE
+  getPinsLeftStanding(gameIndex: number): number[] {
+    const state = this.pinModeState()[gameIndex];
+    const { currentFrameIndex, currentThrowIndex, throwsData } = state;
+    const throws = throwsData[currentFrameIndex] || [];
 
+    return this.gameUtilsService.getAvailablePins(currentFrameIndex, currentThrowIndex, throws);
+  }
+
+  canRecordStrike(gameIndex: number): boolean {
+    const state = this.pinModeState()[gameIndex];
+    const game = this.games()[gameIndex];
+    return this.validationService.canRecordStrike(state.currentFrameIndex, state.currentThrowIndex, game.frames);
+  }
+
+  canRecordSpare(gameIndex: number): boolean {
+    const state = this.pinModeState()[gameIndex];
+    const game = this.games()[gameIndex];
+    return this.validationService.canRecordSpare(state.currentFrameIndex, state.currentThrowIndex, game.frames);
+  }
+
+  canUndoForPinMode(gameIndex: number): boolean {
+    const game = this.games()[gameIndex];
+    const state = this.pinModeState()[gameIndex];
+
+    if (!game || !state) return false;
+
+    return this.validationService.canUndoLastThrow(game.frames, state.currentFrameIndex, state.currentThrowIndex);
+  }
+
+  isGameComplete(gameIndex: number): boolean {
+    const game = this.games()[gameIndex];
+    return this.validationService.isGameValid(game);
+  }
+
+  getCurrentFrameIndex(gameIndex: number): number {
+    return this.pinModeState()[gameIndex].currentFrameIndex;
+  }
+
+  getCurrentThrowIndex(gameIndex: number): number {
+    return this.pinModeState()[gameIndex].currentThrowIndex;
+  }
+
+  onPinThrowConfirmed(event: ThrowConfirmedEvent, gameIndex: number): void {
+    const state = this.pinModeState()[gameIndex];
+    const game = this.games()[gameIndex];
+
+    const result = this.gameUtilsService.processPinThrow(game.frames, state.currentFrameIndex, state.currentThrowIndex, event.pinsKnockedDown);
+
+    this.pinModeState.update((states) => {
+      const newStates = [...states];
+      newStates[gameIndex] = {
+        currentFrameIndex: result.nextFrameIndex,
+        currentThrowIndex: result.nextThrowIndex,
+        throwsData: result.updatedFrames.map((f) => f.throws),
+      };
+      return newStates;
+    });
+
+    this.updateGameState(result.updatedFrames, gameIndex, false);
+  }
+
+  handlePinUndoRequested(gameIndex: number): void {
+    const state = this.pinModeState()[gameIndex];
+    const game = this.games()[gameIndex];
+
+    const result = this.gameUtilsService.applyPinModeUndo(game.frames, state.currentFrameIndex, state.currentThrowIndex);
+
+    if (!result) return;
+
+    this.pinModeState.update((states) => {
+      const newStates = [...states];
+      newStates[gameIndex] = {
+        currentFrameIndex: result.nextFrameIndex,
+        currentThrowIndex: result.nextThrowIndex,
+        throwsData: result.updatedFrames.map((f) => f.throws),
+      };
+      return newStates;
+    });
+
+    this.updateGameState(result.updatedFrames, gameIndex, false);
+  }
+
+  onScoreCellClick(event: { frameIndex: number; throwIndex: number }, gameIndex: number): void {
+    if (!this.isPinInputMode) return;
+
+    const { frameIndex, throwIndex } = event;
+    const game = this.games()[gameIndex];
+    const state = this.pinModeState()[gameIndex];
+
+    const canClick = this.gameUtilsService.isCellAccessible(game.frames, frameIndex, throwIndex);
+
+    if (canClick) {
+      this.pinModeState.update((states) => {
+        const newStates = [...states];
+        newStates[gameIndex] = {
+          ...state,
+          currentFrameIndex: frameIndex,
+          currentThrowIndex: throwIndex,
+        };
+        return newStates;
+      });
+    }
+  }
+
+  // GAME STATE UPDATE HANDLERS
   onGameChange(game: Game, index = 0, isModal = false): void {
     if (isModal) {
       this.gameData = { ...game };
@@ -157,7 +321,7 @@ export class AddGamePage implements OnInit {
     }
   }
 
-  updateSingleGameProperty(key: keyof Game, value: any, index: number, isModal: boolean): void {
+  updateSingleGameProperty(key: keyof Game, value: unknown, index: number, isModal: boolean): void {
     if (isModal) {
       this.gameData = { ...this.gameData, [key]: value };
     } else {
@@ -165,15 +329,14 @@ export class AddGamePage implements OnInit {
     }
   }
 
-  updateSeriesProperty(key: keyof Game, value: any, isModal: boolean): void {
+  updateSeriesProperty(key: keyof Game, value: unknown, isModal: boolean): void {
     if (isModal) {
       this.gameData = { ...this.gameData, [key]: value };
 
-      // Special Handling for Modal Side Effects
       if (key === 'league') {
         const isPractice = value === '' || value === 'New';
         this.gameData.isPractice = isPractice;
-        if (this.modalGrid && this.modalGrid.checkbox) {
+        if (this.modalGrid?.checkbox) {
           this.modalGrid.checkbox.checked = isPractice;
           this.modalGrid.checkbox.disabled = !isPractice;
         }
@@ -181,17 +344,14 @@ export class AddGamePage implements OnInit {
     } else {
       const trackIndexes = this.getActiveTrackIndexes();
 
-      // Update Data Model
       this.games.update((games) =>
         games.map((g, i) => {
           if (trackIndexes.includes(i)) {
             const updates: Partial<Game> = { [key]: value };
 
-            // Special Logic: League changes imply Practice status
             if (key === 'league') {
               updates.isPractice = value === '' || value === 'New';
             }
-            // Special Logic: Patterns slicing
             if (key === 'patterns' && Array.isArray(value) && value.length > 2) {
               updates.patterns = value.slice(-2);
             }
@@ -201,12 +361,11 @@ export class AddGamePage implements OnInit {
         }),
       );
 
-      // Update UI Components if needed (Side Effects)
       if (key === 'league') {
         const isPractice = value === '' || value === 'New';
         this.gameGrids.forEach((grid, i) => {
           if (trackIndexes.includes(i)) {
-            grid.leagueSelector.selectedLeague = value;
+            grid.leagueSelector.selectedLeague = value as string;
             grid.checkbox.checked = isPractice;
             grid.checkbox.disabled = !isPractice;
           }
@@ -215,7 +374,7 @@ export class AddGamePage implements OnInit {
     }
   }
 
-  // Wrapper methods for Template Binding to keep HTML clean
+  // Wrapper methods for Template Binding
   onNoteChange(note: string, index = 0, isModal = false) {
     this.updateSingleGameProperty('note', note, index, isModal);
   }
@@ -225,7 +384,6 @@ export class AddGamePage implements OnInit {
   onIsPracticeChange(isPractice: boolean, index = 0, isModal = false) {
     this.updateSingleGameProperty('isPractice', isPractice, index, isModal);
   }
-
   onLeagueChange(league: string, isModal = false) {
     this.updateSeriesProperty('league', league, isModal);
   }
@@ -233,7 +391,7 @@ export class AddGamePage implements OnInit {
     this.updateSeriesProperty('patterns', patterns, isModal);
   }
 
-  // INPUT & SCORING LOGIC
+  // GRID MODE INPUT & SCORING LOGIC
   handleThrowInput(event: { frameIndex: number; throwIndex: number; value: string }, index: number, isModal = false): void {
     const { frameIndex, throwIndex, value } = event;
     const currentGame = isModal ? this.gameData : this.games()[index];
@@ -245,8 +403,8 @@ export class AddGamePage implements OnInit {
       return;
     }
 
-    const parsedValue = this.validationService.parseInputValue(value, frameIndex, throwIndex, frames);
-    const isValidNumber = this.validationService.isValidNumber0to10(parsedValue);
+    const parsedValue = this.gameUtilsService.parseInputValue(value, frameIndex, throwIndex, frames);
+    const isValidNumber = this.utilsService.isValidNumber0to10(parsedValue);
     const isValidScore = this.validationService.isValidFrameScore(parsedValue, frameIndex, throwIndex, frames);
 
     if (!isValidNumber || !isValidScore) {
@@ -263,11 +421,23 @@ export class AddGamePage implements OnInit {
     this.gameData.frameScores[index] = parseInt(event.detail.value!, 10);
   }
 
-  // UI INTERACTION (Toolbar, Focus, Actions)
+  // UI INTERACTION
+  togglePinInputMode(): void {
+    this.isPinInputMode = !this.isPinInputMode;
+    localStorage.setItem('pinInputMode', String(this.isPinInputMode));
+  }
+
   onInputFocused(event: { frameIndex: number; throwIndex: number }, index: number): void {
     this.activeGameIndex = index;
-    this.currentFocusedFrame = event.frameIndex;
-    this.currentFocusedThrow = event.throwIndex;
+    this.pinModeState.update((states) => {
+      const newStates = [...states];
+      newStates[index] = {
+        ...newStates[index],
+        currentFrameIndex: event.frameIndex,
+        currentThrowIndex: event.throwIndex,
+      };
+      return newStates;
+    });
     this.updateToolbarDisabledState(index);
   }
 
@@ -284,7 +454,7 @@ export class AddGamePage implements OnInit {
   }
 
   async presentActionSheet(): Promise<void> {
-    const buttons = [];
+    const buttons: { text: string; handler?: () => void; role?: string }[] = [];
     this.hapticService.vibrate(ImpactStyle.Medium);
     this.sheetOpen = true;
 
@@ -340,11 +510,32 @@ export class AddGamePage implements OnInit {
   }
 
   // SAVE & RESET LOGIC
+  isGameValid(game: Game): boolean {
+    return this.validationService.isGameValid(game);
+  }
+
   clearFrames(index?: number): void {
     if (index !== undefined && index >= 0) {
       this.games.update((games) => games.map((g, i) => (i === index ? createEmptyGame() : g)));
+      this.pinModeState.update((states) => {
+        const newStates = [...states];
+        newStates[index] = {
+          currentFrameIndex: 0,
+          currentThrowIndex: 0,
+          throwsData: Array.from({ length: 10 }, () => []),
+        };
+        return newStates;
+      });
     } else {
       this.initializeGames();
+      this.pinModeState.set(
+        Array.from({ length: 19 }, () => ({
+          currentFrameIndex: 0,
+          currentThrowIndex: 0,
+          throwsData: Array.from({ length: 10 }, () => []),
+        })),
+      );
+      this.clearDraft();
     }
     this.toastService.showToast(ToastMessages.gameResetSuccess, 'refresh-outline');
   }
@@ -365,13 +556,21 @@ export class AddGamePage implements OnInit {
 
     const success = await this.processAndSaveGames(gamesToSave, isSeries, this.seriesId);
     if (success) {
-      // Check for 300 animation logic specifically for list view
+      this.clearDraft();
       const perfectGame = gamesToSave.some((g) => g.totalScore === 300);
       if (perfectGame) {
         this.is300 = true;
         setTimeout(() => (this.is300 = false), 4000);
       }
       this.initializeGames();
+      this.gameGrids.forEach((grid) => (grid.checkbox.disabled = false));
+      this.pinModeState.set(
+        Array.from({ length: 19 }, () => ({
+          currentFrameIndex: 0,
+          currentThrowIndex: 0,
+          throwsData: Array.from({ length: 10 }, () => []),
+        })),
+      );
     }
   }
 
@@ -395,6 +594,7 @@ export class AddGamePage implements OnInit {
           game.note || '',
           game.patterns || [],
           game.balls || [],
+          this.isPinInputMode,
           game.gameId,
           game.date,
         ),
@@ -422,6 +622,10 @@ export class AddGamePage implements OnInit {
   }
 
   // PRIVATE HELPERS - GAME STATE
+  private loadPinInputMode(): void {
+    this.isPinInputMode = localStorage.getItem('pinInputMode') === 'true';
+  }
+
   private updateGameState(frames: Frame[], index: number, isModal: boolean): void {
     const scoreResult = this.gameScoreCalculatorService.calculateScoreFromFrames(frames);
     const maxScore = this.gameScoreCalculatorService.calculateMaxScoreFromFrames(frames, scoreResult.totalScore);
@@ -445,6 +649,8 @@ export class AddGamePage implements OnInit {
   }
 
   private initializeGames(): void {
+    this.maxScores.set(new Array(19).fill(300));
+    this.totalScores.set(new Array(19).fill(0));
     this.games.set(Array.from({ length: 19 }, () => createEmptyGame()));
   }
 
@@ -474,11 +680,10 @@ export class AddGamePage implements OnInit {
 
     setTimeout(() => {
       this.gameGrids.forEach((grid, i) => {
-        if (activeIndexes.includes(i) && i !== 0) {
+        if (activeIndexes.includes(i)) {
           if (grid.leagueSelector) {
             grid.leagueSelector.selectedLeague = sourceGame.league || '';
           }
-
           if (grid.checkbox) {
             grid.checkbox.checked = sourceGame.isPractice;
             grid.checkbox.disabled = !sourceGame.isPractice;
@@ -493,21 +698,7 @@ export class AddGamePage implements OnInit {
     this.segments = activeIndexes.map((i) => `Game ${i + 1}`);
   }
 
-  // PRIVATE HELPERS - LOGIC
-  isGameValid(game: Game): boolean {
-    return this.validationService.isGameValid(game);
-  }
-
-  canRecordStrike(index: number): boolean {
-    if (this.currentFocusedFrame === null || this.currentFocusedThrow === null) return false;
-    return this.validationService.canRecordStrike(this.currentFocusedFrame, this.currentFocusedThrow, this.games()[index].frames);
-  }
-
-  canRecordSpare(index: number): boolean {
-    if (this.currentFocusedFrame === null || this.currentFocusedThrow === null) return false;
-    return this.validationService.canRecordSpare(this.currentFocusedFrame, this.currentFocusedThrow, this.games()[index].frames);
-  }
-
+  // PRIVATE HELPERS - VALIDATION
   private recordThrow(frames: Frame[], frameIndex: number, throwIndex: number, value: number): void {
     const frame = frames[frameIndex];
     if (!frame) return;
@@ -539,6 +730,7 @@ export class AddGamePage implements OnInit {
     note: string,
     patterns: string[],
     balls: string[],
+    isPinMode: boolean,
     gameId?: string,
     date?: number,
   ): Promise<Game | null> {
@@ -560,6 +752,7 @@ export class AddGamePage implements OnInit {
         balls,
         gameId,
         date,
+        isPinMode,
       );
       await this.storageService.saveGameToLocalStorage(gameData);
       this.analyticsService.trackGameSaved({ score: gameData.totalScore });
@@ -592,7 +785,7 @@ export class AddGamePage implements OnInit {
     };
   }
 
-  // CAMERA / OCR LOGIC (Consider moving to Service)
+  // CAMERA / OCR LOGIC
   async handleImageUpload(): Promise<void> {
     const alertData = localStorage.getItem('alert');
     if (!alertData) {
@@ -690,5 +883,119 @@ export class AddGamePage implements OnInit {
       this.toastService.showToast(ToastMessages.unexpectedError, 'bug', true);
       console.error(error);
     }
+  }
+
+  // SESSION DRAFT LOGIC
+  private async checkAndRestoreDraft(): Promise<void> {
+    const draftJson = localStorage.getItem(this.DRAFT_KEY);
+
+    if (!draftJson) {
+      this.isStorageReady = true;
+      return;
+    }
+
+    try {
+      const draft: GameDraft = JSON.parse(draftJson);
+      const now = Date.now();
+
+      if (now - draft.timestamp > this.DRAFT_TTL) {
+        this.clearDraft();
+        this.isStorageReady = true;
+        return;
+      }
+
+      const isSeries = draft.selectedMode !== SeriesMode.Single;
+      const typeText = isSeries ? 'series' : 'game';
+
+      const alert = await this.alertController.create({
+        header: 'Resume Session?',
+        message: `We found an unfinished ${typeText} from earlier. Do you want to restore it?`,
+        backdropDismiss: false,
+        buttons: [
+          {
+            text: 'No, Start New',
+            role: 'cancel',
+            handler: () => {
+              this.clearDraft();
+              this.isStorageReady = true;
+            },
+          },
+          {
+            text: 'Yes, Resume',
+            handler: () => {
+              this.restoreDraft(draft);
+            },
+          },
+        ],
+      });
+      await alert.present();
+    } catch (e) {
+      console.error('Error parsing draft', e);
+      this.clearDraft();
+      this.isStorageReady = true;
+    }
+  }
+  private saveDraft(
+    games: Game[],
+    pinModeState: any[],
+    totalScores: number[],
+    maxScores: number[],
+    selectedMode: SeriesMode,
+    isPinInputMode: boolean,
+    segments: string[],
+  ): void {
+    const hasData = games.some((game) => {
+      const hasThrows = game.frames.some((f) => f.throws && f.throws.length > 0);
+
+      return hasThrows;
+    });
+
+    if (!hasData) {
+      this.clearDraft();
+      return;
+    }
+
+    const draft: GameDraft = {
+      timestamp: Date.now(),
+      games,
+      pinModeState,
+      totalScores,
+      maxScores,
+      selectedMode,
+      isPinInputMode,
+      segments,
+    };
+    try {
+      const tmpKey = this.DRAFT_KEY + '.tmp';
+      const payload = JSON.stringify(draft);
+      localStorage.setItem(tmpKey, payload);
+      localStorage.setItem(this.DRAFT_KEY, payload);
+      localStorage.removeItem(tmpKey);
+    } catch (err) {
+      console.error('Failed to save draft', err);
+    }
+  }
+
+  private clearDraft(): void {
+    localStorage.removeItem(this.DRAFT_KEY);
+  }
+
+  private restoreDraft(draft: GameDraft): void {
+    this.isStorageReady = true;
+
+    this.selectedMode = draft.selectedMode;
+    this.isPinInputMode = draft.isPinInputMode;
+    this.updateSegments();
+
+    this.games.set(draft.games);
+    this.totalScores.set(draft.totalScores);
+    this.maxScores.set(draft.maxScores);
+    this.pinModeState.set(draft.pinModeState);
+
+    setTimeout(() => {
+      this.propagateMetadataToSeries();
+    }, 100);
+
+    this.toastService.showToast('Session restored successfully.', 'refresh-outline');
   }
 }

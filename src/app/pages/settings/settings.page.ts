@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import {
   IonHeader,
   IonToolbar,
@@ -48,12 +48,12 @@ import { GameStatsService } from 'src/app/core/services/game-stats/game-stats.se
 import { AlertController, InputCustomEvent } from '@ionic/angular';
 import { GithubIssuesModalComponent } from 'src/app/shared/components/github-issues-modal/github-issues-modal.component';
 import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
+import { StorageService } from 'src/app/core/services/storage/storage.service';
 
 @Component({
   selector: 'app-settings',
   templateUrl: './settings.page.html',
   styleUrls: ['./settings.page.scss'],
-  standalone: true,
   imports: [
     IonList,
     IonButtons,
@@ -85,7 +85,15 @@ import { AnalyticsService } from 'src/app/core/services/analytics/analytics.serv
   ],
 })
 export class SettingsPage implements OnInit {
-  username: string | null = '';
+  userService = inject(UserService);
+  private toastService = inject(ToastService);
+  private loadingService = inject(LoadingService);
+  private themeService = inject(ThemeChangerService);
+  private statsService = inject(GameStatsService);
+  private alertCtrl = inject(AlertController);
+  private analyticsService = inject(AnalyticsService);
+  storageService = inject(StorageService);
+
   currentColor: string | null = '';
   optionsWithClasses: { name: string; class: string }[] = [
     { name: 'Blue', class: 'blue-option' },
@@ -94,18 +102,11 @@ export class SettingsPage implements OnInit {
     { name: 'Red', class: 'red-option' },
     { name: 'Gray', class: 'gray-option' },
   ];
+  isTestEnvironment = environment.branch === 'test';
   userEmail = '';
   feedbackMessage = '';
   updateAvailable = false;
-  constructor(
-    public userService: UserService,
-    private toastService: ToastService,
-    private loadingService: LoadingService,
-    private themeService: ThemeChangerService,
-    private statsService: GameStatsService,
-    private alertCtrl: AlertController,
-    private analyticsService: AnalyticsService,
-  ) {
+  constructor() {
     addIcons({
       personCircleOutline,
       colorPaletteOutline,
@@ -130,6 +131,10 @@ export class SettingsPage implements OnInit {
     if (username) {
       this.userService.setUsername(username);
     }
+  }
+
+  savePinInputMode(pinMode: string): void {
+    this.storageService.savePinInputMode(pinMode);
   }
 
   async getGameCountForAverage(event: InputCustomEvent): Promise<void> {

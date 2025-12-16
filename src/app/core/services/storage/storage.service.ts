@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Game } from 'src/app/core/models/game.model';
 import { Storage } from '@ionic/storage-angular';
 import { SortUtilsService } from '../sort-utils/sort-utils.service';
@@ -17,6 +17,16 @@ import { AnalyticsService } from '../analytics/analytics.service';
   providedIn: 'root',
 })
 export class StorageService {
+  private storage = inject(Storage);
+  private sortUtilsService = inject(SortUtilsService);
+  private loadingService = inject(LoadingService);
+  private ballService = inject(BallService);
+  private patternService = inject(PatternService);
+  private highScoreAlertService = inject(HighScoreAlertService);
+  private cacheService = inject(CacheService);
+  private networkService = inject(NetworkService);
+  private analyticsService = inject(AnalyticsService);
+
   url = 'https://bowwwl.com';
   #leagues = signal<string[]>([]);
   #games = signal<Game[]>([]);
@@ -25,6 +35,12 @@ export class StorageService {
   #allPatterns = signal<Partial<Pattern>[]>([]);
 
   #isUsingCache = signal<boolean>(false);
+
+  #pinInputMode = signal<boolean>(true);
+
+  get pinInputMode() {
+    return this.#pinInputMode;
+  }
 
   get usingCacheStatus() {
     return computed(() => ({
@@ -54,18 +70,46 @@ export class StorageService {
     return this.#allPatterns;
   }
 
-  constructor(
-    private storage: Storage,
-    private sortUtilsService: SortUtilsService,
-    private loadingService: LoadingService,
-    private ballService: BallService,
-    private patternService: PatternService,
-    private highScoreAlertService: HighScoreAlertService,
-    private cacheService: CacheService,
-    private networkService: NetworkService,
-    private analyticsService: AnalyticsService,
-  ) {
+  constructor() {
     this.init();
+
+    // const games: Game[] = [];
+    // const baseTimestamp = Date.now();
+
+    // for (let i = 0; i < 10000; i++) {
+    //   const gameId = `${baseTimestamp}_${i}_${Math.random().toString(36).substring(2, 8)}`;
+    //   const seriesId = `series_${baseTimestamp}_${i}_${Math.random().toString(36).substring(2, 6)}`;
+
+    //   const frames = Array.from({ length: 10 }, (_, idx) => ({
+    //     frameIndex: idx + 1,
+    //     throws: [
+    //       { throwIndex: 1, value: Math.floor(Math.random() * 11), pinsLeftStanding: [] },
+    //       { throwIndex: 2, value: Math.floor(Math.random() * 11), pinsLeftStanding: [] },
+    //     ],
+    //     length: 2,
+    //   }));
+
+    //   const totalScore = frames.reduce((sum, f) => sum + f.throws.reduce((s, t) => s + t.value, 0), 0);
+
+    //   games.push({
+    //     gameId,
+    //     seriesId,
+    //     date: baseTimestamp + i * 1000, // unique timestamp per game
+    //     frames,
+    //     frameScores: frames.map(f => f.throws.reduce((s, t) => s + t.value, 0)),
+    //     totalScore,
+    //     isClean: false,
+    //     isPerfect: false,
+    //     isPinMode: true,
+    //     isPractice: false,
+    //     isSeries: false,
+    //     league: 'TestLeague',
+    //     note: '',
+    //     balls: ['TestBall'],
+    //     patterns: [],
+    //   } as Game);
+    // }
+    // this.saveGamesToLocalStorage(games);
     // this.highScoreAlertService.displayHighScoreAlert({ type: 'single_game', newRecord: 150, previousRecord: 110, details: { league: 'Monday Night', patterns: ['THS', 'Sport'], balls: ['Storm', 'Hammer'], date: '1/15/2025' }, gameOrSeries: []});
   }
 
@@ -173,6 +217,12 @@ export class StorageService {
     }
   }
 
+  loadPinInputMode(): void {
+    const mode = localStorage.getItem('pin-input-mode');
+    const pinInputMode = mode === null ? true : mode === 'hit';
+    this.#pinInputMode.set(pinInputMode);
+  }
+
   async loadAllBalls(updated?: string, weight?: number, forceRefresh = false): Promise<void> {
     const cacheKey = `all_balls_${weight || 'default'}`;
 
@@ -256,7 +306,7 @@ export class StorageService {
         return;
       }
 
-      const response = await this.patternService.getAllPatterns();
+      const response = await this.patternService.getAllPatternsStripped();
       this.allPatterns.set(response);
       this.#isUsingCache.set(false);
 
@@ -275,7 +325,7 @@ export class StorageService {
 
   private async refreshPatternsInBackground(cacheKey?: string): Promise<void> {
     try {
-      const response = await this.patternService.getAllPatterns();
+      const response = await this.patternService.getAllPatternsStripped();
       this.allPatterns.set(response);
       this.#isUsingCache.set(false);
 
@@ -285,6 +335,12 @@ export class StorageService {
     } catch (error) {
       console.error('Background refresh failed for patterns:', error);
     }
+  }
+
+  savePinInputMode(pinMode: string): void {
+    this.#pinInputMode.set(pinMode === 'hit');
+    const mode = pinMode === 'hit' ? 'hit' : 'missing';
+    localStorage.setItem('pin-input-mode', mode);
   }
 
   async saveBallToArsenal(ball: Ball) {
@@ -447,6 +503,7 @@ export class StorageService {
 
   private async loadInitialData(weight: number): Promise<void> {
     try {
+      this.loadPinInputMode();
       await Promise.all([
         this.loadAllPatterns(),
         this.loadAllBalls(undefined, weight),

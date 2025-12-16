@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { AlertController, IonApp, IonBackdrop, IonSpinner, IonRouterOutlet } from '@ionic/angular/standalone';
 import { Subscription } from 'rxjs';
 import { NgIf } from '@angular/common';
@@ -16,35 +16,37 @@ import { ThemeChangerService } from './core/services/theme-changer/theme-changer
 import { PwaInstallService } from './core/services/pwa-install/pwa-install.service';
 import { PwaInstallPromptComponent } from './shared/components/pwa-install-prompt/pwa-install-prompt.component';
 import { AnalyticsService } from './core/services/analytics/analytics.service';
+import { isPlatform } from '@ionic/angular';
 
 @Component({
   selector: 'app-root',
   templateUrl: 'app.component.html',
   styleUrls: ['app.component.scss'],
-  standalone: true,
   imports: [IonApp, NgIf, IonBackdrop, IonSpinner, IonRouterOutlet, ToastComponent, PwaInstallPromptComponent],
 })
 export class AppComponent implements OnInit, OnDestroy {
+  private alertController = inject(AlertController);
+  private toastService = inject(ToastService);
+  loadingService = inject(LoadingService);
+  private userService = inject(UserService);
+  private swUpdate = inject(SwUpdate);
+  private themeService = inject(ThemeChangerService);
+  private http = inject(HttpClient);
+  private sanitizer = inject(DomSanitizer);
+  private pwaInstallService = inject(PwaInstallService);
+  private analyticsService = inject(AnalyticsService);
+  private router = inject(Router);
+
   private readonly GREETING_THROTTLE_DURATION_MS = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
   private pwaInstallSubscription: Subscription;
   private updateInterval: any;
   showPwaInstallPrompt = false;
   canInstallPwa = false;
 
-  constructor(
-    private alertController: AlertController,
-    private toastService: ToastService,
-    public loadingService: LoadingService,
-    private userService: UserService,
-    private swUpdate: SwUpdate,
-    private themeService: ThemeChangerService,
-    private http: HttpClient,
-    private sanitizer: DomSanitizer,
-    private pwaInstallService: PwaInstallService,
-    private analyticsService: AnalyticsService,
-    private router: Router,
-  ) {
-    this.initializeApp();
+  constructor() {
+    if (!isPlatform('mobile')) {
+      this.initializeApp();
+    }
     const currentTheme = this.themeService.getCurrentTheme();
     this.themeService.applyTheme(currentTheme);
 
@@ -78,7 +80,8 @@ export class AppComponent implements OnInit, OnDestroy {
       if (event.type === 'VERSION_READY') {
         const lastCommitDate = localStorage.getItem('lastCommitDate');
         const sinceParam = lastCommitDate ? `&since=${lastCommitDate}` : '';
-        const apiUrl = `https://api.github.com/repos/HappyKnuckles/bowling-stats/commits?sha=master${sinceParam}`;
+        const branch = environment.branch || 'master';
+        const apiUrl = `https://api.github.com/repos/HappyKnuckles/bowling-stats/commits?sha=${branch}${sinceParam}`;
 
         // Fetch the latest commits from the master branch on GitHub
         this.http.get(apiUrl).subscribe({

@@ -81,7 +81,7 @@ export class AnalyticsService {
    */
   async trackEvent(eventType: string, properties?: Record<string, unknown>): Promise<string | null> {
     // Don't track if analytics is disabled or not in production
-    if (!this.#analyticsEnabled() || !this.isProduction) {
+    if (!this.#analyticsEnabled() || !this.isProduction || (window as any).env?.GITHUB_BRANCH === 'test') {
       if (!environment.production) {
         console.warn(`[Analytics] Event blocked in dev mode: ${eventType}`);
       }

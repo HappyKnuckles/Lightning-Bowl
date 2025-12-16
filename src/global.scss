@@ -31,7 +31,14 @@
 ion-segment-view {
   height: fit-content;
 }
-
+// Header background bleed hackaround
+// body {
+//   background: #0d0e0d;
+    
+// }
+ion-content{
+  --offset-top: 200px !important;
+}
 .stat-container {
   border: 1px solid #2b2828;
   margin: 0 16px 12px;
@@ -155,6 +162,10 @@ ion-item {
 .grid-container {
   display: grid;
   grid-template-columns: repeat(5, minmax(30px, 1fr));
+
+  @media (min-width: 720px) {
+    grid-template-columns: repeat(10, minmax(30px, 1fr));
+  }
   gap: 6px;
   margin: 5px 5px 10px;
   max-width: 100%;
@@ -219,6 +230,8 @@ ion-item {
       ion-input {
         border: 2px solid var(--ion-color-primary);
         box-shadow: 0 0 8px rgba(var(--ion-color-primary-rgb), 0.5);
+        display: flex;
+        align-items: center;
       }
     }
   }

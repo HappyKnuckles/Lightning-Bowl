@@ -1,6 +1,25 @@
 <ion-header [translucent]="true" class="ion-text-center">
   <ion-toolbar>
-    <app-file-header-buttons></app-file-header-buttons>
+    <ion-buttons slot="start" style="padding: 4px">
+      <ion-button
+        for="excelUpload"
+        type="button"
+        class="action-sheet"
+        slot="start"
+        fill="clear"
+        [disabled]="storageService.allBalls().length === 0"
+        (click)="openExcelFileInput()">
+        <ion-icon slot="icon-only" name="cloud-upload-outline"></ion-icon>
+      </ion-button>
+      <ion-button
+        (click)="exportToExcel()"
+        class="action-sheet"
+        fill="clear"
+        [disabled]="storageService.games().length <= 0 && !loadingService.isLoading()">
+        <ion-icon slot="icon-only" name="cloud-download-outline"></ion-icon> </ion-button
+    ></ion-buttons>
+    <!-- Clear Input on Upload-->
+    <input type="file" id="excelUpload" class="ion-hide" (input)="handleFileUpload($event)" placeholder="Upload file" accept=".xlsx" />
     <ion-title> Stats </ion-title>
     <ion-buttons slot="end" class="action-sheet">
       <ion-button fill="clear" (click)="openFilterModal()" [disabled]="storageService.games().length <= 0 && !loadingService.isLoading()">
@@ -11,7 +30,7 @@
   </ion-toolbar>
   @if (!((gameFilterService.filteredGames().length <= 0 && !loadingService.isLoading()) || gameFilterService.filteredGames().length <= 0)) {
     <ion-toolbar>
-      <ion-segment [value]="selectedSegment" (ionChange)="onSegmentChanged($event)">
+      <ion-segment [value]="selectedSegment" (ionChange)="onSegmentChanged($event)" scrollable="true">
         @for (segment of segments; track segment) {
           <ion-segment-button [value]="segment" [contentId]="segment">
             <ion-label class="segment-label">{{ segment }}</ion-label>
@@ -24,6 +43,23 @@
     <app-generic-filter-active [filters]="currentFilters" [defaultFilters]="defaultFilters" [filterConfigs]="gameFilterConfigs">
     </app-generic-filter-active>
   </ion-toolbar>
+
+  @if (!((gameFilterService.filteredGames().length <= 0 && !loadingService.isLoading()) || gameFilterService.filteredGames().length <= 0)) {
+    <ion-toolbar [@toolbarFade]="selectedSegment === 'Sessions' ? 'visible' : 'hidden'" class="ion-activatable ion-ripple-parent">
+      <ion-select
+        class="date-picker"
+        label="Session date"
+        toggleIcon="calendar-number-outline"
+        expandedIcon="calendar-number"
+        [value]="selectedDate()"
+        (ionChange)="_selectedDate.set($event.detail.value)">
+        <ion-select-option *ngFor="let unixDate of uniqueSortedDates()" [value]="unixDate">
+          {{ unixDate | date: "dd.MM.yyyy" }}
+        </ion-select-option>
+      </ion-select>
+      <ion-ripple-effect></ion-ripple-effect>
+    </ion-toolbar>
+  }
 </ion-header>
 
 <ion-content [fullscreen]="true">
@@ -126,21 +162,22 @@
       </section>
     </ion-segment-content>
 
+    <ion-segment-content id="Pins">
+      <section class="tab" *ngIf="gameFilterService.filteredGames().length > 0">
+        <app-stat-display
+          [title]="'Pin Stats'"
+          [statDefinitions]="pinStatDefinitions"
+          [currentStats]="statsService.currentStats()"
+          [prevStats]="statsService.prevStats()">
+        </app-stat-display>
+        <app-pin-leave-stats [title]="'Strongest Spares'" [leaveStats]="statsService.bestLeaves()"> </app-pin-leave-stats>
+        <app-pin-leave-stats [title]="'Weakest Spares'" [leaveStats]="statsService.worstLeaves()"> </app-pin-leave-stats>
+        <app-pin-leave-stats [title]="'Most Common Leaves'" [leaveStats]="statsService.commonLeaves()"> </app-pin-leave-stats>
+      </section>
+    </ion-segment-content>
+
     <ion-segment-content id="Sessions">
       @if (gameFilterService.filteredGames().length > 0) {
-        <ion-item class="date-picker" lines="none">
-          <ion-select
-            label="Session date"
-            toggleIcon="calendar-number-outline"
-            expandedIcon="calendar-number"
-            [value]="selectedDate()"
-            (ionChange)="_selectedDate.set($event.detail.value)">
-            <ion-select-option *ngFor="let unixDate of uniqueSortedDates()" [value]="unixDate">
-              {{ unixDate | date: "dd.MM.yyyy" }}
-            </ion-select-option>
-          </ion-select>
-        </ion-item>
-
         <section class="tab">
           <app-stat-display
             [title]="'Overall Stats'"
@@ -148,8 +185,12 @@
             [currentStats]="sessionStats()"
             [prevStats]="statsService.currentStats()">
           </app-stat-display>
+          <app-stat-display [title]="'Pin Stats'" [statDefinitions]="pinStatDefinitions" [currentStats]="sessionStats()"> </app-stat-display>
           <app-spare-display [title]="'Spare Stats'" [prevStats]="statsService.currentStats()" [stats]="sessionStats()" [id]="'sessionSpareStats'">
           </app-spare-display>
+          <app-pin-leave-stats [title]="'Strongest Spares'" [leaveStats]="sessionLeaves().best"></app-pin-leave-stats>
+          <app-pin-leave-stats [title]="'Weakest Spares'" [leaveStats]="sessionLeaves().worst"></app-pin-leave-stats>
+          <app-pin-leave-stats [title]="'Most Common Leaves'" [leaveStats]="sessionLeaves().common"></app-pin-leave-stats>
         </section>
       }
     </ion-segment-content>
