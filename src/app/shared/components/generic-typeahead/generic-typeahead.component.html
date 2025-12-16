@@ -18,7 +18,7 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" role="feed">
+<ion-content [fullscreen]="true" style="height: 85vh">
   <ng-container *ngIf="displayedItems().length <= 0 && config().noDataText; else itemsList">
     <ion-text class="no-game-text">{{ config().noDataText }}</ion-text>
   </ng-container>

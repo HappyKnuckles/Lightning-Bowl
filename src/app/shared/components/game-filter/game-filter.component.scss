@@ -13,7 +13,22 @@ ion-modal {
   width: 90%;
   margin: 20px 0 32px;
 }
+.ball-modal {
+  --width: fit-content;
+  --min-width: 250px;
+  --height: fit-content;
+  --border-radius: 13px;
+  --max-height: auto;
+}
 
+.ball-selector::part(detail-icon) {
+  opacity: 1;
+  color: var(--ion-color-step-650, var(--ion-text-color-step-350, #595959));
+  margin-inline-start: 4px;
+  margin-inline-end: 0;
+  font-size: 18px;
+  --ionicon-stroke-width: 48px;
+}
 // ion-datetime-button::part(native) {
 //   font-size: 17px;
 // }

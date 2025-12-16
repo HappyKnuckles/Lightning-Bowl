@@ -28,6 +28,10 @@ import { SortUtilsService } from 'src/app/core/services/sort-utils/sort-utils.se
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { UtilsService } from 'src/app/core/services/utils/utils.service';
 import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
+import { alertEnterAnimation, alertLeaveAnimation } from '../../animations/alert.animation';
+import { addIcons } from 'ionicons';
+import { chevronExpandOutline } from 'ionicons/icons';
+import { BallSelectComponent } from '../ball-select/ball-select.component';
 
 @Component({
   selector: 'app-game-filter',
@@ -54,6 +58,7 @@ import { AnalyticsService } from 'src/app/core/services/analytics/analytics.serv
     ReactiveFormsModule,
     CommonModule,
     IonSelectOption,
+    BallSelectComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
@@ -76,6 +81,12 @@ export class GameFilterComponent implements OnInit {
       .flat()
       .filter((pattern, index, self) => pattern && self.indexOf(pattern) === index);
   });
+  enterAnimation = alertEnterAnimation;
+  leaveAnimation = alertLeaveAnimation;
+
+  constructor() {
+    addIcons({ chevronExpandOutline });
+  }
 
   ngOnInit(): void {
     if (!this.gameFilterService.filters().startDate && !this.gameFilterService.filters().endDate) {
@@ -87,6 +98,14 @@ export class GameFilterComponent implements OnInit {
     }
     this.getHighlightedDates();
     this.getLeagues();
+  }
+
+  getSelectedBallsText(): string {
+    const balls = this.gameFilterService.filters().balls || [];
+    if (balls.length === 1 && balls[0] === 'all') {
+      return 'All';
+    }
+    return balls.length > 0 ? balls.join(', ') : 'None';
   }
 
   startDateChange(event: CustomEvent): void {
@@ -130,6 +149,13 @@ export class GameFilterComponent implements OnInit {
       localStorage.getItem('game-filter') ? JSON.parse(localStorage.getItem('game-filter')!) : this.gameFilterService.filters(),
     );
     return this.modalCtrl.dismiss(null, 'cancel');
+  }
+
+  handleBallSelect(balls: string[], modal: IonModal) {
+    modal.dismiss();
+    const filteredBalls = balls.filter((ball) => ball !== 'all');
+    this.gameFilterService.filters().balls = filteredBalls;
+    this.updateFilter('balls', filteredBalls);
   }
 
   updateFilter<T extends keyof GameFilter>(key: T, value: unknown): void {
