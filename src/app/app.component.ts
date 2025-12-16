@@ -16,6 +16,7 @@ import { ThemeChangerService } from './core/services/theme-changer/theme-changer
 import { PwaInstallService } from './core/services/pwa-install/pwa-install.service';
 import { PwaInstallPromptComponent } from './shared/components/pwa-install-prompt/pwa-install-prompt.component';
 import { AnalyticsService } from './core/services/analytics/analytics.service';
+import { isPlatform } from '@ionic/angular';
 
 @Component({
   selector: 'app-root',
@@ -44,7 +45,9 @@ export class AppComponent implements OnInit, OnDestroy {
     private analyticsService: AnalyticsService,
     private router: Router,
   ) {
-    this.initializeApp();
+    if (!isPlatform('mobile')) {
+      this.initializeApp();
+    }
     const currentTheme = this.themeService.getCurrentTheme();
     this.themeService.applyTheme(currentTheme);
 
