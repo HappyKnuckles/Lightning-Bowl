@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, Signal, ViewChild, ElementRef, effect, model } from '@angular/core';
+import { Component, OnInit, computed, Signal, ViewChild, ElementRef, effect, model, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -59,7 +59,6 @@ import { ChartGenerationService } from 'src/app/core/services/chart/chart-genera
   selector: 'app-arsenal',
   templateUrl: './arsenal.page.html',
   styleUrls: ['./arsenal.page.scss'],
-  standalone: true,
   providers: [ModalController],
   imports: [
     IonRippleEffect,
@@ -103,6 +102,15 @@ import { ChartGenerationService } from 'src/app/core/services/chart/chart-genera
   ],
 })
 export class ArsenalPage implements OnInit {
+  storageService = inject(StorageService);
+  private hapticService = inject(HapticService);
+  private alertController = inject(AlertController);
+  private loadingService = inject(LoadingService);
+  toastService = inject(ToastService);
+  modalCtrl = inject(ModalController);
+  private ballService = inject(BallService);
+  private chartGenerationService = inject(ChartGenerationService);
+
   @ViewChild('core', { static: false }) coreModal!: IonModal;
   @ViewChild('coverstock', { static: false }) coverstockModal!: IonModal;
   coverstockBalls: Ball[] = [];
@@ -117,16 +125,7 @@ export class ArsenalPage implements OnInit {
   selectedSegment = model('arsenal');
   @ViewChild('balls', { static: false }) ballChart?: ElementRef;
   private ballsChartInstance: Chart | null = null;
-  constructor(
-    public storageService: StorageService,
-    private hapticService: HapticService,
-    private alertController: AlertController,
-    private loadingService: LoadingService,
-    public toastService: ToastService,
-    public modalCtrl: ModalController,
-    private ballService: BallService,
-    private chartGenerationService: ChartGenerationService,
-  ) {
+  constructor() {
     addIcons({ add, ellipsisVerticalOutline, trashOutline, chevronBack, openOutline });
     effect(() => {
       if (this.selectedSegment() === 'compare') {

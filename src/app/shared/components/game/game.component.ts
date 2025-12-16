@@ -1,5 +1,5 @@
 import { NgIf, NgFor, DatePipe } from '@angular/common';
-import { Component, Renderer2, ViewChild, ViewChildren, QueryList, computed, OnInit, input, signal } from '@angular/core';
+import { Component, Renderer2, ViewChild, ViewChildren, QueryList, computed, OnInit, input, signal, inject } from '@angular/core';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { ImpactStyle } from '@capacitor/haptics';
@@ -119,9 +119,24 @@ interface MonthHeader {
     BallSelectComponent,
     PinDeckFrameRowComponent,
   ],
-  standalone: true,
 })
 export class GameComponent implements OnInit {
+  private alertController = inject(AlertController);
+  private toastService = inject(ToastService);
+  storageService = inject(StorageService);
+  private loadingService = inject(LoadingService);
+  private datePipe = inject(DatePipe);
+  private hapticService = inject(HapticService);
+  private renderer = inject(Renderer2);
+  private utilsService = inject(UtilsService);
+  private router = inject(Router);
+  private modalCtrl = inject(ModalController);
+  private patternService = inject(PatternService);
+  private analyticsService = inject(AnalyticsService);
+  private validationService = inject(BowlingGameValidationService);
+  private gameUtilsService = inject(GameUtilsService);
+  private gameScoreCalculatorService = inject(GameScoreCalculatorService);
+
   // DOM Elements
   @ViewChild('modal', { static: false }) modal!: IonModal;
   @ViewChild('accordionGroup') accordionGroup!: IonAccordionGroup;
@@ -212,23 +227,7 @@ export class GameComponent implements OnInit {
   enterAnimation = alertEnterAnimation;
   leaveAnimation = alertLeaveAnimation;
 
-  constructor(
-    private alertController: AlertController,
-    private toastService: ToastService,
-    public storageService: StorageService,
-    private loadingService: LoadingService,
-    private datePipe: DatePipe,
-    private hapticService: HapticService,
-    private renderer: Renderer2,
-    private utilsService: UtilsService,
-    private router: Router,
-    private modalCtrl: ModalController,
-    private patternService: PatternService,
-    private analyticsService: AnalyticsService,
-    private validationService: BowlingGameValidationService,
-    private gameUtilsService: GameUtilsService,
-    private gameScoreCalculatorService: GameScoreCalculatorService,
-  ) {
+  constructor() {
     addIcons({
       trashOutline,
       createOutline,

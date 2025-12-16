@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import {
   IonHeader,
   IonToolbar,
@@ -54,7 +54,6 @@ import { StorageService } from 'src/app/core/services/storage/storage.service';
   selector: 'app-settings',
   templateUrl: './settings.page.html',
   styleUrls: ['./settings.page.scss'],
-  standalone: true,
   imports: [
     IonList,
     IonButtons,
@@ -86,6 +85,15 @@ import { StorageService } from 'src/app/core/services/storage/storage.service';
   ],
 })
 export class SettingsPage implements OnInit {
+  userService = inject(UserService);
+  private toastService = inject(ToastService);
+  private loadingService = inject(LoadingService);
+  private themeService = inject(ThemeChangerService);
+  private statsService = inject(GameStatsService);
+  private alertCtrl = inject(AlertController);
+  private analyticsService = inject(AnalyticsService);
+  storageService = inject(StorageService);
+
   currentColor: string | null = '';
   optionsWithClasses: { name: string; class: string }[] = [
     { name: 'Blue', class: 'blue-option' },
@@ -98,16 +106,7 @@ export class SettingsPage implements OnInit {
   userEmail = '';
   feedbackMessage = '';
   updateAvailable = false;
-  constructor(
-    public userService: UserService,
-    private toastService: ToastService,
-    private loadingService: LoadingService,
-    private themeService: ThemeChangerService,
-    private statsService: GameStatsService,
-    private alertCtrl: AlertController,
-    private analyticsService: AnalyticsService,
-    public storageService: StorageService,
-  ) {
+  constructor() {
     addIcons({
       personCircleOutline,
       colorPaletteOutline,

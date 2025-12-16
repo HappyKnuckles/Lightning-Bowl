@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Game } from 'src/app/core/models/game.model';
 import { BestBallStats } from 'src/app/core/models/stats.model';
 import { StorageService } from '../../storage/storage.service';
@@ -7,7 +7,7 @@ import { StorageService } from '../../storage/storage.service';
   providedIn: 'root',
 })
 export class BallStatsCalculatorService {
-  constructor(private storageService: StorageService) {}
+  private storageService = inject(StorageService);
 
   private _calculateAllBallStats(gameHistory: Game[]): Record<string, BestBallStats> {
     const gamesWithBalls = gameHistory.filter((game) => game.balls && game.balls.length > 0);
