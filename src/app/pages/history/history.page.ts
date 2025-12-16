@@ -30,7 +30,6 @@ import {
 } from 'ionicons/icons';
 import { NgIf, DatePipe } from '@angular/common';
 import { ImpactStyle } from '@capacitor/haptics';
-import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { ModalController, RefresherCustomEvent } from '@ionic/angular';
@@ -45,6 +44,7 @@ import { GameFilterComponent } from 'src/app/shared/components/game-filter/game-
 import { GameComponent } from 'src/app/shared/components/game/game.component';
 import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
 import { FileHeaderButtonsComponent } from 'src/app/shared/components/file-header-buttons/file-header-buttons.component';
+import { triggerHaptic } from 'src/app/core/services/haptic/haptic.functions';
 
 @Component({
   selector: 'app-history',
@@ -78,7 +78,6 @@ export class HistoryPage {
   private toastService = inject(ToastService);
   storageService = inject(StorageService);
   loadingService = inject(LoadingService);
-  private hapticService = inject(HapticService);
   private modalCtrl = inject(ModalController);
   gameFilterService = inject(GameFilterService);
   private excelService = inject(ExcelService);
@@ -140,7 +139,7 @@ export class HistoryPage {
 
   async handleRefresh(event: RefresherCustomEvent): Promise<void> {
     try {
-      this.hapticService.vibrate(ImpactStyle.Medium);
+      triggerHaptic(ImpactStyle.Medium);
       await this.storageService.loadGameHistory();
     } catch (error) {
       console.error(error);

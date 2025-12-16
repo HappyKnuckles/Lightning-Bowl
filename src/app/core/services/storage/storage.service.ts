@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Game } from 'src/app/core/models/game.model';
 import { Storage } from '@ionic/storage-angular';
-import { SortUtilsService } from '../sort-utils/sort-utils.service';
+import { sortGameHistoryByDate } from '../sort-utils/sort-utils.functions';
 import { Ball } from 'src/app/core/models/ball.model';
 import { signal, computed } from '@angular/core';
 import { LoadingService } from '../loader/loading.service';
@@ -18,7 +18,6 @@ import { AnalyticsService } from '../analytics/analytics.service';
 })
 export class StorageService {
   private storage = inject(Storage);
-  private sortUtilsService = inject(SortUtilsService);
   private loadingService = inject(LoadingService);
   private ballService = inject(BallService);
   private patternService = inject(PatternService);
@@ -206,8 +205,8 @@ export class StorageService {
         await this.saveGamesToLocalStorage(gameHistory);
       }
 
-      this.sortUtilsService.sortGameHistoryByDate(gameHistory, false);
-      this.games.set(gameHistory);
+      const sortedGames = sortGameHistoryByDate(gameHistory, false);
+      this.games.set(sortedGames);
       return gameHistory;
     } catch (error) {
       console.error('Error loading game history:', error);

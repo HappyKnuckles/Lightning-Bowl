@@ -24,10 +24,10 @@ import {
 import { GameFilter, TimeRange } from 'src/app/core/models/filter.model';
 import { Game } from 'src/app/core/models/game.model';
 import { GameFilterService } from 'src/app/core/services/game-filter/game-filter.service';
-import { SortUtilsService } from 'src/app/core/services/sort-utils/sort-utils.service';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
-import { UtilsService } from 'src/app/core/services/utils/utils.service';
 import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
+import { sortGamesByLeagues } from 'src/app/core/services/sort-utils/sort-utils.functions';
+import { transformDate } from 'src/app/core/services/utils/utils.functions';
 
 @Component({
   selector: 'app-game-filter',
@@ -60,9 +60,7 @@ import { AnalyticsService } from 'src/app/core/services/analytics/analytics.serv
 export class GameFilterComponent implements OnInit {
   private modalCtrl = inject(ModalController);
   gameFilterService = inject(GameFilterService);
-  private sortUtilsService = inject(SortUtilsService);
   storageService = inject(StorageService);
-  private utilsService = inject(UtilsService);
   private analyticsService = inject(AnalyticsService);
 
   @Input() filteredGames!: Game[];
@@ -168,7 +166,7 @@ export class GameFilterComponent implements OnInit {
   }
 
   private getLeagues(): void {
-    const gamesByLeague = this.sortUtilsService.sortGamesByLeagues(this.storageService.games(), false);
+    const gamesByLeague = sortGamesByLeagues(this.storageService.games(), false);
     this.leagues = Object.keys(gamesByLeague);
   }
 
@@ -178,7 +176,7 @@ export class GameFilterComponent implements OnInit {
     const backgroundColor = rootStyles.getPropertyValue('--ion-color-primary').trim();
     this.highlightedDates = this.storageService.games().map((game) => {
       const date = new Date(game.date);
-      const formattedDate = this.utilsService.transformDate(date);
+      const formattedDate = transformDate(date);
       return {
         date: formattedDate,
         textColor: textColor,

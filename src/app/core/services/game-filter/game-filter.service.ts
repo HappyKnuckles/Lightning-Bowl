@@ -1,14 +1,13 @@
 import { computed, Injectable, Signal, signal, inject } from '@angular/core';
 import { GameFilter, TimeRange } from 'src/app/core/models/filter.model';
 import { Game } from 'src/app/core/models/game.model';
-import { UtilsService } from '../utils/utils.service';
 import { StorageService } from '../storage/storage.service';
+import { areDatesEqual, areArraysEqual } from '../utils/utils.functions';
 
 @Injectable({
   providedIn: 'root',
 })
 export class GameFilterService {
-  private utilsService = inject(UtilsService);
   private storageService = inject(StorageService);
 
   defaultFilters: GameFilter = {
@@ -30,11 +29,11 @@ export class GameFilterService {
       const filterValue = this.filters()[key as keyof GameFilter];
       const defaultValue = this.defaultFilters[key as keyof GameFilter];
       if (key === 'startDate' || key === 'endDate') {
-        if (!this.utilsService.areDatesEqual(filterValue as string, defaultValue as string)) {
+        if (!areDatesEqual(filterValue as string, defaultValue as string)) {
           return count + 1;
         }
       } else if (Array.isArray(filterValue) && Array.isArray(defaultValue)) {
-        if (!this.utilsService.areArraysEqual(filterValue, defaultValue)) {
+        if (!areArraysEqual(filterValue, defaultValue)) {
           return count + 1;
         }
       } else if (filterValue !== defaultValue) {

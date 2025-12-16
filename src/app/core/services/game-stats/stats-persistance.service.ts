@@ -3,7 +3,7 @@
 import { computed, Injectable, Signal, inject } from '@angular/core';
 import { PrevStats, Stats } from 'src/app/core/models/stats.model';
 import { StorageService } from '../storage/storage.service';
-import { UtilsService } from '../utils/utils.service';
+import { isSameDay, isDayBefore } from '../utils/utils.functions';
 import { OverallStatsCalculatorService } from './game-stats-calculator/overall-stats-calculator.service';
 import { SeriesStatsCalculatorService } from './game-stats-calculator/series-stats-calculator.service';
 
@@ -12,7 +12,6 @@ import { SeriesStatsCalculatorService } from './game-stats-calculator/series-sta
 })
 export class StatsPersistenceService {
   private storageService = inject(StorageService);
-  private utilsService = inject(UtilsService);
   private overallStatsCalculatorService = inject(OverallStatsCalculatorService);
   private seriesStatsCalculatorService = inject(SeriesStatsCalculatorService);
 
@@ -92,11 +91,11 @@ export class StatsPersistenceService {
       lastGameDate = gameHistory[0].date;
     }
 
-    if (lastComparisonDate !== 0 && this.utilsService.isSameDay(lastComparisonDate, lastGameDate)) {
+    if (lastComparisonDate !== 0 && isSameDay(lastComparisonDate, lastGameDate)) {
       return JSON.parse(localStorage.getItem('prevStats')!) ?? this.getDefaultPrevStats();
     }
 
-    const filteredGameHistory = gameHistory.filter((game) => !this.utilsService.isSameDay(game.date, today));
+    const filteredGameHistory = gameHistory.filter((game) => !isSameDay(game.date, today));
 
     const seriesStats = this.seriesStatsCalculatorService.calculateSeriesStats(filteredGameHistory);
     const stats: Stats = this.overallStatsCalculatorService.calculateBowlingStats(filteredGameHistory, seriesStats) as Stats;
@@ -104,7 +103,7 @@ export class StatsPersistenceService {
     let prevStats: PrevStats = this.getDefaultPrevStats();
 
     if (lastComparisonDate !== 0) {
-      if (!this.utilsService.isSameDay(lastComparisonDate, today) && this.utilsService.isDayBefore(lastComparisonDate, lastGameDate)) {
+      if (!isSameDay(lastComparisonDate, today) && isDayBefore(lastComparisonDate, lastGameDate)) {
         prevStats = this.mapStatsToPrevStats(stats);
 
         localStorage.setItem('prevStats', JSON.stringify(prevStats));

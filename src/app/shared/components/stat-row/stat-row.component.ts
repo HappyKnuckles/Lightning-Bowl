@@ -1,10 +1,10 @@
 import { NgIf } from '@angular/common';
-import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, Input, OnChanges, SimpleChanges, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { IonText, IonIcon } from '@ionic/angular/standalone';
 import { ConditionalNumberPipe } from '../../pipes/number-pipe/conditional-number.pipe';
 import { addIcons } from 'ionicons';
 import { arrowDown, arrowUp, informationCircleOutline } from 'ionicons/icons';
-import { UtilsService } from 'src/app/core/services/utils/utils.service';
+import { getArrowIcon, getDiffColor, calculateStatDifference } from 'src/app/core/services/utils/utils.functions';
 
 @Component({
   selector: 'app-stat-row',
@@ -15,8 +15,6 @@ import { UtilsService } from 'src/app/core/services/utils/utils.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StatRowComponent implements OnChanges {
-  private utilsService = inject(UtilsService);
-
   @Input({ required: true }) label!: string;
   @Input({ required: true }) currentStat!: number;
   @Input() toolTip?: string;
@@ -38,14 +36,14 @@ export class StatRowComponent implements OnChanges {
   }
 
   getArrowIcon(currentValue: number, previousValue?: number): string {
-    return this.utilsService.getArrowIcon(currentValue, previousValue);
+    return getArrowIcon(currentValue, previousValue);
   }
 
   getDiffColor(currentValue: number, previousValue?: number): string {
-    return this.utilsService.getDiffColor(currentValue, previousValue);
+    return getDiffColor(currentValue, previousValue);
   }
 
   private calculateStatDifference(currentValue: number, previousValue: number): string {
-    return this.utilsService.calculateStatDifference(currentValue, previousValue);
+    return calculateStatDifference(currentValue, previousValue);
   }
 }

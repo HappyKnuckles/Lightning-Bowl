@@ -1,10 +1,10 @@
-import { Component, OnInit, ViewChild, ElementRef, AfterViewInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, AfterViewInit, OnDestroy } from '@angular/core';
 import { IonContent, IonHeader, IonTitle, IonToolbar, IonButton, IonCard, IonCardContent, IonIcon, IonButtons } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
-import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { ImpactStyle } from '@capacitor/haptics';
 import { addIcons } from 'ionicons';
 import { refresh } from 'ionicons/icons';
+import { triggerHaptic } from 'src/app/core/services/haptic/haptic.functions';
 
 interface Particle {
   x: number;
@@ -55,8 +55,6 @@ interface Arrow {
   imports: [IonButtons, CommonModule, IonContent, IonHeader, IonTitle, IonToolbar, IonButton, IonCard, IonCardContent, IonIcon],
 })
 export class MinigamePage implements OnInit, AfterViewInit, OnDestroy {
-  private hapticService = inject(HapticService);
-
   @ViewChild('gameCanvas', { static: true }) canvasRef!: ElementRef<HTMLCanvasElement>;
 
   private canvas!: HTMLCanvasElement;
@@ -274,7 +272,7 @@ export class MinigamePage implements OnInit, AfterViewInit, OnDestroy {
     this.startX = x;
     this.startY = y;
     this.gameState = 'aiming';
-    this.hapticService.vibrate(ImpactStyle.Light);
+    triggerHaptic(ImpactStyle.Light);
   }
 
   private handleMove(x: number, y: number) {
@@ -290,7 +288,7 @@ export class MinigamePage implements OnInit, AfterViewInit, OnDestroy {
     this.isDragging = false;
     this.throwBallFromSwipe();
     this.gameState = 'rolling';
-    this.hapticService.vibrate(ImpactStyle.Medium);
+    triggerHaptic(ImpactStyle.Medium);
   }
 
   private throwBallFromSwipe() {
@@ -421,7 +419,7 @@ export class MinigamePage implements OnInit, AfterViewInit, OnDestroy {
       // Check if ball is entering gutter (halfway over the boundary)
       if (this.ball.x < gutterBoundaryLeft || this.ball.x > gutterBoundaryRight) {
         this.ball.inGutter = true;
-        this.hapticService.vibrate(ImpactStyle.Medium); // Gutter entry feedback
+        triggerHaptic(ImpactStyle.Medium); // Gutter entry feedback
 
         // Position ball in center of gutter
         if (this.ball.x < gutterBoundaryLeft) {
@@ -526,7 +524,7 @@ export class MinigamePage implements OnInit, AfterViewInit, OnDestroy {
           movingPin.velocityY *= 0.7;
 
           this.pinsKnocked++;
-          this.hapticService.vibrate(ImpactStyle.Light);
+          triggerHaptic(ImpactStyle.Light);
           this.createParticles(otherPin.x, otherPin.y);
         } else if (otherPin.fallen) {
           // Both pins are fallen - prevent overlap by pushing them apart
@@ -628,7 +626,7 @@ export class MinigamePage implements OnInit, AfterViewInit, OnDestroy {
     this.ball.velocityY *= 0.92;
     this.ball.curve *= 0.95; // Slight curve reduction
 
-    this.hapticService.vibrate(ImpactStyle.Heavy);
+    triggerHaptic(ImpactStyle.Heavy);
     this.pinsKnocked++;
     this.createParticles(pin.x, pin.y);
   }
@@ -685,7 +683,7 @@ export class MinigamePage implements OnInit, AfterViewInit, OnDestroy {
         movingPin.velocityY *= 0.7;
 
         this.pinsKnocked++;
-        this.hapticService.vibrate(ImpactStyle.Light);
+        triggerHaptic(ImpactStyle.Light);
         this.createParticles(standingPin.x, standingPin.y);
       }
     }

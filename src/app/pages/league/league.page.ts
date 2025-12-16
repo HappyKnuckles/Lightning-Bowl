@@ -54,11 +54,8 @@ import { AlertController, RefresherCustomEvent, SegmentCustomEvent } from '@ioni
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import { BestBallStats, Stats } from 'src/app/core/models/stats.model';
 import { GameStatsService } from 'src/app/core/services/game-stats/game-stats.service';
-import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { ImpactStyle } from '@capacitor/haptics';
-import { SortUtilsService } from 'src/app/core/services/sort-utils/sort-utils.service';
 import Chart from 'chart.js/auto';
-import { ChartGenerationService } from 'src/app/core/services/chart/chart-generation.service';
 import { leagueStatDefinitions } from '../../core/constants/stats.definitions.constants';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { GameComponent } from 'src/app/shared/components/game/game.component';
@@ -68,6 +65,9 @@ import { LongPressDirective } from 'src/app/core/directives/long-press/long-pres
 import { HiddenLeagueSelectionService } from 'src/app/core/services/hidden-league/hidden-league.service';
 import { BallStatsComponent } from '../../shared/components/ball-stats/ball-stats.component';
 import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
+import { sortGameHistoryByDate, sortGamesByLeagues } from 'src/app/core/services/sort-utils/sort-utils.functions';
+import { triggerHaptic } from 'src/app/core/services/haptic/haptic.functions';
+import { generateScoreChart, generatePinChart } from 'src/app/core/services/chart/chart-generation.functions';
 
 @Component({
   selector: 'app-league',
@@ -107,13 +107,10 @@ import { AnalyticsService } from 'src/app/core/services/analytics/analytics.serv
 })
 export class LeaguePage {
   storageService = inject(StorageService);
-  private sortUtilsService = inject(SortUtilsService);
-  private hapticService = inject(HapticService);
   private statService = inject(GameStatsService);
   loadingService = inject(LoadingService);
   private alertController = inject(AlertController);
   private toastService = inject(ToastService);
-  private chartService = inject(ChartGenerationService);
   private hiddenLeagueSelectionService = inject(HiddenLeagueSelectionService);
   private analyticsService = inject(AnalyticsService);
 
@@ -126,7 +123,7 @@ export class LeaguePage {
   isEditMode: Record<string, boolean> = {};
   gamesByLeague: Signal<Record<string, Game[]>> = computed(() => {
     const games = this.storageService.games();
-    return this.sortUtilsService.sortGamesByLeagues(games, true);
+    return sortGamesByLeagues(games, true);
   });
   leagueKeys: Signal<string[]> = computed(() => {
     return Object.keys(this.gamesByLeague());
@@ -140,7 +137,7 @@ export class LeaguePage {
     const gamesByLeagueReverse: Record<string, Game[]> = {};
 
     Object.keys(gamesByLeague).forEach((league) => {
-      gamesByLeagueReverse[league] = this.sortUtilsService.sortGameHistoryByDate(gamesByLeague[league] || [], true);
+      gamesByLeagueReverse[league] = sortGameHistoryByDate(gamesByLeague[league] || [], true);
     });
 
     return gamesByLeagueReverse;
@@ -258,7 +255,7 @@ export class LeaguePage {
 
   async handleRefresh(event: RefresherCustomEvent): Promise<void> {
     try {
-      this.hapticService.vibrate(ImpactStyle.Medium);
+      triggerHaptic(ImpactStyle.Medium);
       await this.storageService.loadGameHistory();
     } catch (error) {
       console.error(error);
@@ -349,7 +346,7 @@ export class LeaguePage {
   }
 
   async deleteLeague(league: string): Promise<void> {
-    this.hapticService.vibrate(ImpactStyle.Heavy);
+    triggerHaptic(ImpactStyle.Heavy);
     const alert = await this.alertController.create({
       header: 'Confirm Deletion',
       message: 'Are you sure you want to delete this league?',
@@ -421,7 +418,7 @@ export class LeaguePage {
         return;
       }
 
-      this.scoreChartInstances[league] = this.chartService.generateScoreChart(
+      this.scoreChartInstances[league] = generateScoreChart(
         this.scoreChart,
         this.gamesByLeagueReverse()[league],
         this.scoreChartInstances[league]!,
@@ -441,12 +438,7 @@ export class LeaguePage {
         return;
       }
 
-      this.pinChartInstances[league] = this.chartService.generatePinChart(
-        this.pinChart,
-        this.statsByLeague()[league],
-        this.pinChartInstances[league]!,
-        isReload,
-      );
+      this.pinChartInstances[league] = generatePinChart(this.pinChart, this.statsByLeague()[league], this.pinChartInstances[league]!, isReload);
     } catch (error) {
       this.toastService.showToast(ToastMessages.chartGenerationError, 'bug', true);
       console.error('Error generating pin chart:', error);

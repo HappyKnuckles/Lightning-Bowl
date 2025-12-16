@@ -1,7 +1,7 @@
 import { DatePipe, NgFor, NgIf } from '@angular/common';
-import { Component, Input, OnInit, inject } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { IonChip } from '@ionic/angular/standalone';
-import { UtilsService } from 'src/app/core/services/utils/utils.service';
+import { areDatesEqual, areArraysEqual } from 'src/app/core/services/utils/utils.functions';
 
 export interface FilterConfig {
   key: string;
@@ -25,8 +25,6 @@ export interface FilterConfig {
   styleUrl: './generic-filter-active.component.scss',
 })
 export class GenericFilterActiveComponent implements OnInit {
-  private utilsService = inject(UtilsService);
-
   @Input() filters: Record<string, unknown> = {};
   @Input() defaultFilters: Record<string, unknown> = {};
   @Input() filterConfigs: FilterConfig[] = [];
@@ -56,11 +54,11 @@ export class GenericFilterActiveComponent implements OnInit {
     // Handle different data types
     switch (config.type) {
       case 'date':
-        return !this.utilsService.areDatesEqual(filterValue as string, defaultValue as string);
+        return !areDatesEqual(filterValue as string, defaultValue as string);
       case 'array': {
         const filterArray = Array.isArray(filterValue) ? filterValue : [];
         const defaultArray = Array.isArray(defaultValue) ? defaultValue : [];
-        return !this.utilsService.areArraysEqual(filterArray, defaultArray);
+        return !areArraysEqual(filterArray, defaultArray);
       }
       case 'boolean':
       case 'string':

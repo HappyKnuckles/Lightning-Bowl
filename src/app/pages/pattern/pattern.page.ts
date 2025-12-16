@@ -36,7 +36,7 @@ import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { InfiniteScrollCustomEvent, RefresherCustomEvent } from '@ionic/angular';
 import { ImpactStyle } from '@capacitor/haptics';
-import { HapticService } from 'src/app/core/services/haptic/haptic.service';
+import { triggerHaptic } from 'src/app/core/services/haptic/haptic.functions';
 import { PatternInfoComponent } from 'src/app/shared/components/pattern-info/pattern-info.component';
 import { addIcons } from 'ionicons';
 import {
@@ -51,8 +51,6 @@ import {
   documentOutline,
   linkOutline,
 } from 'ionicons/icons';
-import { ChartGenerationService } from 'src/app/core/services/chart/chart-generation.service';
-import { DomSanitizer } from '@angular/platform-browser';
 import { PatternFormComponent } from '../../shared/components/pattern-form/pattern-form.component';
 import { SearchBlurDirective } from 'src/app/core/directives/search-blur/search-blur.directive';
 import { SortHeaderComponent } from 'src/app/shared/components/sort-header/sort-header.component';
@@ -101,11 +99,8 @@ import { AnalyticsService } from 'src/app/core/services/analytics/analytics.serv
 })
 export class PatternPage implements OnInit {
   private patternService = inject(PatternService);
-  private hapticService = inject(HapticService);
   loadingService = inject(LoadingService);
   private toastService = inject(ToastService);
-  private chartService = inject(ChartGenerationService);
-  private sanitizer = inject(DomSanitizer);
   private modalCtrl = inject(ModalController);
   sortService = inject(SortService);
   private networkService = inject(NetworkService);
@@ -164,7 +159,7 @@ export class PatternPage implements OnInit {
 
   async handleRefresh(event: RefresherCustomEvent): Promise<void> {
     try {
-      this.hapticService.vibrate(ImpactStyle.Medium);
+      await triggerHaptic(ImpactStyle.Medium);
       this.isPageLoading.set(true);
       this.currentPage = 1;
       this.hasMoreData = true;

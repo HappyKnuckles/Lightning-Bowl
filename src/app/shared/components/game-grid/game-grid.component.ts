@@ -16,12 +16,12 @@ import { Subscription } from 'rxjs';
 import { NgFor, NgIf } from '@angular/common';
 import { IonGrid, IonModal, IonRow, IonCol, IonInput, IonItem, IonTextarea, IonCheckbox, IonList, IonLabel } from '@ionic/angular/standalone';
 import { FormsModule } from '@angular/forms';
-import { HapticService } from 'src/app/core/services/haptic/haptic.service';
+import { triggerHaptic } from 'src/app/core/services/haptic/haptic.functions';
 import { ImpactStyle } from '@capacitor/haptics';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { LeagueSelectorComponent } from '../league-selector/league-selector.component';
 import { InputCustomEvent } from '@ionic/angular';
-import { UtilsService } from 'src/app/core/services/utils/utils.service';
+import { isNumber } from 'src/app/core/services/utils/utils.functions';
 import { Game, createEmptyGame, getThrowValue } from 'src/app/core/models/game.model';
 import { GenericTypeaheadComponent } from '../generic-typeahead/generic-typeahead.component';
 import { createPartialPatternTypeaheadConfig } from '../generic-typeahead/typeahead-configs';
@@ -64,8 +64,6 @@ import { PinDeckFrameRowComponent } from '../pin-deck-frame-row/pin-deck-frame-r
 })
 export class GameGridComponent implements OnInit, OnDestroy {
   storageService = inject(StorageService);
-  private hapticService = inject(HapticService);
-  utilsService = inject(UtilsService);
   private platform = inject(Platform);
   private patternService = inject(PatternService);
 
@@ -289,7 +287,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
   }
 
   handleInvalidInput(frameIndex: number, throwIndex: number): void {
-    this.hapticService.vibrate(ImpactStyle.Heavy);
+    triggerHaptic(ImpactStyle.Heavy);
     const inputArray = this.inputs.toArray();
     const inputPosition = this.getInputPosition(frameIndex, throwIndex);
 
@@ -347,7 +345,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
   }
 
   isNumber(value: unknown): boolean {
-    return this.utilsService.isNumber(value);
+    return isNumber(value);
   }
 
   isThrowSplit(frameIndex: number, throwIndex: number): boolean {

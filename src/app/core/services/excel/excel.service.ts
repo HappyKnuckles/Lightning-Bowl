@@ -2,15 +2,15 @@ import { Injectable, inject } from '@angular/core';
 import { Directory, Filesystem } from '@capacitor/filesystem';
 import * as ExcelJS from 'exceljs';
 import { isPlatform } from '@ionic/angular';
-import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { ImpactStyle } from '@capacitor/haptics';
 import { Game } from 'src/app/core/models/game.model';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
-import { SortUtilsService } from '../sort-utils/sort-utils.service';
 import { GameFilterService } from '../game-filter/game-filter.service';
 import { GameStatsService } from '../game-stats/game-stats.service';
 import { Stats } from 'src/app/core/models/stats.model';
-import { GameUtilsService } from '../game-utils/game-utils.service';
+import { triggerHaptic } from '../haptic/haptic.functions';
+import { isSplit } from '../game-utils/game-utils.functions';
+import { sortGameHistoryByDate } from '../sort-utils/sort-utils.functions';
 
 type ExcelCellValue = string | number | boolean | Date | null;
 type ExcelRow = Record<string, ExcelCellValue>;
@@ -19,12 +19,9 @@ type ExcelRow = Record<string, ExcelCellValue>;
   providedIn: 'root',
 })
 export class ExcelService {
-  private hapticService = inject(HapticService);
   private storageService = inject(StorageService);
-  private sortUtils = inject(SortUtilsService);
   private gameFilterService = inject(GameFilterService);
   private statsService = inject(GameStatsService);
-  private gameUtilsService = inject(GameUtilsService);
 
   // TODO make one folder for all and one for each league and in there have stats and game history for the league
   async exportToExcel(): Promise<boolean> {
@@ -82,7 +79,7 @@ export class ExcelService {
         }
       }
 
-      this.hapticService.vibrate(ImpactStyle.Light);
+      triggerHaptic(ImpactStyle.Light);
       let suffix = '';
       const fileName = `game_data_${formattedDate}`;
       let i = 1;
@@ -188,7 +185,7 @@ export class ExcelService {
                 if (pinArray.length > 0) {
                   throwObj.pinsLeftStanding = pinArray;
                   if (frameIndex < 9) {
-                    if (k === 0) throwObj.isSplit = !!this.gameUtilsService.isSplit(pinArray);
+                    if (k === 0) throwObj.isSplit = !!isSplit(pinArray);
                   } else {
                     const prevThrow = frame.throws[k - 1];
 
@@ -205,7 +202,7 @@ export class ExcelService {
                     }
 
                     if (allowSplit) {
-                      throwObj.isSplit = this.gameUtilsService.isSplit(pinArray);
+                      throwObj.isSplit = isSplit(pinArray);
                     }
                   }
                 }
@@ -264,7 +261,7 @@ export class ExcelService {
           await this.storageService.saveBallToArsenal(ballToAdd);
         }
       }
-      const sortedGames = this.sortUtils.sortGameHistoryByDate(gameData);
+      const sortedGames = sortGameHistoryByDate(gameData);
       await this.storageService.saveGamesToLocalStorage(sortedGames);
       this.gameFilterService.setDefaultFilters();
     } catch (error) {

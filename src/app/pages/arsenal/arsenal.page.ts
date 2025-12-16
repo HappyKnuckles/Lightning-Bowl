@@ -45,7 +45,6 @@ import { chevronBack, add, openOutline, trashOutline, ellipsisVerticalOutline } 
 import { AlertController, ItemReorderCustomEvent, ModalController } from '@ionic/angular';
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import { ImpactStyle } from '@capacitor/haptics';
-import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { BallService } from 'src/app/core/services/ball/ball.service';
 import { BallListComponent } from 'src/app/shared/components/ball-list/ball-list.component';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
@@ -53,7 +52,8 @@ import { GenericTypeaheadComponent } from 'src/app/shared/components/generic-typ
 import { createBallTypeaheadConfig } from 'src/app/shared/components/generic-typeahead/typeahead-configs';
 import { TypeaheadConfig } from 'src/app/shared/components/generic-typeahead/typeahead-config.interface';
 import { Chart } from 'chart.js';
-import { ChartGenerationService } from 'src/app/core/services/chart/chart-generation.service';
+import { triggerHaptic } from 'src/app/core/services/haptic/haptic.functions';
+import { generateBallDistributionChart } from 'src/app/core/services/chart/chart-generation.functions';
 
 @Component({
   selector: 'app-arsenal',
@@ -103,13 +103,11 @@ import { ChartGenerationService } from 'src/app/core/services/chart/chart-genera
 })
 export class ArsenalPage implements OnInit {
   storageService = inject(StorageService);
-  private hapticService = inject(HapticService);
   private alertController = inject(AlertController);
   private loadingService = inject(LoadingService);
   toastService = inject(ToastService);
   modalCtrl = inject(ModalController);
   private ballService = inject(BallService);
-  private chartGenerationService = inject(ChartGenerationService);
 
   @ViewChild('core', { static: false }) coreModal!: IonModal;
   @ViewChild('coverstock', { static: false }) coverstockModal!: IonModal;
@@ -144,11 +142,7 @@ export class ArsenalPage implements OnInit {
       if (!this.ballChart) {
         return;
       }
-      this.ballsChartInstance = this.chartGenerationService.generateBallDistributionChart(
-        this.ballChart!,
-        this.storageService.arsenal(),
-        this.ballsChartInstance!,
-      );
+      this.ballsChartInstance = generateBallDistributionChart(this.ballChart!, this.storageService.arsenal(), this.ballsChartInstance!);
     } catch (error) {
       console.error('Error generating ball distribution chart:', error);
       this.toastService.showToast(ToastMessages.chartGenerationError, 'bug', true);
@@ -157,7 +151,7 @@ export class ArsenalPage implements OnInit {
 
   async removeFromArsenal(ball: Ball): Promise<void> {
     try {
-      this.hapticService.vibrate(ImpactStyle.Heavy);
+      triggerHaptic(ImpactStyle.Heavy);
       const alert = await this.alertController.create({
         header: 'Confirm Deletion',
         message: `Are you sure you want to remove ${ball.ball_name} from your arsenal?`,
@@ -226,7 +220,7 @@ export class ArsenalPage implements OnInit {
 
   async getSameCoreBalls(ball: Ball): Promise<void> {
     try {
-      this.hapticService.vibrate(ImpactStyle.Light);
+      triggerHaptic(ImpactStyle.Light);
       this.loadingService.setLoading(true);
 
       this.coreBalls = await this.ballService.getBallsByCore(ball);
@@ -246,7 +240,7 @@ export class ArsenalPage implements OnInit {
 
   async getSameCoverstockBalls(ball: Ball): Promise<void> {
     try {
-      this.hapticService.vibrate(ImpactStyle.Light);
+      triggerHaptic(ImpactStyle.Light);
       this.loadingService.setLoading(true);
 
       this.coverstockBalls = await this.ballService.getBallsByCoverstock(ball);

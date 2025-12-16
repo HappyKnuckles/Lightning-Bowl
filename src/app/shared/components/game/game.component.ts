@@ -46,11 +46,11 @@ import {
 } from 'ionicons/icons';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { Game, Frame, cloneFrames, createThrow } from 'src/app/core/models/game.model';
-import { HapticService } from 'src/app/core/services/haptic/haptic.service';
+import { triggerHaptic } from 'src/app/core/services/haptic/haptic.functions';
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
-import { UtilsService } from 'src/app/core/services/utils/utils.service';
+import { isValidNumber0to10, parseIntValue } from 'src/app/core/services/utils/utils.functions';
 import { GenericTypeaheadComponent } from '../generic-typeahead/generic-typeahead.component';
 import { createPartialPatternTypeaheadConfig } from '../generic-typeahead/typeahead-configs';
 import { TypeaheadConfig } from '../generic-typeahead/typeahead-config.interface';
@@ -62,10 +62,17 @@ import { GameGridComponent } from '../game-grid/game-grid.component';
 import { BallSelectComponent } from '../ball-select/ball-select.component';
 import { alertEnterAnimation, alertLeaveAnimation } from '../../animations/alert.animation';
 import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
-import { BowlingGameValidationService } from 'src/app/core/services/game-utils/bowling-game-validation.service';
-import { GameScoreCalculatorService } from 'src/app/core/services/game-score-calculator/game-score-calculator.service';
+import { isGameValid, canUndoLastThrow, isValidFrameScore } from 'src/app/core/services/game-utils/bowling-game-validation.functions';
+import { calculateScoreFromFrames } from 'src/app/core/services/game-score-calculator/game-score-calculator.functions';
 import { PinDeckFrameRowComponent } from '../pin-deck-frame-row/pin-deck-frame-row.component';
-import { GameUtilsService } from 'src/app/core/services/game-utils/game-utils.service';
+import {
+  calculateIsClean,
+  isCellAccessible,
+  processPinThrow,
+  applyPinModeUndo,
+  getAvailablePins,
+  parseInputValue,
+} from 'src/app/core/services/game-utils/game-utils.functions';
 
 interface MonthHeader {
   name: string;
@@ -126,16 +133,11 @@ export class GameComponent implements OnInit {
   storageService = inject(StorageService);
   private loadingService = inject(LoadingService);
   private datePipe = inject(DatePipe);
-  private hapticService = inject(HapticService);
   private renderer = inject(Renderer2);
-  private utilsService = inject(UtilsService);
   private router = inject(Router);
   private modalCtrl = inject(ModalController);
   private patternService = inject(PatternService);
   private analyticsService = inject(AnalyticsService);
-  private validationService = inject(BowlingGameValidationService);
-  private gameUtilsService = inject(GameUtilsService);
-  private gameScoreCalculatorService = inject(GameScoreCalculatorService);
 
   // DOM Elements
   @ViewChild('modal', { static: false }) modal!: IonModal;
@@ -300,7 +302,7 @@ export class GameComponent implements OnInit {
 
   // GAME ACTIONS (DELETE / SHARE)
   async deleteGame(gameId: string): Promise<void> {
-    this.hapticService.vibrate(ImpactStyle.Heavy);
+    await triggerHaptic(ImpactStyle.Heavy);
     const alert = await this.alertController.create({
       header: 'Confirm Deletion',
       message: 'Are you sure you want to delete this game?',
@@ -458,7 +460,7 @@ export class GameComponent implements OnInit {
 
   enableEdit(game: Game, accordionId?: string): void {
     this.isEditMode[game.gameId] = !this.isEditMode[game.gameId];
-    this.hapticService.vibrate(ImpactStyle.Light);
+    triggerHaptic(ImpactStyle.Light);
 
     if (accordionId) {
       this.openExpansionPanel(accordionId);
@@ -480,7 +482,7 @@ export class GameComponent implements OnInit {
     }
 
     this.isEditMode[game.gameId] = false;
-    this.hapticService.vibrate(ImpactStyle.Light);
+    triggerHaptic(ImpactStyle.Light);
 
     const wasOpen = this.delayedCloseMap[game.gameId];
     this.openExpansionPanel(wasOpen ? game.gameId : undefined);
@@ -499,7 +501,7 @@ export class GameComponent implements OnInit {
             totalScore: editedState.totalScore,
             isPractice: !game.league,
             isPerfect: editedState.totalScore === 300,
-            isClean: this.gameUtilsService.calculateIsClean(editedState.frames),
+            isClean: calculateIsClean(editedState.frames),
           }
         : {
             ...game,
@@ -507,7 +509,7 @@ export class GameComponent implements OnInit {
           };
 
       if (!this.isGameValid(updatedGame)) {
-        this.hapticService.vibrate(ImpactStyle.Heavy);
+        await triggerHaptic(ImpactStyle.Heavy);
         this.toastService.showToast(ToastMessages.invalidInput, 'bug', true);
         return;
       }
@@ -540,7 +542,7 @@ export class GameComponent implements OnInit {
 
       this.toastService.showToast(ToastMessages.gameUpdateSuccess, 'refresh-outline');
       this.isEditMode[game.gameId] = false;
-      this.hapticService.vibrate(ImpactStyle.Light);
+      await triggerHaptic(ImpactStyle.Light);
 
       const wasOpen = this.delayedCloseMap[game.gameId];
       this.openExpansionPanel(wasOpen ? game.gameId : undefined);
@@ -560,7 +562,7 @@ export class GameComponent implements OnInit {
     if (!this.isEditMode[game.gameId] || !game.isPinMode) return;
 
     const editedGame = this.editedGameStates[game.gameId];
-    const canClick = this.gameUtilsService.isCellAccessible(editedGame.frames, frameIndex, throwIndex);
+    const canClick = isCellAccessible(editedGame.frames, frameIndex, throwIndex);
 
     if (canClick) {
       this.editedFocus[game.gameId] = { frameIndex, throwIndex };
@@ -573,7 +575,7 @@ export class GameComponent implements OnInit {
     const focus = this.editedFocus[game.gameId] || { frameIndex: 0, throwIndex: 0 };
     const editedGame = this.editedGameStates[game.gameId] || structuredClone(game);
 
-    const result = this.gameUtilsService.processPinThrow(editedGame.frames, focus.frameIndex, focus.throwIndex, event.pinsKnockedDown || []);
+    const result = processPinThrow(editedGame.frames, focus.frameIndex, focus.throwIndex, event.pinsKnockedDown || []);
 
     this.editedFocus[game.gameId] = {
       frameIndex: result.nextFrameIndex,
@@ -590,7 +592,7 @@ export class GameComponent implements OnInit {
 
     const editedGame = this.editedGameStates[game.gameId];
 
-    const result = this.gameUtilsService.applyPinModeUndo(editedGame.frames, focus.frameIndex, focus.throwIndex);
+    const result = applyPinModeUndo(editedGame.frames, focus.frameIndex, focus.throwIndex);
 
     if (!result) return;
 
@@ -610,7 +612,7 @@ export class GameComponent implements OnInit {
     const frame = editedGame.frames[focus.frameIndex];
     const throws = frame.throws || [];
 
-    return this.gameUtilsService.getAvailablePins(focus.frameIndex, focus.throwIndex, throws);
+    return getAvailablePins(focus.frameIndex, focus.throwIndex, throws);
   }
 
   canRecordStrike(game: Game): boolean {
@@ -629,7 +631,7 @@ export class GameComponent implements OnInit {
 
     const editedGame = this.editedGameStates[game.gameId];
 
-    return this.validationService.canUndoLastThrow(editedGame.frames, focus.frameIndex, focus.throwIndex);
+    return canUndoLastThrow(editedGame.frames, focus.frameIndex, focus.throwIndex);
   }
 
   // INPUT HANDLING
@@ -645,14 +647,14 @@ export class GameComponent implements OnInit {
       return;
     }
 
-    const parsedValue = this.gameUtilsService.parseInputValue(value, frameIndex, throwIndex, frames);
+    const parsedValue = parseInputValue(value, frameIndex, throwIndex, frames);
 
-    if (!this.utilsService.isValidNumber0to10(parsedValue)) {
+    if (!isValidNumber0to10(parsedValue)) {
       this.handleEditInvalidInput(game.gameId, frameIndex, throwIndex);
       return;
     }
 
-    if (!this.validationService.isValidFrameScore(parsedValue, frameIndex, throwIndex, frames)) {
+    if (!isValidFrameScore(parsedValue, frameIndex, throwIndex, frames)) {
       this.handleEditInvalidInput(game.gameId, frameIndex, throwIndex);
       return;
     }
@@ -667,7 +669,7 @@ export class GameComponent implements OnInit {
   }
 
   private handleEditInvalidInput(gameId: string, frameIndex: number, throwIndex: number): void {
-    this.hapticService.vibrate(ImpactStyle.Heavy);
+    triggerHaptic(ImpactStyle.Heavy);
     const grid = this.gameGrids.find((g) => g.game()?.gameId === gameId);
     if (grid) {
       grid.handleInvalidInput(frameIndex, throwIndex);
@@ -699,7 +701,7 @@ export class GameComponent implements OnInit {
   }
 
   private updateEditedGameWithNewFrames(gameId: string, frames: Frame[]): void {
-    const scoreResult = this.gameScoreCalculatorService.calculateScoreFromFrames(frames);
+    const scoreResult = calculateScoreFromFrames(frames);
     const editedGame = this.editedGameStates[gameId];
 
     if (editedGame) {
@@ -736,11 +738,11 @@ export class GameComponent implements OnInit {
 
   // VALIDATION & HELPERS
   isGameValid(game: Game): boolean {
-    return this.validationService.isGameValid(game);
+    return isGameValid(game);
   }
 
   parseIntValue(value: unknown): number {
-    return this.utilsService.parseIntValue(value) as number;
+    return parseIntValue(String(value)) as number;
   }
 
   getSelectedBallsText(game: Game): string {
