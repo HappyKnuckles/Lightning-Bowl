@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, input, OnInit, inject } from '@angular/core';
+import { Component, input, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { IonModal } from '@ionic/angular';
 import {
@@ -32,6 +32,7 @@ import { GitHubService } from 'src/app/core/services/github/github.service';
   selector: 'app-github-issues-modal',
   templateUrl: './github-issues-modal.component.html',
   styleUrls: ['./github-issues-modal.component.scss'],
+  standalone: true,
   imports: [
     IonTitle,
     IonHeader,
@@ -57,15 +58,13 @@ import { GitHubService } from 'src/app/core/services/github/github.service';
   ],
 })
 export class GithubIssuesModalComponent implements OnInit {
-  private gitHubService = inject(GitHubService);
-
   modal = input.required<IonModal>();
   issues: GitHubIssue[] = [];
   loading = false;
   selectedLabels: string[] = ['']; // Empty array to show all issues by default
   error: string | null = null;
 
-  constructor() {
+  constructor(private gitHubService: GitHubService) {
     addIcons({
       documentOutline,
       openOutline,

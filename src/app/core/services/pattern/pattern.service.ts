@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, inject } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { Pattern } from '../../models/pattern.model';
 import { firstValueFrom, retry } from 'rxjs';
 import { environment } from 'src/environments/environment';
@@ -25,9 +25,11 @@ interface AllPatternsResult {
   providedIn: 'root',
 })
 export class PatternService {
-  private http = inject(HttpClient);
-  private cacheService = inject(CacheService);
-  private networkService = inject(NetworkService);
+  constructor(
+    private http: HttpClient,
+    private cacheService: CacheService,
+    private networkService: NetworkService,
+  ) {}
 
   async getPatterns(page: number): Promise<AllPatternsResult> {
     const cacheKey = `patterns_page_${page}`;

@@ -24,6 +24,7 @@ import { close, flash, wifiOutline, notifications, phonePortrait, download, shar
   selector: 'app-pwa-install-prompt',
   templateUrl: './pwa-install-prompt.component.html',
   styleUrls: ['./pwa-install-prompt.component.scss'],
+  standalone: true,
   imports: [
     IonImg,
     IonLabel,

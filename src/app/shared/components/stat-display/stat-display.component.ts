@@ -10,6 +10,7 @@ import { NgIf } from '@angular/common';
   templateUrl: './stat-display.component.html',
   styleUrls: ['./stat-display.component.scss'],
   imports: [IonListHeader, IonList, NgIf, StatRowComponent],
+  standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StatDisplayComponent {

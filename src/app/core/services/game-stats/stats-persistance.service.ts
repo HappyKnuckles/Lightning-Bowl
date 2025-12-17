@@ -1,6 +1,6 @@
 // src/app/core/services/stats-persistence/stats-persistence.service.ts
 
-import { computed, Injectable, Signal, inject } from '@angular/core';
+import { computed, Injectable, Signal } from '@angular/core';
 import { PrevStats, Stats } from 'src/app/core/models/stats.model';
 import { StorageService } from '../storage/storage.service';
 import { UtilsService } from '../utils/utils.service';
@@ -11,10 +11,12 @@ import { SeriesStatsCalculatorService } from './game-stats-calculator/series-sta
   providedIn: 'root',
 })
 export class StatsPersistenceService {
-  private storageService = inject(StorageService);
-  private utilsService = inject(UtilsService);
-  private overallStatsCalculatorService = inject(OverallStatsCalculatorService);
-  private seriesStatsCalculatorService = inject(SeriesStatsCalculatorService);
+  constructor(
+    private storageService: StorageService,
+    private utilsService: UtilsService,
+    private overallStatsCalculatorService: OverallStatsCalculatorService,
+    private seriesStatsCalculatorService: SeriesStatsCalculatorService,
+  ) {}
 
   private mapStatsToPrevStats(stats: Stats): PrevStats {
     return {

@@ -1,16 +1,4 @@
-import {
-  Component,
-  computed,
-  CUSTOM_ELEMENTS_SCHEMA,
-  OnInit,
-  QueryList,
-  signal,
-  ViewChild,
-  ViewChildren,
-  effect,
-  untracked,
-  inject,
-} from '@angular/core';
+import { Component, computed, CUSTOM_ELEMENTS_SCHEMA, OnInit, QueryList, signal, ViewChild, ViewChildren, effect, untracked } from '@angular/core';
 import {
   ActionSheetController,
   AlertController,
@@ -84,6 +72,7 @@ defineCustomElements(window);
   selector: 'app-add-game',
   templateUrl: 'add-game.page.html',
   styleUrls: ['add-game.page.scss'],
+  standalone: true,
   providers: [ModalController],
   imports: [
     IonHeader,
@@ -111,22 +100,6 @@ defineCustomElements(window);
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class AddGamePage implements OnInit {
-  private actionSheetCtrl = inject(ActionSheetController);
-  private imageProcessingService = inject(ImageProcesserService);
-  private alertController = inject(AlertController);
-  private toastService = inject(ToastService);
-  private gameScoreCalculatorService = inject(GameScoreCalculatorService);
-  private transformGameService = inject(GameDataTransformerService);
-  private loadingService = inject(LoadingService);
-  private userService = inject(UserService);
-  private hapticService = inject(HapticService);
-  private gameUtilsService = inject(GameUtilsService);
-  private utilsService = inject(UtilsService);
-  private validationService = inject(BowlingGameValidationService);
-  private highScroreAlertService = inject(HighScoreAlertService);
-  private storageService = inject(StorageService);
-  private analyticsService = inject(AnalyticsService);
-
   // UI State
   selectedMode: SeriesMode = SeriesMode.Single;
   sheetOpen = false;
@@ -183,7 +156,23 @@ export class AddGamePage implements OnInit {
   private readonly DRAFT_KEY = 'bowling_game_draft';
   private readonly DRAFT_TTL = 4 * 60 * 60 * 1000;
 
-  constructor() {
+  constructor(
+    private actionSheetCtrl: ActionSheetController,
+    private imageProcessingService: ImageProcesserService,
+    private alertController: AlertController,
+    private toastService: ToastService,
+    private gameScoreCalculatorService: GameScoreCalculatorService,
+    private transformGameService: GameDataTransformerService,
+    private loadingService: LoadingService,
+    private userService: UserService,
+    private hapticService: HapticService,
+    private gameUtilsService: GameUtilsService,
+    private utilsService: UtilsService,
+    private validationService: BowlingGameValidationService,
+    private highScroreAlertService: HighScoreAlertService,
+    private storageService: StorageService,
+    private analyticsService: AnalyticsService,
+  ) {
     addIcons({ cameraOutline, bowlingBallOutline, bowlingBall, chevronDown, chevronUp, medalOutline, documentTextOutline, add });
     effect(() => {
       const gameState = this.games();

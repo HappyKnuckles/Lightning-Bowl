@@ -10,6 +10,7 @@ export interface ThrowConfirmedEvent {
   selector: 'app-pin-input',
   templateUrl: './pin-input.component.html',
   styleUrls: ['./pin-input.component.scss'],
+  standalone: true,
   imports: [IonButton, IonIcon],
 })
 export class PinInputComponent {

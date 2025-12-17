@@ -18,6 +18,7 @@ import { StorageService } from 'src/app/core/services/storage/storage.service';
 
 @Component({
   selector: 'app-ball-select',
+  standalone: true,
   imports: [
     IonImg,
     IonItem,

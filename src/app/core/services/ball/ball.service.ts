@@ -1,5 +1,5 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Injectable, signal, inject } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { firstValueFrom, retry } from 'rxjs';
 import { Ball, Brand, Core, Coverstock } from 'src/app/core/models/ball.model';
 import { environment } from 'src/environments/environment';
@@ -10,10 +10,6 @@ import { NetworkService } from '../network/network.service';
   providedIn: 'root',
 })
 export class BallService {
-  private http = inject(HttpClient);
-  private cacheService = inject(CacheService);
-  private networkService = inject(NetworkService);
-
   #brands = signal<Brand[]>([]);
   #cores = signal<Core[]>([]);
   #coverstocks = signal<Coverstock[]>([]);
@@ -27,6 +23,12 @@ export class BallService {
   get coverstocks() {
     return this.#coverstocks;
   }
+
+  constructor(
+    private http: HttpClient,
+    private cacheService: CacheService,
+    private networkService: NetworkService,
+  ) {}
 
   async loadBalls(page: number): Promise<Ball[]> {
     const cacheKey = `balls_page_${page}`;

@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { Game, Frame, Throw } from 'src/app/core/models/game.model';
 import { GameUtilsService } from '../game-utils/game-utils.service';
 
@@ -6,8 +6,7 @@ import { GameUtilsService } from '../game-utils/game-utils.service';
   providedIn: 'root',
 })
 export class GameDataTransformerService {
-  private gameUtilsService = inject(GameUtilsService);
-
+  constructor(private gameUtilsService: GameUtilsService) {}
   transformGameData(
     frames: Frame[],
     frameScores: number[],

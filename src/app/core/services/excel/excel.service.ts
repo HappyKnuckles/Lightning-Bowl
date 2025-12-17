@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { Directory, Filesystem } from '@capacitor/filesystem';
 import * as ExcelJS from 'exceljs';
 import { isPlatform } from '@ionic/angular';
@@ -19,12 +19,14 @@ type ExcelRow = Record<string, ExcelCellValue>;
   providedIn: 'root',
 })
 export class ExcelService {
-  private hapticService = inject(HapticService);
-  private storageService = inject(StorageService);
-  private sortUtils = inject(SortUtilsService);
-  private gameFilterService = inject(GameFilterService);
-  private statsService = inject(GameStatsService);
-  private gameUtilsService = inject(GameUtilsService);
+  constructor(
+    private hapticService: HapticService,
+    private storageService: StorageService,
+    private sortUtils: SortUtilsService,
+    private gameFilterService: GameFilterService,
+    private statsService: GameStatsService,
+    private gameUtilsService: GameUtilsService,
+  ) {}
 
   // TODO make one folder for all and one for each league and in there have stats and game history for the league
   async exportToExcel(): Promise<boolean> {

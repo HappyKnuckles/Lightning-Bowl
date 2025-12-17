@@ -1,4 +1,4 @@
-import { Injectable, computed, signal, Signal, inject } from '@angular/core';
+import { Injectable, computed, signal, Signal } from '@angular/core';
 import { Game, Frame, Throw, createEmptyGame, cloneFrames, createThrow, getThrowValue } from 'src/app/core/models/game.model';
 import { GameScoreCalculatorService } from 'src/app/core/services/game-score-calculator/game-score-calculator.service';
 import { BowlingGameValidationService } from 'src/app/core/services/game-utils/bowling-game-validation.service';
@@ -17,13 +17,6 @@ export interface PinModeState {
   providedIn: 'root',
 })
 export class GameSessionFacade {
-  private scoreCalculator = inject(GameScoreCalculatorService);
-  private validationService = inject(BowlingGameValidationService);
-  private transformerService = inject(GameDataTransformerService);
-  private storageService = inject(StorageService);
-  private analyticsService = inject(AnalyticsService);
-  private highScoreService = inject(HighScoreAlertService);
-
   // STATE SIGNALS
 
   // Holds the state of all 19 potential games
@@ -46,6 +39,15 @@ export class GameSessionFacade {
   readonly totalScores = computed(() => this._games().map((g) => g.totalScore));
 
   readonly maxScores = computed(() => this._games().map((g) => this.scoreCalculator.calculateMaxScoreFromFrames(g.frames, g.totalScore)));
+
+  constructor(
+    private scoreCalculator: GameScoreCalculatorService,
+    private validationService: BowlingGameValidationService,
+    private transformerService: GameDataTransformerService,
+    private storageService: StorageService,
+    private analyticsService: AnalyticsService,
+    private highScoreService: HighScoreAlertService,
+  ) {}
 
   // GAME MANAGEMENT
 

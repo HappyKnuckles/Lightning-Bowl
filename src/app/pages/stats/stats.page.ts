@@ -10,7 +10,6 @@ import {
   signal,
   ChangeDetectionStrategy,
   effect,
-  inject,
 } from '@angular/core';
 import Chart from 'chart.js/auto';
 import {
@@ -71,6 +70,7 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
   selector: 'app-stats',
   templateUrl: 'stats.page.html',
   styleUrls: ['stats.page.scss'],
+  standalone: true,
   providers: [DecimalPipe, DatePipe, ModalController],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   animations: [
@@ -128,19 +128,6 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StatsPage implements OnInit, AfterViewInit {
-  loadingService = inject(LoadingService);
-  statsService = inject(GameStatsService);
-  storageService = inject(StorageService);
-  gameFilterService = inject(GameFilterService);
-  private hapticService = inject(HapticService);
-  private modalCtrl = inject(ModalController);
-  private sortUtilsService = inject(SortUtilsService);
-  private utilsService = inject(UtilsService);
-  private chartService = inject(ChartGenerationService);
-  private toastService = inject(ToastService);
-  private excelService = inject(ExcelService);
-  private alertController = inject(AlertController);
-
   @ViewChild(IonContent) content!: IonContent;
   overallStatDefinitions = overallStatDefinitions;
   seriesStatDefinitions = seriesStatDefinitions;
@@ -200,7 +187,20 @@ export class StatsPage implements OnInit, AfterViewInit {
 
   gameFilterConfigs = GAME_FILTER_CONFIGS;
 
-  constructor() {
+  constructor(
+    public loadingService: LoadingService,
+    public statsService: GameStatsService,
+    public storageService: StorageService,
+    public gameFilterService: GameFilterService,
+    private hapticService: HapticService,
+    private modalCtrl: ModalController,
+    private sortUtilsService: SortUtilsService,
+    private utilsService: UtilsService,
+    private chartService: ChartGenerationService,
+    private toastService: ToastService,
+    private excelService: ExcelService,
+    private alertController: AlertController,
+  ) {
     addIcons({ cloudUploadOutline, cloudDownloadOutline, filterOutline, calendarNumberOutline, calendarNumber });
     effect(() => {
       if (this.gameFilterService.filteredGames().length > 0) {

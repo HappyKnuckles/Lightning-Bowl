@@ -1,5 +1,5 @@
 import { NgFor, NgIf } from '@angular/common';
-import { Component, EventEmitter, Input, Output, computed, inject } from '@angular/core';
+import { Component, EventEmitter, Input, Output, computed } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { AlertController, SelectChangeEventDetail } from '@ionic/angular';
 import {
@@ -47,14 +47,9 @@ import { ToastService } from 'src/app/core/services/toast/toast.service';
     ReactiveFormsModule,
     IonSelectOption,
   ],
+  standalone: true,
 })
 export class LeagueSelectorComponent {
-  storageService = inject(StorageService);
-  private toastService = inject(ToastService);
-  private alertController = inject(AlertController);
-  private hiddenLeagueSelectionService = inject(HiddenLeagueSelectionService);
-  private analyticsService = inject(AnalyticsService);
-
   @Input() isAddPage = false;
   @Output() leagueChanged = new EventEmitter<string>();
   selectedLeague = '';
@@ -74,7 +69,13 @@ export class LeagueSelectorComponent {
       return savedSelection[league] !== false;
     });
   });
-  constructor() {
+  constructor(
+    public storageService: StorageService,
+    private toastService: ToastService,
+    private alertController: AlertController,
+    private hiddenLeagueSelectionService: HiddenLeagueSelectionService,
+    private analyticsService: AnalyticsService,
+  ) {
     // this.leagueSubscriptions.add(
     //   merge(this.storageService.newLeagueAdded, this.storageService.leagueDeleted, this.storageService.leagueChanged).subscribe(() => {
     //     this.getLeagues();

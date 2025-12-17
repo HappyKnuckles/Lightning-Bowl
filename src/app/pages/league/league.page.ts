@@ -1,16 +1,4 @@
-import {
-  Component,
-  CUSTOM_ELEMENTS_SCHEMA,
-  ElementRef,
-  ViewChild,
-  ViewChildren,
-  QueryList,
-  computed,
-  Signal,
-  signal,
-  effect,
-  inject,
-} from '@angular/core';
+import { Component, CUSTOM_ELEMENTS_SCHEMA, ElementRef, ViewChild, ViewChildren, QueryList, computed, Signal, signal, effect } from '@angular/core';
 import { DecimalPipe, NgIf } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import {
@@ -73,6 +61,7 @@ import { AnalyticsService } from 'src/app/core/services/analytics/analytics.serv
   selector: 'app-league',
   templateUrl: './league.page.html',
   styleUrls: ['./league.page.scss'],
+  standalone: true,
   imports: [
     IonRefresher,
     IonModal,
@@ -106,17 +95,6 @@ import { AnalyticsService } from 'src/app/core/services/analytics/analytics.serv
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class LeaguePage {
-  storageService = inject(StorageService);
-  private sortUtilsService = inject(SortUtilsService);
-  private hapticService = inject(HapticService);
-  private statService = inject(GameStatsService);
-  loadingService = inject(LoadingService);
-  private alertController = inject(AlertController);
-  private toastService = inject(ToastService);
-  private chartService = inject(ChartGenerationService);
-  private hiddenLeagueSelectionService = inject(HiddenLeagueSelectionService);
-  private analyticsService = inject(AnalyticsService);
-
   @ViewChild('modalContent') content!: IonContent;
   @ViewChildren('modal') modals!: QueryList<IonModal>;
   @ViewChild('scoreChart', { static: false }) scoreChart?: ElementRef;
@@ -190,7 +168,18 @@ export class LeaguePage {
   }
   private previousLeagueSelectionState: Record<string, boolean> = {};
 
-  constructor() {
+  constructor(
+    public storageService: StorageService,
+    private sortUtilsService: SortUtilsService,
+    private hapticService: HapticService,
+    private statService: GameStatsService,
+    public loadingService: LoadingService,
+    private alertController: AlertController,
+    private toastService: ToastService,
+    private chartService: ChartGenerationService,
+    private hiddenLeagueSelectionService: HiddenLeagueSelectionService,
+    private analyticsService: AnalyticsService,
+  ) {
     addIcons({
       addOutline,
       checkmarkOutline,

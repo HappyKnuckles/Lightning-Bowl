@@ -1,16 +1,4 @@
-import {
-  Component,
-  OnInit,
-  OnDestroy,
-  QueryList,
-  ViewChildren,
-  ViewChild,
-  CUSTOM_ELEMENTS_SCHEMA,
-  input,
-  output,
-  computed,
-  inject,
-} from '@angular/core';
+import { Component, OnInit, OnDestroy, QueryList, ViewChildren, ViewChild, CUSTOM_ELEMENTS_SCHEMA, input, output, computed } from '@angular/core';
 import { Platform } from '@ionic/angular';
 import { Subscription } from 'rxjs';
 import { NgFor, NgIf } from '@angular/common';
@@ -40,6 +28,7 @@ import { PinDeckFrameRowComponent } from '../pin-deck-frame-row/pin-deck-frame-r
   selector: 'app-game-grid',
   templateUrl: './game-grid.component.html',
   styleUrls: ['./game-grid.component.scss'],
+  standalone: true,
   imports: [
     NgFor,
     IonList,
@@ -63,12 +52,6 @@ import { PinDeckFrameRowComponent } from '../pin-deck-frame-row/pin-deck-frame-r
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class GameGridComponent implements OnInit, OnDestroy {
-  storageService = inject(StorageService);
-  private hapticService = inject(HapticService);
-  utilsService = inject(UtilsService);
-  private platform = inject(Platform);
-  private patternService = inject(PatternService);
-
   // --- Inputs ---
   ballSelectorId = input<string>();
   showMetadata = input<boolean>(true);
@@ -136,7 +119,13 @@ export class GameGridComponent implements OnInit, OnDestroy {
     return this.game() || createEmptyGame();
   }
 
-  constructor() {
+  constructor(
+    public storageService: StorageService,
+    private hapticService: HapticService,
+    public utilsService: UtilsService,
+    private platform: Platform,
+    private patternService: PatternService,
+  ) {
     this.initializeKeyboardListeners();
     addIcons({ chevronExpandOutline });
   }

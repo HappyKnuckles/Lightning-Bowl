@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, ElementRef, ViewChild, OnInit, OnDestroy } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { IonToolbar, IonHeader, IonContent, IonSearchbar, IonTitle } from '@ionic/angular/standalone';
 import * as L from 'leaflet';
@@ -59,14 +59,12 @@ if (L.Icon?.Default?.prototype) {
 
 @Component({
   selector: 'app-alley-map',
+  standalone: true,
   imports: [IonTitle, IonSearchbar, IonContent, IonHeader, IonToolbar],
   templateUrl: './alley-map.page.html',
   styleUrls: ['./alley-map.page.css'],
 })
 export class AlleyMapPage implements OnInit, OnDestroy {
-  private http = inject(HttpClient);
-  private analyticsService = inject(AnalyticsService);
-
   @ViewChild('mapContainer', { static: true }) mapContainer!: ElementRef;
 
   private map!: L.Map;
@@ -76,6 +74,11 @@ export class AlleyMapPage implements OnInit, OnDestroy {
   private initialUserCoords: [number, number] | null = null;
   private readonly overpassUrl = 'https://overpass-api.de/api/interpreter';
   private readonly nominatimUrl = 'https://nominatim.openstreetmap.org/search';
+
+  constructor(
+    private http: HttpClient,
+    private analyticsService: AnalyticsService,
+  ) {}
 
   async ngOnInit(): Promise<void> {
     this.initializeMapAndAttemptGeolocation();

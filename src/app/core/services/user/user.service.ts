@@ -1,18 +1,16 @@
-import { Injectable, signal, inject } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { ToastService } from '../toast/toast.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class UserService {
-  private toastService = inject(ToastService);
-
   #username = signal<string>('');
   get username() {
     return this.#username;
   }
 
-  constructor() {
+  constructor(private toastService: ToastService) {
     const storedName = localStorage.getItem('username') || '';
     this.#username.set(storedName);
   }
