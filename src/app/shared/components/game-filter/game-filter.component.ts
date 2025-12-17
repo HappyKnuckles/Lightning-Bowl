@@ -106,7 +106,7 @@ export class GameFilterComponent implements OnInit {
     if (balls.length === 1 && balls[0] === 'all') {
       return 'All';
     }
-    return balls.length > 0 ? balls.join(', ') : 'None';
+    return balls.length > 0 ? balls.join(', ') : 'All';
   }
 
   startDateChange(event: CustomEvent): void {

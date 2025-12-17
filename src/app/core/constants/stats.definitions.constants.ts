@@ -208,7 +208,7 @@ export const strikeStatDefinitions: StatDefinition[] = [
   { label: '8-baggers', key: 'bagger8Count', id: 'bagger8Count', toolTip: 'Number of times you threw exactly 8 strikes in a row.' },
   { label: '9-baggers', key: 'bagger9Count', id: 'bagger9Count', toolTip: 'Number of times you threw exactly 9 strikes in a row.' },
   { label: '10-baggers', key: 'bagger10Count', id: 'bagger10Count', toolTip: 'Number of times you threw exactly 10 strikes in a row.' },
-  { label: '11-baggers', key: 'bagger10Count', id: 'bagger11Count', toolTip: 'Number of times you threw exactly 11 strikes in a row.' },
+  { label: '11-baggers', key: 'bagger11Count', id: 'bagger11Count', toolTip: 'Number of times you threw exactly 11 strikes in a row.' },
   {
     label: 'Longest strike streak',
     key: 'longestStrikeStreak',
