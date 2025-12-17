@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef, AfterViewInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, AfterViewInit, OnDestroy, inject } from '@angular/core';
 import { IonContent, IonHeader, IonTitle, IonToolbar, IonButton, IonCard, IonCardContent, IonIcon, IonButtons } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
@@ -56,6 +56,8 @@ interface Arrow {
   imports: [IonButtons, CommonModule, IonContent, IonHeader, IonTitle, IonToolbar, IonButton, IonCard, IonCardContent, IonIcon],
 })
 export class MinigamePage implements OnInit, AfterViewInit, OnDestroy {
+  private hapticService = inject(HapticService);
+
   @ViewChild('gameCanvas', { static: true }) canvasRef!: ElementRef<HTMLCanvasElement>;
 
   private canvas!: HTMLCanvasElement;
@@ -101,7 +103,7 @@ export class MinigamePage implements OnInit, AfterViewInit, OnDestroy {
   score = 0;
   pinsKnocked = 0;
 
-  constructor(private hapticService: HapticService) {
+  constructor() {
     addIcons({ refresh });
   }
 

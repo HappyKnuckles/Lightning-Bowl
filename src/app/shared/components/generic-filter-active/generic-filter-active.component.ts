@@ -1,5 +1,5 @@
 import { DatePipe, NgFor, NgIf } from '@angular/common';
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, inject } from '@angular/core';
 import { IonChip } from '@ionic/angular/standalone';
 import { UtilsService } from 'src/app/core/services/utils/utils.service';
 
@@ -26,12 +26,12 @@ export interface FilterConfig {
   styleUrl: './generic-filter-active.component.scss',
 })
 export class GenericFilterActiveComponent implements OnInit {
+  private utilsService = inject(UtilsService);
+
   @Input() filters: Record<string, unknown> = {};
   @Input() defaultFilters: Record<string, unknown> = {};
   @Input() filterConfigs: FilterConfig[] = [];
   @Input() title?: string;
-
-  constructor(private utilsService: UtilsService) {}
 
   ngOnInit() {
     // Ensure we have valid inputs

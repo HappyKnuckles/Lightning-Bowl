@@ -1,5 +1,5 @@
 import { CommonModule, NgIf, NgStyle } from '@angular/common';
-import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, Input, inject } from '@angular/core';
 import { IonText, IonCol, IonRow, IonIcon, IonGrid } from '@ionic/angular/standalone';
 import { PrevStats, SessionStats, Stats } from 'src/app/core/models/stats.model';
 import { addIcons } from 'ionicons';
@@ -16,11 +16,13 @@ import { UtilsService } from 'src/app/core/services/utils/utils.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SpareDisplayComponent {
+  private utilsService = inject(UtilsService);
+
   @Input({ required: true }) stats!: Stats | SessionStats;
   @Input() title = '';
   @Input() prevStats?: PrevStats | Stats;
   @Input() id?: string;
-  constructor(private utilsService: UtilsService) {
+  constructor() {
     addIcons({ informationCircleOutline, arrowUp, arrowDown });
   }
 

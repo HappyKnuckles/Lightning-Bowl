@@ -1,4 +1,4 @@
-import { Component, OnDestroy } from '@angular/core';
+import { Component, OnDestroy, inject } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { IonToast } from '@ionic/angular/standalone';
@@ -31,6 +31,8 @@ interface ToastData {
   imports: [IonToast, NgFor, NgStyle],
 })
 export class ToastComponent implements OnDestroy {
+  private toastService = inject(ToastService);
+
   activeToasts: ToastData[] = [];
   private toastQueue: ToastData[] = [];
   private nextId = 1;
@@ -38,7 +40,7 @@ export class ToastComponent implements OnDestroy {
   private readonly MAX_ACTIVE = 5;
   readonly TOAST_DURATION = 3000;
 
-  constructor(private toastService: ToastService) {
+  constructor() {
     this.toastSubscription = this.toastService.toastState$.subscribe((raw) => {
       const newToast: ToastData = {
         id: this.nextId++,

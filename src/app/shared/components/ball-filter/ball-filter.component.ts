@@ -1,4 +1,4 @@
-import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit } from '@angular/core';
+import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit, inject } from '@angular/core';
 import { BallFilterService } from 'src/app/core/services/ball-filter/ball-filter.service';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BallService } from 'src/app/core/services/ball/ball.service';
@@ -37,8 +37,8 @@ import { AnalyticsService } from 'src/app/core/services/analytics/analytics.serv
   selector: 'app-ball-filter',
   templateUrl: './ball-filter.component.html',
   styleUrls: ['./ball-filter.component.scss'],
-  standalone: true,
   providers: [ModalController],
+  standalone: true,
   imports: [
     FormsModule,
     IonList,
@@ -66,6 +66,14 @@ import { AnalyticsService } from 'src/app/core/services/analytics/analytics.serv
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class BallFilterComponent implements OnInit {
+  ballFilterService = inject(BallFilterService);
+  private modalCtrl = inject(ModalController);
+  ballService = inject(BallService);
+  private storageService = inject(StorageService);
+  private toastService = inject(ToastService);
+  private loadingService = inject(LoadingService);
+  private analyticsService = inject(AnalyticsService);
+
   markets: Market[] = [Market.ALL, Market.US, Market.INT];
   coreTypes: CoreType[] = [CoreType.ALL, CoreType.ASYMMETRIC, CoreType.SYMMETRIC];
   coverstockTypes: CoverstockType[] = Object.values(CoverstockType);
@@ -73,16 +81,6 @@ export class BallFilterComponent implements OnInit {
   presentingElement?: HTMLElement;
   coreTypeaheadConfig!: TypeaheadConfig<Core>;
   coverstockTypeaheadConfig!: TypeaheadConfig<Coverstock>;
-
-  constructor(
-    public ballFilterService: BallFilterService,
-    private modalCtrl: ModalController,
-    public ballService: BallService,
-    private storageService: StorageService,
-    private toastService: ToastService,
-    private loadingService: LoadingService,
-    private analyticsService: AnalyticsService,
-  ) {}
   ngOnInit() {
     this.presentingElement = document.querySelector('.ion-page')!;
     this.coreTypeaheadConfig = createBallCoreTypeaheadConfig();

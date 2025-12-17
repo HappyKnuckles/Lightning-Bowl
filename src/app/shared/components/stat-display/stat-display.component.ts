@@ -9,8 +9,8 @@ import { NgIf } from '@angular/common';
   selector: 'app-stat-display',
   templateUrl: './stat-display.component.html',
   styleUrls: ['./stat-display.component.scss'],
-  imports: [IonListHeader, IonList, NgIf, StatRowComponent],
   standalone: true,
+  imports: [IonListHeader, IonList, NgIf, StatRowComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StatDisplayComponent {
