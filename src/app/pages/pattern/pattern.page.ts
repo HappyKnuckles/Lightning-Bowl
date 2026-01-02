@@ -61,6 +61,7 @@ import { PatternSortOption, PatternSortField, SortDirection } from 'src/app/core
 import { NetworkService } from 'src/app/core/services/network/network.service';
 import { FavoritesService } from 'src/app/core/services/favorites/favorites.service';
 import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-pattern',
@@ -113,6 +114,7 @@ export class PatternPage implements OnInit {
     direction: SortDirection.ASC,
     label: 'Title (A-Z)',
   };
+  imagesUrl = environment.imagesUrl;
 
   get displayedPatterns(): Pattern[] {
     let patterns: Pattern[];
