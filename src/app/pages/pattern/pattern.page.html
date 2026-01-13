@@ -67,7 +67,7 @@
       <ion-text class="no-game-text"> No patterns found! </ion-text>
     </ng-container>
     <ng-template #allPatterns>
-      @for (pattern of displayedPatterns; track pattern.url) {
+      @for (pattern of displayedPatterns; track pattern.url; let i = $index) {
         <ion-card
           [ngClass]="{
             'red-card': getRatioValue(pattern.ratio ?? '0') >= 1 && getRatioValue(pattern.ratio ?? '0') < 4,
@@ -78,9 +78,11 @@
           id="{{ pattern.url }}">
           <img
             *ngIf="pattern.chart_horizontal"
-            [src]="pattern.chart_horizontal"
+            [src]="imagesUrl + pattern.chart_horizontal"
             alt="{{ pattern.title }} Oil Pattern Chart"
-            class="pattern-chart-image" />
+            class="pattern-chart-image"
+            [loading]="i < 10 ? 'eager' : 'lazy'"
+            [attr.fetchpriority]="i < 3 ? 'high' : 'auto'" />
           <ion-card-header>
             <ion-card-title style="display: flex; align-items: center; justify-content: space-between">
               <span>{{ pattern.title }}</span>
