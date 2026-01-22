@@ -99,7 +99,8 @@ export class SortService {
       return option!.direction === SortDirection.DESC ? -comparison : comparison;
     });
   }
-  sortBalls(balls: Ball[], sortOption: BallSortOption, favoritesFirst = false): Ball[] {
+
+  sortBalls(balls: Ball[], sortOption: BallSortOption, favoritesFirst = false, allBalls: Ball[] = []): Ball[] {
     const sortedBalls = [...balls];
 
     if (favoritesFirst) {
@@ -107,12 +108,21 @@ export class SortService {
       const favoriteBalls: Ball[] = [];
       const nonFavoriteBalls: Ball[] = [];
 
-      // Separate favorites from non-favorites
-      sortedBalls.forEach((ball) => {
+      // Get favorite balls from allBalls if provided, otherwise from the balls array
+      const ballsToSearchForFavorites = allBalls.length > 0 ? allBalls : sortedBalls;
+
+      // Extract all favorite balls from allBalls
+      ballsToSearchForFavorites.forEach((ball) => {
         const ballKey = `${ball.ball_id}-${ball.core_weight}`;
         if (favorites.has(ballKey)) {
           favoriteBalls.push(ball);
-        } else {
+        }
+      });
+
+      // Separate non-favorites from the current balls array
+      sortedBalls.forEach((ball) => {
+        const ballKey = `${ball.ball_id}-${ball.core_weight}`;
+        if (!favorites.has(ballKey)) {
           nonFavoriteBalls.push(ball);
         }
       });

@@ -172,7 +172,7 @@ export class BallsPage implements OnInit {
     }
 
     // Apply sorting only when not searching
-    return this.sortService.sortBalls(result, this.currentSortOption, this.favoritesFirst());
+    return this.sortService.sortBalls(result, this.currentSortOption, this.favoritesFirst(), this.storageService.allBalls());
   }
 
   private lastLoadTime = 0;
@@ -212,11 +212,28 @@ export class BallsPage implements OnInit {
     this.isPageLoading.set(true);
     this.loadFavoritesFirstSetting();
     try {
+      await this.waitForAllBalls();
       await this.loadBalls();
     } catch (error) {
       console.error('Error loading balls:', error);
     } finally {
       this.isPageLoading.set(false);
+    }
+  }
+
+  private async waitForAllBalls(): Promise<void> {
+    // Wait until allBalls are loaded
+    const maxWaitTime = 10000; // 10 seconds max wait
+    const checkInterval = 100; // Check every 100ms
+    let elapsed = 0;
+
+    while (this.storageService.allBalls().length === 0 && elapsed < maxWaitTime) {
+      await new Promise((resolve) => setTimeout(resolve, checkInterval));
+      elapsed += checkInterval;
+    }
+
+    if (elapsed >= maxWaitTime) {
+      console.warn('Timeout waiting for allBalls to load');
     }
   }
 
@@ -230,9 +247,8 @@ export class BallsPage implements OnInit {
       if (this.isFilterActive()) {
         this.filterDisplayCount = 100;
       }
+      await Promise.all([this.storageService.loadAllBalls(), this.storageService.loadArsenal()]);
       await this.loadBalls();
-      await this.storageService.loadAllBalls();
-      await this.storageService.loadArsenal();
     } catch (error) {
       console.error(error);
       this.toastService.showToast(ToastMessages.ballLoadError, 'bug', true);
@@ -309,8 +325,10 @@ export class BallsPage implements OnInit {
         event.target.complete();
         return;
       }
-      // Otherwise, load the next page from the API.
+
+      // Load the next page from the API.
       const response = await this.ballService.loadBalls(this.currentPage);
+
       if (response.length > 0) {
         this.balls.set([...this.balls(), ...response]);
         this.currentPage++;
@@ -476,6 +494,7 @@ export class BallsPage implements OnInit {
   onFavoritesFirstChange(checked: boolean): void {
     this.favoritesFirst.set(checked);
     this.saveFavoritesFirstSetting(checked);
+
     if (this.content) {
       setTimeout(() => {
         this.content.scrollToTop(300);
