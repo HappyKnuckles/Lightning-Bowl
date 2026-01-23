@@ -105,7 +105,7 @@ export class AppComponent implements OnInit, OnDestroy {
               const alert = await this.alertController.create({
                 backdropDismiss: false,
                 header: 'New Version Available',
-                subHeader: `Following changes were made on ${branch}:`,
+                subHeader: 'Following changes were made:',
                 message: sanitizedMessage || '',
                 buttons: [
                   {
