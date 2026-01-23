@@ -151,6 +151,10 @@
                   </ion-grid>
                 </div>
               } @else {
+                <ion-item class="name">
+                  <ion-icon name="person-outline" slot="start"></ion-icon>
+                  <ion-input type="text" [(ngModel)]="game.name" label="Name" placeholder="Enter player name"></ion-input>
+                </ion-item>
                 <ion-item class="league" [disabled]="leagues().length === 0">
                   <ion-icon name="medal-outline" slot="start"></ion-icon>
                   <ion-select

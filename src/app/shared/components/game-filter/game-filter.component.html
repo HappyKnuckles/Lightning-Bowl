@@ -158,7 +158,6 @@
         multiple="true"
         (ionChange)="updateFilter('names', $event.detail.value)">
         <ion-select-option value="all">All</ion-select-option>
-        <ion-select-option value="">None</ion-select-option>
         <ion-select-option *ngFor="let name of names()" [value]="name">{{ name }}</ion-select-option>
       </ion-select>
     </ion-item>
