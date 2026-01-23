@@ -77,12 +77,13 @@ export class AppComponent implements OnInit, OnDestroy {
   private initializeApp(): void {
     this.swUpdate.versionUpdates.subscribe((event) => {
       if (event.type === 'VERSION_READY') {
-        const lastCommitDate = localStorage.getItem('lastCommitDate');
-        const sinceParam = lastCommitDate ? `&since=${lastCommitDate}` : '';
         const branch = environment.branch || 'master';
+        const lastCommitDateKey = `lastCommitDate_${branch}`;
+        const lastCommitDate = localStorage.getItem(lastCommitDateKey);
+        const sinceParam = lastCommitDate ? `&since=${lastCommitDate}` : '';
         const apiUrl = `https://api.github.com/repos/HappyKnuckles/Lightning-Bowl/commits?sha=${branch}${sinceParam}`;
 
-        // Fetch the latest commits from the master branch on GitHub
+        // Fetch the latest commits from the current branch on GitHub
         this.http.get(apiUrl).subscribe({
           next: async (data: any) => {
             const newCommits = [];
@@ -104,21 +105,21 @@ export class AppComponent implements OnInit, OnDestroy {
               const alert = await this.alertController.create({
                 backdropDismiss: false,
                 header: 'New Version Available',
-                subHeader: 'Following changes were made:',
+                subHeader: `Following changes were made on ${branch}:`,
                 message: sanitizedMessage || '',
                 buttons: [
                   {
                     text: 'Cancel',
                     role: 'cancel',
                     handler: () => {
-                      localStorage.setItem('lastCommitDate', new Date(data[0].commit.committer.date).toISOString());
+                      localStorage.setItem(lastCommitDateKey, new Date(data[0].commit.committer.date).toISOString());
                       localStorage.setItem('update', 'true');
                     },
                   },
                   {
                     text: 'Load',
                     handler: () => {
-                      localStorage.setItem('lastCommitDate', new Date(data[0].commit.committer.date).toISOString());
+                      localStorage.setItem(lastCommitDateKey, new Date(data[0].commit.committer.date).toISOString());
                       window.location.reload();
                     },
                   },
