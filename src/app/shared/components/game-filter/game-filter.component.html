@@ -150,6 +150,18 @@
         <ion-select-option *ngFor="let league of patterns()" [value]="league">{{ league }}</ion-select-option>
       </ion-select>
     </ion-item>
+    <ion-item>
+      <ion-select
+        name="names"
+        [ngModel]="gameFilterService.filters().names"
+        label="Names"
+        multiple="true"
+        (ionChange)="updateFilter('names', $event.detail.value)">
+        <ion-select-option value="all">All</ion-select-option>
+        <ion-select-option value="">None</ion-select-option>
+        <ion-select-option *ngFor="let name of names()" [value]="name">{{ name }}</ion-select-option>
+      </ion-select>
+    </ion-item>
   </ion-list>
 </ion-content>
 <ion-footer style="display: flex" class="ion-justify-content-center">

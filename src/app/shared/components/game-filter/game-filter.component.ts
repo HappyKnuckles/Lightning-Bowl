@@ -75,6 +75,12 @@ export class GameFilterComponent implements OnInit {
       .flat()
       .filter((pattern, index, self) => pattern && self.indexOf(pattern) === index);
   });
+  names = computed<string[]>(() => {
+    return this.storageService
+      .games()
+      .map((game) => game.name)
+      .filter((name, index, self): name is string => !!name && self.indexOf(name) === index);
+  });
   enterAnimation = alertEnterAnimation;
   leaveAnimation = alertLeaveAnimation;
 
@@ -182,6 +188,7 @@ export class GameFilterComponent implements OnInit {
         has_leagues: filters.leagues.length > 0,
         has_balls: filters.balls.length > 0,
         has_patterns: filters.patterns.length > 0,
+        has_names: filters.names.length > 0,
         has_date_range: !!filters.startDate || !!filters.endDate,
         has_score_range: filters.minScore > 0 || filters.maxScore < 300,
         exclude_practice: filters.excludePractice,
