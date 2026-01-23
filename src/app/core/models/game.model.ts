@@ -37,6 +37,7 @@ export interface Game {
   league?: string;
   patterns: string[];
   balls?: string[];
+  name?: string;
 }
 
 /**
@@ -84,6 +85,7 @@ export function createEmptyGame(): Game {
     league: '',
     patterns: [],
     balls: [],
+    name: '',
   };
 }
 
@@ -207,6 +209,7 @@ export function cloneGame(game: Game): Game {
     frameScores: [...game.frameScores],
     patterns: [...game.patterns],
     balls: game.balls ? [...game.balls] : undefined,
+    name: game.name,
   };
 }
 
