@@ -39,6 +39,7 @@
               <ion-label class="game-info">
                 <p>{{ game.date | date: "MM.dd.yyyy" }}</p>
                 <h2 class="title">Game {{ gameCount()! - $index }}</h2>
+                <p class="score" *ngIf="game.name">Name: {{ game.name }}</p>
                 <p class="score" *ngIf="game.league && !isLeaguePage()">League/Tournament: {{ game.league }}</p>
                 <p class="score" *ngIf="game.patterns && game.patterns.length > 0">Patterns: {{ game.patterns.join(", ") }}</p>
                 <p class="score">Score: {{ game.totalScore }}</p>
@@ -153,7 +154,7 @@
               } @else {
                 <ion-item class="name">
                   <ion-icon name="person-outline" slot="start"></ion-icon>
-                  <ion-input type="text" [(ngModel)]="game.name" label="Name" placeholder="Enter player name"></ion-input>
+                  <ion-input type="text" [(ngModel)]="game.name" [value]="game.name" label="Name" placeholder="Enter player name"></ion-input>
                 </ion-item>
                 <ion-item class="league" [disabled]="leagues().length === 0">
                   <ion-icon name="medal-outline" slot="start"></ion-icon>
