@@ -742,6 +742,7 @@ export class AddGamePage implements OnInit {
         gameId,
         date,
         isPinMode,
+        this.userService.username() || '',
       );
       await this.storageService.saveGameToLocalStorage(gameData);
       this.analyticsService.trackGameSaved({ score: gameData.totalScore });
