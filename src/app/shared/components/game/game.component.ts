@@ -43,7 +43,6 @@ import {
   medalOutline,
   bowlingBallOutline,
   gridOutline,
-  personOutline,
 } from 'ionicons/icons';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { Game, Frame, cloneFrames, createThrow } from 'src/app/core/models/game.model';

@@ -152,13 +152,13 @@
     </ion-item>
     <ion-item>
       <ion-select
-        name="names"
-        [ngModel]="gameFilterService.filters().names"
-        label="Names"
+        name="usernames"
+        [ngModel]="gameFilterService.filters().usernames"
+        label="Users"
         multiple="true"
-        (ionChange)="updateFilter('names', $event.detail.value)">
+        (ionChange)="updateFilter('usernames', $event.detail.value)">
         <ion-select-option value="all">All</ion-select-option>
-        <ion-select-option *ngFor="let name of names()" [value]="name">{{ name }}</ion-select-option>
+        <ion-select-option *ngFor="let username of usernames()" [value]="username">{{ username }}</ion-select-option>
       </ion-select>
     </ion-item>
   </ion-list>

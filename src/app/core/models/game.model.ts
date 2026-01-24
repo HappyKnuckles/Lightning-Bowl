@@ -37,7 +37,7 @@ export interface Game {
   league?: string;
   patterns: string[];
   balls?: string[];
-  name?: string;
+  user?: string;
 }
 
 /**

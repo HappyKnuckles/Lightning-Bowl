@@ -17,7 +17,7 @@ export class GameFilterService {
     leagues: ['all'],
     balls: ['all'],
     patterns: ['all'],
-    names: ['all'],
+    usernames: ['all'],
     timeRange: TimeRange.ALL,
     startDate: '',
     endDate: '',

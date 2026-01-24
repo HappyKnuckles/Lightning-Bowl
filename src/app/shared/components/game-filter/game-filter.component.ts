@@ -75,11 +75,11 @@ export class GameFilterComponent implements OnInit {
       .flat()
       .filter((pattern, index, self) => pattern && self.indexOf(pattern) === index);
   });
-  names = computed<string[]>(() => {
+  usernames = computed<string[]>(() => {
     return this.storageService
       .games()
-      .map((game) => game.name)
-      .filter((name, index, self): name is string => !!name && self.indexOf(name) === index);
+      .map((game) => game.user)
+      .filter((user, index, self): user is string => !!user && self.indexOf(user) === index);
   });
   enterAnimation = alertEnterAnimation;
   leaveAnimation = alertLeaveAnimation;

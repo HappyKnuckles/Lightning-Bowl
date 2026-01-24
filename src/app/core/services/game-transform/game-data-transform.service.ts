@@ -21,7 +21,7 @@ export class GameDataTransformerService {
     existingGameId?: string,
     existingDate?: number,
     isPinMode?: boolean,
-    name?: string,
+    user?: string,
   ): Game {
     try {
       const gameId = existingGameId || Date.now() + '_' + Math.random().toString(36).slice(2, 9);
@@ -82,7 +82,7 @@ export class GameDataTransformerService {
         isPerfect,
         patterns: patterns ? [...patterns].sort() : [],
         balls: balls ? [...balls].sort() : undefined,
-        name,
+        user,
       };
     } catch (error) {
       throw new Error(`Error transforming game data: ${error}`);

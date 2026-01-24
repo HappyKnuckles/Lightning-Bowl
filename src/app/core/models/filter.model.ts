@@ -7,7 +7,7 @@ export interface GameFilter {
   leagues: string[];
   balls: string[];
   patterns: string[];
-  names: string[];
+  usernames: string[];
   timeRange: TimeRange;
   startDate?: string;
   endDate?: string;

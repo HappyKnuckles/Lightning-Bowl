@@ -241,7 +241,7 @@ export class ExcelService {
               : [],
           balls: (row['Balls'] as string)?.trim() ? (row['Balls'] as string).split(', ') : [],
           note: row['Notes'] as string,
-          name: row['Name'] as string,
+          user: row['User'] as string,
         };
 
         if (game.league !== undefined && game.league !== '') {
@@ -337,7 +337,7 @@ export class ExcelService {
       'Balls',
       'Notes',
       'isPinMode',
-      'Name',
+      'User',
     ];
 
     const headers = [...baseHeaders, ...finalStaticHeaders, ...pinHeaders];
@@ -395,7 +395,7 @@ export class ExcelService {
         game.balls?.join(', ') || '',
         game.note || '',
         game.isPinMode ? 'true' : 'false',
-        game.name || '',
+        game.user || '',
         ...pinData,
       ];
 
