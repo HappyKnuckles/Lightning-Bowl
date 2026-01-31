@@ -691,24 +691,20 @@ export class AddGamePage implements OnInit {
   private recalculateActiveGameScores(): void {
     const activeIndexes = this.getActiveTrackIndexes();
     const currentGames = this.games();
+    const newTotalScores = [...this.totalScores()];
+    const newMaxScores = [...this.maxScores()];
 
     activeIndexes.forEach((index) => {
       const game = currentGames[index];
       const scoreResult = this.gameScoreCalculatorService.calculateScoreFromFrames(game.frames);
       const maxScore = this.gameScoreCalculatorService.calculateMaxScoreFromFrames(game.frames, scoreResult.totalScore);
 
-      this.totalScores.update((scores) => {
-        const s = [...scores];
-        s[index] = scoreResult.totalScore;
-        return s;
-      });
-
-      this.maxScores.update((scores) => {
-        const s = [...scores];
-        s[index] = maxScore;
-        return s;
-      });
+      newTotalScores[index] = scoreResult.totalScore;
+      newMaxScores[index] = maxScore;
     });
+
+    this.totalScores.set(newTotalScores);
+    this.maxScores.set(newMaxScores);
   }
 
   // PRIVATE HELPERS - VALIDATION
