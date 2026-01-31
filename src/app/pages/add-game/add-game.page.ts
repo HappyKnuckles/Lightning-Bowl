@@ -411,6 +411,10 @@ export class AddGamePage implements OnInit {
   }
 
   // UI INTERACTION
+  onSegmentChange(event: any): void {
+    this.selectedSegment = event.detail.value;
+  }
+
   togglePinInputMode(): void {
     this.isPinInputMode = !this.isPinInputMode;
     localStorage.setItem('pinInputMode', String(this.isPinInputMode));
@@ -685,10 +689,11 @@ export class AddGamePage implements OnInit {
 
   private updateSegments(): void {
     const activeIndexes = this.getActiveTrackIndexes();
+    const oldSelectedSegment = this.selectedSegment;
     this.segments = activeIndexes.map((i) => `Game ${i + 1}`);
 
     // Reset to Game 1 if current segment is beyond the new series range
-    if (!this.segments.includes(this.selectedSegment)) {
+    if (!this.segments.includes(oldSelectedSegment)) {
       this.selectedSegment = 'Game 1';
     }
   }
