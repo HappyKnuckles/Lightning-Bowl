@@ -456,6 +456,7 @@ export class AddGamePage implements OnInit {
           handler: () => {
             this.selectedMode = mode;
             this.propagateMetadataToSeries();
+            this.recalculateActiveGameScores();
           },
         });
       }
@@ -685,6 +686,29 @@ export class AddGamePage implements OnInit {
   private updateSegments(): void {
     const activeIndexes = this.getActiveTrackIndexes();
     this.segments = activeIndexes.map((i) => `Game ${i + 1}`);
+  }
+
+  private recalculateActiveGameScores(): void {
+    const activeIndexes = this.getActiveTrackIndexes();
+    const currentGames = this.games();
+
+    activeIndexes.forEach((index) => {
+      const game = currentGames[index];
+      const scoreResult = this.gameScoreCalculatorService.calculateScoreFromFrames(game.frames);
+      const maxScore = this.gameScoreCalculatorService.calculateMaxScoreFromFrames(game.frames, scoreResult.totalScore);
+
+      this.totalScores.update((scores) => {
+        const s = [...scores];
+        s[index] = scoreResult.totalScore;
+        return s;
+      });
+
+      this.maxScores.update((scores) => {
+        const s = [...scores];
+        s[index] = maxScore;
+        return s;
+      });
+    });
   }
 
   // PRIVATE HELPERS - VALIDATION
