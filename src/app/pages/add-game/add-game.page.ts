@@ -686,6 +686,11 @@ export class AddGamePage implements OnInit {
   private updateSegments(): void {
     const activeIndexes = this.getActiveTrackIndexes();
     this.segments = activeIndexes.map((i) => `Game ${i + 1}`);
+
+    // Reset to Game 1 if current segment is beyond the new series range
+    if (!this.segments.includes(this.selectedSegment)) {
+      this.selectedSegment = 'Game 1';
+    }
   }
 
   private recalculateActiveGameScores(): void {
