@@ -45,7 +45,7 @@ import { chevronBack, add, openOutline, trashOutline, ellipsisVerticalOutline } 
 import { AlertController, ItemReorderCustomEvent, ModalController } from '@ionic/angular';
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import { ImpactStyle } from '@capacitor/haptics';
-import { HapticService } from 'src/app/core/services/haptic/haptic.service';
+import { vibrate } from 'src/app/core/utils/haptic.utils';
 import { BallService } from 'src/app/core/services/ball/ball.service';
 import { BallListComponent } from 'src/app/shared/components/ball-list/ball-list.component';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
@@ -119,7 +119,6 @@ export class ArsenalPage implements OnInit {
   private ballsChartInstance: Chart | null = null;
   constructor(
     public storageService: StorageService,
-    private hapticService: HapticService,
     private alertController: AlertController,
     private loadingService: LoadingService,
     public toastService: ToastService,
@@ -158,7 +157,7 @@ export class ArsenalPage implements OnInit {
 
   async removeFromArsenal(ball: Ball): Promise<void> {
     try {
-      this.hapticService.vibrate(ImpactStyle.Heavy);
+      vibrate(ImpactStyle.Heavy);
       const alert = await this.alertController.create({
         header: 'Confirm Deletion',
         message: `Are you sure you want to remove ${ball.ball_name} from your arsenal?`,
@@ -227,7 +226,7 @@ export class ArsenalPage implements OnInit {
 
   async getSameCoreBalls(ball: Ball): Promise<void> {
     try {
-      this.hapticService.vibrate(ImpactStyle.Light);
+      vibrate(ImpactStyle.Light);
       this.loadingService.setLoading(true);
 
       this.coreBalls = await this.ballService.getBallsByCore(ball);
@@ -247,7 +246,7 @@ export class ArsenalPage implements OnInit {
 
   async getSameCoverstockBalls(ball: Ball): Promise<void> {
     try {
-      this.hapticService.vibrate(ImpactStyle.Light);
+      vibrate(ImpactStyle.Light);
       this.loadingService.setLoading(true);
 
       this.coverstockBalls = await this.ballService.getBallsByCoverstock(ball);

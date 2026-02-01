@@ -35,7 +35,7 @@ import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import Fuse from 'fuse.js';
 import { Subject } from 'rxjs';
-import { HapticService } from 'src/app/core/services/haptic/haptic.service';
+import { vibrate } from 'src/app/core/utils/haptic.utils';
 import { ImpactStyle } from '@capacitor/haptics';
 import { BallService } from 'src/app/core/services/ball/ball.service';
 import { BallFilterService } from 'src/app/core/services/ball-filter/ball-filter.service';
@@ -183,7 +183,6 @@ export class BallsPage implements OnInit {
     public loadingService: LoadingService,
     public storageService: StorageService,
     private toastService: ToastService,
-    private hapticService: HapticService,
     private ballService: BallService,
     public ballFilterService: BallFilterService,
     private route: ActivatedRoute,
@@ -239,7 +238,7 @@ export class BallsPage implements OnInit {
 
   async handleRefresh(event: RefresherCustomEvent): Promise<void> {
     try {
-      this.hapticService.vibrate(ImpactStyle.Medium);
+      vibrate(ImpactStyle.Medium);
       this.isPageLoading.set(true);
       this.currentPage = 0;
       this.hasMoreData = true;
@@ -266,7 +265,7 @@ export class BallsPage implements OnInit {
 
   async removeFromArsenal(ball: Ball): Promise<void> {
     try {
-      this.hapticService.vibrate(ImpactStyle.Light);
+      vibrate(ImpactStyle.Light);
       await this.storageService.removeFromArsenal(ball);
       this.toastService.showToast(`${ball.ball_name} removed from Arsenal.`, 'checkmark-outline');
     } catch (error) {
@@ -277,7 +276,7 @@ export class BallsPage implements OnInit {
 
   async saveBallToArsenal(ball: Ball): Promise<void> {
     try {
-      this.hapticService.vibrate(ImpactStyle.Light);
+      vibrate(ImpactStyle.Light);
       await this.storageService.saveBallToArsenal(ball);
       this.toastService.showToast(`${ball.ball_name} added to Arsenal.`, 'add');
     } catch (error) {
@@ -382,7 +381,7 @@ export class BallsPage implements OnInit {
 
   async getSameCoreBalls(ball: Ball): Promise<void> {
     try {
-      this.hapticService.vibrate(ImpactStyle.Light);
+      vibrate(ImpactStyle.Light);
       this.loadingService.setLoading(true);
       this.coreBalls = await this.ballService.getBallsByCore(ball);
       if (this.coreBalls.length > 0) {
@@ -400,7 +399,7 @@ export class BallsPage implements OnInit {
 
   async getSameCoverstockBalls(ball: Ball): Promise<void> {
     try {
-      this.hapticService.vibrate(ImpactStyle.Light);
+      vibrate(ImpactStyle.Light);
       this.loadingService.setLoading(true);
       this.coverstockBalls = await this.ballService.getBallsByCoverstock(ball);
       if (this.coverstockBalls.length > 0) {
@@ -418,7 +417,7 @@ export class BallsPage implements OnInit {
 
   async getSimilarMovementBalls(ball: Ball): Promise<void> {
     try {
-      this.hapticService.vibrate(ImpactStyle.Light);
+      vibrate(ImpactStyle.Light);
       this.loadingService.setLoading(true);
 
       // Use all available balls for comparison

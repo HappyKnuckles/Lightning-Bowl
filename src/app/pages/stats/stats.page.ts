@@ -30,7 +30,7 @@ import {
 import { NgIf, NgFor, DecimalPipe, DatePipe } from '@angular/common';
 import { ImpactStyle } from '@capacitor/haptics';
 import { GameStatsService } from 'src/app/core/services/game-stats/game-stats.service';
-import { HapticService } from 'src/app/core/services/haptic/haptic.service';
+import { vibrate } from 'src/app/core/utils/haptic.utils';
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import { FormsModule } from '@angular/forms';
 import { addIcons } from 'ionicons';
@@ -52,7 +52,7 @@ import {
   spareStatDefinitions,
 } from '../../core/constants/stats.definitions.constants';
 import { GameFilterService } from 'src/app/core/services/game-filter/game-filter.service';
-import { UtilsService } from 'src/app/core/services/utils/utils.service';
+import { transformDate, isSameDay } from 'src/app/core/utils/date.utils';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { ExcelService } from 'src/app/core/services/excel/excel.service';
 import { Filesystem } from '@capacitor/filesystem';
@@ -157,7 +157,7 @@ export class StatsPage implements OnInit, AfterViewInit {
     const selDate = this.selectedDate();
     const allGames = this.storageService.games();
 
-    return allGames.filter((game) => this.utilsService.isSameDay(game.date, selDate));
+    return allGames.filter((game) => isSameDay(game.date, selDate));
   });
 
   sessionStats: Signal<SessionStats> = computed(() => {
@@ -192,11 +192,7 @@ export class StatsPage implements OnInit, AfterViewInit {
     public statsService: GameStatsService,
     public storageService: StorageService,
     public gameFilterService: GameFilterService,
-    private hapticService: HapticService,
     private modalCtrl: ModalController,
-    private sortUtilsService: SortUtilsService,
-    private utilsService: UtilsService,
-    private chartService: ChartGenerationService,
     private toastService: ToastService,
     private excelService: ExcelService,
     private alertController: AlertController,
@@ -241,7 +237,7 @@ export class StatsPage implements OnInit, AfterViewInit {
 
   async handleRefresh(event: RefresherCustomEvent): Promise<void> {
     try {
-      this.hapticService.vibrate(ImpactStyle.Medium);
+      vibrate(ImpactStyle.Medium);
       await this.storageService.loadGameHistory();
       this.generateCharts(true);
     } catch (error) {
@@ -342,9 +338,9 @@ export class StatsPage implements OnInit, AfterViewInit {
         return;
       }
 
-      this.scoreChartInstance = this.chartService.generateScoreChart(
+      this.scoreChartInstance = generateScoreChart(
         this.scoreChart,
-        this.sortUtilsService.sortGameHistoryByDate([...this.gameFilterService.filteredGames()], true),
+        sortGameHistoryByDate([...this.gameFilterService.filteredGames()], true),
         this.scoreChartInstance!,
         this.chartViewMode,
         () => this.toggleChartView(),
@@ -391,9 +387,9 @@ export class StatsPage implements OnInit, AfterViewInit {
         return;
       }
 
-      this.averageScoreChartInstance = this.chartService.generateAverageScoreChart(
+      this.averageScoreChartInstance = generateAverageScoreChart(
         this.averageScoreChart,
-        this.sortUtilsService.sortGameHistoryByDate([...this.gameFilterService.filteredGames()], true),
+        sortGameHistoryByDate([...this.gameFilterService.filteredGames()], true),
         this.averageScoreChartInstance!,
         this.averageChartViewMode,
         () => this.toggleAverageChartView(),
@@ -411,9 +407,9 @@ export class StatsPage implements OnInit, AfterViewInit {
         return;
       }
 
-      this.scoreDistributionChartInstance = this.chartService.generateScoreDistributionChart(
+      this.scoreDistributionChartInstance = generateScoreDistributionChart(
         this.scoreDistributionChart,
-        this.sortUtilsService.sortGameHistoryByDate([...this.gameFilterService.filteredGames()], true),
+        sortGameHistoryByDate([...this.gameFilterService.filteredGames()], true),
         this.scoreDistributionChartInstance!,
         isReload,
       );
@@ -429,7 +425,7 @@ export class StatsPage implements OnInit, AfterViewInit {
         return;
       }
 
-      this.spareDistributionChartInstance = this.chartService.generateSpareDistributionChart(
+      this.spareDistributionChartInstance = generateSpareDistributionChart(
         this.spareDistributionChart,
         this.statsService.currentStats(),
         this.spareDistributionChartInstance!,
@@ -447,7 +443,7 @@ export class StatsPage implements OnInit, AfterViewInit {
         return;
       }
 
-      this.pinChartInstance = this.chartService.generatePinChart(this.pinChart, this.statsService.currentStats(), this.pinChartInstance!, isReload);
+      this.pinChartInstance = generatePinChart(this.pinChart, this.statsService.currentStats(), this.pinChartInstance!, isReload);
     } catch (error) {
       this.toastService.showToast(ToastMessages.chartGenerationError, 'bug', true);
       console.error('Error generating pin chart:', error);
@@ -460,7 +456,7 @@ export class StatsPage implements OnInit, AfterViewInit {
         return;
       }
 
-      this.throwChartInstance = this.chartService.generateThrowChart(
+      this.throwChartInstance = generateThrowChart(
         this.throwChart,
         this.statsService.currentStats(),
         this.throwChartInstance!,
