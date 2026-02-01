@@ -53,7 +53,7 @@ import { GenericTypeaheadComponent } from 'src/app/shared/components/generic-typ
 import { createBallTypeaheadConfig } from 'src/app/shared/components/generic-typeahead/typeahead-configs';
 import { TypeaheadConfig } from 'src/app/shared/components/generic-typeahead/typeahead-config.interface';
 import { Chart } from 'chart.js';
-import { ChartGenerationService } from 'src/app/core/services/chart/chart-generation.service';
+import { generateBallDistributionChart } from 'src/app/core/utils/chart.utils';
 
 @Component({
   selector: 'app-arsenal',
@@ -124,7 +124,6 @@ export class ArsenalPage implements OnInit {
     public toastService: ToastService,
     public modalCtrl: ModalController,
     private ballService: BallService,
-    private chartGenerationService: ChartGenerationService,
   ) {
     addIcons({ add, ellipsisVerticalOutline, trashOutline, chevronBack, openOutline });
     effect(() => {
@@ -144,11 +143,7 @@ export class ArsenalPage implements OnInit {
       if (!this.ballChart) {
         return;
       }
-      this.ballsChartInstance = this.chartGenerationService.generateBallDistributionChart(
-        this.ballChart!,
-        this.storageService.arsenal(),
-        this.ballsChartInstance!,
-      );
+      this.ballsChartInstance = generateBallDistributionChart(this.ballChart!, this.storageService.arsenal(), this.ballsChartInstance!);
     } catch (error) {
       console.error('Error generating ball distribution chart:', error);
       this.toastService.showToast(ToastMessages.chartGenerationError, 'bug', true);

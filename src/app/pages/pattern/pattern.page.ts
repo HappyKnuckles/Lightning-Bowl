@@ -51,7 +51,6 @@ import {
   documentOutline,
   linkOutline,
 } from 'ionicons/icons';
-import { ChartGenerationService } from 'src/app/core/services/chart/chart-generation.service';
 import { DomSanitizer } from '@angular/platform-browser';
 import { PatternFormComponent } from '../../shared/components/pattern-form/pattern-form.component';
 import { SearchBlurDirective } from 'src/app/core/directives/search-blur/search-blur.directive';
@@ -136,7 +135,6 @@ export class PatternPage implements OnInit {
     private patternService: PatternService,
     public loadingService: LoadingService,
     private toastService: ToastService,
-    private chartService: ChartGenerationService,
     private sanitizer: DomSanitizer,
     private modalCtrl: ModalController,
     public sortService: SortService,
