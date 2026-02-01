@@ -24,9 +24,9 @@ import {
 import { GameFilter, TimeRange } from 'src/app/core/models/filter.model';
 import { Game } from 'src/app/core/models/game.model';
 import { GameFilterService } from 'src/app/core/services/game-filter/game-filter.service';
-import { SortUtilsService } from 'src/app/core/services/sort-utils/sort-utils.service';
+import { sortGamesByLeagues } from 'src/app/core/utils/sort.utils';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
-import { UtilsService } from 'src/app/core/services/utils/utils.service';
+import { transformDate } from 'src/app/core/utils/date.utils';
 import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
 import { alertEnterAnimation, alertLeaveAnimation } from '../../animations/alert.animation';
 import { addIcons } from 'ionicons';
@@ -81,9 +81,7 @@ export class GameFilterComponent implements OnInit {
   constructor(
     private modalCtrl: ModalController,
     public gameFilterService: GameFilterService,
-    private sortUtilsService: SortUtilsService,
     public storageService: StorageService,
-    private utilsService: UtilsService,
     private analyticsService: AnalyticsService,
   ) {
     addIcons({ chevronExpandOutline });
@@ -195,7 +193,7 @@ export class GameFilterComponent implements OnInit {
   }
 
   private getLeagues(): void {
-    const gamesByLeague = this.sortUtilsService.sortGamesByLeagues(this.storageService.games(), false);
+    const gamesByLeague = sortGamesByLeagues(this.storageService.games(), false);
     this.leagues = Object.keys(gamesByLeague);
   }
 
@@ -205,7 +203,7 @@ export class GameFilterComponent implements OnInit {
     const backgroundColor = rootStyles.getPropertyValue('--ion-color-primary').trim();
     this.highlightedDates = this.storageService.games().map((game) => {
       const date = new Date(game.date);
-      const formattedDate = this.utilsService.transformDate(date);
+      const formattedDate = transformDate(date);
       return {
         date: formattedDate,
         textColor: textColor,

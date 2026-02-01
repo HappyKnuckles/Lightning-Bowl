@@ -4,12 +4,12 @@ import { Subscription } from 'rxjs';
 import { NgFor, NgIf } from '@angular/common';
 import { IonGrid, IonModal, IonRow, IonCol, IonInput, IonItem, IonTextarea, IonCheckbox, IonList, IonLabel } from '@ionic/angular/standalone';
 import { FormsModule } from '@angular/forms';
-import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { ImpactStyle } from '@capacitor/haptics';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { LeagueSelectorComponent } from '../league-selector/league-selector.component';
 import { InputCustomEvent } from '@ionic/angular';
-import { UtilsService } from 'src/app/core/services/utils/utils.service';
+import { vibrate } from 'src/app/core/utils/haptic.utils';
+import { isNumber } from 'src/app/core/utils/general.utils';
 import { Game, createEmptyGame, getThrowValue } from 'src/app/core/models/game.model';
 import { GenericTypeaheadComponent } from '../generic-typeahead/generic-typeahead.component';
 import { createPartialPatternTypeaheadConfig } from '../generic-typeahead/typeahead-configs';
@@ -121,8 +121,6 @@ export class GameGridComponent implements OnInit, OnDestroy {
 
   constructor(
     public storageService: StorageService,
-    private hapticService: HapticService,
-    public utilsService: UtilsService,
     private platform: Platform,
     private patternService: PatternService,
   ) {
@@ -278,7 +276,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
   }
 
   handleInvalidInput(frameIndex: number, throwIndex: number): void {
-    this.hapticService.vibrate(ImpactStyle.Heavy);
+    vibrate(ImpactStyle.Heavy);
     const inputArray = this.inputs.toArray();
     const inputPosition = this.getInputPosition(frameIndex, throwIndex);
 
@@ -336,7 +334,7 @@ export class GameGridComponent implements OnInit, OnDestroy {
   }
 
   isNumber(value: unknown): boolean {
-    return this.utilsService.isNumber(value);
+    return isNumber(value);
   }
 
   isThrowSplit(frameIndex: number, throwIndex: number): boolean {
