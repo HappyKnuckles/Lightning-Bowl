@@ -62,7 +62,6 @@ export class StorageService {
 
   constructor(
     private storage: Storage,
-    private sortUtilsService: SortUtilsService,
     private loadingService: LoadingService,
     private ballService: BallService,
     private patternService: PatternService,
@@ -206,7 +205,7 @@ export class StorageService {
         await this.saveGamesToLocalStorage(gameHistory);
       }
 
-      this.sortUtilsService.sortGameHistoryByDate(gameHistory, false);
+      sortGameHistoryByDate(gameHistory, false);
       this.games.set(gameHistory);
       return gameHistory;
     } catch (error) {

@@ -33,7 +33,7 @@ export class BallFilterService {
           return count + 1;
         }
       } else if (Array.isArray(filterValue) && Array.isArray(defaultValue)) {
-        if (!this.utilsService.areArraysEqual(filterValue, defaultValue)) {
+        if (!areArraysEqual(filterValue, defaultValue)) {
           return count + 1;
         }
       } else if (filterValue !== defaultValue) {
@@ -57,10 +57,7 @@ export class BallFilterService {
     return this.#filteredBalls;
   }
 
-  constructor(
-    private utilsService: UtilsService,
-    private storageService: StorageService,
-  ) {}
+  constructor(private storageService: StorageService) {}
 
   saveFilters(): void {
     localStorage.setItem('ball-filter', JSON.stringify(this.filters()));
