@@ -36,7 +36,7 @@ import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { InfiniteScrollCustomEvent, RefresherCustomEvent } from '@ionic/angular';
 import { ImpactStyle } from '@capacitor/haptics';
-import { HapticService } from 'src/app/core/services/haptic/haptic.service';
+import { vibrate } from 'src/app/core/utils/haptic.utils';
 import { PatternInfoComponent } from 'src/app/shared/components/pattern-info/pattern-info.component';
 import { addIcons } from 'ionicons';
 import {
@@ -51,7 +51,6 @@ import {
   documentOutline,
   linkOutline,
 } from 'ionicons/icons';
-import { ChartGenerationService } from 'src/app/core/services/chart/chart-generation.service';
 import { DomSanitizer } from '@angular/platform-browser';
 import { PatternFormComponent } from '../../shared/components/pattern-form/pattern-form.component';
 import { SearchBlurDirective } from 'src/app/core/directives/search-blur/search-blur.directive';
@@ -134,10 +133,8 @@ export class PatternPage implements OnInit {
   private debounceMs = 300;
   constructor(
     private patternService: PatternService,
-    private hapticService: HapticService,
     public loadingService: LoadingService,
     private toastService: ToastService,
-    private chartService: ChartGenerationService,
     private sanitizer: DomSanitizer,
     private modalCtrl: ModalController,
     public sortService: SortService,
@@ -167,7 +164,7 @@ export class PatternPage implements OnInit {
 
   async handleRefresh(event: RefresherCustomEvent): Promise<void> {
     try {
-      this.hapticService.vibrate(ImpactStyle.Medium);
+      vibrate(ImpactStyle.Medium);
       this.isPageLoading.set(true);
       this.currentPage = 1;
       this.hasMoreData = true;

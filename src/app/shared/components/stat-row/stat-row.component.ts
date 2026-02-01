@@ -4,7 +4,7 @@ import { IonText, IonIcon } from '@ionic/angular/standalone';
 import { ConditionalNumberPipe } from '../../pipes/number-pipe/conditional-number.pipe';
 import { addIcons } from 'ionicons';
 import { arrowDown, arrowUp, informationCircleOutline } from 'ionicons/icons';
-import { UtilsService } from 'src/app/core/services/utils/utils.service';
+import { calculateStatDifference, getArrowIcon, getDiffColor } from 'src/app/core/utils/general.utils';
 
 @Component({
   selector: 'app-stat-row',
@@ -26,25 +26,25 @@ export class StatRowComponent implements OnChanges {
 
   statDifference = '0';
 
-  constructor(private utilsService: UtilsService) {
+  constructor() {
     addIcons({ informationCircleOutline, arrowUp, arrowDown });
   }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['currentStat'] || changes['prevStat']) {
-      this.statDifference = this.calculateStatDifference(this.currentStat, this.prevStat!);
+      this.statDifference = calculateStatDifference(this.currentStat, this.prevStat!);
     }
   }
 
   getArrowIcon(currentValue: number, previousValue?: number): string {
-    return this.utilsService.getArrowIcon(currentValue, previousValue);
+    return getArrowIcon(currentValue, previousValue);
   }
 
   getDiffColor(currentValue: number, previousValue?: number): string {
-    return this.utilsService.getDiffColor(currentValue, previousValue);
+    return getDiffColor(currentValue, previousValue);
   }
 
   private calculateStatDifference(currentValue: number, previousValue: number): string {
-    return this.utilsService.calculateStatDifference(currentValue, previousValue);
+    return calculateStatDifference(currentValue, previousValue);
   }
 }

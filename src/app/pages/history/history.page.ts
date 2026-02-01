@@ -30,7 +30,7 @@ import {
 } from 'ionicons/icons';
 import { NgIf, DatePipe } from '@angular/common';
 import { ImpactStyle } from '@capacitor/haptics';
-import { HapticService } from 'src/app/core/services/haptic/haptic.service';
+import { vibrate } from 'src/app/core/utils/haptic.utils';
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { ModalController, RefresherCustomEvent } from '@ionic/angular';
@@ -103,12 +103,10 @@ export class HistoryPage {
     private toastService: ToastService,
     public storageService: StorageService,
     public loadingService: LoadingService,
-    private hapticService: HapticService,
     private modalCtrl: ModalController,
     public gameFilterService: GameFilterService,
     private excelService: ExcelService,
     private analyticsService: AnalyticsService,
-    // public sortService: SortService,
   ) {
     addIcons({
       cloudUploadOutline,
@@ -142,7 +140,7 @@ export class HistoryPage {
 
   async handleRefresh(event: RefresherCustomEvent): Promise<void> {
     try {
-      this.hapticService.vibrate(ImpactStyle.Medium);
+      vibrate(ImpactStyle.Medium);
       await this.storageService.loadGameHistory();
     } catch (error) {
       console.error(error);

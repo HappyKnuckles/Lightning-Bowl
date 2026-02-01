@@ -1,8 +1,10 @@
 import { Injectable, computed, signal, Signal } from '@angular/core';
 import { Game, Frame, Throw, createEmptyGame, cloneFrames, createThrow, getThrowValue } from 'src/app/core/models/game.model';
-import { GameScoreCalculatorService } from 'src/app/core/services/game-score-calculator/game-score-calculator.service';
-import { BowlingGameValidationService } from 'src/app/core/services/game-utils/bowling-game-validation.service';
-import { GameDataTransformerService } from 'src/app/core/services/game-transform/game-data-transform.service';
+import { calculateScoreFromFrames, calculateMaxScoreFromFrames } from 'src/app/core/utils/score-calculator.utils';
+import { isValidFrameScore, isGameValid } from 'src/app/core/utils/bowling-validation.utils';
+import { transformGameData } from 'src/app/core/utils/game-transform.utils';
+import { parseInputValue, isSplit } from 'src/app/core/utils/game.utils';
+import { isValidNumber0to10 } from 'src/app/core/utils/general.utils';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
 import { HighScoreAlertService } from 'src/app/core/services/high-score-alert/high-score-alert.service';
@@ -38,12 +40,9 @@ export class GameSessionFacade {
 
   readonly totalScores = computed(() => this._games().map((g) => g.totalScore));
 
-  readonly maxScores = computed(() => this._games().map((g) => this.scoreCalculator.calculateMaxScoreFromFrames(g.frames, g.totalScore)));
+  readonly maxScores = computed(() => this._games().map((g) => calculateMaxScoreFromFrames(g.frames, g.totalScore)));
 
   constructor(
-    private scoreCalculator: GameScoreCalculatorService,
-    private validationService: BowlingGameValidationService,
-    private transformerService: GameDataTransformerService,
     private storageService: StorageService,
     private analyticsService: AnalyticsService,
     private highScoreService: HighScoreAlertService,
@@ -113,9 +112,9 @@ export class GameSessionFacade {
     }
 
     // Case: Entering a score
-    const parsedValue = this.validationService.parseInputValue(value, frameIndex, throwIndex, frames);
-    const isValidNumber = this.validationService.isValidNumber0to10(parsedValue);
-    const isValidScore = this.validationService.isValidFrameScore(parsedValue, frameIndex, throwIndex, frames);
+    const parsedValue = parseInputValue(value, frameIndex, throwIndex, frames);
+    const isValidNumber = isValidNumber0to10(parsedValue);
+    const isValidScore = isValidFrameScore(parsedValue, frameIndex, throwIndex, frames);
 
     if (!isValidNumber || !isValidScore) {
       return false; // Controller should trigger vibration/error UI
@@ -284,7 +283,7 @@ export class GameSessionFacade {
     const gamesToSave = indexesToSave.map((i) => this._games()[i]);
 
     // 1. Validation
-    if (!gamesToSave.every((g) => this.validationService.isGameValid(g))) {
+    if (!gamesToSave.every((g) => isGameValid(g))) {
       return false; // Caller should handle UI alert
     }
 
@@ -295,7 +294,7 @@ export class GameSessionFacade {
       for (const game of gamesToSave) {
         if (game.league === 'New') continue; // Skip invalid league selections
 
-        const gameData = this.transformerService.transformGameData(
+        const gameData = transformGameData(
           game.frames,
           game.frameScores,
           game.totalScore,
@@ -339,7 +338,7 @@ export class GameSessionFacade {
   // PRIVATE HELPERS
 
   private recalculateAndUpdate(index: number, frames: Frame[]) {
-    const scoreResult = this.scoreCalculator.calculateScoreFromFrames(frames);
+    const scoreResult = calculateScoreFromFrames(frames);
     this.updateGame(index, {
       frames,
       frameScores: scoreResult.frameScores,
@@ -397,27 +396,27 @@ export class GameSessionFacade {
   private calculateSplit(frameIndex: number, throwIndex: number, pinsLeftStanding: number[], throwsData: Throw[][]): boolean {
     // Normal Frames 1-9
     if (frameIndex < 9) {
-      if (throwIndex === 0) return this.validationService.isSplit(pinsLeftStanding);
+      if (throwIndex === 0) return isSplit(pinsLeftStanding);
       return false;
     }
 
     // 10th Frame
     if (frameIndex === 9) {
-      if (throwIndex === 0) return this.validationService.isSplit(pinsLeftStanding);
+      if (throwIndex === 0) return isSplit(pinsLeftStanding);
 
       const t1 = throwsData[9]?.[0];
       // Split on 2nd throw if first was Strike
       if (throwIndex === 1 && t1?.value === 10) {
-        return this.validationService.isSplit(pinsLeftStanding);
+        return isSplit(pinsLeftStanding);
       }
 
       // Split on 3rd throw if (XX) or (Spare)
       if (throwIndex === 2) {
         const t2 = throwsData[9]?.[1];
         // XX -> Pins reset -> Split possible
-        if (t1?.value === 10 && t2?.value === 10) return this.validationService.isSplit(pinsLeftStanding);
+        if (t1?.value === 10 && t2?.value === 10) return isSplit(pinsLeftStanding);
         // Spare -> Pins reset -> Split possible
-        if (t1 && t2 && t1.value !== 10 && t1.value + t2.value === 10) return this.validationService.isSplit(pinsLeftStanding);
+        if (t1 && t2 && t1.value !== 10 && t1.value + t2.value === 10) return isSplit(pinsLeftStanding);
       }
     }
     return false;

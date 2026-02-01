@@ -27,25 +27,32 @@ import { addIcons } from 'ionicons';
 import { add, chevronDown, chevronUp, cameraOutline, documentTextOutline, medalOutline, bowlingBallOutline, bowlingBall } from 'ionicons/icons';
 import { NgIf, NgFor } from '@angular/common';
 import { ImpactStyle } from '@capacitor/haptics';
-import { HapticService } from 'src/app/core/services/haptic/haptic.service';
-import { ImageProcesserService } from 'src/app/core/services/image-processer/image-processer.service';
+import { vibrate } from 'src/app/core/utils/haptic.utils';
+import { performOCR } from 'src/app/core/utils/image-processor.utils';
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { UserService } from 'src/app/core/services/user/user.service';
 import { defineCustomElements } from '@teamhive/lottie-player/loader';
-import { GameUtilsService } from 'src/app/core/services/game-utils/game-utils.service';
-import { GameScoreCalculatorService } from 'src/app/core/services/game-score-calculator/game-score-calculator.service';
-import { GameDataTransformerService } from 'src/app/core/services/game-transform/game-data-transform.service';
+import {
+  processPinThrow,
+  applyPinModeUndo,
+  isCellAccessible,
+  getAvailablePins,
+  parseBowlingScores,
+  parseInputValue,
+} from 'src/app/core/utils/game.utils';
+import { calculateScoreFromFrames, calculateMaxScoreFromFrames } from 'src/app/core/utils/score-calculator.utils';
+import { transformGameData } from 'src/app/core/utils/game-transform.utils';
 import { InputCustomEvent, ModalController } from '@ionic/angular';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { GameGridComponent } from 'src/app/shared/components/game-grid/game-grid.component';
 import { HighScoreAlertService } from 'src/app/core/services/high-score-alert/high-score-alert.service';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
-import { BowlingGameValidationService } from 'src/app/core/services/game-utils/bowling-game-validation.service';
+import { canRecordStrike, canRecordSpare, canUndoLastThrow, isValidFrameScore, isGameValid } from 'src/app/core/utils/bowling-validation.utils';
 import { GameScoreToolbarComponent } from 'src/app/shared/components/game-score-toolbar/game-score-toolbar.component';
 import { ThrowConfirmedEvent } from 'src/app/shared/components/pin-input/pin-input.component';
-import { UtilsService } from 'src/app/core/services/utils/utils.service';
+import { isValidNumber0to10 } from 'src/app/core/utils/general.utils';
 
 const enum SeriesMode {
   Single = 'Single',
@@ -158,17 +165,10 @@ export class AddGamePage implements OnInit {
 
   constructor(
     private actionSheetCtrl: ActionSheetController,
-    private imageProcessingService: ImageProcesserService,
     private alertController: AlertController,
     private toastService: ToastService,
-    private gameScoreCalculatorService: GameScoreCalculatorService,
-    private transformGameService: GameDataTransformerService,
     private loadingService: LoadingService,
     private userService: UserService,
-    private hapticService: HapticService,
-    private gameUtilsService: GameUtilsService,
-    private utilsService: UtilsService,
-    private validationService: BowlingGameValidationService,
     private highScroreAlertService: HighScoreAlertService,
     private storageService: StorageService,
     private analyticsService: AnalyticsService,
@@ -202,19 +202,19 @@ export class AddGamePage implements OnInit {
     const { currentFrameIndex, currentThrowIndex, throwsData } = state;
     const throws = throwsData[currentFrameIndex] || [];
 
-    return this.gameUtilsService.getAvailablePins(currentFrameIndex, currentThrowIndex, throws);
+    return getAvailablePins(currentFrameIndex, currentThrowIndex, throws);
   }
 
   canRecordStrike(gameIndex: number): boolean {
     const state = this.pinModeState()[gameIndex];
     const game = this.games()[gameIndex];
-    return this.validationService.canRecordStrike(state.currentFrameIndex, state.currentThrowIndex, game.frames);
+    return canRecordStrike(state.currentFrameIndex, state.currentThrowIndex, game.frames);
   }
 
   canRecordSpare(gameIndex: number): boolean {
     const state = this.pinModeState()[gameIndex];
     const game = this.games()[gameIndex];
-    return this.validationService.canRecordSpare(state.currentFrameIndex, state.currentThrowIndex, game.frames);
+    return canRecordSpare(state.currentFrameIndex, state.currentThrowIndex, game.frames);
   }
 
   canUndoForPinMode(gameIndex: number): boolean {
@@ -223,12 +223,12 @@ export class AddGamePage implements OnInit {
 
     if (!game || !state) return false;
 
-    return this.validationService.canUndoLastThrow(game.frames, state.currentFrameIndex, state.currentThrowIndex);
+    return canUndoLastThrow(game.frames, state.currentFrameIndex, state.currentThrowIndex);
   }
 
   isGameComplete(gameIndex: number): boolean {
     const game = this.games()[gameIndex];
-    return this.validationService.isGameValid(game);
+    return isGameValid(game);
   }
 
   getCurrentFrameIndex(gameIndex: number): number {
@@ -243,7 +243,7 @@ export class AddGamePage implements OnInit {
     const state = this.pinModeState()[gameIndex];
     const game = this.games()[gameIndex];
 
-    const result = this.gameUtilsService.processPinThrow(game.frames, state.currentFrameIndex, state.currentThrowIndex, event.pinsKnockedDown);
+    const result = processPinThrow(game.frames, state.currentFrameIndex, state.currentThrowIndex, event.pinsKnockedDown);
 
     this.pinModeState.update((states) => {
       const newStates = [...states];
@@ -262,7 +262,7 @@ export class AddGamePage implements OnInit {
     const state = this.pinModeState()[gameIndex];
     const game = this.games()[gameIndex];
 
-    const result = this.gameUtilsService.applyPinModeUndo(game.frames, state.currentFrameIndex, state.currentThrowIndex);
+    const result = applyPinModeUndo(game.frames, state.currentFrameIndex, state.currentThrowIndex);
 
     if (!result) return;
 
@@ -286,7 +286,7 @@ export class AddGamePage implements OnInit {
     const game = this.games()[gameIndex];
     const state = this.pinModeState()[gameIndex];
 
-    const canClick = this.gameUtilsService.isCellAccessible(game.frames, frameIndex, throwIndex);
+    const canClick = isCellAccessible(game.frames, frameIndex, throwIndex);
 
     if (canClick) {
       this.pinModeState.update((states) => {
@@ -392,9 +392,9 @@ export class AddGamePage implements OnInit {
       return;
     }
 
-    const parsedValue = this.gameUtilsService.parseInputValue(value, frameIndex, throwIndex, frames);
-    const isValidNumber = this.utilsService.isValidNumber0to10(parsedValue);
-    const isValidScore = this.validationService.isValidFrameScore(parsedValue, frameIndex, throwIndex, frames);
+    const parsedValue = parseInputValue(value, frameIndex, throwIndex, frames);
+    const isValidNumber = isValidNumber0to10(parsedValue);
+    const isValidScore = isValidFrameScore(parsedValue, frameIndex, throwIndex, frames);
 
     if (!isValidNumber || !isValidScore) {
       this.handleInvalidInputUI(index, frameIndex, throwIndex, isModal);
@@ -448,7 +448,7 @@ export class AddGamePage implements OnInit {
 
   async presentActionSheet(): Promise<void> {
     const buttons: { text: string; handler?: () => void; role?: string }[] = [];
-    this.hapticService.vibrate(ImpactStyle.Medium);
+    vibrate(ImpactStyle.Medium);
     this.sheetOpen = true;
 
     const modes = [SeriesMode.Single, SeriesMode.Series3, SeriesMode.Series4, SeriesMode.Series5, SeriesMode.Series6];
@@ -505,7 +505,7 @@ export class AddGamePage implements OnInit {
 
   // SAVE & RESET LOGIC
   isGameValid(game: Game): boolean {
-    return this.validationService.isGameValid(game);
+    return isGameValid(game);
   }
 
   clearFrames(index?: number): void {
@@ -570,7 +570,7 @@ export class AddGamePage implements OnInit {
 
   private async processAndSaveGames(games: Game[], isSeries = false, seriesId = ''): Promise<boolean> {
     if (!games.every((g) => this.isGameValid(g))) {
-      this.hapticService.vibrate(ImpactStyle.Heavy);
+      vibrate(ImpactStyle.Heavy);
       this.isAlertOpen = true;
       return false;
     }
@@ -603,7 +603,7 @@ export class AddGamePage implements OnInit {
         } else {
           await this.highScroreAlertService.checkAndDisplayHighScoreAlertsForMultipleGames(savedGames, allGames);
         }
-        this.hapticService.vibrate(ImpactStyle.Medium);
+        vibrate(ImpactStyle.Medium);
         this.toastService.showToast(ToastMessages.gameSaveSuccess, 'add');
         return true;
       }
@@ -621,8 +621,8 @@ export class AddGamePage implements OnInit {
   }
 
   private updateGameState(frames: Frame[], index: number, isModal: boolean): void {
-    const scoreResult = this.gameScoreCalculatorService.calculateScoreFromFrames(frames);
-    const maxScore = this.gameScoreCalculatorService.calculateMaxScoreFromFrames(frames, scoreResult.totalScore);
+    const scoreResult = calculateScoreFromFrames(frames);
+    const maxScore = calculateMaxScoreFromFrames(frames, scoreResult.totalScore);
     const updatedGameData = { frames, frameScores: scoreResult.frameScores, totalScore: scoreResult.totalScore };
 
     if (isModal) {
@@ -706,8 +706,8 @@ export class AddGamePage implements OnInit {
 
     activeIndexes.forEach((index) => {
       const game = currentGames[index];
-      const scoreResult = this.gameScoreCalculatorService.calculateScoreFromFrames(game.frames);
-      const maxScore = this.gameScoreCalculatorService.calculateMaxScoreFromFrames(game.frames, scoreResult.totalScore);
+      const scoreResult = calculateScoreFromFrames(game.frames);
+      const maxScore = calculateMaxScoreFromFrames(game.frames, scoreResult.totalScore);
 
       newTotalScores[index] = scoreResult.totalScore;
       newMaxScores[index] = maxScore;
@@ -758,7 +758,7 @@ export class AddGamePage implements OnInit {
       return null;
     }
     try {
-      const gameData = this.transformGameService.transformGameData(
+      const gameData = transformGameData(
         frames,
         frameScores,
         totalScore,
@@ -787,7 +787,7 @@ export class AddGamePage implements OnInit {
   }
 
   private handleInvalidInputUI(index: number, frameIndex: number, throwIndex: number, isModal: boolean): void {
-    this.hapticService.vibrate(ImpactStyle.Heavy);
+    vibrate(ImpactStyle.Heavy);
     const grid = isModal ? this.modalGrid : this.gameGrids.toArray()[index];
     if (grid) grid.handleInvalidInput(frameIndex, throwIndex);
   }
@@ -822,7 +822,7 @@ export class AddGamePage implements OnInit {
       const imageUrl: File | Blob | undefined = await this.takeOrChoosePicture();
       if (imageUrl instanceof File) {
         this.loadingService.setLoading(true);
-        const gameText = await this.imageProcessingService.performOCR(imageUrl);
+        const gameText = await performOCR(imageUrl);
         this.parseBowlingScores(gameText!);
         await this.analyticsService.trackOCRUsed(!!gameText);
       } else {
@@ -893,9 +893,9 @@ export class AddGamePage implements OnInit {
 
   private parseBowlingScores(input: string): void {
     try {
-      const { frames, frameScores, totalScore } = this.gameUtilsService.parseBowlingScores(input, this.userService.username());
+      const { frames, frameScores, totalScore } = parseBowlingScores(input, this.userService.username());
       const framesAsFrameArray = numberArraysToFrames(frames);
-      this.gameData = this.transformGameService.transformGameData(framesAsFrameArray, frameScores, totalScore, false, '', false, '', '', [], []);
+      this.gameData = transformGameData(framesAsFrameArray, frameScores, totalScore, false, '', false, '', '', [], []);
       this.gameData.isPractice = true;
       this.isModalOpen = true;
     } catch (error) {

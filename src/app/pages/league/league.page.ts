@@ -42,11 +42,11 @@ import { AlertController, RefresherCustomEvent, SegmentCustomEvent } from '@ioni
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import { BestBallStats, Stats } from 'src/app/core/models/stats.model';
 import { GameStatsService } from 'src/app/core/services/game-stats/game-stats.service';
-import { HapticService } from 'src/app/core/services/haptic/haptic.service';
+import { vibrate } from 'src/app/core/utils/haptic.utils';
 import { ImpactStyle } from '@capacitor/haptics';
-import { SortUtilsService } from 'src/app/core/services/sort-utils/sort-utils.service';
+import { sortGamesByLeagues, sortGameHistoryByDate } from 'src/app/core/utils/sort.utils';
 import Chart from 'chart.js/auto';
-import { ChartGenerationService } from 'src/app/core/services/chart/chart-generation.service';
+import { generateScoreChart, generatePinChart } from 'src/app/core/utils/chart.utils';
 import { leagueStatDefinitions } from '../../core/constants/stats.definitions.constants';
 import { ToastMessages } from 'src/app/core/constants/toast-messages.constants';
 import { GameComponent } from 'src/app/shared/components/game/game.component';
@@ -104,7 +104,7 @@ export class LeaguePage {
   isEditMode: Record<string, boolean> = {};
   gamesByLeague: Signal<Record<string, Game[]>> = computed(() => {
     const games = this.storageService.games();
-    return this.sortUtilsService.sortGamesByLeagues(games, true);
+    return sortGamesByLeagues(games, true);
   });
   leagueKeys: Signal<string[]> = computed(() => {
     return Object.keys(this.gamesByLeague());
@@ -118,7 +118,7 @@ export class LeaguePage {
     const gamesByLeagueReverse: Record<string, Game[]> = {};
 
     Object.keys(gamesByLeague).forEach((league) => {
-      gamesByLeagueReverse[league] = this.sortUtilsService.sortGameHistoryByDate(gamesByLeague[league] || [], true);
+      gamesByLeagueReverse[league] = sortGameHistoryByDate(gamesByLeague[league] || [], true);
     });
 
     return gamesByLeagueReverse;
@@ -170,13 +170,10 @@ export class LeaguePage {
 
   constructor(
     public storageService: StorageService,
-    private sortUtilsService: SortUtilsService,
-    private hapticService: HapticService,
     private statService: GameStatsService,
     public loadingService: LoadingService,
     private alertController: AlertController,
     private toastService: ToastService,
-    private chartService: ChartGenerationService,
     private hiddenLeagueSelectionService: HiddenLeagueSelectionService,
     private analyticsService: AnalyticsService,
   ) {
@@ -247,7 +244,7 @@ export class LeaguePage {
 
   async handleRefresh(event: RefresherCustomEvent): Promise<void> {
     try {
-      this.hapticService.vibrate(ImpactStyle.Medium);
+      vibrate(ImpactStyle.Medium);
       await this.storageService.loadGameHistory();
     } catch (error) {
       console.error(error);
@@ -338,7 +335,7 @@ export class LeaguePage {
   }
 
   async deleteLeague(league: string): Promise<void> {
-    this.hapticService.vibrate(ImpactStyle.Heavy);
+    vibrate(ImpactStyle.Heavy);
     const alert = await this.alertController.create({
       header: 'Confirm Deletion',
       message: 'Are you sure you want to delete this league?',
@@ -410,7 +407,7 @@ export class LeaguePage {
         return;
       }
 
-      this.scoreChartInstances[league] = this.chartService.generateScoreChart(
+      this.scoreChartInstances[league] = generateScoreChart(
         this.scoreChart,
         this.gamesByLeagueReverse()[league],
         this.scoreChartInstances[league]!,
@@ -430,7 +427,7 @@ export class LeaguePage {
         return;
       }
 
-      this.pinChartInstances[league] = this.chartService.generatePinChart(
+      this.pinChartInstances[league] = generatePinChart(
         this.pinChart,
         this.statsByLeague()[league],
         this.pinChartInstances[league]!,

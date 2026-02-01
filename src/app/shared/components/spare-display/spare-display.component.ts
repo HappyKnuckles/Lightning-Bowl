@@ -4,7 +4,7 @@ import { IonText, IonCol, IonRow, IonIcon, IonGrid } from '@ionic/angular/standa
 import { PrevStats, SessionStats, Stats } from 'src/app/core/models/stats.model';
 import { addIcons } from 'ionicons';
 import { arrowDown, arrowUp, informationCircleOutline } from 'ionicons/icons';
-import { UtilsService } from 'src/app/core/services/utils/utils.service';
+import { calculateStatDifference, getArrowIcon, getDiffColor } from 'src/app/core/utils/general.utils';
 
 @Component({
   selector: 'app-spare-display',
@@ -20,20 +20,21 @@ export class SpareDisplayComponent {
   @Input() title = '';
   @Input() prevStats?: PrevStats | Stats;
   @Input() id?: string;
-  constructor(private utilsService: UtilsService) {
+  
+  constructor() {
     addIcons({ informationCircleOutline, arrowUp, arrowDown });
   }
 
   calculateStatDifference(currentValue: number, previousValue: number): string {
-    return this.utilsService.calculateStatDifference(currentValue, previousValue);
+    return calculateStatDifference(currentValue, previousValue);
   }
 
   getArrowIcon(currentValue: number, previousValue: number): string {
-    return this.utilsService.getArrowIcon(currentValue, previousValue);
+    return getArrowIcon(currentValue, previousValue);
   }
 
   getDiffColor(currentValue: number, previousValue: number): string {
-    return this.utilsService.getDiffColor(currentValue, previousValue);
+    return getDiffColor(currentValue, previousValue);
   }
 
   getLabel(i: number): string {

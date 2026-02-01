@@ -1,6 +1,6 @@
 import { Directive, ElementRef, EventEmitter, HostListener, Input, OnDestroy, Output, Renderer2 } from '@angular/core';
 import { timer, Subscription } from 'rxjs';
-import { HapticService } from '../../services/haptic/haptic.service';
+import { vibrate } from 'src/app/core/utils/haptic.utils';
 import { ImpactStyle } from '@capacitor/haptics';
 
 @Directive({
@@ -24,13 +24,12 @@ export class LongPressDirective implements OnDestroy {
   constructor(
     private elementRef: ElementRef<HTMLElement>,
     private renderer: Renderer2,
-    private hapticService: HapticService,
   ) {}
 
   @HostListener('pointerdown', ['$event'])
   onPointerDown(ev: PointerEvent) {
     this.scaleTimeout = setTimeout(() => {
-      this.hapticService.vibrate(ImpactStyle.Medium);
+      vibrate(ImpactStyle.Medium);
       this.renderer.setStyle(this.elementRef.nativeElement, 'transition', `transform ${this.transitionDuration} ease`);
       this.renderer.setStyle(this.elementRef.nativeElement, 'transform', `scale(${this.scaleFactor})`);
     }, 300);

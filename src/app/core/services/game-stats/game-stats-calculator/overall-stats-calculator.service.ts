@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Game } from 'src/app/core/models/game.model';
 import { SeriesStats, SessionStats, Stats } from 'src/app/core/models/stats.model';
-import { GameUtilsService } from '../../game-utils/game-utils.service';
+import { isSplit, isMakeableSplit } from 'src/app/core/utils/game.utils';
 
 const MAX_FRAMES = 10;
 
@@ -9,8 +9,6 @@ const MAX_FRAMES = 10;
   providedIn: 'root',
 })
 export class OverallStatsCalculatorService {
-  constructor(private gameUtilsService: GameUtilsService) {}
-
   private getRate(converted: number, missed: number): number {
     if (converted + missed === 0) {
       return 0;
@@ -255,19 +253,19 @@ export class OverallStatsCalculatorService {
           if (!isStrike && frame.throws[0] && frame.throws[0].pinsLeftStanding) {
             const pinsLeft = frame.throws[0].pinsLeftStanding;
             const pinsLeftCount = pinsLeft.length;
-            const isSplit = this.gameUtilsService.isSplit(pinsLeft);
+            const isSplitFrame = isSplit(pinsLeft);
 
             // Count opportunity
             if (pinsLeftCount === 1) {
               singlePinSpareOpportunities++;
             } else if (pinsLeftCount > 1) {
               multiPinSpareOpportunities++;
-              if (!isSplit) {
+              if (!isSplitFrame) {
                 nonSplitSpareOpportunities++;
               } else {
                 splitOpportunities++;
                 // Check if split is makeable
-                if (this.gameUtilsService.isMakeableSplit(pinsLeft)) {
+                if (isMakeableSplit(pinsLeft)) {
                   makeableSplitOpportunities++;
                 }
               }
@@ -284,7 +282,7 @@ export class OverallStatsCalculatorService {
                 } else {
                   splits++;
                   // Check if makeable split was converted
-                  if (this.gameUtilsService.isMakeableSplit(pinsLeft)) {
+                  if (isMakeableSplit(pinsLeft)) {
                     makeableSplits++;
                   }
                 }
@@ -296,19 +294,19 @@ export class OverallStatsCalculatorService {
           if (idx === MAX_FRAMES - 1 && isStrike && throw2 !== undefined && !isSecondStrike && frame.throws[1] && frame.throws[1].pinsLeftStanding) {
             const pinsLeft = frame.throws[1].pinsLeftStanding;
             const pinsLeftCount = pinsLeft.length;
-            const isSplit = this.gameUtilsService.isSplit(pinsLeft);
+            const isSplitFrame = isSplit(pinsLeft);
 
             // Count opportunity
             if (pinsLeftCount === 1) {
               singlePinSpareOpportunities++;
             } else if (pinsLeftCount > 1) {
               multiPinSpareOpportunities++;
-              if (!isSplit) {
+              if (!isSplitFrame) {
                 nonSplitSpareOpportunities++;
               } else {
                 splitOpportunities++;
                 // Check if split is makeable
-                if (this.gameUtilsService.isMakeableSplit(pinsLeft)) {
+                if (isMakeableSplit(pinsLeft)) {
                   makeableSplitOpportunities++;
                 }
               }
@@ -325,7 +323,7 @@ export class OverallStatsCalculatorService {
                 } else {
                   splits++;
                   // Check if makeable split was converted
-                  if (this.gameUtilsService.isMakeableSplit(pinsLeft)) {
+                  if (isMakeableSplit(pinsLeft)) {
                     makeableSplits++;
                   }
                 }
