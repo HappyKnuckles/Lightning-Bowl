@@ -472,19 +472,16 @@ export class MinigamePage implements OnInit, AfterViewInit, OnDestroy {
   private updatePins() {
     this.pins.forEach((pin, index) => {
       if (pin.fallen) {
-        // Apply physics to fallen pins
+        // Apply physics to fallen pins - they fly/tumble based on impact
         pin.x += pin.velocityX;
         pin.y += pin.velocityY;
 
         // Check for collisions with other pins during movement
         this.checkMovingPinCollisions(pin, index);
 
-        // Realistic pin friction - wood on wood
+        // Realistic pin friction - wood on wood, pins slow down in all directions
         pin.velocityX *= this.PIN_FRICTION;
         pin.velocityY *= this.PIN_FRICTION;
-
-        // Gravity effect - pins settle downward
-        pin.velocityY += this.GRAVITY;
 
         // Realistic falling animation - angular velocity based on linear velocity
         if (pin.fallingAngle < Math.PI / 1.8) {
@@ -493,18 +490,29 @@ export class MinigamePage implements OnInit, AfterViewInit, OnDestroy {
           pin.fallingAngle += 0.08 + angularMomentum * 0.025;
         }
 
-        // Boundary constraints with realistic bouncing
-        if (pin.x < 0) {
-          pin.x = 0;
-          pin.velocityX = Math.abs(pin.velocityX) * 0.25; // Energy loss on bounce
+        // Boundary constraints - pins bounce off lane edges and stay in pin deck area
+        const gutterWidth = 18;
+        const minX = gutterWidth;
+        const maxX = this.LANE_WIDTH - gutterWidth;
+
+        if (pin.x < minX) {
+          pin.x = minX;
+          pin.velocityX = Math.abs(pin.velocityX) * 0.3; // Bounce off left edge
         }
-        if (pin.x > this.LANE_WIDTH) {
-          pin.x = this.LANE_WIDTH;
-          pin.velocityX = -Math.abs(pin.velocityX) * 0.25;
+        if (pin.x > maxX) {
+          pin.x = maxX;
+          pin.velocityX = -Math.abs(pin.velocityX) * 0.3; // Bounce off right edge
         }
-        if (pin.y > this.LANE_HEIGHT) {
-          pin.y = this.LANE_HEIGHT;
-          pin.velocityY = -Math.abs(pin.velocityY) * 0.15; // Minimal vertical bounce
+
+        // Keep pins in the pin deck area (top part of lane)
+        // Pins fly around but don't go past the foul line
+        if (pin.y < -20) {
+          pin.y = -20;
+          pin.velocityY = Math.abs(pin.velocityY) * 0.2; // Bounce back from back wall
+        }
+        if (pin.y > 200) {
+          pin.y = 200;
+          pin.velocityY = -Math.abs(pin.velocityY) * 0.2; // Bounce back toward pin area
         }
 
         // Stop nearly motionless pins
@@ -533,12 +541,17 @@ export class MinigamePage implements OnInit, AfterViewInit, OnDestroy {
           // Moving pin knocks down standing pin
           otherPin.fallen = true;
 
-          // Realistic collision physics
+          // Realistic collision physics with scatter
           const collisionAngle = Math.atan2(dy, dx);
-          const momentumTransfer = movingSpeed * 0.65; // Pin-to-pin transfer
+          const momentumTransfer = movingSpeed * 0.75; // Increased for better pin action
 
-          otherPin.velocityX = Math.cos(collisionAngle) * momentumTransfer + movingPin.velocityX * 0.35;
-          otherPin.velocityY = Math.sin(collisionAngle) * momentumTransfer + movingPin.velocityY * 0.35;
+          otherPin.velocityX = Math.cos(collisionAngle) * momentumTransfer + movingPin.velocityX * 0.4;
+          otherPin.velocityY = Math.sin(collisionAngle) * momentumTransfer + movingPin.velocityY * 0.4;
+
+          // Add scatter for realistic pin action
+          const scatter = movingSpeed * 0.15;
+          otherPin.velocityX += (Math.random() - 0.5) * scatter;
+          otherPin.velocityY += (Math.random() - 0.5) * scatter;
 
           // Energy loss in collision
           movingPin.velocityX *= 0.65;
@@ -548,7 +561,7 @@ export class MinigamePage implements OnInit, AfterViewInit, OnDestroy {
           this.hapticService.vibrate(ImpactStyle.Light);
           this.createParticles(otherPin.x, otherPin.y);
         } else if (otherPin.fallen) {
-          // Both pins fallen - elastic collision
+          // Both pins fallen - elastic collision with scatter
           const overlap = collisionDistance - distance;
           if (overlap > 0) {
             const separationX = (dx / distance) * overlap * 0.5;
@@ -560,11 +573,11 @@ export class MinigamePage implements OnInit, AfterViewInit, OnDestroy {
             otherPin.x += separationX;
             otherPin.y += separationY;
 
-            // Realistic elastic collision - exchange momentum
-            const tempVelX = movingPin.velocityX * 0.35;
-            const tempVelY = movingPin.velocityY * 0.35;
-            movingPin.velocityX += otherPin.velocityX * 0.25 - tempVelX;
-            movingPin.velocityY += otherPin.velocityY * 0.25 - tempVelY;
+            // Realistic elastic collision - exchange momentum with variation
+            const tempVelX = movingPin.velocityX * 0.4;
+            const tempVelY = movingPin.velocityY * 0.4;
+            movingPin.velocityX += otherPin.velocityX * 0.3 - tempVelX;
+            movingPin.velocityY += otherPin.velocityY * 0.3 - tempVelY;
             otherPin.velocityX += tempVelX;
             otherPin.velocityY += tempVelY;
           }
@@ -616,17 +629,17 @@ export class MinigamePage implements OnInit, AfterViewInit, OnDestroy {
     const impactAngle = Math.atan2(-dy, -dx);
 
     // Realistic momentum transfer using conservation of momentum
-    // F = ma, where heavier ball transfers more energy to lighter pin
+    // Pins fly dramatically when hit by heavy ball
     const momentumRatio = this.BALL_MASS / (this.BALL_MASS + this.PIN_MASS);
-    const energyTransfer = ballSpeed * momentumRatio * 0.75; // 75% efficiency
+    const energyTransfer = ballSpeed * momentumRatio * 0.85; // 85% efficiency - pins fly with force
 
     // Pin velocity based on impact angle and realistic physics
-    const directionFactor = 0.85; // Impact angle influence
-    pin.velocityX = Math.cos(impactAngle) * energyTransfer * directionFactor + this.ball.velocityX * 0.35;
-    pin.velocityY = Math.sin(impactAngle) * energyTransfer * directionFactor + this.ball.velocityY * 0.35;
+    const directionFactor = 0.9; // Strong directional impact
+    pin.velocityX = Math.cos(impactAngle) * energyTransfer * directionFactor + this.ball.velocityX * 0.4;
+    pin.velocityY = Math.sin(impactAngle) * energyTransfer * directionFactor + this.ball.velocityY * 0.4;
 
-    // Add realistic scatter effect (pins don't fly perfectly straight)
-    const scatterAmount = ballSpeed * 0.12;
+    // Add realistic scatter effect - pins fly in various directions
+    const scatterAmount = ballSpeed * 0.25; // Increased scatter for dramatic pin action
     pin.velocityX += (Math.random() - 0.5) * scatterAmount;
     pin.velocityY += (Math.random() - 0.5) * scatterAmount;
 
@@ -689,14 +702,19 @@ export class MinigamePage implements OnInit, AfterViewInit, OnDestroy {
         // Calculate collision angle
         const collisionAngle = Math.atan2(dy, dx);
 
-        // Realistic momentum transfer between pins (pin-to-pin is less efficient than ball-to-pin)
-        const momentumTransfer = movingPinSpeed * 0.65; // 65% transfer efficiency
+        // Realistic momentum transfer - pins scatter when hit
+        const momentumTransfer = movingPinSpeed * 0.75; // 75% transfer for dramatic pin action
         standingPin.velocityX = Math.cos(collisionAngle) * momentumTransfer;
         standingPin.velocityY = Math.sin(collisionAngle) * momentumTransfer;
 
-        // Add component of moving pin's velocity
-        standingPin.velocityX += movingPin.velocityX * 0.35;
-        standingPin.velocityY += movingPin.velocityY * 0.35;
+        // Add component of moving pin's velocity for realistic scatter
+        standingPin.velocityX += movingPin.velocityX * 0.4;
+        standingPin.velocityY += movingPin.velocityY * 0.4;
+
+        // Add scatter variation
+        const pinScatter = movingPinSpeed * 0.15;
+        standingPin.velocityX += (Math.random() - 0.5) * pinScatter;
+        standingPin.velocityY += (Math.random() - 0.5) * pinScatter;
 
         // Moving pin loses energy in collision
         movingPin.velocityX *= 0.65;
