@@ -202,19 +202,19 @@ export class AddGamePage implements OnInit {
     const { currentFrameIndex, currentThrowIndex, throwsData } = state;
     const throws = throwsData[currentFrameIndex] || [];
 
-    return this.gameUtilsService.getAvailablePins(currentFrameIndex, currentThrowIndex, throws);
+    return getAvailablePins(currentFrameIndex, currentThrowIndex, throws);
   }
 
   canRecordStrike(gameIndex: number): boolean {
     const state = this.pinModeState()[gameIndex];
     const game = this.games()[gameIndex];
-    return this.validationService.canRecordStrike(state.currentFrameIndex, state.currentThrowIndex, game.frames);
+    return canRecordStrike(state.currentFrameIndex, state.currentThrowIndex, game.frames);
   }
 
   canRecordSpare(gameIndex: number): boolean {
     const state = this.pinModeState()[gameIndex];
     const game = this.games()[gameIndex];
-    return this.validationService.canRecordSpare(state.currentFrameIndex, state.currentThrowIndex, game.frames);
+    return canRecordSpare(state.currentFrameIndex, state.currentThrowIndex, game.frames);
   }
 
   canUndoForPinMode(gameIndex: number): boolean {
@@ -223,12 +223,12 @@ export class AddGamePage implements OnInit {
 
     if (!game || !state) return false;
 
-    return this.validationService.canUndoLastThrow(game.frames, state.currentFrameIndex, state.currentThrowIndex);
+    return canUndoLastThrow(game.frames, state.currentFrameIndex, state.currentThrowIndex);
   }
 
   isGameComplete(gameIndex: number): boolean {
     const game = this.games()[gameIndex];
-    return this.validationService.isGameValid(game);
+    return isGameValid(game);
   }
 
   getCurrentFrameIndex(gameIndex: number): number {
@@ -286,7 +286,7 @@ export class AddGamePage implements OnInit {
     const game = this.games()[gameIndex];
     const state = this.pinModeState()[gameIndex];
 
-    const canClick = this.gameUtilsService.isCellAccessible(game.frames, frameIndex, throwIndex);
+    const canClick = isCellAccessible(game.frames, frameIndex, throwIndex);
 
     if (canClick) {
       this.pinModeState.update((states) => {
@@ -448,7 +448,7 @@ export class AddGamePage implements OnInit {
 
   async presentActionSheet(): Promise<void> {
     const buttons: { text: string; handler?: () => void; role?: string }[] = [];
-    this.hapticService.vibrate(ImpactStyle.Medium);
+    vibrate(ImpactStyle.Medium);
     this.sheetOpen = true;
 
     const modes = [SeriesMode.Single, SeriesMode.Series3, SeriesMode.Series4, SeriesMode.Series5, SeriesMode.Series6];
@@ -505,7 +505,7 @@ export class AddGamePage implements OnInit {
 
   // SAVE & RESET LOGIC
   isGameValid(game: Game): boolean {
-    return this.validationService.isGameValid(game);
+    return isGameValid(game);
   }
 
   clearFrames(index?: number): void {
@@ -570,7 +570,7 @@ export class AddGamePage implements OnInit {
 
   private async processAndSaveGames(games: Game[], isSeries = false, seriesId = ''): Promise<boolean> {
     if (!games.every((g) => this.isGameValid(g))) {
-      this.hapticService.vibrate(ImpactStyle.Heavy);
+      vibrate(ImpactStyle.Heavy);
       this.isAlertOpen = true;
       return false;
     }
@@ -603,7 +603,7 @@ export class AddGamePage implements OnInit {
         } else {
           await this.highScroreAlertService.checkAndDisplayHighScoreAlertsForMultipleGames(savedGames, allGames);
         }
-        this.hapticService.vibrate(ImpactStyle.Medium);
+        vibrate(ImpactStyle.Medium);
         this.toastService.showToast(ToastMessages.gameSaveSuccess, 'add');
         return true;
       }
@@ -621,8 +621,8 @@ export class AddGamePage implements OnInit {
   }
 
   private updateGameState(frames: Frame[], index: number, isModal: boolean): void {
-    const scoreResult = this.gameScoreCalculatorService.calculateScoreFromFrames(frames);
-    const maxScore = this.gameScoreCalculatorService.calculateMaxScoreFromFrames(frames, scoreResult.totalScore);
+    const scoreResult = calculateScoreFromFrames(frames);
+    const maxScore = calculateMaxScoreFromFrames(frames, scoreResult.totalScore);
     const updatedGameData = { frames, frameScores: scoreResult.frameScores, totalScore: scoreResult.totalScore };
 
     if (isModal) {
@@ -706,8 +706,8 @@ export class AddGamePage implements OnInit {
 
     activeIndexes.forEach((index) => {
       const game = currentGames[index];
-      const scoreResult = this.gameScoreCalculatorService.calculateScoreFromFrames(game.frames);
-      const maxScore = this.gameScoreCalculatorService.calculateMaxScoreFromFrames(game.frames, scoreResult.totalScore);
+      const scoreResult = calculateScoreFromFrames(game.frames);
+      const maxScore = calculateMaxScoreFromFrames(game.frames, scoreResult.totalScore);
 
       newTotalScores[index] = scoreResult.totalScore;
       newMaxScores[index] = maxScore;
@@ -758,7 +758,7 @@ export class AddGamePage implements OnInit {
       return null;
     }
     try {
-      const gameData = this.transformGameService.transformGameData(
+      const gameData = transformGameData(
         frames,
         frameScores,
         totalScore,
@@ -787,7 +787,7 @@ export class AddGamePage implements OnInit {
   }
 
   private handleInvalidInputUI(index: number, frameIndex: number, throwIndex: number, isModal: boolean): void {
-    this.hapticService.vibrate(ImpactStyle.Heavy);
+    vibrate(ImpactStyle.Heavy);
     const grid = isModal ? this.modalGrid : this.gameGrids.toArray()[index];
     if (grid) grid.handleInvalidInput(frameIndex, throwIndex);
   }
@@ -893,9 +893,9 @@ export class AddGamePage implements OnInit {
 
   private parseBowlingScores(input: string): void {
     try {
-      const { frames, frameScores, totalScore } = this.gameUtilsService.parseBowlingScores(input, this.userService.username());
+      const { frames, frameScores, totalScore } = parseBowlingScores(input, this.userService.username());
       const framesAsFrameArray = numberArraysToFrames(frames);
-      this.gameData = this.transformGameService.transformGameData(framesAsFrameArray, frameScores, totalScore, false, '', false, '', '', [], []);
+      this.gameData = transformGameData(framesAsFrameArray, frameScores, totalScore, false, '', false, '', '', [], []);
       this.gameData.isPractice = true;
       this.isModalOpen = true;
     } catch (error) {
