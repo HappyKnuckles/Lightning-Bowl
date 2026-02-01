@@ -1,4 +1,4 @@
-import { Frame } from '../../models/game.model';
+import { Frame } from 'src/app/core/models/game.model';
 
 /**
  * Formats a throw value for display (handles strikes, spares, and gutter balls)

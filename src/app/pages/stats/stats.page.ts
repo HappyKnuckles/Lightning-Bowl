@@ -38,8 +38,15 @@ import { calendarNumber, calendarNumberOutline, filterOutline, cloudUploadOutlin
 import { SessionStats } from 'src/app/core/models/stats.model';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { AlertController, ModalController, RefresherCustomEvent, SegmentCustomEvent } from '@ionic/angular';
-import { SortUtilsService } from 'src/app/core/services/sort-utils/sort-utils.service';
-import { ChartGenerationService } from 'src/app/core/services/chart/chart-generation.service';
+import { sortGameHistoryByDate } from 'src/app/core/utils/sort.utils';
+import {
+  generateScoreChart,
+  generateAverageScoreChart,
+  generateScoreDistributionChart,
+  generateSpareDistributionChart,
+  generatePinChart,
+  generateThrowChart,
+} from 'src/app/core/utils/chart.utils';
 import {
   overallStatDefinitions,
   seriesStatDefinitions,
@@ -52,7 +59,7 @@ import {
   spareStatDefinitions,
 } from '../../core/constants/stats.definitions.constants';
 import { GameFilterService } from 'src/app/core/services/game-filter/game-filter.service';
-import { transformDate, isSameDay } from 'src/app/core/utils/date.utils';
+import { isSameDay } from 'src/app/core/utils/date.utils';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { ExcelService } from 'src/app/core/services/excel/excel.service';
 import { Filesystem } from '@capacitor/filesystem';
@@ -456,12 +463,7 @@ export class StatsPage implements OnInit, AfterViewInit {
         return;
       }
 
-      this.throwChartInstance = generateThrowChart(
-        this.throwChart,
-        this.statsService.currentStats(),
-        this.throwChartInstance!,
-        isReload,
-      );
+      this.throwChartInstance = generateThrowChart(this.throwChart, this.statsService.currentStats(), this.throwChartInstance!, isReload);
     } catch (error) {
       this.toastService.showToast(ToastMessages.chartGenerationError, 'bug', true);
       console.error('Error generating throw chart:', error);

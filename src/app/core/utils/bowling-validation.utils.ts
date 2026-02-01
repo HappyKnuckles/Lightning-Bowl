@@ -1,4 +1,4 @@
-import { Game, Frame, getThrowValue } from '../../models/game.model';
+import { Game, Frame, getThrowValue } from 'src/app/core/models/game.model';
 
 /**
  * Check if a strike can be recorded at the given position
@@ -156,7 +156,9 @@ function isGameValidFromFrames(frames: Frame[]): boolean {
       return false;
     }
 
-    const throws = frame.throws.map((t) => (typeof t.value === 'string' ? parseInt(t.value as unknown as string, 10) : t.value));
+    const throws = frame.throws.map((t: { value: string | number }) =>
+      typeof t.value === 'string' ? parseInt(t.value as unknown as string, 10) : t.value,
+    );
 
     if (index < 9) {
       // For frames 1 to 9
@@ -169,7 +171,7 @@ function isGameValidFromFrames(frames: Frame[]): boolean {
 
       const frameValid =
         (first === 10 && (second === undefined || isNaN(second))) ||
-        (first !== 10 && throws.length >= 2 && !isNaN(second) && first + second <= 10 && throws.slice(0, 2).every((v) => v >= 0 && v <= 10));
+        (first !== 10 && throws.length >= 2 && !isNaN(second) && first + second <= 10 && throws.slice(0, 2).every((v: number) => v >= 0 && v <= 10));
 
       if (!frameValid) {
         return false;
@@ -185,11 +187,11 @@ function isGameValidFromFrames(frames: Frame[]): boolean {
 
       const frameValid =
         // Strike on first throw - need 3 throws
-        (first === 10 && throws.length === 3 && throws.every((v) => !isNaN(v) && v >= 0 && v <= 10)) ||
+        (first === 10 && throws.length === 3 && throws.every((v: number) => !isNaN(v) && v >= 0 && v <= 10)) ||
         // No mark - only 2 throws
-        (throws.length === 2 && first + second < 10 && throws.every((v) => !isNaN(v) && v >= 0 && v <= 10)) ||
+        (throws.length === 2 && first + second < 10 && throws.every((v: number) => !isNaN(v) && v >= 0 && v <= 10)) ||
         // Spare - need 3 throws
-        (throws.length === 3 && first + second >= 10 && second !== undefined && throws.every((v) => !isNaN(v) && v >= 0 && v <= 10));
+        (throws.length === 3 && first + second >= 10 && second !== undefined && throws.every((v: number) => !isNaN(v) && v >= 0 && v <= 10));
 
       if (!frameValid) {
         return false;

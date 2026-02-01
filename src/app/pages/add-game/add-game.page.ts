@@ -822,7 +822,7 @@ export class AddGamePage implements OnInit {
       const imageUrl: File | Blob | undefined = await this.takeOrChoosePicture();
       if (imageUrl instanceof File) {
         this.loadingService.setLoading(true);
-        const gameText = await this.imageProcessingService.performOCR(imageUrl);
+        const gameText = await performOCR(imageUrl);
         this.parseBowlingScores(gameText!);
         await this.analyticsService.trackOCRUsed(!!gameText);
       } else {

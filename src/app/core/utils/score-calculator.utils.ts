@@ -1,4 +1,4 @@
-import { Frame, getThrowValue } from '../../models/game.model';
+import { Frame, getThrowValue } from 'src/app/core/models/game.model';
 
 export interface ScoreResult {
   totalScore: number;

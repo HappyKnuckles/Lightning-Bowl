@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Game } from 'src/app/core/models/game.model';
 import { Storage } from '@ionic/storage-angular';
-import { SortUtilsService } from '../sort-utils/sort-utils.service';
+import { sortGameHistoryByDate } from 'src/app/core/utils/sort.utils';
 import { Ball } from 'src/app/core/models/ball.model';
 import { signal, computed } from '@angular/core';
 import { LoadingService } from '../loader/loading.service';

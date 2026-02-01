@@ -1,6 +1,7 @@
 import { computed, Injectable, Signal, signal } from '@angular/core';
 import { BallFilter, CoreType, CoverstockType, Market } from 'src/app/core/models/filter.model';
-import { UtilsService } from '../utils/utils.service';
+import { areDatesEqual } from 'src/app/core/utils/date.utils';
+import { areArraysEqual } from 'src/app/core/utils/general.utils';
 import { Ball } from 'src/app/core/models/ball.model';
 import { StorageService } from '../storage/storage.service';
 
@@ -29,7 +30,7 @@ export class BallFilterService {
       const filterValue = this.filters()[key as keyof BallFilter];
       const defaultValue = this.defaultFilters[key as keyof BallFilter];
       if (key === 'startDate' || key === 'endDate') {
-        if (!this.utilsService.areDatesEqual(filterValue as string, defaultValue as string)) {
+        if (!areDatesEqual(filterValue as string, defaultValue as string)) {
           return count + 1;
         }
       } else if (Array.isArray(filterValue) && Array.isArray(defaultValue)) {

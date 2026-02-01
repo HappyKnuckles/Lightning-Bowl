@@ -1,4 +1,4 @@
-import { Frame, getThrowValue, Throw } from '../../models/game.model';
+import { Frame, getThrowValue, Throw } from 'src/app/core/models/game.model';
 
 export interface PinThrowResult {
   updatedFrames: Frame[];
@@ -464,7 +464,7 @@ function cleanupSubsequentThrows(frame: Frame, frameIndex: number, throwIndex: n
 }
 
 function validateOrClearThrow(targetThrow: Throw, availablePins: number[], frame: Frame, targetIndex: number): void {
-  const invalidPins = (targetThrow.pinsKnockedDown || []).filter((p) => !availablePins.includes(p));
+  const invalidPins = (targetThrow.pinsKnockedDown || []).filter((p: number) => !availablePins.includes(p));
 
   if (invalidPins.length > 0) {
     frame.throws.splice(targetIndex);
