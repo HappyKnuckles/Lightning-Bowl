@@ -26,17 +26,18 @@ export class GameUtilsService {
   ];
 
   // Adjacency map: which pins are adjacent to each pin
+  // Pins are considered adjacent if they're physically touching OR on the same diagonal line
   private readonly PIN_ADJACENCY: Record<number, number[]> = {
-    1: [2, 3],
-    2: [1, 3, 4, 5],
-    3: [1, 2, 5, 6],
-    4: [2, 5, 7, 8],
-    5: [2, 3, 4, 6, 8, 9],
-    6: [3, 5, 9, 10],
-    7: [4, 8],
-    8: [4, 5, 7, 9],
-    9: [5, 6, 8, 10],
-    10: [6, 9],
+    1: [2, 3, 5], // row 1: touches 2,3 + diagonal 5
+    2: [1, 3, 4, 5, 8], // row 2: touches 1,3,4,5 + diagonal 8
+    3: [1, 2, 5, 6, 9], // row 2: touches 1,2,5,6 + diagonal 9
+    4: [2, 5, 7, 8], // row 3: touches 2,5,7,8
+    5: [1, 2, 3, 4, 6, 8, 9], // row 3: touches 2,3,4,6,8,9 + diagonal 1
+    6: [3, 5, 9, 10], // row 3: touches 3,5,9,10
+    7: [4, 8], // row 4: touches 4,8
+    8: [2, 4, 5, 7, 9], // row 4: touches 4,5,7,9 + diagonal 2
+    9: [3, 5, 6, 8, 10], // row 4: touches 5,6,8,10 + diagonal 3
+    10: [6, 9], // row 4: touches 6,9
   };
 
   private readonly PIN_TO_COLUMN: Record<number, number> = {
