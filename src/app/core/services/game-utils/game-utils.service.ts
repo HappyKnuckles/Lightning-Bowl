@@ -25,6 +25,20 @@ export class GameUtilsService {
     [4, 6, 7, 9, 10],
   ];
 
+  // Adjacency map: which pins are adjacent to each pin
+  private readonly PIN_ADJACENCY: Record<number, number[]> = {
+    1: [2, 3],
+    2: [1, 3, 4, 5],
+    3: [1, 2, 5, 6],
+    4: [2, 5, 7, 8],
+    5: [2, 3, 4, 6, 8, 9],
+    6: [3, 5, 9, 10],
+    7: [4, 8],
+    8: [4, 5, 7, 9],
+    9: [5, 6, 8, 10],
+    10: [6, 9],
+  };
+
   private readonly PIN_TO_COLUMN: Record<number, number> = {
     7: 1,
     4: 2,
@@ -251,18 +265,31 @@ export class GameUtilsService {
     const numPins = pinsLeftStanding?.length ?? 0;
     if (numPins < 2 || pinsLeftStanding.includes(1)) return false;
 
-    const occupiedColumns = new Set<number>();
-    for (const pin of pinsLeftStanding) {
-      const col = this.PIN_TO_COLUMN[pin];
-      if (col) occupiedColumns.add(col);
+    // For splits, check if pins form a contiguous group
+    // If all pins are connected through adjacency, it's NOT a split
+    const sortedPins = [...pinsLeftStanding].sort((a, b) => a - b);
+
+    // Start with the first pin and try to reach all others through adjacency
+    const visited = new Set<number>();
+    const toVisit = [sortedPins[0]];
+
+    while (toVisit.length > 0) {
+      const currentPin = toVisit.pop()!;
+      if (visited.has(currentPin)) continue;
+      visited.add(currentPin);
+
+      // Add adjacent pins that are in the pins left standing list
+      const adjacentPins = this.PIN_ADJACENCY[currentPin] || [];
+      for (const adjacentPin of adjacentPins) {
+        if (pinsLeftStanding.includes(adjacentPin) && !visited.has(adjacentPin)) {
+          toVisit.push(adjacentPin);
+        }
+      }
     }
 
-    const sortedCols = Array.from(occupiedColumns).sort((a, b) => a - b);
-    for (let i = 0; i < sortedCols.length - 1; i++) {
-      if (sortedCols[i + 1] - sortedCols[i] > 1) return true;
-    }
-
-    return false;
+    // If we visited all pins, they form a contiguous group (not a split)
+    // If we didn't visit all pins, there's a gap (it's a split)
+    return visited.size !== pinsLeftStanding.length;
   }
 
   isMakeableSplit(pinsLeftStanding: number[]): boolean {
