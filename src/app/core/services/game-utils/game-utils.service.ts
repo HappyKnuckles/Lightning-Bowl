@@ -269,7 +269,7 @@ export class GameUtilsService {
     // If all pins are connected through adjacency, it's NOT a split
     const sortedPins = [...pinsLeftStanding].sort((a, b) => a - b);
 
-    // Start with the first pin and try to reach all others through adjacency
+    // Start with the first pin and try to reach all others through adjacency (DFS)
     const visited = new Set<number>();
     const toVisit = [sortedPins[0]];
 
