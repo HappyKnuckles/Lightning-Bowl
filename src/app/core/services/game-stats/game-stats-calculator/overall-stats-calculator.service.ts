@@ -42,8 +42,6 @@ export class OverallStatsCalculatorService {
     let singlePinSpareOpportunities = 0;
     let multiPinSpares = 0;
     let multiPinSpareOpportunities = 0;
-    let nonSplitSpares = 0;
-    let nonSplitSpareOpportunities = 0;
     let splits = 0;
     let splitOpportunities = 0;
     let makeableSplits = 0;
@@ -262,9 +260,7 @@ export class OverallStatsCalculatorService {
               singlePinSpareOpportunities++;
             } else if (pinsLeftCount > 1) {
               multiPinSpareOpportunities++;
-              if (!isSplit) {
-                nonSplitSpareOpportunities++;
-              } else {
+              if (isSplit) {
                 splitOpportunities++;
                 // Check if split is makeable
                 if (this.gameUtilsService.isMakeableSplit(pinsLeft)) {
@@ -279,9 +275,7 @@ export class OverallStatsCalculatorService {
                 singlePinSpares++;
               } else if (pinsLeftCount > 1) {
                 multiPinSpares++;
-                if (!isSplit) {
-                  nonSplitSpares++;
-                } else {
+                if (isSplit) {
                   splits++;
                   // Check if makeable split was converted
                   if (this.gameUtilsService.isMakeableSplit(pinsLeft)) {
@@ -303,9 +297,7 @@ export class OverallStatsCalculatorService {
               singlePinSpareOpportunities++;
             } else if (pinsLeftCount > 1) {
               multiPinSpareOpportunities++;
-              if (!isSplit) {
-                nonSplitSpareOpportunities++;
-              } else {
+              if (isSplit) {
                 splitOpportunities++;
                 // Check if split is makeable
                 if (this.gameUtilsService.isMakeableSplit(pinsLeft)) {
@@ -320,9 +312,7 @@ export class OverallStatsCalculatorService {
                 singlePinSpares++;
               } else if (pinsLeftCount > 1) {
                 multiPinSpares++;
-                if (!isSplit) {
-                  nonSplitSpares++;
-                } else {
+                if (isSplit) {
                   splits++;
                   // Check if makeable split was converted
                   if (this.gameUtilsService.isMakeableSplit(pinsLeft)) {
@@ -384,7 +374,14 @@ export class OverallStatsCalculatorService {
     const pocketHitPercentage = totalFirstBalls > 0 ? (pocketHits / totalFirstBalls) * 100 : 0;
     const singlePinSparePercentage = singlePinSpareOpportunities > 0 ? (singlePinSpares / singlePinSpareOpportunities) * 100 : 0;
     const multiPinSparePercentage = multiPinSpareOpportunities > 0 ? (multiPinSpares / multiPinSpareOpportunities) * 100 : 0;
+
+    // Non-split spares = (total opens + total spares) - splits
+    // Total spare opportunities = all spares converted + all spares missed
+    const totalSpareOpportunities = totalSparesConverted + totalSparesMissed;
+    const nonSplitSpares = totalSparesConverted - splits;
+    const nonSplitSpareOpportunities = totalSpareOpportunities - splitOpportunities;
     const nonSplitSparePercentage = nonSplitSpareOpportunities > 0 ? (nonSplitSpares / nonSplitSpareOpportunities) * 100 : 0;
+
     const splitConversionPercentage = splitOpportunities > 0 ? (splits / splitOpportunities) * 100 : 0;
     const makeableSplitPercentage = makeableSplitOpportunities > 0 ? (makeableSplits / makeableSplitOpportunities) * 100 : 0;
 
