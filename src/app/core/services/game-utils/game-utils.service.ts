@@ -25,21 +25,6 @@ export class GameUtilsService {
     [4, 6, 7, 9, 10],
   ];
 
-  // Adjacency map: which pins are adjacent to each pin
-  // Pins are considered adjacent if they're physically touching OR on the same diagonal line
-  private readonly PIN_ADJACENCY: Record<number, number[]> = {
-    1: [2, 3, 5], // row 1: touches 2,3 + diagonal 5
-    2: [1, 3, 4, 5, 8], // row 2: touches 1,3,4,5 + diagonal 8
-    3: [1, 2, 5, 6, 9], // row 2: touches 1,2,5,6 + diagonal 9
-    4: [2, 5, 7, 8], // row 3: touches 2,5,7,8
-    5: [1, 2, 3, 4, 6, 8, 9], // row 3: touches 2,3,4,6,8,9 + diagonal 1
-    6: [3, 5, 9, 10], // row 3: touches 3,5,9,10
-    7: [4, 8], // row 4: touches 4,8
-    8: [2, 4, 5, 7, 9], // row 4: touches 4,5,7,9 + diagonal 2
-    9: [3, 5, 6, 8, 10], // row 4: touches 5,6,8,10 + diagonal 3
-    10: [6, 9], // row 4: touches 6,9
-  };
-
   private readonly PIN_TO_COLUMN: Record<number, number> = {
     7: 1,
     4: 2,
@@ -266,31 +251,18 @@ export class GameUtilsService {
     const numPins = pinsLeftStanding?.length ?? 0;
     if (numPins < 2 || pinsLeftStanding.includes(1)) return false;
 
-    // For splits, check if pins form a contiguous group
-    // If all pins are connected through adjacency, it's NOT a split
-    const sortedPins = [...pinsLeftStanding].sort((a, b) => a - b);
-
-    // Start with the first pin and try to reach all others through adjacency (DFS)
-    const visited = new Set<number>();
-    const toVisit = [sortedPins[0]];
-
-    while (toVisit.length > 0) {
-      const currentPin = toVisit.pop()!;
-      if (visited.has(currentPin)) continue;
-      visited.add(currentPin);
-
-      // Add adjacent pins that are in the pins left standing list
-      const adjacentPins = this.PIN_ADJACENCY[currentPin] || [];
-      for (const adjacentPin of adjacentPins) {
-        if (pinsLeftStanding.includes(adjacentPin) && !visited.has(adjacentPin)) {
-          toVisit.push(adjacentPin);
-        }
-      }
+    const occupiedColumns = new Set<number>();
+    for (const pin of pinsLeftStanding) {
+      const col = this.PIN_TO_COLUMN[pin];
+      if (col) occupiedColumns.add(col);
     }
 
-    // If we visited all pins, they form a contiguous group (not a split)
-    // If we didn't visit all pins, there's a gap (it's a split)
-    return visited.size !== pinsLeftStanding.length;
+    const sortedCols = Array.from(occupiedColumns).sort((a, b) => a - b);
+    for (let i = 0; i < sortedCols.length - 1; i++) {
+      if (sortedCols[i + 1] - sortedCols[i] > 1) return true;
+    }
+
+    return false;
   }
 
   isMakeableSplit(pinsLeftStanding: number[]): boolean {
