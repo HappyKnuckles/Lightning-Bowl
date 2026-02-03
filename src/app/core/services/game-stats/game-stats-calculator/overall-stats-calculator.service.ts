@@ -375,9 +375,11 @@ export class OverallStatsCalculatorService {
     const singlePinSparePercentage = singlePinSpareOpportunities > 0 ? (singlePinSpares / singlePinSpareOpportunities) * 100 : 0;
     const multiPinSparePercentage = multiPinSpareOpportunities > 0 ? (multiPinSpares / multiPinSpareOpportunities) * 100 : 0;
 
-    // Non-split spares = multi-pin spares - splits
-    const nonSplitSpares = multiPinSpares - splits;
-    const nonSplitSpareOpportunities = multiPinSpareOpportunities - splitOpportunities;
+    // Non-split spares = (total opens + total spares) - splits
+    // Total spare opportunities = all spares converted + all spares missed
+    const totalSpareOpportunities = totalSparesConverted + totalSparesMissed;
+    const nonSplitSpares = totalSparesConverted - splits;
+    const nonSplitSpareOpportunities = totalSpareOpportunities - splitOpportunities;
     const nonSplitSparePercentage = nonSplitSpareOpportunities > 0 ? (nonSplitSpares / nonSplitSpareOpportunities) * 100 : 0;
 
     const splitConversionPercentage = splitOpportunities > 0 ? (splits / splitOpportunities) * 100 : 0;
