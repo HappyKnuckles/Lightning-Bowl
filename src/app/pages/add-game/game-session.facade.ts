@@ -6,6 +6,7 @@ import { GameDataTransformerService } from 'src/app/core/services/game-transform
 import { StorageService } from 'src/app/core/services/storage/storage.service';
 import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
 import { HighScoreAlertService } from 'src/app/core/services/high-score-alert/high-score-alert.service';
+import { UserService } from 'src/app/core/services/user/user.service';
 
 export interface PinModeState {
   currentFrameIndex: number;
@@ -47,6 +48,7 @@ export class GameSessionFacade {
     private storageService: StorageService,
     private analyticsService: AnalyticsService,
     private highScoreService: HighScoreAlertService,
+    private userService: UserService,
   ) {}
 
   // GAME MANAGEMENT
@@ -309,6 +311,7 @@ export class GameSessionFacade {
           game.gameId,
           game.date,
           config.isPinMode,
+          this.userService.username() || '',
         );
 
         await this.storageService.saveGameToLocalStorage(gameData);

@@ -240,6 +240,7 @@ export class GameComponent implements OnInit {
       cloudUploadOutline,
       cloudDownloadOutline,
       filterOutline,
+      personOutline,
     });
   }
 

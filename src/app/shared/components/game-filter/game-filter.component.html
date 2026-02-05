@@ -147,7 +147,18 @@
         (ionChange)="updateFilter('patterns', $event.detail.value)">
         <ion-select-option value="all">All</ion-select-option>
         <ion-select-option value="">None</ion-select-option>
-        <ion-select-option *ngFor="let league of patterns()" [value]="league">{{ league }}</ion-select-option>
+        <ion-select-option *ngFor="let pattern of patterns()" [value]="pattern">{{ pattern }}</ion-select-option>
+      </ion-select>
+    </ion-item>
+    <ion-item>
+      <ion-select
+        name="usernames"
+        [ngModel]="gameFilterService.filters().usernames"
+        label="Users"
+        multiple="true"
+        (ionChange)="updateFilter('usernames', $event.detail.value)">
+        <ion-select-option value="all">All</ion-select-option>
+        <ion-select-option *ngFor="let username of usernames()" [value]="username">{{ username }}</ion-select-option>
       </ion-select>
     </ion-item>
   </ion-list>
