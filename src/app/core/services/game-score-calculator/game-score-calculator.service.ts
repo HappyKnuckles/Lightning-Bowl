@@ -163,12 +163,33 @@ export class GameScoreCalculatorService {
 
         if (secondThrow !== undefined) {
           if (firstThrow === 10) {
-            if (isPrevStrike && secondThrow !== 10) {
-              maxScore -= 20 - secondThrow;
-            } else if (!isPrevStrike && secondThrow !== 10) {
-              maxScore -= 10;
+            // Strike on first throw of 10th frame
+            if (secondThrow === 10) {
+              // Strike on second throw - pins reset, third throw can be 10
+              // No reduction needed, max is still possible
+            } else {
+              // Non-strike on second throw - third throw limited to (10 - secondThrow)
+              const maxThirdThrow = 10 - secondThrow;
+              if (isPrevStrike) {
+                maxScore -= 20 - secondThrow - maxThirdThrow;
+              } else {
+                maxScore -= 10 - maxThirdThrow;
+              }
             }
-          } else if (firstThrow + secondThrow !== 10) {
+          } else if (firstThrow + secondThrow === 10) {
+            // Spare in 10th frame - pins reset, third throw can be 10
+            // Max for 10th frame is 20 (spare + 10), not 30 (three strikes)
+            // Need to account for:
+            // 1. Bonus from frame 9 (if it was a spare)
+            // 2. The 10th frame's max contribution difference (30 - 20 = 10)
+            if (isPrevSpare && !isPrevStrike) {
+              // Frame 9 was spare, expecting 10 as bonus but got firstThrow
+              maxScore -= 10 - firstThrow;
+            }
+            // 10th frame max is 20, not 30
+            maxScore -= 10;
+          } else {
+            // Open frame (no strike, no spare) - no third throw earned
             maxScore = currentTotalScore;
           }
           continue;
