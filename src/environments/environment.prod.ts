@@ -9,5 +9,5 @@ export const environment = {
   analyticsEndpoint: 'https://analytics.nicolas-hoffmann.dev/api/',
   imagesUrl: 'https://images.lightningbowl.de/',
   branch: 'master',
-  googleDriveClientId: '', // Configure with actual Google OAuth client ID
+  googleDriveClientId: '712735063879-0fc2cnqto0omthr28gm4vlgiae28trt0.apps.googleusercontent.com',
 };
