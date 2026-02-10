@@ -238,7 +238,7 @@ export class CloudSyncService {
   private async generateExcelBuffer(): Promise<ArrayBuffer> {
     // Import ExcelJS dynamically to generate the workbook
     const ExcelJS = await import('exceljs');
-    const workbook = new ExcelJS.Workbook();
+    const workbook = new ExcelJS.default.Workbook();
 
     // Get game data
     const gameData = this.getGameDataForExport(this.storageService.games());
