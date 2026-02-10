@@ -130,6 +130,7 @@ export class CloudSyncService {
           this.updateSettings({
             provider: CloudProvider.GOOGLE_DRIVE,
             accessToken,
+            enabled: true,
           });
 
           this.#syncStatus.update((status) => ({
