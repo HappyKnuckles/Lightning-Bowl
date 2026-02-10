@@ -14,6 +14,7 @@ import {
   IonSpinner,
   IonToggle,
   IonNote,
+  IonInput,
 } from '@ionic/angular/standalone';
 import { NgIf, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -43,6 +44,7 @@ import { CloudProvider, SyncFrequency } from 'src/app/core/models/cloud-sync.mod
     IonSpinner,
     IonToggle,
     IonNote,
+    IonInput,
   ],
   templateUrl: './cloud-sync-settings.component.html',
   styleUrl: './cloud-sync-settings.component.scss',
@@ -55,6 +57,7 @@ export class CloudSyncSettingsComponent {
 
   selectedProvider: CloudProvider = CloudProvider.GOOGLE_DRIVE;
   selectedFrequency: SyncFrequency = SyncFrequency.WEEKLY;
+  folderPath = 'lightningbowl Game-History';
 
   constructor() {
     addIcons({
@@ -70,6 +73,7 @@ export class CloudSyncSettingsComponent {
     const settings = this.cloudSyncService.settings();
     this.selectedProvider = settings.provider;
     this.selectedFrequency = settings.frequency;
+    this.folderPath = settings.folderPath || 'lightningbowl Game-History';
   }
 
   async connectProvider(): Promise<void> {
@@ -95,6 +99,12 @@ export class CloudSyncSettingsComponent {
 
   async updateFrequency(): Promise<void> {
     await this.cloudSyncService.updateSettings({ frequency: this.selectedFrequency });
+  }
+
+  async updateFolderPath(): Promise<void> {
+    if (this.folderPath && this.folderPath.trim()) {
+      await this.cloudSyncService.updateSettings({ folderPath: this.folderPath.trim() });
+    }
   }
 
   async syncNow(): Promise<void> {

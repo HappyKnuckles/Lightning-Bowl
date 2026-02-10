@@ -6,6 +6,8 @@ export interface CloudSyncSettings {
   nextSyncDate?: number;
   accessToken?: string;
   refreshToken?: string;
+  folderPath?: string; // User-selectable folder path
+  folderId?: string; // Google Drive folder ID
 }
 
 export enum CloudProvider {

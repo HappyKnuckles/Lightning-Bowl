@@ -304,10 +304,21 @@ export class CloudSyncService {
     });
     const fileName = `game_data_${formattedDate}.xlsx`;
 
-    // Create file metadata
+    // Get or create the folder
+    const settings = this.#settings();
+    const folderName = settings.folderPath || 'lightningbowl Game-History';
+    const folderId = await this.getOrCreateFolder(folderName, accessToken);
+
+    // Update settings with folder ID
+    if (folderId !== settings.folderId) {
+      await this.updateSettings({ folderId });
+    }
+
+    // Create file metadata with parent folder
     const metadata = {
       name: fileName,
       mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      parents: [folderId],
     };
 
     // Create multipart request
@@ -327,6 +338,49 @@ export class CloudSyncService {
       const error = await response.json();
       throw new Error(error.error?.message || 'Failed to upload to Google Drive');
     }
+  }
+
+  private async getOrCreateFolder(folderName: string, accessToken: string): Promise<string> {
+    // Search for existing folder
+    const searchResponse = await fetch(
+      `https://www.googleapis.com/drive/v3/files?q=name='${encodeURIComponent(folderName)}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      },
+    );
+
+    if (!searchResponse.ok) {
+      throw new Error('Failed to search for folder');
+    }
+
+    const searchData = await searchResponse.json();
+
+    // If folder exists, return its ID
+    if (searchData.files && searchData.files.length > 0) {
+      return searchData.files[0].id;
+    }
+
+    // Create new folder
+    const createResponse = await fetch('https://www.googleapis.com/drive/v3/files', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        name: folderName,
+        mimeType: 'application/vnd.google-apps.folder',
+      }),
+    });
+
+    if (!createResponse.ok) {
+      throw new Error('Failed to create folder');
+    }
+
+    const createData = await createResponse.json();
+    return createData.id;
   }
 
   private scheduleNextSync(): void {

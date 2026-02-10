@@ -72,6 +72,16 @@
       </ion-select>
     </ion-item>
 
+    <!-- Folder Path -->
+    <ion-item *ngIf="cloudSyncService.syncStatus().isAuthenticated">
+      <ion-label position="stacked">Folder Path</ion-label>
+      <ion-input
+        [(ngModel)]="folderPath"
+        (ionBlur)="updateFolderPath()"
+        placeholder="lightningbowl Game-History"
+        helperText="Name of the folder in your cloud storage"></ion-input>
+    </ion-item>
+
     <!-- Last Sync Info -->
     <ion-item *ngIf="cloudSyncService.syncStatus().lastSync" lines="none">
       <ion-label>
