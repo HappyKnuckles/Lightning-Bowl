@@ -4,6 +4,7 @@ import { StorageService } from '../storage/storage.service';
 import { ExcelService } from '../excel/excel.service';
 import { ToastService } from '../toast/toast.service';
 import { Storage } from '@ionic/storage-angular';
+import { environment } from 'src/environments/environment';
 
 const CLOUD_SYNC_STORAGE_KEY = 'cloud_sync_settings';
 
@@ -97,7 +98,11 @@ export class CloudSyncService {
 
   private async authenticateGoogleDrive(): Promise<void> {
     // Google OAuth2 configuration
-    const clientId = ''; // This should be configured in environment
+    const clientId = environment.googleDriveClientId;
+    if (!clientId) {
+      throw new Error('Google Drive client ID not configured. Please set googleDriveClientId in environment configuration.');
+    }
+
     const redirectUri = window.location.origin + '/auth/callback';
     const scope = 'https://www.googleapis.com/auth/drive.file';
 
