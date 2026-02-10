@@ -77,6 +77,11 @@
       <p class="link">Open form</p>
     </ion-item>
 
+    <ion-item button id="cloud-sync-modal">
+      <ion-icon name="cloud-upload-outline" slot="start"></ion-icon>
+      <ion-label>Cloud Sync</ion-label>
+    </ion-item>
+
     <ion-item (click)="updateApp()" button [detail]="false" *ngIf="updateAvailable">
       <ion-icon name="refresh-circle-outline" slot="start"></ion-icon>
       <ion-label>Load update</ion-label>
@@ -162,6 +167,24 @@
           </form>
         </ion-card-content>
       </ion-card>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+<ion-modal trigger="cloud-sync-modal" #cloudSyncModal>
+  <ng-template>
+    <ion-header [translucent]="true">
+      <ion-toolbar>
+        <ion-buttons slot="start">
+          <ion-button color="medium" (click)="cloudSyncModal.dismiss()">
+            <ion-icon name="chevron-back"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+        <ion-title>Cloud Sync</ion-title>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content [fullscreen]="true">
+      <app-cloud-sync-settings></app-cloud-sync-settings>
     </ion-content>
   </ng-template>
 </ion-modal>

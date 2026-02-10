@@ -33,6 +33,7 @@ import {
   refreshCircleOutline,
   chevronBackOutline,
   bugOutline,
+  cloudUploadOutline,
 } from 'ionicons/icons';
 import { NgClass, NgFor, NgIf } from '@angular/common';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
@@ -49,6 +50,7 @@ import { AlertController, InputCustomEvent } from '@ionic/angular';
 import { GithubIssuesModalComponent } from 'src/app/shared/components/github-issues-modal/github-issues-modal.component';
 import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
 import { StorageService } from 'src/app/core/services/storage/storage.service';
+import { CloudSyncSettingsComponent } from 'src/app/shared/components/cloud-sync-settings/cloud-sync-settings.component';
 
 @Component({
   selector: 'app-settings',
@@ -82,6 +84,7 @@ import { StorageService } from 'src/app/core/services/storage/storage.service';
     LeagueSelectorComponent,
     SpareNamesComponent,
     GithubIssuesModalComponent,
+    CloudSyncSettingsComponent,
     NgIf,
   ],
 })
@@ -119,6 +122,7 @@ export class SettingsPage implements OnInit {
       chevronBack,
       sendOutline,
       bugOutline,
+      cloudUploadOutline,
     });
   }
 
