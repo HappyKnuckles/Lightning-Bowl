@@ -60,6 +60,44 @@ export class CloudSyncService {
   async updateSettings(settings: Partial<CloudSyncSettings>): Promise<void> {
     const currentSettings = this.#settings();
     const updatedSettings = { ...currentSettings, ...settings };
+
+    // If frequency is being updated and we have a lastSyncDate, recalculate nextSyncDate
+    if (settings.frequency !== undefined && currentSettings.lastSyncDate) {
+      const now = Date.now();
+      const calculatedNextSync = this.calculateNextSyncDate(settings.frequency, currentSettings.lastSyncDate);
+
+      // If the calculated next sync is in the past, sync now
+      if (calculatedNextSync < now) {
+        // First update the settings with the new frequency
+        this.#settings.set(updatedSettings);
+        await this.storage.set(CLOUD_SYNC_STORAGE_KEY, updatedSettings);
+
+        // Then trigger immediate sync (this will update lastSyncDate and nextSyncDate)
+        try {
+          await this.syncNow();
+        } catch (error) {
+          console.error('Automatic sync after frequency change failed:', error);
+          // Even if sync fails, calculate next sync from now
+          const newNextSync = this.calculateNextSyncDate(settings.frequency, now);
+          updatedSettings.nextSyncDate = newNextSync;
+          this.#syncStatus.update((status) => ({
+            ...status,
+            nextSync: new Date(newNextSync),
+          }));
+          this.#settings.set(updatedSettings);
+          await this.storage.set(CLOUD_SYNC_STORAGE_KEY, updatedSettings);
+        }
+        return;
+      }
+
+      // Next sync is in the future, just update it
+      updatedSettings.nextSyncDate = calculatedNextSync;
+      this.#syncStatus.update((status) => ({
+        ...status,
+        nextSync: new Date(calculatedNextSync),
+      }));
+    }
+
     this.#settings.set(updatedSettings);
     await this.storage.set(CLOUD_SYNC_STORAGE_KEY, updatedSettings);
   }
@@ -82,7 +120,7 @@ export class CloudSyncService {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Authentication failed';
       this.#syncStatus.update((status) => ({ ...status, error: errorMessage }));
-      this.toastService.showToast(`Authentication failed: ${errorMessage}`, 'close-circle', true);
+      this.toastService.showToast('Authentication failed', 'bug-outline', true);
       throw error;
     }
   }
@@ -118,19 +156,25 @@ export class CloudSyncService {
           authWindow?.close();
 
           const accessToken = event.data.accessToken;
+          const currentSettings = this.#settings();
+          const now = Date.now();
+          const nextSync = this.calculateNextSyncDate(currentSettings.frequency, now);
+
           this.updateSettings({
             provider: CloudProvider.GOOGLE_DRIVE,
             accessToken,
             enabled: true,
+            nextSyncDate: nextSync,
           });
 
           this.#syncStatus.update((status) => ({
             ...status,
             isAuthenticated: true,
             error: undefined,
+            nextSync: new Date(nextSync),
           }));
 
-          this.toastService.showToast('Google Drive connected successfully!', 'checkmark-circle');
+          this.toastService.showToast('Google Drive connected successfully!', 'checkmark-outline');
           resolve();
         } else if (event.data.type === 'google-auth-error') {
           window.removeEventListener('message', messageHandler);
@@ -173,7 +217,7 @@ export class CloudSyncService {
       error: undefined,
     }));
 
-    this.toastService.showToast('Cloud sync disconnected', 'cloud-offline');
+    this.toastService.showToast('Cloud sync disconnected', 'checkmark-outline');
   }
 
   async syncNow(): Promise<void> {
@@ -208,7 +252,7 @@ export class CloudSyncService {
         nextSync: new Date(nextSync),
       }));
 
-      this.toastService.showToast('Excel file synced to cloud successfully!', 'cloud-done');
+      this.toastService.showToast('Excel file synced to cloud successfully!', 'checkmark-outline');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Sync failed';
       this.#syncStatus.update((status) => ({
@@ -216,7 +260,7 @@ export class CloudSyncService {
         syncInProgress: false,
         error: errorMessage,
       }));
-      this.toastService.showToast(`Sync failed: ${errorMessage}`, 'cloud-offline', true);
+      this.toastService.showToast(`Sync failed.`, 'bug-outline', true);
       throw error;
     }
   }
@@ -249,7 +293,7 @@ export class CloudSyncService {
 
     // Get or create the folder
     const settings = this.#settings();
-    const folderName = settings.folderPath || 'lightningbowl Game-History';
+    const folderName = settings.folderPath || 'Lightningbowl Game-History';
     const folderId = await this.getOrCreateFolder(folderName, accessToken);
 
     // Update settings with folder ID
@@ -350,7 +394,7 @@ export class CloudSyncService {
 
   private shouldSyncNow(lastSyncDate: number, frequency: SyncFrequency, currentDate: number): boolean {
     if (lastSyncDate === 0) {
-      return true; // Never synced before
+      return false; // Never synced before
     }
 
     const timeSinceLastSync = currentDate - lastSyncDate;

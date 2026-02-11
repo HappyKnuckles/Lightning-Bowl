@@ -39,7 +39,7 @@ import {
 } from 'ionicons/icons';
 import { CloudSyncService } from 'src/app/core/services/cloud-sync/cloud-sync.service';
 import { CloudProvider, SyncFrequency } from 'src/app/core/models/cloud-sync.model';
-import { ModalController } from '@ionic/angular';
+import { AlertController, ModalController } from '@ionic/angular';
 
 @Component({
   selector: 'app-cloud-sync-settings',
@@ -78,6 +78,7 @@ import { ModalController } from '@ionic/angular';
 export class CloudSyncSettingsComponent {
   cloudSyncService = inject(CloudSyncService);
   modalCtrl = inject(ModalController);
+  alertCtrl = inject(AlertController);
 
   readonly CloudProvider = CloudProvider;
   readonly SyncFrequency = SyncFrequency;
@@ -118,7 +119,22 @@ export class CloudSyncSettingsComponent {
   }
 
   async disconnect(): Promise<void> {
-    await this.cloudSyncService.disconnect();
+    await this.alertCtrl
+      .create({
+        header: 'Disconnect Cloud Sync',
+        message: 'Are you sure you want to disconnect from the cloud provider? This will stop all syncing and remove stored credentials.',
+        buttons: [
+          { text: 'Cancel', role: 'cancel' },
+          {
+            text: 'Disconnect',
+            role: 'destructive',
+            handler: async () => {
+              await this.cloudSyncService.disconnect();
+            },
+          },
+        ],
+      })
+      .then((alert) => alert.present());
   }
 
   async toggleSync(event: any): Promise<void> {

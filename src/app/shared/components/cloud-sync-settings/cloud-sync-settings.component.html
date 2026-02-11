@@ -18,7 +18,9 @@
       <h1>{{ cloudSyncService.syncStatus().isAuthenticated ? "Connected" : "Not Connected" }}</h1>
       <p *ngIf="cloudSyncService.syncStatus().isAuthenticated">Linked to {{ getProviderDisplayName(cloudSyncService.settings().provider) }}</p>
     </ion-label>
-    <ion-button slot="end" fill="clear" color="danger" (click)="disconnect()">Disconnect</ion-button>
+    <ion-button *ngIf="cloudSyncService.syncStatus().isAuthenticated" slot="end" fill="clear" color="danger" (click)="disconnect()"
+      >Disconnect</ion-button
+    >
   </ion-item>
 
   <div *ngIf="!cloudSyncService.syncStatus().isAuthenticated" class="ion-padding-top" style="display: flex; flex-direction: column">
