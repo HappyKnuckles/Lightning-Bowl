@@ -23,8 +23,6 @@ export class CloudSyncService {
     syncInProgress: false,
   });
 
-  private syncIntervalId?: number;
-
   readonly settings = this.#settings.asReadonly();
   readonly syncStatus = this.#syncStatus.asReadonly();
 
@@ -45,7 +43,7 @@ export class CloudSyncService {
   private async init(): Promise<void> {
     await this.storage.create();
     await this.loadSettings();
-    this.scheduleNextSync();
+    await this.checkAndSyncOnStartup();
   }
 
   private async loadSettings(): Promise<void> {
@@ -66,11 +64,6 @@ export class CloudSyncService {
     const updatedSettings = { ...currentSettings, ...settings };
     this.#settings.set(updatedSettings);
     await this.storage.set(CLOUD_SYNC_STORAGE_KEY, updatedSettings);
-
-    // Reschedule sync if frequency or enabled status changed
-    if (settings.frequency !== undefined || settings.enabled !== undefined) {
-      this.scheduleNextSync();
-    }
   }
 
   async authenticateWithProvider(provider: CloudProvider): Promise<void> {
@@ -182,11 +175,6 @@ export class CloudSyncService {
       error: undefined,
     }));
 
-    if (this.syncIntervalId) {
-      clearInterval(this.syncIntervalId);
-      this.syncIntervalId = undefined;
-    }
-
     this.toastService.showToast('Cloud sync disconnected', 'cloud-offline');
   }
 
@@ -236,51 +224,8 @@ export class CloudSyncService {
   }
 
   private async generateExcelBuffer(): Promise<ArrayBuffer> {
-    // Import ExcelJS dynamically to generate the workbook
-    const ExcelJS = await import('exceljs');
-    const workbook = new ExcelJS.default.Workbook();
-
-    // Get game data
-    const gameData = this.getGameDataForExport(this.storageService.games());
-    const gameWorksheet = workbook.addWorksheet('Game History');
-
-    if (gameData.length > 0) {
-      const headers = Object.keys(gameData[0]);
-      this.addTable(gameWorksheet, 'GameHistoryTable', 'A1', headers, gameData);
-      this.setColumnWidths(gameWorksheet, headers, gameData, 1);
-    }
-
-    return await workbook.xlsx.writeBuffer();
-  }
-
-  private getGameDataForExport(games: any[]): Record<string, any>[] {
-    // Simplified version - in production, use the full implementation from ExcelService
-    return games.map((game) => ({
-      Game: game.gameId,
-      Date: new Date(game.date).toLocaleDateString(),
-      'Total Score': game.totalScore,
-      League: game.league || '',
-      Practice: game.isPractice ? 'true' : 'false',
-    }));
-  }
-
-  private addTable(worksheet: any, name: string, ref: string, headers: string[], rows: Record<string, any>[]): void {
-    worksheet.addTable({
-      name,
-      ref,
-      headerRow: true,
-      totalsRow: false,
-      style: { theme: 'TableStyleMedium1', showRowStripes: true },
-      columns: headers.map((header) => ({ name: header })),
-      rows: rows.map((row) => headers.map((header) => row[header])),
-    });
-  }
-
-  private setColumnWidths(worksheet: any, headers: string[], data: Record<string, any>[], startIndex: number): void {
-    headers.forEach((header, index) => {
-      const maxContentLength = Math.max(header.length, ...data.map((row) => (row[header] ?? '').toString().length));
-      worksheet.getColumn(startIndex + index).width = maxContentLength + 1;
-    });
+    // Use ExcelService to generate the complete workbook with all data
+    return await this.excelService.generateExcelBuffer();
   }
 
   private async uploadToCloud(buffer: ArrayBuffer, settings: CloudSyncSettings): Promise<void> {
@@ -383,46 +328,45 @@ export class CloudSyncService {
     return createData.id;
   }
 
-  private scheduleNextSync(): void {
-    // Clear existing interval
-    if (this.syncIntervalId) {
-      clearInterval(this.syncIntervalId);
-      this.syncIntervalId = undefined;
-    }
-
+  private async checkAndSyncOnStartup(): Promise<void> {
     const settings = this.#settings();
+
     if (!settings.enabled || !settings.accessToken) {
       return;
     }
 
-    // Calculate next sync date if not set
-    if (!settings.nextSyncDate) {
-      const nextSync = this.calculateNextSyncDate(settings.frequency);
-      this.updateSettings({ nextSyncDate: nextSync });
-    }
-
-    // Check every hour if it's time to sync
-    this.syncIntervalId = window.setInterval(
-      () => {
-        this.checkAndSync();
-      },
-      60 * 60 * 1000,
-    ); // Check every hour
-
-    // Also check immediately
-    this.checkAndSync();
-  }
-
-  private async checkAndSync(): Promise<void> {
-    const settings = this.#settings();
     const now = Date.now();
+    const lastSyncDate = settings.lastSyncDate || 0;
 
-    if (settings.enabled && settings.nextSyncDate && now >= settings.nextSyncDate) {
+    // Calculate if sync is needed based on frequency
+    const shouldSync = this.shouldSyncNow(lastSyncDate, settings.frequency, now);
+
+    if (shouldSync) {
       try {
         await this.syncNow();
       } catch (error) {
-        console.error('Automatic sync failed:', error);
+        console.error('Automatic sync on startup failed:', error);
       }
+    }
+  }
+
+  private shouldSyncNow(lastSyncDate: number, frequency: SyncFrequency, currentDate: number): boolean {
+    if (lastSyncDate === 0) {
+      return true; // Never synced before
+    }
+
+    const timeSinceLastSync = currentDate - lastSyncDate;
+    const oneDayMs = 24 * 60 * 60 * 1000;
+
+    switch (frequency) {
+      case SyncFrequency.DAILY:
+        return timeSinceLastSync >= oneDayMs;
+      case SyncFrequency.WEEKLY:
+        return timeSinceLastSync >= 7 * oneDayMs;
+      case SyncFrequency.MONTHLY:
+        return timeSinceLastSync >= 30 * oneDayMs;
+      default:
+        return false;
     }
   }
 
