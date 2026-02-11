@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, computed } from '@angular/core';
 import { Pattern } from 'src/app/core/models/pattern.model';
 import { IonCol, IonRow, IonGrid, IonLabel, IonChip } from '@ionic/angular/standalone';
 import { environment } from 'src/environments/environment';
@@ -14,7 +14,7 @@ export class PatternInfoComponent {
   pattern = input.required<Pattern>();
   imagesUrl = environment.imagesUrl;
 
-  getDifficulty() {
+  difficulty = computed(() => {
     const numericPart = this.pattern().ratio?.split(':')[0] || '0';
     const num = parseInt(numericPart, 10);
     if (num <= 4) {
@@ -24,9 +24,9 @@ export class PatternInfoComponent {
     } else {
       return 'Easy';
     }
-  }
+  });
 
-  getLength() {
+  length = computed(() => {
     const length = parseInt(this.pattern().distance, 10);
     if (length <= 35) {
       return 'Short';
@@ -35,9 +35,9 @@ export class PatternInfoComponent {
     } else {
       return 'Long';
     }
-  }
+  });
 
-  getVolume() {
+  volume = computed(() => {
     const volume = parseInt(this.pattern().volume, 10);
     if (volume < 22) {
       return 'Light';
@@ -48,5 +48,5 @@ export class PatternInfoComponent {
     } else {
       return 'Very High';
     }
-  }
+  });
 }

@@ -75,6 +75,15 @@ export class GameFilterComponent implements OnInit {
       .flat()
       .filter((pattern, index, self) => pattern && self.indexOf(pattern) === index);
   });
+
+  selectedBallsText = computed(() => {
+    const balls = this.gameFilterService.filters().balls || [];
+    if (balls.length === 1 && balls[0] === 'all') {
+      return 'All';
+    }
+    return balls.length > 0 ? balls.join(', ') : 'All';
+  });
+
   enterAnimation = alertEnterAnimation;
   leaveAnimation = alertLeaveAnimation;
 
@@ -99,14 +108,6 @@ export class GameFilterComponent implements OnInit {
     }
     this.getHighlightedDates();
     this.getLeagues();
-  }
-
-  getSelectedBallsText(): string {
-    const balls = this.gameFilterService.filters().balls || [];
-    if (balls.length === 1 && balls[0] === 'all') {
-      return 'All';
-    }
-    return balls.length > 0 ? balls.join(', ') : 'All';
   }
 
   startDateChange(event: CustomEvent): void {

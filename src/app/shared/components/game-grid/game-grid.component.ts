@@ -96,6 +96,10 @@ export class GameGridComponent implements OnInit, OnDestroy {
   // --- Computed State ---
   frames = computed(() => this.game()?.frames ?? []);
   frameScores = computed(() => this.game()?.frameScores ?? []);
+  selectedBallsText = computed(() => {
+    const balls = this.currentGame?.balls || [];
+    return balls.length > 0 ? balls.join(', ') : 'None';
+  });
 
   // --- Local UI State ---
   enterAnimation = alertEnterAnimation;
@@ -330,11 +334,6 @@ export class GameGridComponent implements OnInit, OnDestroy {
   }
 
   // --- Template Getters ---
-  getSelectedBallsText(): string {
-    const balls = this.currentGame?.balls || [];
-    return balls.length > 0 ? balls.join(', ') : 'None';
-  }
-
   isNumber(value: unknown): boolean {
     return this.utilsService.isNumber(value);
   }
