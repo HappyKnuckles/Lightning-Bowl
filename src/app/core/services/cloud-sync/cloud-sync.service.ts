@@ -1,6 +1,5 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { CloudSyncSettings, CloudProvider, SyncFrequency, CloudSyncStatus } from '../../models/cloud-sync.model';
-import { StorageService } from '../storage/storage.service';
 import { ExcelService } from '../excel/excel.service';
 import { ToastService } from '../toast/toast.service';
 import { Storage } from '@ionic/storage-angular';
@@ -35,7 +34,6 @@ export class CloudSyncService {
     private storage: Storage,
     private excelService: ExcelService,
     private toastService: ToastService,
-    private storageService: StorageService,
   ) {
     this.init();
   }

@@ -1,8 +1,6 @@
 import { Component, inject } from '@angular/core';
 import {
   IonCard,
-  IonCardHeader,
-  IonCardTitle,
   IonCardContent,
   IonItem,
   IonLabel,
@@ -10,29 +8,59 @@ import {
   IonSelectOption,
   IonButton,
   IonIcon,
-  IonText,
   IonSpinner,
   IonToggle,
-  IonNote,
   IonInput,
+  IonFooter,
+  IonToolbar,
+  IonCol,
+  IonRow,
+  IonGrid,
+  IonList,
+  IonListHeader,
+  IonBadge,
+  IonContent,
+  IonButtons,
+  IonHeader,
+  IonTitle,
 } from '@ionic/angular/standalone';
 import { NgIf, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { addIcons } from 'ionicons';
-import { cloudUploadOutline, cloudDoneOutline, cloudOfflineOutline, syncOutline, linkOutline, unlinkOutline } from 'ionicons/icons';
+import {
+  cloudUploadOutline,
+  cloudDoneOutline,
+  cloudOfflineOutline,
+  syncOutline,
+  linkOutline,
+  unlinkOutline,
+  folderOutline,
+  calendarOutline,
+} from 'ionicons/icons';
 import { CloudSyncService } from 'src/app/core/services/cloud-sync/cloud-sync.service';
 import { CloudProvider, SyncFrequency } from 'src/app/core/models/cloud-sync.model';
+import { ModalController } from '@ionic/angular';
 
 @Component({
   selector: 'app-cloud-sync-settings',
   standalone: true,
   imports: [
+    IonTitle,
+    IonHeader,
+    IonButtons,
+    IonContent,
+    IonBadge,
+    IonListHeader,
+    IonList,
+    IonGrid,
+    IonRow,
+    IonCol,
+    IonToolbar,
+    IonFooter,
     NgIf,
     DatePipe,
     FormsModule,
     IonCard,
-    IonCardHeader,
-    IonCardTitle,
     IonCardContent,
     IonItem,
     IonLabel,
@@ -40,10 +68,8 @@ import { CloudProvider, SyncFrequency } from 'src/app/core/models/cloud-sync.mod
     IonSelectOption,
     IonButton,
     IonIcon,
-    IonText,
     IonSpinner,
     IonToggle,
-    IonNote,
     IonInput,
   ],
   templateUrl: './cloud-sync-settings.component.html',
@@ -51,13 +77,14 @@ import { CloudProvider, SyncFrequency } from 'src/app/core/models/cloud-sync.mod
 })
 export class CloudSyncSettingsComponent {
   cloudSyncService = inject(CloudSyncService);
+  modalCtrl = inject(ModalController);
 
   readonly CloudProvider = CloudProvider;
   readonly SyncFrequency = SyncFrequency;
 
   selectedProvider: CloudProvider = CloudProvider.GOOGLE_DRIVE;
   selectedFrequency: SyncFrequency = SyncFrequency.WEEKLY;
-  folderPath = 'lightningbowl Game-History';
+  folderPath = 'Lightningbowl Game-History';
 
   constructor() {
     addIcons({
@@ -67,13 +94,19 @@ export class CloudSyncSettingsComponent {
       syncOutline,
       linkOutline,
       unlinkOutline,
+      folderOutline,
+      calendarOutline,
     });
 
     // Initialize from current settings
     const settings = this.cloudSyncService.settings();
     this.selectedProvider = settings.provider;
     this.selectedFrequency = settings.frequency;
-    this.folderPath = settings.folderPath || 'lightningbowl Game-History';
+    this.folderPath = settings.folderPath || 'Lightningbowl Game-History';
+  }
+
+  cancel(): Promise<boolean> {
+    return this.modalCtrl.dismiss(null, 'cancel');
   }
 
   async connectProvider(): Promise<void> {

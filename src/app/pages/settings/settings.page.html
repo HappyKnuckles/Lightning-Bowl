@@ -77,9 +77,12 @@
       <p class="link">Open form</p>
     </ion-item>
 
-    <ion-item button id="cloud-sync-modal">
+    <ion-item button (click)="openFilterModal()">
       <ion-icon name="cloud-upload-outline" slot="start"></ion-icon>
       <ion-label>Cloud Sync</ion-label>
+      @if (cloudSyncService.syncStatus().lastSync) {
+        <ion-note slot="end">Last sync: {{ cloudSyncService.syncStatus().lastSync | date: "short" }}</ion-note>
+      }
     </ion-item>
 
     <ion-item (click)="updateApp()" button [detail]="false" *ngIf="updateAvailable">
@@ -167,24 +170,6 @@
           </form>
         </ion-card-content>
       </ion-card>
-    </ion-content>
-  </ng-template>
-</ion-modal>
-
-<ion-modal trigger="cloud-sync-modal" #cloudSyncModal>
-  <ng-template>
-    <ion-header [translucent]="true">
-      <ion-toolbar>
-        <ion-buttons slot="start">
-          <ion-button color="medium" (click)="cloudSyncModal.dismiss()">
-            <ion-icon name="chevron-back"></ion-icon>
-          </ion-button>
-        </ion-buttons>
-        <ion-title>Cloud Sync</ion-title>
-      </ion-toolbar>
-    </ion-header>
-    <ion-content [fullscreen]="true">
-      <app-cloud-sync-settings></app-cloud-sync-settings>
     </ion-content>
   </ng-template>
 </ion-modal>

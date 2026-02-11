@@ -1,122 +1,112 @@
-<ion-card>
-  <ion-card-header>
-    <ion-card-title>
-      <ion-icon name="cloud-upload-outline"></ion-icon>
-      Cloud Sync Settings
-    </ion-card-title>
-  </ion-card-header>
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button color="medium" (click)="cancel()">
+        <ion-icon name="chevron-back"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Cloud Sync</ion-title>
+  </ion-toolbar>
+</ion-header>
 
-  <ion-card-content>
-    <!-- Connection Status -->
-    <ion-item lines="none">
-      <ion-icon
-        slot="start"
-        [name]="cloudSyncService.syncStatus().isAuthenticated ? 'cloud-done-outline' : 'cloud-offline-outline'"
-        [color]="cloudSyncService.syncStatus().isAuthenticated ? 'success' : 'medium'">
-      </ion-icon>
-      <ion-label>
-        <h3>Status</h3>
-        <p>{{ cloudSyncService.syncStatus().isAuthenticated ? "Connected" : "Not Connected" }}</p>
-      </ion-label>
-    </ion-item>
+<ion-content>
+  <ion-item lines="none" style="padding-top: 8px">
+    <ion-badge slot="start" color="dark" class="hero-icon"
+      ><ion-icon [name]="cloudSyncService.syncStatus().isAuthenticated ? 'cloud-done-outline' : 'cloud-offline-outline'"></ion-icon
+    ></ion-badge>
+    <ion-label>
+      <h1>{{ cloudSyncService.syncStatus().isAuthenticated ? "Connected" : "Not Connected" }}</h1>
+      <p *ngIf="cloudSyncService.syncStatus().isAuthenticated">Linked to {{ getProviderDisplayName(cloudSyncService.settings().provider) }}</p>
+    </ion-label>
+    <ion-button slot="end" fill="clear" color="danger" (click)="disconnect()">Disconnect</ion-button>
+  </ion-item>
 
-    <!-- Cloud Provider Selection -->
-    <ion-item *ngIf="!cloudSyncService.syncStatus().isAuthenticated">
-      <ion-label>Cloud Provider</ion-label>
-      <ion-select [(ngModel)]="selectedProvider" interface="popover" (ionChange)="updateProvider()">
+  <div *ngIf="!cloudSyncService.syncStatus().isAuthenticated" class="ion-padding-top" style="display: flex; flex-direction: column">
+    <ion-item lines="none" class="transparent-item">
+      <ion-select
+        [(ngModel)]="selectedProvider"
+        interface="popover"
+        (ionChange)="updateProvider()"
+        label="Provider"
+        label-placement="stacked"
+        placeholder="Select Provider">
         <ion-select-option [value]="CloudProvider.GOOGLE_DRIVE">Google Drive</ion-select-option>
-        <ion-select-option [value]="CloudProvider.DROPBOX" disabled>Dropbox (Coming Soon)</ion-select-option>
-        <ion-select-option [value]="CloudProvider.ONEDRIVE" disabled>OneDrive (Coming Soon)</ion-select-option>
+        <ion-select-option [value]="CloudProvider.DROPBOX" disabled>Dropbox (Soon)</ion-select-option>
+        <ion-select-option [value]="CloudProvider.ONEDRIVE" disabled>OneDrive (Soon)</ion-select-option>
       </ion-select>
     </ion-item>
 
-    <!-- Connected Provider Display -->
-    <ion-item *ngIf="cloudSyncService.syncStatus().isAuthenticated" lines="none">
-      <ion-label>
-        <h3>Provider</h3>
-        <p>{{ getProviderDisplayName(cloudSyncService.settings().provider) }}</p>
-      </ion-label>
-    </ion-item>
-
-    <!-- Connect/Disconnect Button -->
-    <ion-button
-      *ngIf="!cloudSyncService.syncStatus().isAuthenticated"
-      expand="block"
-      (click)="connectProvider()"
-      [disabled]="cloudSyncService.syncStatus().syncInProgress">
-      <ion-icon slot="start" name="link-outline"></ion-icon>
+    <ion-button class="connect-btn" (click)="connectProvider()" [disabled]="cloudSyncService.syncStatus().syncInProgress">
+      <ion-icon slot="start" name="link"></ion-icon>
       Connect {{ getProviderDisplayName(selectedProvider) }}
     </ion-button>
+    <p class="helper-text ion-text-center ion-margin-top">Connect to automatically backup your game history securely to the cloud.</p>
+  </div>
 
-    <ion-button *ngIf="cloudSyncService.syncStatus().isAuthenticated" expand="block" color="danger" fill="outline" (click)="disconnect()">
-      <ion-icon slot="start" name="unlink-outline"></ion-icon>
-      Disconnect
+  <ng-container *ngIf="cloudSyncService.syncStatus().isAuthenticated">
+    <ion-list-header style="margin-bottom: 4px"> Configuration </ion-list-header>
+    <ion-list>
+      <ion-item>
+        <ion-icon name="sync-outline" slot="start"></ion-icon>
+        <ion-label>
+          <h3>Auto-Sync</h3>
+          <p>Upload files automatically</p>
+        </ion-label>
+        <ion-toggle slot="end" [checked]="cloudSyncService.settings().enabled" (ionChange)="toggleSync($event)"> </ion-toggle>
+      </ion-item>
+
+      <ion-item [disabled]="!cloudSyncService.settings().enabled">
+        <ion-icon name="calendar-outline" slot="start"></ion-icon>
+        <ion-select [(ngModel)]="selectedFrequency" interface="action-sheet" label="Sync Frequency" (ionChange)="updateFrequency()">
+          <ion-select-option [value]="SyncFrequency.DAILY">Daily</ion-select-option>
+          <ion-select-option [value]="SyncFrequency.WEEKLY">Weekly</ion-select-option>
+          <ion-select-option [value]="SyncFrequency.MONTHLY">Monthly</ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item lines="none">
+        <ion-icon name="folder-outline" slot="start"></ion-icon>
+        <ion-input [(ngModel)]="folderPath" (ionBlur)="updateFolderPath()" label="Folder Path" class="ion-text-right" placeholder="e.g. Game-History">
+        </ion-input>
+      </ion-item>
+    </ion-list>
+
+    <ion-list-header style="margin-bottom: 4px"> Activity </ion-list-header>
+    <ion-grid class="stats-grid">
+      <ion-row>
+        <ion-col size="6">
+          <div class="stat-card">
+            <span>Last Sync</span>
+            <strong>{{ (cloudSyncService.syncStatus().lastSync | date: "MMM d, h:mm a") || "Never" }}</strong>
+          </div>
+        </ion-col>
+        <ion-col size="6">
+          <div class="stat-card">
+            <span>Next Sync</span>
+            <strong>{{ (cloudSyncService.syncStatus().nextSync | date: "MMM d, h:mm a") || "--" }}</strong>
+          </div>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+
+    <ion-card class="error-card" *ngIf="cloudSyncService.syncStatus().error">
+      <ion-card-content>
+        <ion-icon name="warning" color="danger"></ion-icon>
+        Last sync failed.
+      </ion-card-content>
+    </ion-card>
+  </ng-container>
+</ion-content>
+
+<ion-footer *ngIf="cloudSyncService.syncStatus().isAuthenticated">
+  <ion-toolbar>
+    <ion-button class="confirm-btn" expand="block" (click)="syncNow()" [disabled]="cloudSyncService.syncStatus().syncInProgress">
+      <ng-container *ngIf="!cloudSyncService.syncStatus().syncInProgress"> Sync Now </ng-container>
+
+      <ng-container *ngIf="cloudSyncService.syncStatus().syncInProgress">
+        <ion-spinner name="crescent"></ion-spinner>
+        <span style="margin-left: 10px">Syncing...</span>
+      </ng-container>
     </ion-button>
-
-    <!-- Auto-Sync Toggle -->
-    <ion-item *ngIf="cloudSyncService.syncStatus().isAuthenticated">
-      <ion-label>
-        <h3>Auto-Sync Enabled</h3>
-        <p>Automatically upload Excel files</p>
-      </ion-label>
-      <ion-toggle [checked]="cloudSyncService.settings().enabled" (ionChange)="toggleSync($event)"></ion-toggle>
-    </ion-item>
-
-    <!-- Sync Frequency -->
-    <ion-item *ngIf="cloudSyncService.syncStatus().isAuthenticated && cloudSyncService.settings().enabled">
-      <ion-label>Sync Frequency</ion-label>
-      <ion-select [(ngModel)]="selectedFrequency" interface="action-sheet" (ionChange)="updateFrequency()">
-        <ion-select-option [value]="SyncFrequency.DAILY">Daily</ion-select-option>
-        <ion-select-option [value]="SyncFrequency.WEEKLY">Weekly</ion-select-option>
-        <ion-select-option [value]="SyncFrequency.MONTHLY">Monthly</ion-select-option>
-      </ion-select>
-    </ion-item>
-
-    <!-- Folder Path -->
-    <ion-item *ngIf="cloudSyncService.syncStatus().isAuthenticated">
-      <ion-label position="stacked">Folder Path</ion-label>
-      <ion-input
-        [(ngModel)]="folderPath"
-        (ionBlur)="updateFolderPath()"
-        placeholder="lightningbowl Game-History"
-        helperText="Name of the folder in your cloud storage"></ion-input>
-    </ion-item>
-
-    <!-- Last Sync Info -->
-    <ion-item *ngIf="cloudSyncService.syncStatus().lastSync" lines="none">
-      <ion-label>
-        <h3>Last Sync</h3>
-        <p>{{ cloudSyncService.syncStatus().lastSync | date: "short" }}</p>
-      </ion-label>
-    </ion-item>
-
-    <!-- Next Sync Info -->
-    <ion-item *ngIf="cloudSyncService.syncStatus().nextSync && cloudSyncService.settings().enabled" lines="none">
-      <ion-label>
-        <h3>Next Sync</h3>
-        <p>{{ cloudSyncService.syncStatus().nextSync | date: "short" }}</p>
-      </ion-label>
-    </ion-item>
-
-    <!-- Manual Sync Button -->
-    <ion-button
-      *ngIf="cloudSyncService.syncStatus().isAuthenticated"
-      expand="block"
-      (click)="syncNow()"
-      [disabled]="cloudSyncService.syncStatus().syncInProgress">
-      <ion-spinner *ngIf="cloudSyncService.syncStatus().syncInProgress" name="crescent" slot="start"></ion-spinner>
-      <ion-icon *ngIf="!cloudSyncService.syncStatus().syncInProgress" slot="start" name="sync-outline"></ion-icon>
-      {{ cloudSyncService.syncStatus().syncInProgress ? "Syncing..." : "Sync Now" }}
-    </ion-button>
-
-    <!-- Error Display -->
-    <ion-text color="danger" *ngIf="cloudSyncService.syncStatus().error">
-      <p style="padding: 10px 0; font-size: 14px"><strong>Error:</strong> {{ cloudSyncService.syncStatus().error }}</p>
-    </ion-text>
-
-    <!-- Info Note -->
-    <ion-note *ngIf="!cloudSyncService.syncStatus().isAuthenticated" style="display: block; padding-top: 16px; text-align: center">
-      Connect to automatically backup your game history to the cloud
-    </ion-note>
-  </ion-card-content>
-</ion-card>
+  </ion-toolbar>
+</ion-footer>
