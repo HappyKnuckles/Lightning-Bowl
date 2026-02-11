@@ -411,6 +411,10 @@ export class AddGamePage implements OnInit {
   }
 
   // UI INTERACTION
+  onSegmentChange(event: any): void {
+    this.selectedSegment = event.detail.value;
+  }
+
   togglePinInputMode(): void {
     this.isPinInputMode = !this.isPinInputMode;
     localStorage.setItem('pinInputMode', String(this.isPinInputMode));
@@ -456,6 +460,7 @@ export class AddGamePage implements OnInit {
           handler: () => {
             this.selectedMode = mode;
             this.propagateMetadataToSeries();
+            this.recalculateActiveGameScores();
           },
         });
       }
@@ -673,7 +678,32 @@ export class AddGamePage implements OnInit {
 
   private updateSegments(): void {
     const activeIndexes = this.getActiveTrackIndexes();
+    const oldSelectedSegment = this.selectedSegment;
     this.segments = activeIndexes.map((i) => `Game ${i + 1}`);
+
+    // Reset to Game 1 if current segment is beyond the new series range
+    if (!this.segments.includes(oldSelectedSegment)) {
+      this.selectedSegment = 'Game 1';
+    }
+  }
+
+  private recalculateActiveGameScores(): void {
+    const activeIndexes = this.getActiveTrackIndexes();
+    const currentGames = this.games();
+    const newTotalScores = [...this.totalScores()];
+    const newMaxScores = [...this.maxScores()];
+
+    activeIndexes.forEach((index) => {
+      const game = currentGames[index];
+      const scoreResult = this.gameScoreCalculatorService.calculateScoreFromFrames(game.frames);
+      const maxScore = this.gameScoreCalculatorService.calculateMaxScoreFromFrames(game.frames, scoreResult.totalScore);
+
+      newTotalScores[index] = scoreResult.totalScore;
+      newMaxScores[index] = maxScore;
+    });
+
+    this.totalScores.set(newTotalScores);
+    this.maxScores.set(newMaxScores);
   }
 
   // PRIVATE HELPERS - VALIDATION

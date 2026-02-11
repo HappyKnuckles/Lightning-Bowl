@@ -19,7 +19,7 @@
 
   @if (selectedMode !== "Single") {
     <ion-toolbar>
-      <ion-segment [value]="selectedSegment" [scrollable]="true">
+      <ion-segment [value]="selectedSegment" (ionChange)="onSegmentChange($event)" [scrollable]="true">
         <ion-segment-button *ngFor="let segment of segments" [value]="segment" [contentId]="segment">
           <ion-label class="segment-label">{{ segment }}</ion-label>
         </ion-segment-button>
