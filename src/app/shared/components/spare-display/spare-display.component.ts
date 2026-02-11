@@ -5,6 +5,8 @@ import { PrevStats, SessionStats, Stats } from 'src/app/core/models/stats.model'
 import { addIcons } from 'ionicons';
 import { arrowDown, arrowUp, informationCircleOutline } from 'ionicons/icons';
 import { UtilsService } from 'src/app/core/services/utils/utils.service';
+import { SpareLabelPipe } from 'src/app/core/pipes/spare-label.pipe';
+import { RateColorPipe } from 'src/app/core/pipes/rate-color.pipe';
 
 @Component({
   selector: 'app-spare-display',
@@ -12,7 +14,7 @@ import { UtilsService } from 'src/app/core/services/utils/utils.service';
   styleUrls: ['./spare-display.component.scss'],
   standalone: true,
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
-  imports: [IonText, IonCol, IonRow, IonIcon, IonGrid, NgIf, NgStyle, CommonModule],
+  imports: [IonText, IonCol, IonRow, IonIcon, IonGrid, NgIf, NgStyle, CommonModule, SpareLabelPipe, RateColorPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SpareDisplayComponent {
@@ -34,25 +36,5 @@ export class SpareDisplayComponent {
 
   getDiffColor(currentValue: number, previousValue: number): string {
     return this.utilsService.getDiffColor(currentValue, previousValue);
-  }
-
-  getLabel(i: number): string {
-    if (i === 0) return 'Overall';
-    if (i === 1) return `${i} Pin`;
-    return `${i} Pins`;
-  }
-
-  getRateColor(conversionRate: number): string {
-    if (conversionRate > 95) {
-      return '#4faeff';
-    } else if (conversionRate > 75) {
-      return '#008000';
-    } else if (conversionRate > 50) {
-      return '#809300';
-    } else if (conversionRate > 33) {
-      return '#FFA500';
-    } else {
-      return '#FF0000';
-    }
   }
 }

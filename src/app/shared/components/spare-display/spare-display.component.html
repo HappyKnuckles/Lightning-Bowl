@@ -18,7 +18,7 @@
       </ion-row>
       <ion-row *ngFor="let i of [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]" class="stats">
         <ion-col>
-          <ion-text>{{ getLabel(i) }}</ion-text>
+          <ion-text>{{ i | spareLabel }}</ion-text>
         </ion-col>
 
         @if (i > 0) {
@@ -31,7 +31,7 @@
           </ion-col>
           <ion-col *ngIf="stats.pinCounts[i] === 0 && stats.missedCounts[i] === 0"></ion-col>
           @if (stats.pinCounts[i] !== 0 || stats.missedCounts[i] !== 0) {
-            <ion-col [ngStyle]="{ color: getRateColor(stats.spareRates[i]) }" class="spare-rates-content">
+            <ion-col [ngStyle]="{ color: stats.spareRates[i] | rateColor }" class="spare-rates-content">
               <ion-text [id]="id! + i" class="stat-text"
                 >{{ stats.spareRates[i] | number: "1.2-2" }}%
                 @if (prevStats && getArrowIcon(stats.spareRates[i], prevStats.spareRates[i])) {
@@ -60,7 +60,7 @@
             <ion-text>{{ stats.totalSparesConverted }}</ion-text>
           </ion-col>
           @if (stats.totalSparesMissed + stats.totalSparesConverted !== 0) {
-            <ion-col [ngStyle]="{ color: getRateColor(stats.overallSpareRate) }" class="spare-rates-content">
+            <ion-col [ngStyle]="{ color: stats.overallSpareRate | rateColor }" class="spare-rates-content">
               <ion-text [id]="'overall' + id!" class="stat-text">
                 {{ stats.overallSpareRate | number: "1.2-2" }}%
                 @if (prevStats && getArrowIcon(stats.overallSpareRate, prevStats.overallSpareRate)) {

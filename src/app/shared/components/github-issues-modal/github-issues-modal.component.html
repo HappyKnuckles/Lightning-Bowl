@@ -62,7 +62,8 @@
             *ngFor="let label of issue.labels"
             class="issue-label"
             [style.background-color]="'#' + label.color"
-            [style.color]="getTextColor(label.color)">
+            [style.color]="label.color | textColor"
+            >>
             {{ label.name }}
           </ion-chip>
           <ion-avatar style="margin-left: auto; height: 32px; width: 32px; --border-radius: 0">
@@ -80,7 +81,7 @@
         </ng-template>
 
         <div class="issue-meta">
-          <span class="created-date">Created {{ getRelativeTime(issue.created_at) }}</span>
+          <span class="created-date">Created {{ issue.created_at | relativeTime }}</span>
           <ion-button fill="clear" size="small" [href]="issue.html_url" target="_blank">
             <ion-icon name="open-outline" slot="start"></ion-icon>
             View on GitHub
