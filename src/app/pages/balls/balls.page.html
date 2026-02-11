@@ -95,8 +95,8 @@
                   <ion-icon name="open-outline"></ion-icon>
                 </div>
                 <p class="info">{{ ball.core_name }}</p>
-                <p class="info">RG: {{ ball.core_rg }} ({{ getLengthPotential(ball) }})</p>
-                <p class="info">Diff: {{ ball.core_diff }} ({{ getFlarePotential(ball) }})</p>
+                <p class="info">RG: {{ ball.core_rg }} ({{ ball | lengthPotential }})</p>
+                <p class="info">Diff: {{ ball.core_diff }} ({{ ball | flarePotential }})</p>
                 <p class="info" *ngIf="ball.core_int_diff">Int. Diff: {{ ball.core_int_diff }}</p>
                 <p class="info">{{ ball.core_type }}</p>
                 <ion-ripple-effect></ion-ripple-effect>

@@ -52,6 +52,8 @@ import { BallSortOption, BallSortField, SortDirection } from 'src/app/core/model
 import { NetworkService } from 'src/app/core/services/network/network.service';
 import { FavoritesService } from 'src/app/core/services/favorites/favorites.service';
 import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
+import { LengthPotentialPipe } from 'src/app/core/pipes/length-potential.pipe';
+import { FlarePotentialPipe } from 'src/app/core/pipes/flare-potential.pipe';
 
 @Component({
   selector: 'app-balls',
@@ -89,6 +91,8 @@ import { AnalyticsService } from 'src/app/core/services/analytics/analytics.serv
     GenericFilterActiveComponent,
     SearchBlurDirective,
     SortHeaderComponent,
+    LengthPotentialPipe,
+    FlarePotentialPipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -347,36 +351,6 @@ export class BallsPage implements OnInit {
       if (event && !this.isFilterActive()) {
         event.target.complete();
       }
-    }
-  }
-
-  getLengthPotential(ball: Ball): string {
-    const rg = parseFloat(ball.core_rg);
-    if (isNaN(rg)) {
-      return '';
-    }
-
-    if (rg < 2.52) {
-      return 'Early Roll';
-    } else if (rg < 2.58) {
-      return 'Medium Roll';
-    } else {
-      return 'Late Roll';
-    }
-  }
-
-  getFlarePotential(ball: Ball): string {
-    const diff = parseFloat(ball.core_diff);
-    if (isNaN(diff)) {
-      return '';
-    }
-
-    if (diff < 0.035) {
-      return 'Low Flare';
-    } else if (diff < 0.05) {
-      return 'Medium Flare';
-    } else {
-      return 'High Flare';
     }
   }
 
