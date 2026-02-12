@@ -134,6 +134,7 @@ export class CloudSyncService {
 
     const redirectUri = window.location.origin + '/auth/callback';
     const scope = 'https://www.googleapis.com/auth/drive.file';
+    const state = 'google-auth-state'; // State parameter to identify provider
 
     // For web-based OAuth flow
     const authUrl =
@@ -141,7 +142,8 @@ export class CloudSyncService {
       `client_id=${clientId}&` +
       `redirect_uri=${encodeURIComponent(redirectUri)}&` +
       `response_type=token&` +
-      `scope=${encodeURIComponent(scope)}`;
+      `scope=${encodeURIComponent(scope)}&` +
+      `state=${encodeURIComponent(state)}`;
 
     // Open OAuth window
     const authWindow = window.open(authUrl, 'Google Drive Authentication', 'width=500,height=600');
@@ -195,13 +197,147 @@ export class CloudSyncService {
   }
 
   private async authenticateDropbox(): Promise<void> {
-    // Placeholder for Dropbox authentication
-    throw new Error('Dropbox authentication not yet implemented');
+    // Dropbox OAuth2 configuration
+    const clientId = environment.dropboxClientId;
+    if (!clientId) {
+      throw new Error('Dropbox client ID not configured. Please set dropboxClientId in environment configuration.');
+    }
+
+    const redirectUri = window.location.origin + '/auth/callback';
+    const state = 'dropbox-auth-state'; // State parameter to identify provider
+
+    // Dropbox OAuth2 URL
+    const authUrl =
+      `https://www.dropbox.com/oauth2/authorize?` +
+      `client_id=${clientId}&` +
+      `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+      `response_type=token&` +
+      `state=${encodeURIComponent(state)}`;
+
+    // Open OAuth window
+    const authWindow = window.open(authUrl, 'Dropbox Authentication', 'width=500,height=600');
+
+    // Listen for the OAuth callback
+    return new Promise((resolve, reject) => {
+      const messageHandler = (event: MessageEvent) => {
+        if (event.origin !== window.location.origin) return;
+
+        if (event.data.type === 'dropbox-auth-success') {
+          window.removeEventListener('message', messageHandler);
+          authWindow?.close();
+
+          const accessToken = event.data.accessToken;
+          const currentSettings = this.#settings();
+          const now = Date.now();
+          const nextSync = this.calculateNextSyncDate(currentSettings.frequency, now);
+
+          this.updateSettings({
+            provider: CloudProvider.DROPBOX,
+            accessToken,
+            enabled: true,
+            nextSyncDate: nextSync,
+          });
+
+          this.#syncStatus.update((status) => ({
+            ...status,
+            isAuthenticated: true,
+            error: undefined,
+            nextSync: new Date(nextSync),
+          }));
+
+          this.toastService.showToast('Dropbox connected successfully!', 'checkmark-circle');
+          resolve();
+        } else if (event.data.type === 'dropbox-auth-error') {
+          window.removeEventListener('message', messageHandler);
+          authWindow?.close();
+          reject(new Error(event.data.error || 'Authentication failed'));
+        }
+      };
+
+      window.addEventListener('message', messageHandler);
+
+      // Timeout after 5 minutes
+      setTimeout(() => {
+        window.removeEventListener('message', messageHandler);
+        authWindow?.close();
+        reject(new Error('Authentication timeout'));
+      }, 300000);
+    });
   }
 
   private async authenticateOneDrive(): Promise<void> {
-    // Placeholder for OneDrive authentication
-    throw new Error('OneDrive authentication not yet implemented');
+    // OneDrive/Microsoft OAuth2 configuration
+    const clientId = environment.oneDriveClientId;
+    if (!clientId) {
+      throw new Error('OneDrive client ID not configured. Please set oneDriveClientId in environment configuration.');
+    }
+
+    const redirectUri = window.location.origin + '/auth/callback';
+    const scope = 'Files.ReadWrite offline_access';
+    const state = 'onedrive-auth-state'; // State parameter to identify provider
+
+    // Microsoft OAuth2 URL - Using id_token+token for implicit flow
+    // Note: Implicit flow is deprecated, but still works for backward compatibility
+    // For production, consider using PKCE flow with MSAL.js
+    const authUrl =
+      `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?` +
+      `client_id=${clientId}&` +
+      `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+      `response_type=id_token+token&` + // Changed from 'token' to 'id_token+token'
+      `response_mode=fragment&` + // Explicitly set fragment mode
+      `scope=${encodeURIComponent(scope)}&` +
+      `state=${encodeURIComponent(state)}&` +
+      `nonce=${Date.now()}`; // Required for id_token
+
+    // Open OAuth window
+    const authWindow = window.open(authUrl, 'OneDrive Authentication', 'width=500,height=600');
+
+    // Listen for the OAuth callback
+    return new Promise((resolve, reject) => {
+      const messageHandler = (event: MessageEvent) => {
+        if (event.origin !== window.location.origin) return;
+
+        if (event.data.type === 'onedrive-auth-success') {
+          window.removeEventListener('message', messageHandler);
+          authWindow?.close();
+
+          const accessToken = event.data.accessToken;
+          const currentSettings = this.#settings();
+          const now = Date.now();
+          const nextSync = this.calculateNextSyncDate(currentSettings.frequency, now);
+
+          this.updateSettings({
+            provider: CloudProvider.ONEDRIVE,
+            accessToken,
+            enabled: true,
+            nextSyncDate: nextSync,
+          });
+
+          this.#syncStatus.update((status) => ({
+            ...status,
+            isAuthenticated: true,
+            error: undefined,
+            nextSync: new Date(nextSync),
+          }));
+
+          this.toastService.showToast('OneDrive connected successfully!', 'checkmark-circle');
+          resolve();
+        } else if (event.data.type === 'onedrive-auth-error') {
+          window.removeEventListener('message', messageHandler);
+          authWindow?.close();
+          reject(new Error(event.data.error || 'Authentication failed'));
+        }
+      };
+
+      window.addEventListener('message', messageHandler);
+
+      // Timeout after 5 minutes
+      setTimeout(() => {
+        window.removeEventListener('message', messageHandler);
+        authWindow?.close();
+        reject(new Error('Authentication timeout'));
+      }, 300000);
+    });
   }
 
   async disconnect(): Promise<void> {
@@ -276,9 +412,11 @@ export class CloudSyncService {
         await this.uploadToGoogleDrive(buffer, settings.accessToken!);
         break;
       case CloudProvider.DROPBOX:
-        throw new Error('Dropbox upload not yet implemented');
+        await this.uploadToDropbox(buffer, settings.accessToken!);
+        break;
       case CloudProvider.ONEDRIVE:
-        throw new Error('OneDrive upload not yet implemented');
+        await this.uploadToOneDrive(buffer, settings.accessToken!);
+        break;
     }
   }
 
@@ -368,6 +506,72 @@ export class CloudSyncService {
 
     const createData = await createResponse.json();
     return createData.id;
+  }
+
+  private async uploadToDropbox(buffer: ArrayBuffer, accessToken: string): Promise<void> {
+    const date = new Date();
+    const formattedDate = date.toLocaleString('de-DE', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+    const settings = this.#settings();
+    const folderPath = settings.folderPath || 'Lightningbowl Game-History';
+    const fileName = `game_data_${formattedDate}.xlsx`;
+    const fullPath = `/${folderPath}/${fileName}`;
+
+    // Dropbox API v2 - Upload file
+    const response = await fetch('https://content.dropboxapi.com/2/files/upload', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/octet-stream',
+        'Dropbox-API-Arg': JSON.stringify({
+          path: fullPath,
+          mode: 'add',
+          autorename: true,
+          mute: false,
+        }),
+      },
+      body: buffer,
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error_summary || 'Failed to upload to Dropbox');
+    }
+  }
+
+  private async uploadToOneDrive(buffer: ArrayBuffer, accessToken: string): Promise<void> {
+    const date = new Date();
+    const formattedDate = date.toLocaleString('de-DE', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+    const settings = this.#settings();
+    const folderPath = settings.folderPath || 'Lightningbowl Game-History';
+    const fileName = `game_data_${formattedDate}.xlsx`;
+
+    // OneDrive API - Upload small file (< 4MB)
+    // For larger files, use resumable upload session
+    const encodedFolderPath = encodeURIComponent(folderPath);
+    const encodedFileName = encodeURIComponent(fileName);
+    const uploadUrl = `https://graph.microsoft.com/v1.0/me/drive/root:/${encodedFolderPath}/${encodedFileName}:/content`;
+
+    const response = await fetch(uploadUrl, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      },
+      body: buffer,
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error?.message || 'Failed to upload to OneDrive');
+    }
   }
 
   private async checkAndSyncOnStartup(): Promise<void> {
