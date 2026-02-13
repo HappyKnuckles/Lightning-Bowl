@@ -4,6 +4,8 @@ import { ExcelService } from '../excel/excel.service';
 import { ToastService } from '../toast/toast.service';
 import { Storage } from '@ionic/storage-angular';
 import { environment } from 'src/environments/environment';
+import { PublicClientApplication, type Configuration, type AuthenticationResult } from '@azure/msal-browser';
+import { DropboxAuth } from 'dropbox';
 
 const CLOUD_SYNC_STORAGE_KEY = 'cloud_sync_settings';
 
@@ -21,6 +23,12 @@ export class CloudSyncService {
     isAuthenticated: false,
     syncInProgress: false,
   });
+
+  // MSAL instance for OneDrive/Microsoft authentication
+  private msalInstance: PublicClientApplication | null = null;
+
+  // Dropbox auth instance
+  private dropboxAuth: DropboxAuth | null = null;
 
   readonly settings = this.#settings.asReadonly();
   readonly syncStatus = this.#syncStatus.asReadonly();
@@ -126,221 +134,301 @@ export class CloudSyncService {
   }
 
   private async authenticateGoogleDrive(): Promise<void> {
-    // Google OAuth2 configuration
+    // Google Identity Services (GIS) configuration
     const clientId = environment.googleDriveClientId;
     if (!clientId) {
       throw new Error('Google Drive client ID not configured. Please set googleDriveClientId in environment configuration.');
     }
 
-    const redirectUri = window.location.origin + '/auth/callback';
-    const scope = 'https://www.googleapis.com/auth/drive.file';
-    const state = 'google-auth-state'; // State parameter to identify provider
+    // Check if Google Identity Services is loaded
+    if (typeof google === 'undefined' || !google.accounts) {
+      throw new Error('Google Identity Services not loaded. Please check your internet connection and try again.');
+    }
 
-    // For web-based OAuth flow
-    const authUrl =
-      `https://accounts.google.com/o/oauth2/v2/auth?` +
-      `client_id=${clientId}&` +
-      `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-      `response_type=token&` +
-      `scope=${encodeURIComponent(scope)}&` +
-      `state=${encodeURIComponent(state)}`;
-
-    // Open OAuth window
-    const authWindow = window.open(authUrl, 'Google Drive Authentication', 'width=500,height=600');
-
-    // Listen for the OAuth callback
     return new Promise((resolve, reject) => {
-      const messageHandler = (event: MessageEvent) => {
-        if (event.origin !== window.location.origin) return;
+      try {
+        // Initialize the Token Client for Google Identity Services
+        const tokenClient = google.accounts.oauth2.initTokenClient({
+          client_id: clientId,
+          scope: 'https://www.googleapis.com/auth/drive.file',
+          callback: async (response: google.accounts.oauth2.TokenResponse) => {
+            if (response.error) {
+              this.toastService.showToast(`Google Drive authentication failed: ${response.error}`, 'close-circle', true);
+              reject(new Error(response.error));
+              return;
+            }
 
-        if (event.data.type === 'google-auth-success') {
-          window.removeEventListener('message', messageHandler);
-          authWindow?.close();
+            if (response.access_token) {
+              const currentSettings = this.#settings();
+              const now = Date.now();
+              const nextSync = this.calculateNextSyncDate(currentSettings.frequency, now);
 
-          const accessToken = event.data.accessToken;
-          const currentSettings = this.#settings();
-          const now = Date.now();
-          const nextSync = this.calculateNextSyncDate(currentSettings.frequency, now);
+              await this.updateSettings({
+                provider: CloudProvider.GOOGLE_DRIVE,
+                accessToken: response.access_token,
+                enabled: true,
+                nextSyncDate: nextSync,
+              });
 
-          this.updateSettings({
-            provider: CloudProvider.GOOGLE_DRIVE,
-            accessToken,
-            enabled: true,
-            nextSyncDate: nextSync,
-          });
+              this.#syncStatus.update((status) => ({
+                ...status,
+                isAuthenticated: true,
+                error: undefined,
+                nextSync: new Date(nextSync),
+              }));
 
-          this.#syncStatus.update((status) => ({
-            ...status,
-            isAuthenticated: true,
-            error: undefined,
-            nextSync: new Date(nextSync),
-          }));
+              this.toastService.showToast('Google Drive connected successfully!', 'checkmark-circle');
+              resolve();
+            } else {
+              reject(new Error('No access token received'));
+            }
+          },
+          error_callback: (error: google.accounts.oauth2.ClientConfigError) => {
+            this.toastService.showToast(`Google Drive authentication failed: ${error.type}`, 'close-circle', true);
+            reject(new Error(error.message || error.type));
+          },
+        });
 
-          this.toastService.showToast('Google Drive connected successfully!', 'checkmark-outline');
-          resolve();
-        } else if (event.data.type === 'google-auth-error') {
-          window.removeEventListener('message', messageHandler);
-          authWindow?.close();
-          reject(new Error(event.data.error || 'Authentication failed'));
-        }
-      };
-
-      window.addEventListener('message', messageHandler);
-
-      // Timeout after 5 minutes
-      setTimeout(() => {
-        window.removeEventListener('message', messageHandler);
-        authWindow?.close();
-        reject(new Error('Authentication timeout'));
-      }, 300000);
+        // Request access token via popup
+        tokenClient.requestAccessToken({ prompt: 'consent' });
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Authentication failed';
+        this.toastService.showToast(`Google Drive authentication failed: ${errorMessage}`, 'close-circle', true);
+        reject(error);
+      }
     });
   }
 
   private async authenticateDropbox(): Promise<void> {
-    // Dropbox OAuth2 configuration
+    // Dropbox SDK configuration with PKCE
     const clientId = environment.dropboxClientId;
     if (!clientId) {
       throw new Error('Dropbox client ID not configured. Please set dropboxClientId in environment configuration.');
     }
 
-    const redirectUri = window.location.origin + '/auth/callback';
-    const state = 'dropbox-auth-state'; // State parameter to identify provider
+    try {
+      // Initialize DropboxAuth if not already done
+      if (!this.dropboxAuth) {
+        this.dropboxAuth = new DropboxAuth({
+          clientId: clientId,
+        });
+      }
 
-    // Dropbox OAuth2 URL
-    const authUrl =
-      `https://www.dropbox.com/oauth2/authorize?` +
-      `client_id=${clientId}&` +
-      `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-      `response_type=token&` +
-      `state=${encodeURIComponent(state)}`;
+      const redirectUri = window.location.origin + '/auth/dropbox-callback';
 
-    // Open OAuth window
-    const authWindow = window.open(authUrl, 'Dropbox Authentication', 'width=500,height=600');
+      // Get the authorization URL for PKCE flow
+      const authUrl = await this.dropboxAuth.getAuthenticationUrl(
+        redirectUri,
+        undefined, // state
+        'code', // Use authorization code flow with PKCE
+        'offline', // Request offline access for refresh tokens
+        undefined, // scopes (uses default)
+        undefined, // includeGrantedScopes
+        true, // Use PKCE
+      );
 
-    // Listen for the OAuth callback
-    return new Promise((resolve, reject) => {
-      const messageHandler = (event: MessageEvent) => {
-        if (event.origin !== window.location.origin) return;
+      // Open OAuth window
+      const authWindow = window.open(authUrl.toString(), 'Dropbox Authentication', 'width=500,height=600');
 
-        if (event.data.type === 'dropbox-auth-success') {
+      // Listen for the OAuth callback
+      return new Promise((resolve, reject) => {
+        const messageHandler = async (event: MessageEvent) => {
+          if (event.origin !== window.location.origin) return;
+
+          if (event.data.type === 'dropbox-auth-success') {
+            window.removeEventListener('message', messageHandler);
+            authWindow?.close();
+
+            const code = event.data.code;
+
+            try {
+              // Exchange code for access token
+              (window as Window & { _dropboxCodeVerifier?: string })._dropboxCodeVerifier = this.dropboxAuth!.getCodeVerifier();
+              this.dropboxAuth!.setCodeVerifier((window as Window & { _dropboxCodeVerifier?: string })._dropboxCodeVerifier!);
+              const tokenResponse = await this.dropboxAuth!.getAccessTokenFromCode(redirectUri, code);
+
+              const result = tokenResponse.result as { access_token?: string; refresh_token?: string };
+
+              if (tokenResponse && result.access_token) {
+                const currentSettings = this.#settings();
+                const now = Date.now();
+                const nextSync = this.calculateNextSyncDate(currentSettings.frequency, now);
+
+                await this.updateSettings({
+                  provider: CloudProvider.DROPBOX,
+                  accessToken: result.access_token,
+                  refreshToken: result.refresh_token,
+                  enabled: true,
+                  nextSyncDate: nextSync,
+                });
+
+                this.#syncStatus.update((status) => ({
+                  ...status,
+                  isAuthenticated: true,
+                  error: undefined,
+                  nextSync: new Date(nextSync),
+                }));
+
+                this.toastService.showToast('Dropbox connected successfully!', 'checkmark-circle');
+                resolve();
+              } else {
+                reject(new Error('No access token received from Dropbox'));
+              }
+            } catch (error) {
+              const errorMessage = error instanceof Error ? error.message : 'Token exchange failed';
+              this.toastService.showToast(`Dropbox authentication failed: ${errorMessage}`, 'close-circle', true);
+              reject(error);
+            }
+          } else if (event.data.type === 'dropbox-auth-error') {
+            window.removeEventListener('message', messageHandler);
+            authWindow?.close();
+            reject(new Error(event.data.error || 'Authentication failed'));
+          }
+        };
+
+        window.addEventListener('message', messageHandler);
+
+        // Store code verifier for PKCE
+        (window as Window & { _dropboxCodeVerifier?: string })._dropboxCodeVerifier = this.dropboxAuth!.getCodeVerifier();
+
+        // Timeout after 5 minutes
+        setTimeout(() => {
           window.removeEventListener('message', messageHandler);
           authWindow?.close();
-
-          const accessToken = event.data.accessToken;
-          const currentSettings = this.#settings();
-          const now = Date.now();
-          const nextSync = this.calculateNextSyncDate(currentSettings.frequency, now);
-
-          this.updateSettings({
-            provider: CloudProvider.DROPBOX,
-            accessToken,
-            enabled: true,
-            nextSyncDate: nextSync,
-          });
-
-          this.#syncStatus.update((status) => ({
-            ...status,
-            isAuthenticated: true,
-            error: undefined,
-            nextSync: new Date(nextSync),
-          }));
-
-          this.toastService.showToast('Dropbox connected successfully!', 'checkmark-circle');
-          resolve();
-        } else if (event.data.type === 'dropbox-auth-error') {
-          window.removeEventListener('message', messageHandler);
-          authWindow?.close();
-          reject(new Error(event.data.error || 'Authentication failed'));
-        }
-      };
-
-      window.addEventListener('message', messageHandler);
-
-      // Timeout after 5 minutes
-      setTimeout(() => {
-        window.removeEventListener('message', messageHandler);
-        authWindow?.close();
-        reject(new Error('Authentication timeout'));
-      }, 300000);
-    });
+          reject(new Error('Authentication timeout'));
+        }, 300000);
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Authentication failed';
+      this.toastService.showToast(`Dropbox authentication failed: ${errorMessage}`, 'close-circle', true);
+      throw error;
+    }
   }
 
   private async authenticateOneDrive(): Promise<void> {
-    // OneDrive/Microsoft OAuth2 configuration
+    // OneDrive/Microsoft OAuth2 configuration using MSAL
     const clientId = environment.oneDriveClientId;
     if (!clientId) {
       throw new Error('OneDrive client ID not configured. Please set oneDriveClientId in environment configuration.');
     }
 
-    const redirectUri = window.location.origin + '/auth/callback';
-    const scope = 'Files.ReadWrite offline_access';
-    const state = 'onedrive-auth-state'; // State parameter to identify provider
+    try {
+      // Initialize MSAL if not already done
+      if (!this.msalInstance) {
+        const msalConfig: Configuration = {
+          auth: {
+            clientId: clientId,
+            authority: 'https://login.microsoftonline.com/common',
+            redirectUri: window.location.origin,
+          },
+          cache: {
+            cacheLocation: 'localStorage',
+          },
+        };
+        this.msalInstance = new PublicClientApplication(msalConfig);
+        await this.msalInstance.initialize();
+      }
 
-    // Microsoft OAuth2 URL - Using id_token+token for implicit flow
-    // Note: Implicit flow is deprecated, but still works for backward compatibility
-    // For production, consider using PKCE flow with MSAL.js
-    const authUrl =
-      `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?` +
-      `client_id=${clientId}&` +
-      `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-      `response_type=id_token+token&` + // Changed from 'token' to 'id_token+token'
-      `response_mode=fragment&` + // Explicitly set fragment mode
-      `scope=${encodeURIComponent(scope)}&` +
-      `state=${encodeURIComponent(state)}&` +
-      `nonce=${Date.now()}`; // Required for id_token
-
-    // Open OAuth window
-    const authWindow = window.open(authUrl, 'OneDrive Authentication', 'width=500,height=600');
-
-    // Listen for the OAuth callback
-    return new Promise((resolve, reject) => {
-      const messageHandler = (event: MessageEvent) => {
-        if (event.origin !== window.location.origin) return;
-
-        if (event.data.type === 'onedrive-auth-success') {
-          window.removeEventListener('message', messageHandler);
-          authWindow?.close();
-
-          const accessToken = event.data.accessToken;
-          const currentSettings = this.#settings();
-          const now = Date.now();
-          const nextSync = this.calculateNextSyncDate(currentSettings.frequency, now);
-
-          this.updateSettings({
-            provider: CloudProvider.ONEDRIVE,
-            accessToken,
-            enabled: true,
-            nextSyncDate: nextSync,
-          });
-
-          this.#syncStatus.update((status) => ({
-            ...status,
-            isAuthenticated: true,
-            error: undefined,
-            nextSync: new Date(nextSync),
-          }));
-
-          this.toastService.showToast('OneDrive connected successfully!', 'checkmark-circle');
-          resolve();
-        } else if (event.data.type === 'onedrive-auth-error') {
-          window.removeEventListener('message', messageHandler);
-          authWindow?.close();
-          reject(new Error(event.data.error || 'Authentication failed'));
-        }
+      // Request scopes for OneDrive access
+      const loginRequest = {
+        scopes: ['Files.ReadWrite', 'offline_access'],
+        prompt: 'select_account' as const,
       };
 
-      window.addEventListener('message', messageHandler);
+      // Use popup for authentication (better UX than redirect)
+      const response: AuthenticationResult = await this.msalInstance.loginPopup(loginRequest);
 
-      // Timeout after 5 minutes
-      setTimeout(() => {
-        window.removeEventListener('message', messageHandler);
-        authWindow?.close();
-        reject(new Error('Authentication timeout'));
-      }, 300000);
-    });
+      if (response && response.accessToken) {
+        const currentSettings = this.#settings();
+        const now = Date.now();
+        const nextSync = this.calculateNextSyncDate(currentSettings.frequency, now);
+
+        await this.updateSettings({
+          provider: CloudProvider.ONEDRIVE,
+          accessToken: response.accessToken,
+          enabled: true,
+          nextSyncDate: nextSync,
+        });
+
+        this.#syncStatus.update((status) => ({
+          ...status,
+          isAuthenticated: true,
+          error: undefined,
+          nextSync: new Date(nextSync),
+        }));
+
+        this.toastService.showToast('OneDrive connected successfully!', 'checkmark-circle');
+      } else {
+        throw new Error('No access token received from authentication');
+      }
+    } catch (error) {
+      // Handle MSAL errors
+      const errorMessage = error instanceof Error ? error.message : 'Authentication failed';
+      this.toastService.showToast(`OneDrive authentication failed: ${errorMessage}`, 'close-circle', true);
+      throw error;
+    }
+  }
+
+  /**
+   * Silently acquire a fresh access token for OneDrive using MSAL
+   * This is called before sync operations to ensure token is valid
+   */
+  private async refreshOneDriveToken(): Promise<string> {
+    if (!this.msalInstance) {
+      throw new Error('MSAL not initialized');
+    }
+
+    const accounts = this.msalInstance.getAllAccounts();
+    if (accounts.length === 0) {
+      throw new Error('No accounts found. Please re-authenticate.');
+    }
+
+    const silentRequest = {
+      scopes: ['Files.ReadWrite'],
+      account: accounts[0],
+    };
+
+    try {
+      // Try to acquire token silently
+      const response: AuthenticationResult = await this.msalInstance.acquireTokenSilent(silentRequest);
+
+      // Update stored token
+      await this.updateSettings({
+        accessToken: response.accessToken,
+      });
+
+      return response.accessToken;
+    } catch (error) {
+      // If silent acquisition fails, fall back to interactive popup
+      console.warn('Silent token acquisition failed, using popup:', error);
+      const response: AuthenticationResult = await this.msalInstance.acquireTokenPopup(silentRequest);
+
+      await this.updateSettings({
+        accessToken: response.accessToken,
+      });
+
+      return response.accessToken;
+    }
   }
 
   async disconnect(): Promise<void> {
+    const currentSettings = this.#settings();
+
+    // If OneDrive, logout from MSAL
+    if (currentSettings.provider === CloudProvider.ONEDRIVE && this.msalInstance) {
+      try {
+        const accounts = this.msalInstance.getAllAccounts();
+        if (accounts.length > 0) {
+          await this.msalInstance.logoutPopup({
+            account: accounts[0],
+          });
+        }
+      } catch (error) {
+        console.error('MSAL logout error:', error);
+        // Continue with disconnect even if MSAL logout fails
+      }
+    }
+
     await this.updateSettings({
       enabled: false,
       accessToken: undefined,
@@ -414,9 +502,12 @@ export class CloudSyncService {
       case CloudProvider.DROPBOX:
         await this.uploadToDropbox(buffer, settings.accessToken!);
         break;
-      case CloudProvider.ONEDRIVE:
-        await this.uploadToOneDrive(buffer, settings.accessToken!);
+      case CloudProvider.ONEDRIVE: {
+        // Refresh token before upload to ensure it's valid
+        const freshToken = await this.refreshOneDriveToken();
+        await this.uploadToOneDrive(buffer, freshToken);
         break;
+      }
     }
   }
 

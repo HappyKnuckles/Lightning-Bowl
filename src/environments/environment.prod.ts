@@ -11,5 +11,5 @@ export const environment = {
   branch: 'master',
   googleDriveClientId: '712735063879-0fc2cnqto0omthr28gm4vlgiae28trt0.apps.googleusercontent.com',
   dropboxClientId: '0qi0957d7m0b2e8', // TODO: Add Dropbox App Key from https://www.dropbox.com/developers/apps
-  oneDriveClientId: 'f0ca305e-341a-4aac-946c-4a39c047ccb2', // IMPORTANT: In Azure Portal, go to Authentication > Implicit grant > Enable "Access tokens" and "ID tokens"
+  oneDriveClientId: 'f0ca305e-341a-4aac-946c-4a39c047ccb2', // Using MSAL.js - Add redirect URI in Azure: Platform = SPA, URI = https://lightningbowl.de
 };
