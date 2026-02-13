@@ -54,6 +54,14 @@ export const routes: Routes = [
     ],
   },
   {
+    path: 'auth/callback',
+    loadComponent: () => import('./pages/auth-callback/auth-callback.page').then((m) => m.AuthCallbackPage),
+  },
+  {
+    path: 'auth/dropbox-callback',
+    loadComponent: () => import('./pages/dropbox-callback/dropbox-callback.page').then((m) => m.DropboxCallbackPage),
+  },
+  {
     path: '',
     redirectTo: '/tabs/add',
     pathMatch: 'full',

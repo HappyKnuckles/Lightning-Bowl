@@ -16,7 +16,7 @@ import { ThemeChangerService } from './core/services/theme-changer/theme-changer
 import { PwaInstallService } from './core/services/pwa-install/pwa-install.service';
 import { PwaInstallPromptComponent } from './shared/components/pwa-install-prompt/pwa-install-prompt.component';
 import { AnalyticsService } from './core/services/analytics/analytics.service';
-import { isPlatform } from '@ionic/angular';
+import { CloudSyncService } from './core/services/cloud-sync/cloud-sync.service';
 
 @Component({
   selector: 'app-root',
@@ -44,10 +44,10 @@ export class AppComponent implements OnInit, OnDestroy {
     private pwaInstallService: PwaInstallService,
     private analyticsService: AnalyticsService,
     private router: Router,
+    private cloudSyncService: CloudSyncService,
   ) {
-    if (!isPlatform('mobile')) {
-      this.initializeApp();
-    }
+    // Initialize service worker updates for all platforms
+    this.initializeApp();
     const currentTheme = this.themeService.getCurrentTheme();
     this.themeService.applyTheme(currentTheme);
 
@@ -79,12 +79,13 @@ export class AppComponent implements OnInit, OnDestroy {
   private initializeApp(): void {
     this.swUpdate.versionUpdates.subscribe((event) => {
       if (event.type === 'VERSION_READY') {
-        const lastCommitDate = localStorage.getItem('lastCommitDate');
-        const sinceParam = lastCommitDate ? `&since=${lastCommitDate}` : '';
         const branch = environment.branch || 'master';
-        const apiUrl = `https://api.github.com/repos/HappyKnuckles/bowling-stats/commits?sha=${branch}${sinceParam}`;
+        const lastCommitDateKey = `lastCommitDate_${branch}`;
+        const lastCommitDate = localStorage.getItem(lastCommitDateKey);
+        const sinceParam = lastCommitDate ? `&since=${lastCommitDate}` : '';
+        const apiUrl = `https://api.github.com/repos/HappyKnuckles/Lightning-Bowl/commits?sha=${branch}${sinceParam}`;
 
-        // Fetch the latest commits from the master branch on GitHub
+        // Fetch the latest commits from the current branch on GitHub
         this.http.get(apiUrl).subscribe({
           next: async (data: any) => {
             const newCommits = [];
@@ -113,14 +114,14 @@ export class AppComponent implements OnInit, OnDestroy {
                     text: 'Cancel',
                     role: 'cancel',
                     handler: () => {
-                      localStorage.setItem('lastCommitDate', new Date(data[0].commit.committer.date).toISOString());
+                      localStorage.setItem(lastCommitDateKey, new Date(data[0].commit.committer.date).toISOString());
                       localStorage.setItem('update', 'true');
                     },
                   },
                   {
                     text: 'Load',
                     handler: () => {
-                      localStorage.setItem('lastCommitDate', new Date(data[0].commit.committer.date).toISOString());
+                      localStorage.setItem(lastCommitDateKey, new Date(data[0].commit.committer.date).toISOString());
                       window.location.reload();
                     },
                   },

@@ -71,9 +71,11 @@ export class PatternService {
   async getAllPatternsStripped(): Promise<Partial<Pattern>[]> {
     try {
       const response = await firstValueFrom(
-        this.http.get<Partial<Pattern>[]>(`${environment.patternEndpoint}patterns/all-stripped`).pipe(retry({ count: 5, delay: 2000 })),
+        this.http
+          .get<{ count: number; patterns: Partial<Pattern>[] }>(`${environment.patternEndpoint}patterns/all-stripped`)
+          .pipe(retry({ count: 5, delay: 2000 })),
       );
-      return response;
+      return response.patterns;
     } catch (error) {
       console.error('Error fetching stripped patterns:', error);
       return [];
@@ -83,9 +85,9 @@ export class PatternService {
   async getAllPatterns(): Promise<Pattern[]> {
     try {
       const response = await firstValueFrom(
-        this.http.get<Pattern[]>(`${environment.patternEndpoint}patterns/all`).pipe(retry({ count: 5, delay: 2000 })),
+        this.http.get<{ count: number; patterns: Pattern[] }>(`${environment.patternEndpoint}patterns/all`).pipe(retry({ count: 5, delay: 2000 })),
       );
-      return response;
+      return response.patterns;
     } catch (error) {
       console.error('Error fetching all patterns:', error);
       return [];
@@ -122,7 +124,7 @@ export class PatternService {
     }
   }
 
-  async searchPattern(searchTerm: string): Promise<SearchResult> {
+  async searchPattern(searchTerm: string, include_metadata = false): Promise<SearchResult> {
     const cacheKey = `pattern_search_${encodeURIComponent(searchTerm)}`;
 
     try {
@@ -138,7 +140,9 @@ export class PatternService {
         return { patterns: [], count: 0, query: searchTerm, numeric_query: false, threshold: 0 };
       }
 
-      const response = await firstValueFrom(this.http.get<SearchResult>(`${environment.patternEndpoint}search?q=${searchTerm}`));
+      const response = await firstValueFrom(
+        this.http.get<SearchResult>(`${environment.patternEndpoint}search?q=${searchTerm}&include_metadata=${include_metadata}`),
+      );
 
       await this.cacheService.set(cacheKey, response, 2 * 60 * 60 * 1000); // 2 hours
 

@@ -230,7 +230,7 @@ export class PatternPage implements OnInit {
         this.patterns = response.patterns;
         this.currentPage++;
       } else {
-        const response = await this.patternService.searchPattern(searchValue);
+        const response = await this.patternService.searchPattern(searchValue, true);
         this.patterns = response.patterns;
         this.hasMoreData = false;
         this.currentPage = 1;
