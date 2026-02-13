@@ -9,4 +9,6 @@ export const environment = {
   analyticsEndpoint: 'https://analytics.nicolas-hoffmann.dev/api/',
   imagesUrl: 'https://images.lightningbowl.de/',
   branch: 'master',
+  googleDriveClientId: '712735063879-0fc2cnqto0omthr28gm4vlgiae28trt0.apps.googleusercontent.com',
+  oneDriveClientId: 'f0ca305e-341a-4aac-946c-4a39c047ccb2', // Using MSAL.js - Add redirect URI in Azure: Platform = SPA, URI = https://lightningbowl.de
 };
