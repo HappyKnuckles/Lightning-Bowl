@@ -12,7 +12,6 @@ export interface CloudSyncSettings {
 
 export enum CloudProvider {
   GOOGLE_DRIVE = 'google_drive',
-  DROPBOX = 'dropbox',
   ONEDRIVE = 'onedrive',
 }
 

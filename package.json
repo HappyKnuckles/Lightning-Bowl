@@ -55,7 +55,6 @@
     "chart.js": "^4.4.2",
     "chartjs-plugin-zoom": "^2.2.0",
     "d3": "^7.9.0",
-    "dropbox": "^10.34.0",
     "exceljs": "^4.4.0",
     "fuse.js": "^7.0.0",
     "html-to-image": "^1.11.11",
@@ -98,7 +97,8 @@
     "stylelint-config-standard": "^37.0.0",
     "stylelint-config-standard-scss": "^14.0.0",
     "typescript": "^5.4.5",
-    "typescript-eslint": "8.23.0"
+    "typescript-eslint": "8.23.0",
+    "util": "^0.12.5"
   },
   "description": "Lightning Bowl, a bowling score tracker.",
   "browserslist": [
