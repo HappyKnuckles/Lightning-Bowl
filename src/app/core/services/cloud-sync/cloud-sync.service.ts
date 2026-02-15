@@ -108,7 +108,7 @@ export class CloudSyncService {
 
     try {
       // Navigate browser to the OAuth backend start endpoint
-      const redirectUrl = `${window.location.origin}/auth/callback`;
+      const redirectUrl = `${window.location.origin}/auth/callback?openModal=true`;
       const startUrl = `${environment.authBackendUrl}/${provider}/start?redirect=${encodeURIComponent(redirectUrl)}`;
       window.location.href = startUrl;
     } catch (error) {

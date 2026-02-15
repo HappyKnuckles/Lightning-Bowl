@@ -77,7 +77,7 @@
       <p class="link">Open form</p>
     </ion-item>
 
-    <ion-item button (click)="openFilterModal()">
+    <ion-item button (click)="openSyncModal()">
       <ion-icon name="cloud-upload-outline" slot="start"></ion-icon>
       <ion-label>Cloud Sync</ion-label>
       @if (cloudSyncService.syncStatus().lastSync) {

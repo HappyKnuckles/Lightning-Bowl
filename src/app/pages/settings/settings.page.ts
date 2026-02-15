@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import {
   IonHeader,
   IonToolbar,
@@ -90,7 +91,6 @@ import { CloudSyncService } from 'src/app/core/services/cloud-sync/cloud-sync.se
     LeagueSelectorComponent,
     SpareNamesComponent,
     GithubIssuesModalComponent,
-    CloudSyncSettingsComponent,
   ],
 })
 export class SettingsPage implements OnInit {
@@ -117,6 +117,7 @@ export class SettingsPage implements OnInit {
     public storageService: StorageService,
     public cloudSyncService: CloudSyncService,
     public modalCtrl: ModalController,
+    private route: ActivatedRoute,
   ) {
     addIcons({
       personCircleOutline,
@@ -136,9 +137,19 @@ export class SettingsPage implements OnInit {
   ngOnInit(): void {
     this.currentColor = this.themeService.getCurrentTheme();
     this.updateAvailable = localStorage.getItem('update') !== null ? true : false;
+
+    // Check if we should open cloud sync modal after OAuth callback
+    this.route.queryParams.subscribe((params) => {
+      if (params['openCloudSync'] === 'true') {
+        // Use setTimeout to ensure the page has fully initialized
+        setTimeout(() => {
+          void this.openSyncModal();
+        }, 300);
+      }
+    });
   }
 
-  async openFilterModal() {
+  async openSyncModal() {
     const modal = await this.modalCtrl.create({
       component: CloudSyncSettingsComponent,
     });
