@@ -61,10 +61,11 @@ export class CloudSyncService {
     const currentSettings = this.#settings();
     const updatedSettings = { ...currentSettings, ...settings };
 
-    // If frequency is being updated and we have a lastSyncDate, recalculate nextSyncDate
-    if (settings.frequency !== undefined && currentSettings.lastSyncDate) {
+    // If frequency is being updated, recalculate nextSyncDate
+    if (settings.frequency !== undefined) {
       const now = Date.now();
-      const calculatedNextSync = this.calculateNextSyncDate(settings.frequency, currentSettings.lastSyncDate);
+      const fromDate = currentSettings.lastSyncDate || now;
+      const calculatedNextSync = this.calculateNextSyncDate(settings.frequency, fromDate);
 
       // If the calculated next sync is in the past, sync now
       if (calculatedNextSync < now) {
@@ -139,6 +140,7 @@ export class CloudSyncService {
         ...s,
         isAuthenticated: true,
         error: undefined,
+        lastSync: undefined,
         nextSync: new Date(nextSync),
       }));
 
