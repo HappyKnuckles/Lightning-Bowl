@@ -4,7 +4,6 @@ import { ExcelService } from '../excel/excel.service';
 import { ToastService } from '../toast/toast.service';
 import { Storage } from '@ionic/storage-angular';
 import { environment } from 'src/environments/environment';
-import { PublicClientApplication, type Configuration, type AuthenticationResult } from '@azure/msal-browser';
 
 const CLOUD_SYNC_STORAGE_KEY = 'cloud_sync_settings';
 
@@ -23,15 +22,12 @@ export class CloudSyncService {
     syncInProgress: false,
   });
 
-  // MSAL instance for OneDrive/Microsoft authentication
-  private msalInstance: PublicClientApplication | null = null;
-
   readonly settings = this.#settings.asReadonly();
   readonly syncStatus = this.#syncStatus.asReadonly();
 
   readonly isConfigured = computed(() => {
     const settings = this.#settings();
-    return settings.enabled && settings.accessToken !== undefined;
+    return settings.enabled && settings.connectedProvider !== undefined;
   });
 
   constructor(
@@ -54,7 +50,7 @@ export class CloudSyncService {
       this.#settings.set(savedSettings);
       this.#syncStatus.update((status) => ({
         ...status,
-        isAuthenticated: !!savedSettings.accessToken,
+        isAuthenticated: !!savedSettings.connectedProvider,
         lastSync: savedSettings.lastSyncDate ? new Date(savedSettings.lastSyncDate) : undefined,
         nextSync: savedSettings.nextSyncDate ? new Date(savedSettings.nextSyncDate) : undefined,
       }));
@@ -110,14 +106,10 @@ export class CloudSyncService {
     this.#syncStatus.update((status) => ({ ...status, error: undefined }));
 
     try {
-      switch (provider) {
-        case CloudProvider.GOOGLE_DRIVE:
-          await this.authenticateGoogleDrive();
-          break;
-        case CloudProvider.ONEDRIVE:
-          await this.authenticateOneDrive();
-          break;
-      }
+      // Navigate browser to the OAuth backend start endpoint
+      const redirectUrl = `${window.location.origin}/auth/callback`;
+      const startUrl = `${environment.authBackendUrl}/${provider}/start?redirect=${encodeURIComponent(redirectUrl)}`;
+      window.location.href = startUrl;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Authentication failed';
       this.#syncStatus.update((status) => ({ ...status, error: errorMessage }));
@@ -126,200 +118,64 @@ export class CloudSyncService {
     }
   }
 
-  private async authenticateGoogleDrive(): Promise<void> {
-    // Google Identity Services (GIS) configuration
-    const clientId = environment.googleDriveClientId;
-    if (!clientId) {
-      throw new Error('Google Drive client ID not configured. Please set googleDriveClientId in environment configuration.');
-    }
+  /**
+   * Called by the auth-callback page after the OAuth backend redirects back
+   */
+  async handleAuthCallback(provider: string, status: string, error?: string): Promise<void> {
+    if (status === 'success') {
+      const providerEnum = provider as CloudProvider;
+      const currentSettings = this.#settings();
+      const now = Date.now();
+      const nextSync = this.calculateNextSyncDate(currentSettings.frequency, now);
 
-    // Check if Google Identity Services is loaded
-    if (typeof google === 'undefined' || !google.accounts) {
-      throw new Error('Google Identity Services not loaded. Please check your internet connection and try again.');
-    }
+      await this.updateSettings({
+        provider: providerEnum,
+        connectedProvider: providerEnum,
+        enabled: true,
+        nextSyncDate: nextSync,
+      });
 
-    return new Promise((resolve, reject) => {
-      try {
-        // Initialize the Token Client for Google Identity Services
-        const tokenClient = google.accounts.oauth2.initTokenClient({
-          client_id: clientId,
-          scope: 'https://www.googleapis.com/auth/drive.file',
-          callback: async (response: google.accounts.oauth2.TokenResponse) => {
-            if (response.error) {
-              this.toastService.showToast(`Google Drive authentication failed: ${response.error}`, 'close-circle', true);
-              reject(new Error(response.error));
-              return;
-            }
+      this.#syncStatus.update((s) => ({
+        ...s,
+        isAuthenticated: true,
+        error: undefined,
+        nextSync: new Date(nextSync),
+      }));
 
-            if (response.access_token) {
-              const currentSettings = this.#settings();
-              const now = Date.now();
-              const nextSync = this.calculateNextSyncDate(currentSettings.frequency, now);
-
-              await this.updateSettings({
-                provider: CloudProvider.GOOGLE_DRIVE,
-                accessToken: response.access_token,
-                enabled: true,
-                nextSyncDate: nextSync,
-              });
-
-              this.#syncStatus.update((status) => ({
-                ...status,
-                isAuthenticated: true,
-                error: undefined,
-                nextSync: new Date(nextSync),
-              }));
-
-              this.toastService.showToast('Google Drive connected successfully!', 'checkmark-circle');
-              resolve();
-            } else {
-              reject(new Error('No access token received'));
-            }
-          },
-          error_callback: (error: google.accounts.oauth2.ClientConfigError) => {
-            this.toastService.showToast(`Google Drive authentication failed: ${error.type}`, 'close-circle', true);
-            reject(new Error(error.message || error.type));
-          },
-        });
-
-        // Request access token via popup
-        tokenClient.requestAccessToken({ prompt: 'consent' });
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Authentication failed';
-        this.toastService.showToast(`Google Drive authentication failed: ${errorMessage}`, 'close-circle', true);
-        reject(error);
-      }
-    });
-  }
-
-  private async authenticateOneDrive(): Promise<void> {
-    // OneDrive/Microsoft OAuth2 configuration using MSAL
-    const clientId = environment.oneDriveClientId;
-    if (!clientId) {
-      throw new Error('OneDrive client ID not configured. Please set oneDriveClientId in environment configuration.');
-    }
-
-    try {
-      // Initialize MSAL if not already done
-      if (!this.msalInstance) {
-        const msalConfig: Configuration = {
-          auth: {
-            clientId: clientId,
-            authority: 'https://login.microsoftonline.com/common',
-            redirectUri: window.location.origin,
-          },
-          cache: {
-            cacheLocation: 'localStorage',
-          },
-        };
-        this.msalInstance = new PublicClientApplication(msalConfig);
-        await this.msalInstance.initialize();
-      }
-
-      // Request scopes for OneDrive access
-      const loginRequest = {
-        scopes: ['Files.ReadWrite', 'offline_access'],
-        prompt: 'select_account' as const,
-      };
-
-      // Use popup for authentication (better UX than redirect)
-      const response: AuthenticationResult = await this.msalInstance.loginPopup(loginRequest);
-
-      if (response && response.accessToken) {
-        const currentSettings = this.#settings();
-        const now = Date.now();
-        const nextSync = this.calculateNextSyncDate(currentSettings.frequency, now);
-
-        await this.updateSettings({
-          provider: CloudProvider.ONEDRIVE,
-          accessToken: response.accessToken,
-          enabled: true,
-          nextSyncDate: nextSync,
-        });
-
-        this.#syncStatus.update((status) => ({
-          ...status,
-          isAuthenticated: true,
-          error: undefined,
-          nextSync: new Date(nextSync),
-        }));
-
-        this.toastService.showToast('OneDrive connected successfully!', 'checkmark-circle');
-      } else {
-        throw new Error('No access token received from authentication');
-      }
-    } catch (error) {
-      // Handle MSAL errors
-      const errorMessage = error instanceof Error ? error.message : 'Authentication failed';
-      this.toastService.showToast(`OneDrive authentication failed: ${errorMessage}`, 'close-circle', true);
-      throw error;
+      this.toastService.showToast(`${this.getProviderDisplayName(providerEnum)} connected successfully!`, 'checkmark-circle');
+    } else {
+      const errorMessage = error || 'Authentication failed';
+      this.#syncStatus.update((s) => ({ ...s, error: errorMessage }));
+      this.toastService.showToast(`Authentication failed: ${errorMessage}`, 'bug-outline', true);
     }
   }
 
   /**
-   * Silently acquire a fresh access token for OneDrive using MSAL
-   * This is called before sync operations to ensure token is valid
+   * Fetch a fresh access token from the OAuth backend
    */
-  private async refreshOneDriveToken(): Promise<string> {
-    if (!this.msalInstance) {
-      throw new Error('MSAL not initialized');
+  private async getAccessToken(provider: CloudProvider): Promise<string> {
+    const response = await fetch(`${environment.authBackendUrl}/${provider}/access-token`, {
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      if (response.status === 401 || response.status === 404) {
+        // Session expired or not connected — clear local state
+        await this.updateSettings({ connectedProvider: undefined, enabled: false });
+        this.#syncStatus.update((s) => ({ ...s, isAuthenticated: false }));
+        throw new Error('Not authenticated. Please reconnect your cloud provider.');
+      }
+      throw new Error('Failed to retrieve access token');
     }
 
-    const accounts = this.msalInstance.getAllAccounts();
-    if (accounts.length === 0) {
-      throw new Error('No accounts found. Please re-authenticate.');
-    }
-
-    const silentRequest = {
-      scopes: ['Files.ReadWrite'],
-      account: accounts[0],
-    };
-
-    try {
-      // Try to acquire token silently
-      const response: AuthenticationResult = await this.msalInstance.acquireTokenSilent(silentRequest);
-
-      // Update stored token
-      await this.updateSettings({
-        accessToken: response.accessToken,
-      });
-
-      return response.accessToken;
-    } catch (error) {
-      // If silent acquisition fails, fall back to interactive popup
-      console.warn('Silent token acquisition failed, using popup:', error);
-      const response: AuthenticationResult = await this.msalInstance.acquireTokenPopup(silentRequest);
-
-      await this.updateSettings({
-        accessToken: response.accessToken,
-      });
-
-      return response.accessToken;
-    }
+    const data = await response.json();
+    return data.access_token;
   }
 
   async disconnect(): Promise<void> {
-    const currentSettings = this.#settings();
-
-    // If OneDrive, logout from MSAL
-    if (currentSettings.provider === CloudProvider.ONEDRIVE && this.msalInstance) {
-      try {
-        const accounts = this.msalInstance.getAllAccounts();
-        if (accounts.length > 0) {
-          await this.msalInstance.logoutPopup({
-            account: accounts[0],
-          });
-        }
-      } catch (error) {
-        console.error('MSAL logout error:', error);
-        // Continue with disconnect even if MSAL logout fails
-      }
-    }
-
     await this.updateSettings({
       enabled: false,
-      accessToken: undefined,
-      refreshToken: undefined,
+      connectedProvider: undefined,
     });
 
     this.#syncStatus.update((status) => ({
@@ -334,18 +190,21 @@ export class CloudSyncService {
   async syncNow(): Promise<void> {
     const settings = this.#settings();
 
-    if (!settings.enabled || !settings.accessToken) {
+    if (!settings.enabled || !settings.connectedProvider) {
       throw new Error('Cloud sync is not configured');
     }
 
     this.#syncStatus.update((status) => ({ ...status, syncInProgress: true, error: undefined }));
 
     try {
+      // Get a fresh access token from the backend
+      const accessToken = await this.getAccessToken(settings.connectedProvider);
+
       // Generate Excel file
       const buffer = await this.generateExcelBuffer();
 
       // Upload to cloud provider
-      await this.uploadToCloud(buffer, settings);
+      await this.uploadToCloud(buffer, settings, accessToken);
 
       // Update sync status
       const now = Date.now();
@@ -377,21 +236,20 @@ export class CloudSyncService {
   }
 
   private async generateExcelBuffer(): Promise<ArrayBuffer> {
-    // Use ExcelService to generate the complete workbook with all data
     return await this.excelService.generateExcelBuffer();
   }
 
-  private async uploadToCloud(buffer: ArrayBuffer, settings: CloudSyncSettings): Promise<void> {
-    switch (settings.provider) {
+  private async uploadToCloud(buffer: ArrayBuffer, settings: CloudSyncSettings, accessToken: string): Promise<void> {
+    switch (settings.connectedProvider) {
       case CloudProvider.GOOGLE_DRIVE:
-        await this.uploadToGoogleDrive(buffer, settings.accessToken!);
+        await this.uploadToGoogleDrive(buffer, accessToken);
         break;
-      case CloudProvider.ONEDRIVE: {
-        // Refresh token before upload to ensure it's valid
-        const freshToken = await this.refreshOneDriveToken();
-        await this.uploadToOneDrive(buffer, freshToken);
+      case CloudProvider.ONEDRIVE:
+        await this.uploadToOneDrive(buffer, accessToken);
         break;
-      }
+      case CloudProvider.DROPBOX:
+        await this.uploadToDropbox(buffer, accessToken);
+        break;
     }
   }
 
@@ -494,8 +352,6 @@ export class CloudSyncService {
     const folderPath = settings.folderPath || 'Lightningbowl Game-History';
     const fileName = `game_data_${formattedDate}.xlsx`;
 
-    // OneDrive API - Upload small file (< 4MB)
-    // For larger files, use resumable upload session
     const encodedFolderPath = encodeURIComponent(folderPath);
     const encodedFileName = encodeURIComponent(fileName);
     const uploadUrl = `https://graph.microsoft.com/v1.0/me/drive/root:/${encodedFolderPath}/${encodedFileName}:/content`;
@@ -515,10 +371,57 @@ export class CloudSyncService {
     }
   }
 
+  private async uploadToDropbox(buffer: ArrayBuffer, accessToken: string): Promise<void> {
+    const date = new Date();
+    const formattedDate = date.toLocaleString('de-DE', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+    const settings = this.#settings();
+    const folderPath = settings.folderPath || 'Lightningbowl Game-History';
+    const fileName = `game_data_${formattedDate}.xlsx`;
+
+    const dropboxPath = `/${folderPath}/${fileName}`;
+
+    const response = await fetch('https://content.dropboxapi.com/2/files/upload', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/octet-stream',
+        'Dropbox-API-Arg': JSON.stringify({
+          path: dropboxPath,
+          mode: 'overwrite',
+          autorename: false,
+          mute: false,
+        }),
+      },
+      body: buffer,
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error_summary || 'Failed to upload to Dropbox');
+    }
+  }
+
+  private getProviderDisplayName(provider: CloudProvider): string {
+    switch (provider) {
+      case CloudProvider.GOOGLE_DRIVE:
+        return 'Google Drive';
+      case CloudProvider.ONEDRIVE:
+        return 'OneDrive';
+      case CloudProvider.DROPBOX:
+        return 'Dropbox';
+      default:
+        return provider;
+    }
+  }
+
   private async checkAndSyncOnStartup(): Promise<void> {
     const settings = this.#settings();
 
-    if (!settings.enabled || !settings.accessToken) {
+    if (!settings.enabled || !settings.connectedProvider) {
       return;
     }
 

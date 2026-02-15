@@ -170,6 +170,8 @@ export class CloudSyncSettingsComponent {
         return 'Google Drive';
       case CloudProvider.ONEDRIVE:
         return 'OneDrive';
+      case CloudProvider.DROPBOX:
+        return 'Dropbox';
       default:
         return provider;
     }

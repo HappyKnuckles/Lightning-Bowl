@@ -4,15 +4,15 @@ export interface CloudSyncSettings {
   frequency: SyncFrequency;
   lastSyncDate?: number;
   nextSyncDate?: number;
-  accessToken?: string;
-  refreshToken?: string;
+  connectedProvider?: CloudProvider; // which provider is connected via backend
   folderPath?: string; // User-selectable folder path
   folderId?: string; // Google Drive folder ID
 }
 
 export enum CloudProvider {
-  GOOGLE_DRIVE = 'google_drive',
+  GOOGLE_DRIVE = 'google-drive',
   ONEDRIVE = 'onedrive',
+  DROPBOX = 'dropbox',
 }
 
 export enum SyncFrequency {

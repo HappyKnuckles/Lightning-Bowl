@@ -27,7 +27,6 @@
     "@angular/platform-browser-dynamic": "^18.2.13",
     "@angular/router": "^18.2.13",
     "@angular/service-worker": "^18.2.13",
-    "@azure/msal-browser": "^5.2.0",
     "@capacitor-community/admob": "^6.0.0",
     "@capacitor/android": "^7.0.0",
     "@capacitor/app": "^7.0.0",
