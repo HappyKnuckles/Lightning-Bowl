@@ -173,15 +173,38 @@ export class CloudSyncService {
   }
 
   async disconnect(): Promise<void> {
+    const settings = this.#settings();
+
+    if (settings.connectedProvider) {
+      try {
+        const response = await fetch(`${environment.authBackendUrl}/${settings.connectedProvider}/disconnect`, {
+          method: 'POST',
+          credentials: 'include',
+        });
+
+        if (!response.ok) {
+          console.warn('Failed to revoke tokens at provider, continuing with local disconnect');
+        }
+      } catch (error) {
+        console.warn('Error calling disconnect API:', error);
+      }
+    }
+
+    // Clear local state
     await this.updateSettings({
       enabled: false,
       connectedProvider: undefined,
+      lastSyncDate: undefined,
+      nextSyncDate: undefined,
+      folderId: undefined,
     });
 
     this.#syncStatus.update((status) => ({
       ...status,
       isAuthenticated: false,
       error: undefined,
+      lastSync: undefined,
+      nextSync: undefined,
     }));
 
     this.toastService.showToast('Cloud sync disconnected', 'checkmark-outline');
