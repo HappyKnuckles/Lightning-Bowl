@@ -36,8 +36,8 @@ page before the app boots) → navigate → `waitForAppReady`.
   `'empty'` (for empty-state assertions).
 - `opts.extraLocal`: extra `localStorage` merged on top of the seed (drafts,
   `pinInputMode`, …).
-- `opts.mockApi`: `'balls'` or `'patterns'` — serve a fixed fixture for a
-  network-backed library so its page is deterministic offline (see
+- `opts.mockApi`: `'balls'`, `'patterns'` or `'alleys'` — serve a fixed fixture for a
+  network-backed library or search so its page is deterministic offline (see
   [lib/api-mocks.ts](lib/api-mocks.ts)). Omit to leave the live API in place.
 
 The **page objects** in [`../screenshots/pages`](../screenshots/pages) (selectors
@@ -58,6 +58,7 @@ place across both suites.
 | `settings.spec.ts` | list, theme change persists + applies, cloud-sync modal |
 | `equipment.spec.ts` | Ball Library (mocked API): grid renders, search narrows, filter modal |
 | `patterns.spec.ts` | Pattern Library (mocked API): list renders, search narrows |
+| `alleys.spec.ts` | alley on a game (mocked search): pick/fallback/recents/saved/near me in add game, series edit persists, alley filter, alley stats highlights |
 
 ### Test-strategy split (why some things aren't here)
 
@@ -77,8 +78,9 @@ instead:
 > The two specs above were verified type-correct in isolation; they'll run once
 > the suite is unbroken.
 
-Every `ion-searchbar` lives on a network-backed page (Ball/Pattern Library,
-Map), so search coverage uses `mockApi` fixtures (`equipment`/`patterns` specs);
+Every `ion-searchbar` lives on a network-backed page or picker (Ball/Pattern
+Library, Map, alley picker), so search coverage uses `mockApi` fixtures
+(`equipment`/`patterns`/`alleys` specs);
 the seed-backed pages use the filter modal, not search.
 
 ## Adding a test

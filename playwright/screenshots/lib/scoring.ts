@@ -58,6 +58,7 @@ export interface GameMeta {
   gameId: string;
   date: number;
   league?: string;
+  alley?: string;
   patterns?: string[];
   balls?: string[];
   note?: string;
@@ -84,6 +85,7 @@ function assemble(frameValues: number[][], throwsList: Throw[][], meta: GameMeta
     seriesId: meta.seriesId,
     note: meta.note,
     league: meta.league,
+    alley: meta.alley,
     patterns: meta.patterns ?? [],
     balls: meta.balls,
   };

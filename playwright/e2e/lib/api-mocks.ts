@@ -1,9 +1,10 @@
 import type { Page, Route } from '@playwright/test';
+import type { Alley } from '../../../src/app/core/models/alley.model';
 import type { Ball } from '../../../src/app/core/models/ball.model';
 import type { Pattern } from '../../../src/app/core/models/pattern.model';
 
 /**
- * Opt-in data mocks for the network-backed libraries (Ball / Pattern). The
+ * Opt-in data mocks for the network-backed libraries (Ball / Pattern / Alley). The
  * screenshot system deliberately hits the LIVE APIs; e2e instead serves small,
  * fixed fixtures so the Ball/Pattern Library tests are deterministic and offline.
  *
@@ -55,4 +56,30 @@ export async function installPatternMocks(page: Page, patterns: Pattern[]): Prom
     const matched = patterns.filter((p) => p.title.toLowerCase().includes(q));
     return json(route, { patterns: matched, count: matched.length, query: q, numeric_query: false, threshold: 0 });
   });
+}
+
+/**
+ * Mock the alley search: Nominatim geocodes `town` (anything else → no match),
+ * Overpass lists `alleys` around it, and the Google Places fallback stays empty.
+ * Local dev calls the upstreams directly; deployed builds go through the /api
+ * proxies, so both shapes of URL are matched.
+ */
+export async function installAlleyMocks(page: Page, town: { name: string; lat: number; lon: number }, alleys: Alley[]): Promise<void> {
+  await page.route(/nominatim\.openstreetmap\.org\/search|\/api\/nominatim/, (route) => {
+    const q = (new URL(route.request().url()).searchParams.get('q') ?? '').toLowerCase();
+    const found = q.includes(town.name.toLowerCase());
+    return json(route, found ? [{ lat: String(town.lat), lon: String(town.lon), display_name: town.name }] : []);
+  });
+  await page.route(/overpass-api\.de\/api\/interpreter|\/api\/overpass/, (route) =>
+    json(route, {
+      elements: alleys.map((alley) => ({
+        type: 'node',
+        id: Number(alley.id.split('/')[1]),
+        lat: alley.lat,
+        lon: alley.lon,
+        tags: { name: alley.name, leisure: 'bowling_alley' },
+      })),
+    }),
+  );
+  await page.route(/\/api\/places/, (route) => json(route, { places: [] }));
 }

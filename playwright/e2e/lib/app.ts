@@ -5,9 +5,10 @@ import { getSeedBundle } from '../../screenshots/fixtures-data/seed-profiles';
 import { installStabilizers, settle, waitForAppReady } from '../../screenshots/lib/stabilize';
 import type { SeedProfileName } from '../../screenshots/lib/types';
 import type { Ball } from '../../../src/app/core/models/ball.model';
-import { installBowwwlMocks, installPatternMocks } from './api-mocks';
+import { installAlleyMocks, installBowwwlMocks, installPatternMocks } from './api-mocks';
 import REAL_BALLS from '../../screenshots/fixtures-data/real-balls.json';
 import { PATTERNS } from '../fixtures/patterns';
+import { ALLEY_TOWN, ALLEYS } from '../fixtures/alleys';
 
 /**
  * Functional-e2e harness. This is the single entry point every spec uses to get
@@ -32,7 +33,7 @@ export interface BootOptions {
    * Mock a network-backed library API with a fixed fixture so its page is
    * deterministic offline. Omit to leave the live API in place (the default).
    */
-  mockApi?: 'balls' | 'patterns';
+  mockApi?: 'balls' | 'patterns' | 'alleys';
 }
 
 export class AppHarness {
@@ -51,6 +52,7 @@ export class AppHarness {
     await installMocks(page);
     if (opts.mockApi === 'balls') await installBowwwlMocks(page, REAL_BALLS as unknown as Ball[]);
     if (opts.mockApi === 'patterns') await installPatternMocks(page, PATTERNS);
+    if (opts.mockApi === 'alleys') await installAlleyMocks(page, ALLEY_TOWN, ALLEYS);
     await installStabilizers(page);
 
     // Blank, same-origin document so seeding lands in the app's IndexedDB BEFORE

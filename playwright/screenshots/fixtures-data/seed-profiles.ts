@@ -75,6 +75,7 @@ const PIN_GAMES: PinFrame[][] = [
 interface Session {
   daysAgo: number;
   league?: string;
+  alley?: string;
   isPractice?: boolean;
   templates: number[][][];
   pinGames?: PinFrame[][];
@@ -82,17 +83,50 @@ interface Session {
   patternIdx: number;
 }
 
+// Each league bowls at its own house; the practice session has no alley, so the
+// "None" alley filter and the alley stats both have something to separate.
+export const MONDAY_ALLEY = 'Strike Zone Lanes';
+export const CLASSIC_ALLEY = 'Kingpin Bowling Center';
+
 const SESSIONS: Session[] = [
-  { daysAgo: 56, league: 'Monday Night League', templates: [TEMPLATES[3], TEMPLATES[1], TEMPLATES[2]], balls: [1, 0], patternIdx: 5 },
-  { daysAgo: 49, league: 'Monday Night League', templates: [TEMPLATES[1], TEMPLATES[5], TEMPLATES[0]], balls: [0, 3], patternIdx: 5 },
-  { daysAgo: 42, league: 'City Classic', templates: [TEMPLATES[2], TEMPLATES[3], TEMPLATES[6]], balls: [3, 4], patternIdx: 6 },
-  { daysAgo: 35, league: 'Monday Night League', templates: [TEMPLATES[5], TEMPLATES[0], TEMPLATES[1]], balls: [0, 7], patternIdx: 1 },
-  { daysAgo: 28, league: 'City Classic', templates: [TEMPLATES[6], TEMPLATES[2], TEMPLATES[3]], balls: [4, 8], patternIdx: 6 },
-  { daysAgo: 21, league: 'Monday Night League', templates: [TEMPLATES[0], TEMPLATES[5], PERFECT], balls: [0, 3], patternIdx: 3 },
-  { daysAgo: 14, league: 'City Classic', templates: [TEMPLATES[1], TEMPLATES[6], TEMPLATES[2]], balls: [3, 8], patternIdx: 2 },
-  { daysAgo: 7, league: 'Monday Night League', templates: [TEMPLATES[5], TEMPLATES[0], TEMPLATES[1]], balls: [0, 7], patternIdx: 5 },
+  {
+    daysAgo: 56,
+    league: 'Monday Night League',
+    alley: MONDAY_ALLEY,
+    templates: [TEMPLATES[3], TEMPLATES[1], TEMPLATES[2]],
+    balls: [1, 0],
+    patternIdx: 5,
+  },
+  {
+    daysAgo: 49,
+    league: 'Monday Night League',
+    alley: MONDAY_ALLEY,
+    templates: [TEMPLATES[1], TEMPLATES[5], TEMPLATES[0]],
+    balls: [0, 3],
+    patternIdx: 5,
+  },
+  { daysAgo: 42, league: 'City Classic', alley: CLASSIC_ALLEY, templates: [TEMPLATES[2], TEMPLATES[3], TEMPLATES[6]], balls: [3, 4], patternIdx: 6 },
+  {
+    daysAgo: 35,
+    league: 'Monday Night League',
+    alley: MONDAY_ALLEY,
+    templates: [TEMPLATES[5], TEMPLATES[0], TEMPLATES[1]],
+    balls: [0, 7],
+    patternIdx: 1,
+  },
+  { daysAgo: 28, league: 'City Classic', alley: CLASSIC_ALLEY, templates: [TEMPLATES[6], TEMPLATES[2], TEMPLATES[3]], balls: [4, 8], patternIdx: 6 },
+  { daysAgo: 21, league: 'Monday Night League', alley: MONDAY_ALLEY, templates: [TEMPLATES[0], TEMPLATES[5], PERFECT], balls: [0, 3], patternIdx: 3 },
+  { daysAgo: 14, league: 'City Classic', alley: CLASSIC_ALLEY, templates: [TEMPLATES[1], TEMPLATES[6], TEMPLATES[2]], balls: [3, 8], patternIdx: 2 },
+  {
+    daysAgo: 7,
+    league: 'Monday Night League',
+    alley: MONDAY_ALLEY,
+    templates: [TEMPLATES[5], TEMPLATES[0], TEMPLATES[1]],
+    balls: [0, 7],
+    patternIdx: 5,
+  },
   { daysAgo: 3, isPractice: true, templates: [], pinGames: PIN_GAMES, balls: [0, 4], patternIdx: 4 },
-  { daysAgo: 1, league: 'City Classic', templates: [TEMPLATES[6], TEMPLATES[1]], balls: [4, 3], patternIdx: 6 },
+  { daysAgo: 1, league: 'City Classic', alley: CLASSIC_ALLEY, templates: [TEMPLATES[6], TEMPLATES[1]], balls: [4, 3], patternIdx: 6 },
 ];
 
 function buildGames(): Game[] {
@@ -117,6 +151,7 @@ function buildGames(): Game[] {
         gameId: String(gid++),
         date: date + withinSession * 1000,
         league: session.league,
+        alley: session.alley,
         isPractice: !!session.isPractice,
         isSeries,
         seriesId: isSeries ? seriesId : undefined,
