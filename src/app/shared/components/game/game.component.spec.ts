@@ -43,4 +43,21 @@ describe('GameComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  describe('closeAccordion', () => {
+    it('collapses an open game details accordion', () => {
+      component.accordionGroup!.value = 'details';
+
+      component.closeAccordion();
+
+      expect(component.accordionGroup!.value).toBeUndefined();
+    });
+
+    it('does nothing when the game details are hidden', () => {
+      fixture.componentRef.setInput('showMetadata', false);
+      fixture.detectChanges();
+
+      expect(() => component.closeAccordion()).not.toThrow();
+    });
+  });
 });

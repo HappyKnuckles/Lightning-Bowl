@@ -147,6 +147,7 @@ export class GameComponent implements OnInit {
   @ViewChildren(IonInput) inputs!: QueryList<IonInput>;
   @ViewChild('leagueSelector') leagueSelector!: LeagueSelectorComponent;
   @ViewChild('checkbox') checkbox!: IonCheckbox;
+  @ViewChild('accordionGroup') accordionGroup?: IonAccordionGroup;
 
   // --- Computed State ---
   currentGame: Signal<Game> = computed(() => this.game() || createEmptyGame());
@@ -226,6 +227,13 @@ export class GameComponent implements OnInit {
 
   async ngOnInit(): Promise<void> {
     this.presentingElement = document.querySelector('.ion-page')!;
+  }
+
+  /** Collapses the "Game Details" accordion. */
+  closeAccordion(): void {
+    if (this.accordionGroup) {
+      this.accordionGroup.value = undefined;
+    }
   }
 
   // PIN INPUT MODE - PASS-THROUGH HANDLERS

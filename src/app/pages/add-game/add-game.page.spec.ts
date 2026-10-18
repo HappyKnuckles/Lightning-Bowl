@@ -137,6 +137,18 @@ describe('AddGamePage', () => {
     });
   });
 
+  describe('game details accordion', () => {
+    it('closes in every game when the series switches to another game', () => {
+      const games = component.gameComponents.toArray();
+      const spies = games.map((game) => vi.spyOn(game, 'closeAccordion'));
+
+      component.onSegmentChange({ detail: { value: 'Game 2' } } as SegmentCustomEvent);
+
+      expect(games.length).toBeGreaterThan(0);
+      spies.forEach((spy) => expect(spy).toHaveBeenCalled());
+    });
+  });
+
   describe('activeSegmentIndex', () => {
     it('is the position of the selected segment', () => {
       component.segments = ['Game 1', 'Game 2', 'Game 3'];

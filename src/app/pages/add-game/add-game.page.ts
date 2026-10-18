@@ -437,6 +437,9 @@ export class AddGamePage implements OnInit {
 
   // UI INTERACTION
   onSegmentChange(event: SegmentCustomEvent): void {
+    // All games sit side by side in one segment view, so an open "Game Details"
+    // accordion in one game stretches every game and pushes the content below down.
+    this.gameComponents?.forEach((game) => game.closeAccordion());
     this.selectedSegment = event.detail.value as string;
     this.pinSheetOpen.set(false);
   }
