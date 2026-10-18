@@ -168,6 +168,13 @@ export class AddGamePage implements OnInit {
    */
   readonly pinSheetOpen = signal(false);
 
+  /**
+   * Whether "Game Details" is open, shared by every game in the series. The games sit
+   * side by side in one segment view, so if only one game had it open, that game would
+   * stretch the others and push the content below them down (#687).
+   */
+  readonly detailsOpen = signal(false);
+
   /** Index of the game the segment view is currently showing. */
   get activeSegmentIndex(): number {
     const index = this.segments.indexOf(this.selectedSegment);
@@ -437,9 +444,6 @@ export class AddGamePage implements OnInit {
 
   // UI INTERACTION
   onSegmentChange(event: SegmentCustomEvent): void {
-    // All games sit side by side in one segment view, so an open "Game Details"
-    // accordion in one game stretches every game and pushes the content below down.
-    this.gameComponents?.forEach((game) => game.closeAccordion());
     this.selectedSegment = event.detail.value as string;
     this.pinSheetOpen.set(false);
   }

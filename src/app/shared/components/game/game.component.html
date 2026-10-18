@@ -125,8 +125,8 @@
 }
 
 @if (showMetadata() && currentGame()) {
-  <ion-accordion-group #accordionGroup style="margin: 0 5px 5px">
-    <ion-accordion style="border-radius: var(--card-border-radius)">
+  <ion-accordion-group [value]="detailsAccordionValue()" (ionChange)="onDetailsToggle($event)" style="margin: 0 5px 5px">
+    <ion-accordion value="details" style="border-radius: var(--card-border-radius)">
       <ion-item slot="header">
         <ion-label
           >Game Details

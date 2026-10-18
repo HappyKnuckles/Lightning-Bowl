@@ -138,14 +138,27 @@ describe('AddGamePage', () => {
   });
 
   describe('game details accordion', () => {
-    it('closes in every game when the series switches to another game', () => {
+    it('is shared by every game in the series', () => {
+      component.detailsOpen.set(true);
+      fixture.detectChanges();
+
       const games = component.gameComponents.toArray();
-      const spies = games.map((game) => vi.spyOn(game, 'closeAccordion'));
+      expect(games.length).toBeGreaterThan(0);
+      games.forEach((game) => expect(game.detailsOpen()).toBe(true));
+    });
+
+    it('picks up a toggle from any single game', () => {
+      component.gameComponents.first.detailsOpen.set(true);
+
+      expect(component.detailsOpen()).toBe(true);
+    });
+
+    it('stays as it was when the series switches to another game', () => {
+      component.detailsOpen.set(true);
 
       component.onSegmentChange({ detail: { value: 'Game 2' } } as SegmentCustomEvent);
 
-      expect(games.length).toBeGreaterThan(0);
-      spies.forEach((spy) => expect(spy).toHaveBeenCalled());
+      expect(component.detailsOpen()).toBe(true);
     });
   });
 
