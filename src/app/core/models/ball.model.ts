@@ -66,3 +66,17 @@ export interface BallTraits {
   rg: number;
   diff: number;
 }
+
+/** One page of balls from the ball API (Spring `PagedModel` shape). */
+export interface BallPage {
+  content: Ball[];
+  page: {
+    number: number;
+    size: number;
+    totalElements: number;
+    totalPages: number;
+  };
+}
+
+/** Query-string values for `GET balls`; arrays become repeated parameters. */
+export type BallQueryParams = Record<string, string | string[]>;

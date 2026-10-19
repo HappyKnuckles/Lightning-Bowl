@@ -3,7 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
 import { ModalController } from '@ionic/angular/standalone';
 import { of } from 'rxjs';
-import { Ball } from 'src/app/core/models/ball.model';
+import { Ball, BallPage } from 'src/app/core/models/ball.model';
 import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
 import { BallFilterService } from 'src/app/core/services/ball-filter/ball-filter.service';
 import { BallService } from 'src/app/core/services/ball/ball.service';
@@ -23,11 +23,19 @@ describe('BallsPage', () => {
   let fixture: ComponentFixture<BallsPage>;
   let favoritesService: SpyObj<FavoritesService>;
   let allBalls: ReturnType<typeof signal<Ball[]>>;
+  let online: ReturnType<typeof signal<boolean>>;
+  let ballService: SpyObj<BallService>;
 
   const ball = (name: string): Ball => ({ ball_id: name, ball_name: name, core_weight: '15' }) as Ball;
+  const page = (content: Ball[], number = 0, totalPages = 1): BallPage => ({
+    content,
+    page: { number, size: 50, totalElements: totalPages * 50, totalPages },
+  });
+  const infiniteEvent = () => ({ target: { complete: vi.fn() } }) as never;
 
   beforeEach(async () => {
     allBalls = signal<Ball[]>([]);
+    online = signal(true);
     const mockBallsStore = {
       url: '',
       allBalls,
@@ -43,11 +51,20 @@ describe('BallsPage', () => {
     };
     const favoritesServiceSpy = createSpyObj(['toggleBallFavorite', 'isBallFavorite']);
     const toastServiceSpy = createSpyObj(['showToast']);
-    const ballServiceSpy = createSpyObj(['loadBalls', 'getBallsByCore', 'getBallsByCoverstock']);
+    const ballServiceSpy = createSpyObj<BallService>(['searchBalls', 'getBallsByCore', 'getBallsByCoverstock', 'getBallsByMovementPattern']);
+    ballServiceSpy.searchBalls.mockResolvedValue(page([]));
     const loadingServiceSpy = createSpyObj(['setLoading']);
     const hapticServiceSpy = createSpyObj(['vibrate']);
-    const sortServiceSpy = createSpyObj(['sortBalls'], { BALL_SORT_OPTIONS: [] });
-    const networkServiceSpy = createSpyObj([], { isOffline: false });
+    const sortServiceSpy = createSpyObj<BallSortService>(['sortBalls'], { BALL_SORT_OPTIONS: [] });
+    sortServiceSpy.sortBalls.mockImplementation((balls: Ball[]) => balls);
+    const networkServiceSpy = {
+      get isOnline() {
+        return online();
+      },
+      get isOffline() {
+        return !online();
+      },
+    };
     const analyticsServiceSpy = createSpyObj(['trackEvent', 'trackBallSearch']);
 
     await TestBed.configureTestingModule({
@@ -71,6 +88,7 @@ describe('BallsPage', () => {
     fixture = TestBed.createComponent(BallsPage);
     component = fixture.componentInstance;
     favoritesService = TestBed.inject(FavoritesService) as SpyObj<FavoritesService>;
+    ballService = TestBed.inject(BallService) as SpyObj<BallService>;
   });
 
   it('should create', () => {
@@ -88,7 +106,12 @@ describe('BallsPage', () => {
     expect(favoritesService.toggleBallFavorite).toHaveBeenCalledWith(mockBall);
   });
 
-  it('disables the search until the ball catalogue has loaded', () => {
+  it('keeps the search enabled online, where the API searches', () => {
+    expect(component.searchDisabled()).toBe(false);
+  });
+
+  it('disables the search offline until the ball catalogue has loaded', () => {
+    online.set(false);
     expect(component.searchDisabled()).toBe(true);
 
     allBalls.set([ball('Zen')]);
@@ -102,5 +125,73 @@ describe('BallsPage', () => {
     component.searchTerm.set('phaze');
 
     expect(component.searchSuggestions()).toEqual(['Phaze II', 'Hammer Phaze']);
+  });
+
+  it('loads the first page from the API and knows whether more pages exist', async () => {
+    ballService.searchBalls.mockResolvedValue(page([ball('A'), ball('B')], 0, 3));
+
+    await component.loadFirstPage();
+
+    expect(ballService.searchBalls).toHaveBeenCalledWith(expect.objectContaining({ page: '0', size: '50' }));
+    expect(component.displayedBalls().map((b) => b.ball_id)).toEqual(['A', 'B']);
+    expect(component.hasMoreData()).toBe(true);
+  });
+
+  it('appends the next page on infinite scroll', async () => {
+    ballService.searchBalls.mockResolvedValueOnce(page([ball('A')], 0, 2)).mockResolvedValueOnce(page([ball('B')], 1, 2));
+    await component.loadFirstPage();
+    const event = infiniteEvent();
+
+    await component.loadMore(event);
+
+    expect(ballService.searchBalls).toHaveBeenLastCalledWith(expect.objectContaining({ page: '1' }));
+    expect(component.displayedBalls().map((b) => b.ball_id)).toEqual(['A', 'B']);
+    expect(component.hasMoreData()).toBe(false);
+    expect((event as { target: { complete: () => void } }).target.complete).toHaveBeenCalled();
+  });
+
+  it('drops a response that arrives after a newer query', async () => {
+    let resolveStale!: (value: BallPage) => void;
+    ballService.searchBalls
+      .mockReturnValueOnce(new Promise<BallPage>((resolve) => (resolveStale = resolve)))
+      .mockResolvedValueOnce(page([ball('New')]));
+
+    const stale = component.loadFirstPage();
+    await component.loadFirstPage();
+    resolveStale(page([ball('Old')]));
+    await stale;
+
+    expect(component.displayedBalls().map((b) => b.ball_id)).toEqual(['New']);
+  });
+
+  it('sends the search term to the API', async () => {
+    component.searchTerm.set('phaze');
+
+    await component.loadFirstPage();
+
+    expect(ballService.searchBalls).toHaveBeenLastCalledWith(expect.objectContaining({ search: 'phaze' }));
+  });
+
+  it('searches the cached catalogue when offline', () => {
+    online.set(false);
+    allBalls.set([ball('Phaze II'), ball('Zen')]);
+
+    component.searchTerm.set('phaze');
+
+    expect(component.displayedBalls().map((b) => b.ball_name)).toEqual(['Phaze II']);
+    expect(ballService.searchBalls).not.toHaveBeenCalled();
+  });
+
+  it('pages through the cached catalogue offline', () => {
+    online.set(false);
+    allBalls.set(Array.from({ length: 150 }, (_, i) => ball(`Ball ${i}`)));
+
+    expect(component.displayedBalls().length).toBe(100);
+    expect(component.hasMoreData()).toBe(true);
+
+    void component.loadMore(infiniteEvent());
+
+    expect(component.displayedBalls().length).toBe(150);
+    expect(component.hasMoreData()).toBe(false);
   });
 });
