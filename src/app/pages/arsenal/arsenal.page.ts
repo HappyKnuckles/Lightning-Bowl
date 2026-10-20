@@ -1,4 +1,4 @@
-import { Component, ElementRef, Signal, ViewChild, computed, effect, model, signal, OnInit } from '@angular/core';
+import { Component, computed, effect, ElementRef, model, OnInit, Signal, signal, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ImpactStyle } from '@capacitor/haptics';
 import { AlertController, ItemReorderCustomEvent, ModalController } from '@ionic/angular';
@@ -37,18 +37,19 @@ import {
 import { Chart } from 'chart.js';
 import { addIcons } from 'ionicons';
 import { add, chevronBack, chevronDownOutline, ellipsisVerticalOutline, openOutline, trashOutline } from 'ionicons/icons';
+
 import { TOAST_MESSAGES } from 'src/app/core/constants/toast-messages.constants';
 import { Ball } from 'src/app/core/models/ball.model';
+import { TypeaheadConfig } from 'src/app/core/models/typeahead-config.model';
 import { BallService } from 'src/app/core/services/ball/ball.service';
 import { ChartGenerationService } from 'src/app/core/services/chart/chart-generation.service';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
+import { TypeaheadConfigService } from 'src/app/core/services/typeahead-config/typeahead-config.service';
 import { BallsStore } from 'src/app/core/stores/balls.store';
 import { BallListComponent } from 'src/app/shared/components/ball-list/ball-list.component';
 import { GenericTypeaheadComponent } from 'src/app/shared/components/generic-typeahead/generic-typeahead.component';
-import { TypeaheadConfig } from 'src/app/core/models/typeahead-config.model';
-import { TypeaheadConfigService } from 'src/app/core/services/typeahead-config/typeahead-config.service';
 
 @Component({
   selector: 'app-arsenal',
@@ -92,23 +93,23 @@ import { TypeaheadConfigService } from 'src/app/core/services/typeahead-config/t
   ],
 })
 export class ArsenalPage implements OnInit {
+  selectedSegment = model('arsenal');
   @ViewChild('core', { static: false }) coreModal!: IonModal;
   @ViewChild('coverstock', { static: false }) coverstockModal!: IonModal;
+  @ViewChild('balls', { static: false }) ballChart?: ElementRef;
+  ballsWithoutArsenal: Signal<Ball[]> = computed(() =>
+    this.ballsStore
+      .knownBalls()
+      .filter((ball) => !this.ballsStore.arsenal().some((b) => b.ball_id === ball.ball_id && b.core_weight === ball.core_weight)),
+  );
+
+  readonly loadingWeightBallIds = signal<Set<string>>(new Set());
   coverstockBalls: Ball[] = [];
   coreBalls: Ball[] = [];
   presentingElement!: HTMLElement | null;
-
   ballTypeaheadConfig: TypeaheadConfig<Ball> = this.typeaheadConfigService.ball;
-  ballsWithoutArsenal: Signal<Ball[]> = computed(() =>
-    this.ballsStore
-      .allBalls()
-      .filter((ball) => !this.ballsStore.arsenal().some((b) => b.ball_id === ball.ball_id && b.core_weight === ball.core_weight)),
-  );
-  selectedSegment = model('arsenal');
-  @ViewChild('balls', { static: false }) ballChart?: ElementRef;
-  private ballsChartInstance: Chart | null = null;
-  readonly loadingWeightBallIds = signal<Set<string>>(new Set());
   readonly availableWeights = ['12', '13', '14', '15', '16'];
+  private ballsChartInstance: Chart | null = null;
 
   constructor(
     public ballsStore: BallsStore,
@@ -131,22 +132,6 @@ export class ArsenalPage implements OnInit {
 
   ngOnInit() {
     this.presentingElement = document.querySelector('.ion-page');
-  }
-
-  private generateBallDistributionChart(): void {
-    try {
-      if (!this.ballChart) {
-        return;
-      }
-      this.ballsChartInstance = this.chartGenerationService.generateBallDistributionChart(
-        this.ballChart!,
-        this.ballsStore.arsenal(),
-        this.ballsChartInstance!,
-      );
-    } catch (error) {
-      console.error('Error generating ball distribution chart:', error);
-      this.toastService.showToast(TOAST_MESSAGES.chartGenerationError, 'bug', true);
-    }
   }
 
   async removeFromArsenal(ball: Ball): Promise<void> {
@@ -206,9 +191,9 @@ export class ArsenalPage implements OnInit {
     }
   }
 
-  onBallSelectionChange(ballIds: string[]): void {
-    const selectedBalls = this.ballsWithoutArsenal().filter((ball) => ballIds.includes(ball.ball_id));
-    this.saveBallToArsenal(selectedBalls);
+  onBallSelectionChange(selected: Ball[]): void {
+    const inArsenal = (ball: Ball) => this.ballsStore.arsenal().some((b) => b.ball_id === ball.ball_id && b.core_weight === ball.core_weight);
+    this.saveBallToArsenal(selected.filter((ball) => !inArsenal(ball)));
   }
 
   async getSameCoreBalls(ball: Ball): Promise<void> {
@@ -259,8 +244,7 @@ export class ArsenalPage implements OnInit {
     this.loadingWeightBallIds.update((s) => new Set([...s, key]));
 
     try {
-      const ballsAtWeight = await this.ballService.getBallsByWeight(selectedWeight);
-      const replacementBall = ballsAtWeight.find((c) => c.ball_id === ball.ball_id);
+      const replacementBall = await this.ballService.getBallVariant(ball.ball_id, selectedWeight);
 
       if (!replacementBall) {
         selectEl.value = ball.core_weight;
@@ -288,6 +272,22 @@ export class ArsenalPage implements OnInit {
         next.delete(key);
         return next;
       });
+    }
+  }
+
+  private generateBallDistributionChart(): void {
+    try {
+      if (!this.ballChart) {
+        return;
+      }
+      this.ballsChartInstance = this.chartGenerationService.generateBallDistributionChart(
+        this.ballChart!,
+        this.ballsStore.arsenal(),
+        this.ballsChartInstance!,
+      );
+    } catch (error) {
+      console.error('Error generating ball distribution chart:', error);
+      this.toastService.showToast(TOAST_MESSAGES.chartGenerationError, 'bug', true);
     }
   }
 }

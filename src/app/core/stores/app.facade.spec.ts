@@ -1,11 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
+
 import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
 import { BallFilterService } from 'src/app/core/services/ball-filter/ball-filter.service';
 import { BallService } from 'src/app/core/services/ball/ball.service';
 import { StorageRepository } from 'src/app/core/services/storage/storage.repository';
 import { makeGame } from 'src/testing/fixtures';
 import { createSpyObj, SpyObj } from 'src/testing/spy-obj';
+
 import { AppFacade } from './app.facade';
 import { BallsStore } from './balls.store';
 import { GamesStore } from './games.store';
@@ -51,8 +53,9 @@ describe('AppFacade', () => {
     gamesStore.games.mockReturnValue([]);
     gamesStore.saveGamesToLocalStorage.mockResolvedValue(undefined);
 
-    ballsStore = createSpyObj<BallsStore>(['loadAllBalls', 'loadArsenal', 'clearArsenal']);
-    ballsStore.loadAllBalls.mockResolvedValue(undefined);
+    ballsStore = createSpyObj<BallsStore>(['loadBallCache', 'resolveBallNames', 'loadArsenal', 'clearArsenal']);
+    ballsStore.loadBallCache.mockResolvedValue(undefined);
+    ballsStore.resolveBallNames.mockResolvedValue(new Map());
     ballsStore.loadArsenal.mockResolvedValue(undefined);
 
     patternsStore = createSpyObj<PatternsStore>(['loadAllPatterns', 'loadPatternImageMap']);
@@ -89,7 +92,8 @@ describe('AppFacade', () => {
 
       expect(storageRepository.create).toHaveBeenCalled();
       expect(settingsStore.loadPinInputMode).toHaveBeenCalled();
-      expect(ballsStore.loadAllBalls).toHaveBeenCalledWith(undefined, 15);
+      expect(ballsStore.loadBallCache).toHaveBeenCalled();
+      expect(ballsStore.resolveBallNames).toHaveBeenCalledWith([], 15);
       expect(gamesStore.loadGameHistory).toHaveBeenCalled();
       expect(leaguesStore.loadLeagues).toHaveBeenCalled();
       expect(patternsStore.loadAllPatterns).toHaveBeenCalled();

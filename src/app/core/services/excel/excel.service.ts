@@ -4,12 +4,14 @@ import { ImpactStyle } from '@capacitor/haptics';
 import { Share } from '@capacitor/share';
 import { isPlatform } from '@ionic/angular';
 import type { Workbook, Worksheet } from 'exceljs';
+
 import { Game, Throw } from 'src/app/core/models/game.model';
 import { HighlightItemStats, LeaveStats, Stats } from 'src/app/core/models/stats.model';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { BallsStore } from 'src/app/core/stores/balls.store';
 import { GamesStore } from 'src/app/core/stores/games.store';
 import { LeaguesStore } from 'src/app/core/stores/leagues.store';
+
 import { isSplit } from '../../utils/game-utils/pin.utils';
 import { sortGameHistoryByDate } from '../../utils/sort-utils/sort.utils';
 import { GameFilterService } from '../game-filter/game-filter.service';
@@ -131,7 +133,7 @@ export class ExcelService {
 
         for (let j = 1; j <= 10; j++) {
           const frameIndex = j;
-          const frame: { frameIndex: number; throws: { value: number; throwIndex: number; pinsLeftStanding?: number[]; isSplit?: boolean }[] } = {
+          const frame: { frameIndex: number; throws: { isSplit?: boolean; pinsLeftStanding?: number[]; throwIndex: number; value: number }[] } = {
             frameIndex: frameIndex,
             throws: [],
           };
@@ -155,7 +157,7 @@ export class ExcelService {
           const maxThrowsInFrame = frameIndex === 10 ? 3 : 2;
 
           for (let k = 0; k < throwValues.length && k < maxThrowsInFrame; k++) {
-            const throwObj: { value: number; throwIndex: number; pinsLeftStanding?: number[]; isSplit?: boolean } = {
+            const throwObj: { isSplit?: boolean; pinsLeftStanding?: number[]; throwIndex: number; value: number } = {
               value: throwValues[k],
               throwIndex: k + 1,
             };
@@ -243,8 +245,10 @@ export class ExcelService {
         await this.leaguesStore.addLeague(league);
       }
 
+      // Resolves names via known balls or the ball API (exact name match).
+      const resolved = await this.ballsStore.resolveBallNames([...ballMap.values()]);
       for (const ball of ballMap.values()) {
-        const ballToAdd = this.ballsStore.allBalls().find((b) => b.ball_name === ball);
+        const ballToAdd = resolved.get(ball.toLowerCase());
         if (ballToAdd !== undefined && !this.ballsStore.arsenal().some((b) => b.ball_name === ball)) {
           await this.ballsStore.saveBallToArsenal(ballToAdd);
         }

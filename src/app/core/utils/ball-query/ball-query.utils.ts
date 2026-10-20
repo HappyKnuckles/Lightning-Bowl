@@ -1,16 +1,16 @@
 import { BallQueryParams } from 'src/app/core/models/ball.model';
 import { BallFilter, CoreType, Market } from 'src/app/core/models/filter.model';
-import { BallSortOption } from 'src/app/core/models/sort.model';
+import { BallSortField, BallSortOption } from 'src/app/core/models/sort.model';
 
 export interface BallQueryInput {
-  filters: BallFilter;
-  defaultFilters: BallFilter;
-  search: string;
-  sort: BallSortOption;
   /** Ball ids in the user's arsenal, used for the "only arsenal balls" filter. */
   arsenalIds: string[];
+  defaultFilters: BallFilter;
+  filters: BallFilter;
   page: number;
+  search: string;
   size: number;
+  sort: BallSortOption;
 }
 
 /**
@@ -19,7 +19,8 @@ export interface BallQueryInput {
  * - The weight filter always applies, so the list matches the offline catalog.
  * - Spec ranges are only sent when changed from their defaults, so balls with
  *   missing specs aren't hidden by an untouched slider.
- * - With a search term no sort is sent: the API then orders by relevance.
+ * - "Best Match" sends no sort, so the API orders search results by
+ *   relevance; any other sort is sent and orders all matches.
  */
 export function buildBallQueryParams(input: BallQueryInput): BallQueryParams {
   const { filters, defaultFilters } = input;
@@ -55,11 +56,8 @@ export function buildBallQueryParams(input: BallQueryInput): BallQueryParams {
   }
 
   const search = input.search.trim();
-  if (search) {
-    set('search', search);
-  } else {
-    set('sort', `${input.sort.field},${input.sort.direction}`);
-  }
+  if (search) set('search', search);
+  if (input.sort.field !== BallSortField.RELEVANCE) set('sort', `${input.sort.field},${input.sort.direction}`);
 
   return params;
 }

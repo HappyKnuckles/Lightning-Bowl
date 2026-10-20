@@ -1,6 +1,7 @@
 import { BallFilter, CoreType, CoverstockType, Market } from 'src/app/core/models/filter.model';
 import { BallSortField, BallSortOption, SortDirection } from 'src/app/core/models/sort.model';
-import { buildBallQueryParams, BallQueryInput } from './ball-query.utils';
+
+import { BallQueryInput, buildBallQueryParams } from './ball-query.utils';
 
 const defaults: BallFilter = {
   brands: [],
@@ -87,10 +88,18 @@ describe('buildBallQueryParams', () => {
     expect(build({}, { inArsenal: true })['id']).toEqual(['__none__']);
   });
 
-  it('sends the search term without a sort so results come back by relevance', () => {
-    const params = build({ search: '  phaze ' });
+  it('sends no sort for Best Match, so search results come back by relevance', () => {
+    const bestMatch: BallSortOption = { field: BallSortField.RELEVANCE, direction: SortDirection.DESC, label: 'Best Match' };
+    const params = build({ search: '  phaze ', sort: bestMatch });
 
     expect(params['search']).toBe('phaze');
     expect(params['sort']).toBeUndefined();
+  });
+
+  it('sends a chosen sort together with the search, so all matches are sorted', () => {
+    const params = build({ search: 'phaze', sort: { field: BallSortField.CORE_RG, direction: SortDirection.DESC, label: 'RG' } });
+
+    expect(params['search']).toBe('phaze');
+    expect(params['sort']).toBe('core_rg,desc');
   });
 });

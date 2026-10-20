@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+
 import { Frame, Game } from 'src/app/core/models/game.model';
 import { HighlightItemStats } from 'src/app/core/models/stats.model';
 import { BallsStore } from 'src/app/core/stores/balls.store';
@@ -27,7 +28,7 @@ export class BallStatsCalculatorService {
     const gamesWithBalls = gameHistory.filter((game) => game.balls && game.balls.length > 0);
     const tempStats: Record<
       string,
-      { totalScore: number; gameCount: number; highestGame: number; lowestGame: number; cleanGames: number; totalStrikes: number }
+      { cleanGames: number; gameCount: number; highestGame: number; lowestGame: number; totalScore: number; totalStrikes: number }
     > = {};
 
     gamesWithBalls.forEach((game) => {
@@ -71,7 +72,7 @@ export class BallStatsCalculatorService {
     const finalStats: Record<string, HighlightItemStats> = {};
     for (const ballName in tempStats) {
       const stats = tempStats[ballName];
-      const ballImage = this.ballsStore.allBalls().find((b) => b.ball_name === ballName)?.ball_image || '';
+      const ballImage = this.ballsStore.findKnownBall(ballName)?.ball_image || '';
       const totalPossibleStrikes = stats.gameCount * 12;
       const strikeRate = totalPossibleStrikes > 0 ? Math.round((stats.totalStrikes / totalPossibleStrikes) * 100) : 0;
 

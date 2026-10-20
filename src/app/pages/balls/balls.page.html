@@ -18,7 +18,7 @@
         [favoritesFirstStorageKey]="'balls-favorites-first'"
         [id]="'ball-sort-header'"
         [selectedSort]="currentSortOption()"
-        [sortOptions]="sortService.BALL_SORT_OPTIONS"
+        [sortOptions]="sortOptions()"
         [storageKey]="'balls-sort-option'"
         (favoritesFirstChanged)="onFavoritesFirstChange($event)"
         (sortChanged)="onSortChanged($event)">

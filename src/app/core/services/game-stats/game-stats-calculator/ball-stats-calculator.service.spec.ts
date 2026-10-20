@@ -1,9 +1,11 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+
 import { Ball } from 'src/app/core/models/ball.model';
 import { Frame, Game } from 'src/app/core/models/game.model';
 import { BallsStore } from 'src/app/core/stores/balls.store';
 import { makeBall, makeGame } from 'src/testing/fixtures';
+
 import { BallStatsCalculatorService } from './ball-stats-calculator.service';
 
 /** Nine strike frames plus a 10th built from the given values. */
@@ -29,7 +31,12 @@ describe('BallStatsCalculatorService', () => {
   beforeEach(() => {
     allBalls.set([]);
     TestBed.configureTestingModule({
-      providers: [{ provide: BallsStore, useValue: { allBalls } }],
+      providers: [
+        {
+          provide: BallsStore,
+          useValue: { findKnownBall: (name: string) => allBalls().find((b) => b.ball_name.toLowerCase() === name.toLowerCase()) },
+        },
+      ],
     });
     calculator = TestBed.inject(BallStatsCalculatorService);
   });

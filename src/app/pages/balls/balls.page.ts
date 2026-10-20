@@ -106,17 +106,23 @@ export class BallsPage implements OnInit {
 
   searchTerm = signal('');
 
+  /** Balls loaded from the API so far (online mode). */
+  balls = signal<Ball[]>([]);
+
+  // Names of balls you have plus the ones currently listed; the catalog itself isn't on the device.
   searchSuggestions = computed(() =>
-    buildSearchSuggestions(
-      this.ballsStore.allBalls().map((ball) => ball.ball_name),
-      this.searchTerm(),
-    ),
+    buildSearchSuggestions([...new Set([...this.ballsStore.knownBalls(), ...this.balls()].map((ball) => ball.ball_name))], this.searchTerm()),
   );
 
   readonly isOnline = computed(() => this.networkService.isOnline);
-
-  /** Online, the API searches; offline, search needs the cached catalog. */
-  searchDisabled = computed(() => !this.isOnline() && this.ballsStore.allBalls().length === 0);
+  /** Online, the API searches; offline, search runs over your known balls. */
+  searchDisabled = computed(() => !this.isOnline() && this.ballsStore.knownBalls().length === 0);
+  /** "Best Match" is offered only while searching. */
+  readonly sortOptions = computed(() =>
+    this.searchTerm().trim() !== ''
+      ? [this.sortService.BEST_MATCH_OPTION, ...this.sortService.BALL_SORT_OPTIONS]
+      : this.sortService.BALL_SORT_OPTIONS,
+  );
   currentSortOption = signal<BallSortOption>({
     field: BallSortField.RELEASE_DATE,
     direction: SortDirection.DESC,
@@ -134,7 +140,7 @@ export class BallsPage implements OnInit {
   }));
   private readonly offlineResult = computed(() => {
     const search = this.searchTerm().trim();
-    const baseArray = this.isFilterActive() ? this.ballFilterService.filteredBalls() : this.ballsStore.allBalls();
+    const baseArray = this.isFilterActive() ? this.ballFilterService.filteredBalls() : this.ballsStore.knownBalls();
     if (search === '') {
       return baseArray;
     }
@@ -157,7 +163,7 @@ export class BallsPage implements OnInit {
       .map((term) => term.trim())
       .flatMap((term) => fuseInstance.search(term).map((result) => result.item));
   });
-  // Offline: the previous client-side search/filter/sort over the cached catalog.
+  // Offline: client-side search/filter/sort over your known balls.
   private readonly offlineDisplayCount = signal(100);
   // Online: search, filters, sort and paging run on the ball API.
   private readonly serverHasMore = signal(false);
@@ -167,24 +173,21 @@ export class BallsPage implements OnInit {
     }
     return this.searchTerm().trim() === '' && this.offlineDisplayCount() < this.offlineResult().length;
   });
-  /** Balls loaded from the API so far (online mode). */
-  balls = signal<Ball[]>([]);
   favoritesFirst = signal(false);
-  // Search results keep the API's relevance order. Otherwise the API already
-  // sorted; re-sorting locally is only needed to pull favorites to the top.
+  // Online, the API already searched and sorted (Best Match = relevance order);
+  // re-sorting locally only pulls favorites to the top. Offline, the known
+  // balls are sorted here.
   displayedBalls: Signal<Ball[]> = computed(() => {
-    const searching = this.searchTerm().trim() !== '';
+    const bestMatch = this.currentSortOption().field === BallSortField.RELEVANCE;
 
     if (this.isOnline()) {
       const balls = this.balls();
-      return !searching && this.favoritesFirst() ? this.sortService.sortBalls(balls, this.currentSortOption(), true) : balls;
+      return !bestMatch && this.favoritesFirst() ? this.sortService.sortBalls(balls, this.currentSortOption(), true) : balls;
     }
 
     const result = this.offlineResult();
-    if (searching) {
-      return result;
-    }
-    return this.sortService.sortBalls(result.slice(0, this.offlineDisplayCount()), this.currentSortOption(), this.favoritesFirst());
+    const visible = this.searchTerm().trim() !== '' ? result : result.slice(0, this.offlineDisplayCount());
+    return bestMatch ? visible : this.sortService.sortBalls(visible, this.currentSortOption(), this.favoritesFirst());
   });
   coreBalls = signal<Ball[]>([]);
   coverstockBalls = signal<Ball[]>([]);
@@ -206,6 +209,8 @@ export class BallsPage implements OnInit {
   private nextPage = 0;
   /** Bumped on every new query so responses to outdated queries are dropped. */
   private queryVersion = 0;
+  /** The sort that was active when the search started, restored when it's cleared. */
+  private sortBeforeSearch: BallSortOption | null = null;
 
   constructor(
     private modalCtrl: ModalController,
@@ -223,7 +228,7 @@ export class BallsPage implements OnInit {
   ) {
     addIcons({ filterOutline, closeCircle, globeOutline, openOutline, addOutline, camera, heart, heartOutline, chevronDownOutline });
     this.searchSubject.subscribe((query) => {
-      this.searchTerm.set(query);
+      this.setSearchTerm(query);
       if (this.content) {
         setTimeout(() => {
           this.content.scrollToTop(300);
@@ -232,7 +237,7 @@ export class BallsPage implements OnInit {
     });
     this.route.queryParams.subscribe((params) => {
       if (params['search']) {
-        this.searchTerm.set(params['search']);
+        this.setSearchTerm(params['search']);
       }
     });
     toObservable(this.query)
@@ -258,7 +263,7 @@ export class BallsPage implements OnInit {
       this.hapticService.vibrate(ImpactStyle.Medium);
       this.isPageLoading.set(true);
       this.offlineDisplayCount.set(100);
-      await Promise.all([this.ballsStore.loadAllBalls(undefined, undefined, true), this.ballsStore.loadArsenal()]);
+      await Promise.all([this.ballsStore.refreshKnownBalls(), this.ballsStore.loadArsenal()]);
       if (this.isOnline()) {
         await this.loadFirstPage();
       }
@@ -490,8 +495,7 @@ export class BallsPage implements OnInit {
     const key = ball.ball_id + ball.core_weight;
     this.loadingWeightBallIds.update((s) => new Set([...s, key]));
     try {
-      const ballsAtWeight = await this.ballService.getBallsByWeight(selectedWeight);
-      const replacementBall = ballsAtWeight.find((c) => c.ball_id === ball.ball_id);
+      const replacementBall = await this.ballService.getBallVariant(ball.ball_id, selectedWeight);
       if (!replacementBall) {
         selectEl.value = ball.core_weight;
         this.toastService.showToast('Selected weight is unavailable for this ball.', 'alert-circle-outline', true);
@@ -511,7 +515,7 @@ export class BallsPage implements OnInit {
   }
 
   onBallSelected(ball: Ball): void {
-    this.searchTerm.set(ball.ball_name);
+    this.setSearchTerm(ball.ball_name);
     this.searchSubject.next(ball.ball_name);
     if (this.content) {
       setTimeout(() => {
@@ -533,6 +537,25 @@ export class BallsPage implements OnInit {
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem('balls-favorites-first', value.toString());
     }
+  }
+
+  /**
+   * Starting a search switches to "Best Match"; clearing it restores the
+   * previous sort unless another sort was picked meanwhile.
+   */
+  private setSearchTerm(term: string): void {
+    const wasSearching = this.searchTerm().trim() !== '';
+    const isSearching = term.trim() !== '';
+    if (!wasSearching && isSearching) {
+      this.sortBeforeSearch = this.currentSortOption();
+      this.currentSortOption.set(this.sortService.BEST_MATCH_OPTION);
+    } else if (wasSearching && !isSearching) {
+      if (this.currentSortOption().field === BallSortField.RELEVANCE && this.sortBeforeSearch) {
+        this.currentSortOption.set(this.sortBeforeSearch);
+      }
+      this.sortBeforeSearch = null;
+    }
+    this.searchTerm.set(term);
   }
 
   private queryParams(page: number) {

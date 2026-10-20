@@ -18,18 +18,16 @@ import {
   IonToolbar,
   ModalController,
 } from '@ionic/angular/standalone';
-import { TOAST_MESSAGES } from 'src/app/core/constants/toast-messages.constants';
+
 import { Brand, Core, Coverstock } from 'src/app/core/models/ball.model';
 import { BallFilter, CoreType, CoverstockType, Market } from 'src/app/core/models/filter.model';
+import { TypeaheadConfig } from 'src/app/core/models/typeahead-config.model';
 import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
 import { BallFilterService } from 'src/app/core/services/ball-filter/ball-filter.service';
 import { BallService } from 'src/app/core/services/ball/ball.service';
-import { LoadingService } from 'src/app/core/services/loader/loading.service';
-import { ToastService } from 'src/app/core/services/toast/toast.service';
-import { BallsStore } from 'src/app/core/stores/balls.store';
-import { GenericTypeaheadComponent } from '../generic-typeahead/generic-typeahead.component';
-import { TypeaheadConfig } from 'src/app/core/models/typeahead-config.model';
 import { TypeaheadConfigService } from 'src/app/core/services/typeahead-config/typeahead-config.service';
+
+import { GenericTypeaheadComponent } from '../generic-typeahead/generic-typeahead.component';
 
 @Component({
   selector: 'app-ball-filter',
@@ -73,9 +71,6 @@ export class BallFilterComponent implements OnInit {
     public ballFilterService: BallFilterService,
     private modalCtrl: ModalController,
     public ballService: BallService,
-    private ballsStore: BallsStore,
-    private toastService: ToastService,
-    private loadingService: LoadingService,
     private analyticsService: AnalyticsService,
     private typeaheadConfigService: TypeaheadConfigService,
   ) {}
@@ -96,9 +91,6 @@ export class BallFilterComponent implements OnInit {
   }
 
   async updateFilter<T extends keyof BallFilter>(key: T, value: BallFilter[T]): Promise<void> {
-    if (key === 'weight') {
-      await this.changeWeight(value as number);
-    }
     this.ballFilterService.filters.update((filters) => ({
       ...filters,
       [key]: value,
@@ -142,17 +134,5 @@ export class BallFilterComponent implements OnInit {
 
     // this.ballFilterService.filterGames(this.games);
     return this.modalCtrl.dismiss('confirm');
-  }
-
-  async changeWeight(weight: number): Promise<void> {
-    try {
-      this.loadingService.setLoading(true);
-      await this.ballsStore.loadAllBalls(undefined, weight);
-    } catch (error) {
-      console.error('Error loading balls:', error);
-      this.toastService.showToast(TOAST_MESSAGES.ballLoadError, 'bug', true);
-    } finally {
-      this.loadingService.setLoading(false);
-    }
   }
 }

@@ -1,28 +1,29 @@
-import { Component, computed, EventEmitter, input, Output, signal, ViewChild, OnInit, OnDestroy } from '@angular/core';
-import { InfiniteScrollCustomEvent, ModalController } from '@ionic/angular';
-import Fuse from 'fuse.js';
-import {
-  IonToolbar,
-  IonTitle,
-  IonHeader,
-  IonInfiniteScrollContent,
-  IonInfiniteScroll,
-  IonContent,
-  IonItem,
-  IonCheckbox,
-  IonLabel,
-  IonSearchbar,
-  IonList,
-  IonButtons,
-  IonButton,
-  IonAvatar,
-  IonImg,
-  IonText,
-} from '@ionic/angular/standalone';
 import { NgClass } from '@angular/common';
+import { Component, computed, EventEmitter, input, OnDestroy, OnInit, Output, signal, ViewChild } from '@angular/core';
+import { InfiniteScrollCustomEvent, ModalController } from '@ionic/angular';
+import {
+  IonAvatar,
+  IonButton,
+  IonButtons,
+  IonCheckbox,
+  IonContent,
+  IonHeader,
+  IonImg,
+  IonInfiniteScroll,
+  IonInfiniteScrollContent,
+  IonItem,
+  IonLabel,
+  IonList,
+  IonSearchbar,
+  IonText,
+  IonTitle,
+  IonToolbar,
+} from '@ionic/angular/standalone';
+import Fuse from 'fuse.js';
+
 import { SearchBlurDirective } from 'src/app/core/directives/search-blur/search-blur.directive';
-import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import { TypeaheadConfig } from 'src/app/core/models/typeahead-config.model';
+import { LoadingService } from 'src/app/core/services/loader/loading.service';
 
 @Component({
   selector: 'app-generic-typeahead',
@@ -54,15 +55,17 @@ export class GenericTypeaheadComponent<T> implements OnInit, OnDestroy {
   config = input.required<TypeaheadConfig<T>>();
   prevSelectedItems = input<string[]>([]);
   @Output() selectedItemsChange = new EventEmitter<string[]>();
+  /** Same moment as `selectedItemsChange`, with the full items (needed for API search results that aren't in `items`). */
+  @Output() selectedObjectsChange = new EventEmitter<T[]>();
   @ViewChild(IonContent, { static: false }) content!: IonContent;
   @ViewChild('infiniteScroll') infiniteScroll!: IonInfiniteScroll;
 
   filteredItems = signal<T[]>([]);
-  selectedItems: T[] = [];
+  public loadedCount = signal(0);
   displayedItems = computed(() => this.filteredItems().slice(0, this.loadedCount()));
+  selectedItems: T[] = [];
   fuse!: Fuse<T>;
   private batchSize = 100;
-  public loadedCount = signal(0);
   private initialSelectedValues: string[] = [];
 
   constructor(
@@ -100,6 +103,23 @@ export class GenericTypeaheadComponent<T> implements OnInit, OnDestroy {
 
     // Store initial selected state for comparison in ngOnDestroy
     this.initialSelectedValues = this.selectedItems.map((item) => this.getItemValue(item));
+  }
+
+  ngOnDestroy(): void {
+    // Get current selected values for comparison
+    const selectedValues = this.selectedItems.map((item) => this.getItemValue(item));
+
+    // Only emit if the current selection is different from the initial selection
+    // Compare values since we now store and emit values
+    const isDifferent =
+      selectedValues.length !== this.initialSelectedValues.length ||
+      selectedValues.some((value) => !this.initialSelectedValues.includes(value)) ||
+      this.initialSelectedValues.some((value) => !selectedValues.includes(value));
+
+    if (isDifferent) {
+      this.selectedItemsChange.emit(selectedValues);
+      this.selectedObjectsChange.emit([...this.selectedItems]);
+    }
   }
 
   loadData(event: InfiniteScrollCustomEvent): void {
@@ -238,21 +258,5 @@ export class GenericTypeaheadComponent<T> implements OnInit, OnDestroy {
     const unselectedItems = this.filteredItems().filter((item) => !selectedIdentifiers.includes(this.getItemIdentifier(item)));
 
     this.filteredItems.set([...this.selectedItems, ...unselectedItems]);
-  }
-
-  ngOnDestroy(): void {
-    // Get current selected values for comparison
-    const selectedValues = this.selectedItems.map((item) => this.getItemValue(item));
-
-    // Only emit if the current selection is different from the initial selection
-    // Compare values since we now store and emit values
-    const isDifferent =
-      selectedValues.length !== this.initialSelectedValues.length ||
-      selectedValues.some((value) => !this.initialSelectedValues.includes(value)) ||
-      this.initialSelectedValues.some((value) => !selectedValues.includes(value));
-
-    if (isDifferent) {
-      this.selectedItemsChange.emit(selectedValues);
-    }
   }
 }

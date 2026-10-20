@@ -1,29 +1,32 @@
 import { Injectable } from '@angular/core';
 import initSqlJs, { Database, SqlJsStatic, SqlValue } from 'sql.js';
+
 import { Ball } from 'src/app/core/models/ball.model';
+import { BallService } from 'src/app/core/services/ball/ball.service';
 import { GameFilterService } from 'src/app/core/services/game-filter/game-filter.service';
 import { GameScoreCalculatorService } from 'src/app/core/services/game-score-calculator/game-score-calculator.service';
 import { BallsStore } from 'src/app/core/stores/balls.store';
 import { GamesStore } from 'src/app/core/stores/games.store';
 import { PatternsStore } from 'src/app/core/stores/patterns.store';
+
 import { Frame, Game, Throw } from '../../models/game.model';
 import { calculateIsClean, createEmptyFrames } from '../../utils/game-utils/frame.utils';
 import { sortGameHistoryByDate } from '../../utils/sort-utils/sort.utils';
 import { ToastService } from '../toast/toast.service';
 
 interface GameRow {
+  ballName: string | null;
+  leagueName: string | null;
+  notes: string | null;
+  patternName: string | null;
   pk: number;
   totalScore: number | null;
-  notes: string | null;
-  leagueName: string | null;
-  ballName: string | null;
-  patternName: string | null;
   weekDate: number | null;
 }
 interface RawFrameRow {
   frameNum: number;
-  scores: number | null;
   pins: number | null;
+  scores: number | null;
 }
 @Injectable({
   providedIn: 'root',
@@ -34,6 +37,7 @@ export class PinpalService {
 
   constructor(
     private ballsStore: BallsStore,
+    private ballService: BallService,
     private patternsStore: PatternsStore,
     private gamesStore: GamesStore,
     private scoreCalculator: GameScoreCalculatorService,
@@ -53,8 +57,9 @@ export class PinpalService {
       const gameRows = this.queryGames(db);
       const timestamp = Date.now();
 
-      // Namen für Matching laden
-      const availableBalls = this.ballsStore.allBalls();
+      // Ball candidates for name matching: known balls plus API search results
+      // for every distinct ball name in the import.
+      const availableBalls = await this.findBallCandidates(gameRows.map((row) => row.ballName));
       const availableBallNames = availableBalls.map((b) => b.ball_name);
       const availableBallsByName = new Map(availableBalls.map((ball) => [ball.ball_name.toLowerCase(), ball]));
       const availablePatternNames = this.patternsStore.allPatterns().map((p) => p.title || '');
@@ -262,6 +267,16 @@ export class PinpalService {
   /**
    * Fuzzy Matching Logik
    */
+  /** Known balls plus the top API matches for each distinct name (skipped offline). */
+  private async findBallCandidates(names: (string | null)[]): Promise<Ball[]> {
+    const known = this.ballsStore.knownBalls();
+    const unique = [...new Set(names.map((name) => name?.trim()).filter((name): name is string => !!name))];
+    const searches = await Promise.allSettled(unique.map((name) => this.ballService.findBallsByText(name, undefined, 10)));
+    const found = searches.flatMap((result) => (result.status === 'fulfilled' ? result.value : []));
+    const seen = new Set(known.map((b) => `${b.ball_id}-${b.core_weight}`));
+    return [...known, ...found.filter((b) => !seen.has(`${b.ball_id}-${b.core_weight}`))];
+  }
+
   private findBestMatch(input: string | null, available: string[]): string | null {
     if (!input) return null;
     const sanitized = input.trim().toLowerCase();

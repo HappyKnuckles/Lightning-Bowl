@@ -1,8 +1,10 @@
 import { Injectable } from '@angular/core';
+
 import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
 import { BallFilterService } from 'src/app/core/services/ball-filter/ball-filter.service';
 import { BallService } from 'src/app/core/services/ball/ball.service';
 import { StorageRepository } from 'src/app/core/services/storage/storage.repository';
+
 import { BallsStore } from './balls.store';
 import { GamesStore } from './games.store';
 import { LeaguesStore } from './leagues.store';
@@ -34,36 +36,13 @@ export class AppFacade {
     return this.#initPromise;
   }
 
-  private async runInit(): Promise<void> {
-    try {
-      await this.storageRepository.create();
-
-      if (navigator.storage && navigator.storage.persist) {
-        const isPersisted = await navigator.storage.persisted();
-        if (!isPersisted) {
-          const requested = await navigator.storage.persist();
-          if (!requested) {
-            console.warn('Persistent storage request was denied or not granted.');
-          }
-        }
-      } else {
-        console.warn('Persistent Storage API is not supported by this browser.');
-      }
-
-      const weight = parseInt(this.ballFilterService.filters().weight, 10);
-      await this.loadInitialData(weight);
-    } catch (error) {
-      console.error('Error during AppFacade init:', error);
-    }
-  }
-
   async loadInitialData(weight: number): Promise<void> {
     try {
       this.settingsStore.loadPinInputMode();
       await Promise.all([
         this.patternsStore.loadAllPatterns(),
         this.patternsStore.loadPatternImageMap(),
-        this.ballsStore.loadAllBalls(undefined, weight),
+        this.ballsStore.loadBallCache(),
         this.leaguesStore.loadLeagues(),
         this.gamesStore.loadGameHistory(),
         this.ballsStore.loadArsenal(),
@@ -71,6 +50,11 @@ export class AppFacade {
         this.ballService.getCores(),
         this.ballService.getCoverstocks(),
       ]);
+      // Make the balls named in games available offline (fetches only unknown names).
+      void this.ballsStore.resolveBallNames(
+        this.gamesStore.games().flatMap((game) => game.balls ?? []),
+        weight,
+      );
     } catch (error) {
       console.error('Error during initial data load:', error);
       throw error;
@@ -106,6 +90,29 @@ export class AppFacade {
     } catch (error) {
       console.error('Error deleting all data:', error);
       throw error;
+    }
+  }
+
+  private async runInit(): Promise<void> {
+    try {
+      await this.storageRepository.create();
+
+      if (navigator.storage && navigator.storage.persist) {
+        const isPersisted = await navigator.storage.persisted();
+        if (!isPersisted) {
+          const requested = await navigator.storage.persist();
+          if (!requested) {
+            console.warn('Persistent storage request was denied or not granted.');
+          }
+        }
+      } else {
+        console.warn('Persistent Storage API is not supported by this browser.');
+      }
+
+      const weight = parseInt(this.ballFilterService.filters().weight, 10);
+      await this.loadInitialData(weight);
+    } catch (error) {
+      console.error('Error during AppFacade init:', error);
     }
   }
 }

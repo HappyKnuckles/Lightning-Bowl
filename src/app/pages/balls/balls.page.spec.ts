@@ -3,7 +3,10 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
 import { ModalController } from '@ionic/angular/standalone';
 import { of } from 'rxjs';
+import { vi } from 'vitest';
+
 import { Ball, BallPage } from 'src/app/core/models/ball.model';
+import { BallSortField, BallSortOption, SortDirection } from 'src/app/core/models/sort.model';
 import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
 import { BallFilterService } from 'src/app/core/services/ball-filter/ball-filter.service';
 import { BallService } from 'src/app/core/services/ball/ball.service';
@@ -14,15 +17,15 @@ import { NetworkService } from 'src/app/core/services/network/network.service';
 import { BallSortService } from 'src/app/core/services/sort/ball-sort.service';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { BallsStore } from 'src/app/core/stores/balls.store';
-import { BallsPage } from './balls.page';
-import { vi } from 'vitest';
+
 import { createSpyObj, SpyObj } from '../../../testing/spy-obj';
+import { BallsPage } from './balls.page';
 
 describe('BallsPage', () => {
   let component: BallsPage;
   let fixture: ComponentFixture<BallsPage>;
   let favoritesService: SpyObj<FavoritesService>;
-  let allBalls: ReturnType<typeof signal<Ball[]>>;
+  let knownBalls: ReturnType<typeof signal<Ball[]>>;
   let online: ReturnType<typeof signal<boolean>>;
   let ballService: SpyObj<BallService>;
 
@@ -32,13 +35,16 @@ describe('BallsPage', () => {
     page: { number, size: 50, totalElements: totalPages * 50, totalPages },
   });
   const infiniteEvent = () => ({ target: { complete: vi.fn() } }) as never;
+  const newestFirst: BallSortOption = { field: BallSortField.RELEASE_DATE, direction: SortDirection.DESC, label: 'Newest First' };
+  const bestMatch: BallSortOption = { field: BallSortField.RELEVANCE, direction: SortDirection.DESC, label: 'Best Match' };
+  const rgHighFirst: BallSortOption = { field: BallSortField.CORE_RG, direction: SortDirection.DESC, label: 'RG (High to Low)' };
 
   beforeEach(async () => {
-    allBalls = signal<Ball[]>([]);
+    knownBalls = signal<Ball[]>([]);
     online = signal(true);
     const mockBallsStore = {
       url: '',
-      allBalls,
+      knownBalls,
       arsenal: signal<Ball[]>([]),
       saveBallToArsenal: vi.fn().mockResolvedValue([]),
       removeFromArsenal: vi.fn().mockResolvedValue(undefined),
@@ -55,7 +61,7 @@ describe('BallsPage', () => {
     ballServiceSpy.searchBalls.mockResolvedValue(page([]));
     const loadingServiceSpy = createSpyObj(['setLoading']);
     const hapticServiceSpy = createSpyObj(['vibrate']);
-    const sortServiceSpy = createSpyObj<BallSortService>(['sortBalls'], { BALL_SORT_OPTIONS: [] });
+    const sortServiceSpy = createSpyObj<BallSortService>(['sortBalls'], { BALL_SORT_OPTIONS: [newestFirst], BEST_MATCH_OPTION: bestMatch });
     sortServiceSpy.sortBalls.mockImplementation((balls: Ball[]) => balls);
     const networkServiceSpy = {
       get isOnline() {
@@ -110,17 +116,17 @@ describe('BallsPage', () => {
     expect(component.searchDisabled()).toBe(false);
   });
 
-  it('disables the search offline until the ball catalogue has loaded', () => {
+  it('disables the search offline when there are no known balls', () => {
     online.set(false);
     expect(component.searchDisabled()).toBe(true);
 
-    allBalls.set([ball('Zen')]);
+    knownBalls.set([ball('Zen')]);
 
     expect(component.searchDisabled()).toBe(false);
   });
 
-  it('builds search suggestions from the loaded catalogue', () => {
-    allBalls.set([ball('Phaze II'), ball('Zen'), ball('Hammer Phaze')]);
+  it('builds search suggestions from known balls', () => {
+    knownBalls.set([ball('Phaze II'), ball('Zen'), ball('Hammer Phaze')]);
 
     component.searchTerm.set('phaze');
 
@@ -172,9 +178,9 @@ describe('BallsPage', () => {
     expect(ballService.searchBalls).toHaveBeenLastCalledWith(expect.objectContaining({ search: 'phaze' }));
   });
 
-  it('searches the cached catalogue when offline', () => {
+  it('searches known balls when offline', () => {
     online.set(false);
-    allBalls.set([ball('Phaze II'), ball('Zen')]);
+    knownBalls.set([ball('Phaze II'), ball('Zen')]);
 
     component.searchTerm.set('phaze');
 
@@ -182,9 +188,9 @@ describe('BallsPage', () => {
     expect(ballService.searchBalls).not.toHaveBeenCalled();
   });
 
-  it('pages through the cached catalogue offline', () => {
+  it('pages through known balls offline', () => {
     online.set(false);
-    allBalls.set(Array.from({ length: 150 }, (_, i) => ball(`Ball ${i}`)));
+    knownBalls.set(Array.from({ length: 150 }, (_, i) => ball(`Ball ${i}`)));
 
     expect(component.displayedBalls().length).toBe(100);
     expect(component.hasMoreData()).toBe(true);
@@ -193,5 +199,36 @@ describe('BallsPage', () => {
 
     expect(component.displayedBalls().length).toBe(150);
     expect(component.hasMoreData()).toBe(false);
+  });
+
+  describe('Best Match', () => {
+    it('is selected when a search starts and offered only while searching', () => {
+      expect(component.sortOptions()).toEqual([newestFirst]);
+
+      component.searchSubject.next('phaze');
+
+      expect(component.currentSortOption()).toEqual(bestMatch);
+      expect(component.sortOptions()).toEqual([bestMatch, newestFirst]);
+    });
+
+    it('restores the previous sort when the search is cleared', () => {
+      component.onSortChanged(rgHighFirst);
+      component.searchSubject.next('phaze');
+
+      component.searchSubject.next('');
+
+      expect(component.currentSortOption()).toEqual(rgHighFirst);
+    });
+
+    it('keeps a sort picked during the search and sends it with the search', async () => {
+      component.searchSubject.next('phaze');
+      component.onSortChanged(rgHighFirst);
+
+      await component.loadFirstPage();
+      expect(ballService.searchBalls).toHaveBeenLastCalledWith(expect.objectContaining({ search: 'phaze', sort: 'core_rg,desc' }));
+
+      component.searchSubject.next('');
+      expect(component.currentSortOption()).toEqual(rgHighFirst);
+    });
   });
 });

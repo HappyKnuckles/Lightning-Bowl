@@ -1,14 +1,16 @@
 import { TestBed } from '@angular/core/testing';
+import { vi } from 'vitest';
+
 import { BallsStore } from 'src/app/core/stores/balls.store';
 import { GamesStore } from 'src/app/core/stores/games.store';
 import { LeaguesStore } from 'src/app/core/stores/leagues.store';
+
+import { createSpyObj, SpyObj } from '../../../../testing/spy-obj';
 import { GameFilterService } from '../game-filter/game-filter.service';
 import { GameStatsService } from '../game-stats/game-stats.service';
 import { HapticService } from '../haptic/haptic.service';
 import { ToastService } from '../toast/toast.service';
 import { ExcelService } from './excel.service';
-import { vi } from 'vitest';
-import { createSpyObj, SpyObj } from '../../../../testing/spy-obj';
 
 describe('ExcelService', () => {
   let service: ExcelService;
@@ -18,7 +20,7 @@ describe('ExcelService', () => {
 
   beforeEach(() => {
     const gamesStoreSpy = createSpyObj(['games', 'saveGamesToLocalStorage']);
-    const ballsStoreSpy = createSpyObj(['allBalls', 'arsenal', 'saveBallToArsenal']);
+    const ballsStoreSpy = createSpyObj(['resolveBallNames', 'arsenal', 'saveBallToArsenal']);
     const leaguesStoreSpy = createSpyObj(['addLeague']);
 
     TestBed.configureTestingModule({
@@ -73,7 +75,7 @@ describe('ExcelService', () => {
 
   it('should support legacy Pattern field in transformData', async () => {
     // Mock storage service methods
-    mockBallsStore.allBalls.mockReturnValue([]);
+    mockBallsStore.resolveBallNames.mockResolvedValue(new Map());
     mockBallsStore.arsenal.mockReturnValue([]);
     mockLeaguesStore.addLeague.mockReturnValue(Promise.resolve());
     mockBallsStore.saveBallToArsenal.mockReturnValue(Promise.resolve([]));
@@ -151,7 +153,7 @@ describe('ExcelService', () => {
 
   it('should prefer new Patterns field over legacy Pattern field', async () => {
     // Mock storage service methods
-    mockBallsStore.allBalls.mockReturnValue([]);
+    mockBallsStore.resolveBallNames.mockResolvedValue(new Map());
     mockBallsStore.arsenal.mockReturnValue([]);
     mockLeaguesStore.addLeague.mockReturnValue(Promise.resolve());
     mockBallsStore.saveBallToArsenal.mockReturnValue(Promise.resolve([]));
