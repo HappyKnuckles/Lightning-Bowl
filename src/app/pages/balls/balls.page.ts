@@ -31,7 +31,7 @@ import {
 } from '@ionic/angular/standalone';
 import Fuse from 'fuse.js';
 import { addIcons } from 'ionicons';
-import { addOutline, camera, chevronDownOutline, closeCircle, filterOutline, globeOutline, heart, heartOutline, openOutline } from 'ionicons/icons';
+import { addOutline, camera, chevronDownOutline, chevronForward, closeCircle, filterOutline, globeOutline, heart, heartOutline, openOutline } from 'ionicons/icons';
 import { debounceTime, Subject } from 'rxjs';
 import { BALL_FILTER_CONFIGS } from 'src/app/core/configs/filter/ball-filter.config';
 import { BALL_PAGE_SIZE } from 'src/app/core/constants/ball-api.constants';
@@ -224,7 +224,7 @@ export class BallsPage implements OnInit {
     public favoritesService: FavoritesService,
     private analyticsService: AnalyticsService,
   ) {
-    addIcons({ filterOutline, closeCircle, globeOutline, openOutline, addOutline, camera, heart, heartOutline, chevronDownOutline });
+    addIcons({ filterOutline, closeCircle, globeOutline, openOutline, addOutline, camera, heart, heartOutline, chevronDownOutline, chevronForward });
     this.searchSubject.subscribe((query) => {
       this.setSearchTerm(query);
       if (this.content) {
