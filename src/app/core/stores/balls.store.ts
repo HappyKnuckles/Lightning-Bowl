@@ -8,7 +8,7 @@ import { FavoritesService } from 'src/app/core/services/favorites/favorites.serv
 import { NetworkService } from 'src/app/core/services/network/network.service';
 import { STORAGE_PREFIX, StorageKeys } from 'src/app/core/services/storage/storage-keys';
 import { StorageRepository } from 'src/app/core/services/storage/storage.repository';
-import { toStoredBall } from 'src/app/core/utils/ball-utils/stored-ball.utils';
+import { formatStoredBall, parseStoredBall, toStoredBall } from 'src/app/core/utils/ball-utils/stored-ball.utils';
 
 const ballKey = (ball: Pick<Ball, 'ball_id' | 'core_weight'>): string => `${ball.ball_id}-${ball.core_weight}`;
 
@@ -76,13 +76,29 @@ export class BallsStore {
     }
   }
 
-  /** A known ball by name (case-insensitive), preferring the given weight. */
+  /**
+   * A known ball by name (case-insensitive), preferring the given weight. Also
+   * accepts names with the weight appended ("Phaze II15", "Phaze II 15lbs"),
+   * as games store them; that weight then wins over `preferredWeight`.
+   */
   findKnownBall(name: string, preferredWeight?: number | string): Ball | undefined {
-    const lower = name.toLowerCase();
-    return pickVariant(
-      this.knownBalls().filter((b) => b.ball_name.toLowerCase() === lower),
-      preferredWeight,
-    );
+    const byName = (ballName: string) => this.knownBalls().filter((b) => b.ball_name.toLowerCase() === ballName.toLowerCase());
+    const exact = byName(name.trim());
+    if (exact.length > 0) return pickVariant(exact, preferredWeight);
+
+    const parsed = parseStoredBall(name);
+    return parsed.weight ? pickVariant(byName(parsed.name), parsed.weight) : undefined;
+  }
+
+  /**
+   * How to show a ball stored in a game: "Name 15lbs" when a weight was
+   * stored with it, else the plain name, plus the matching known ball (for
+   * its image), if any.
+   */
+  describeStoredBall(value: string): { label: string; ball: Ball | undefined } {
+    const ball = this.findKnownBall(value);
+    const isPlainName = ball?.ball_name.toLowerCase() === value.trim().toLowerCase();
+    return { label: isPlainName ? value.trim() : formatStoredBall(parseStoredBall(value)), ball };
   }
 
   /**
@@ -101,13 +117,12 @@ export class BallsStore {
 
     if (missing.length > 0 && this.#networkService.isOnline) {
       try {
-        const fetched = await this.#ballService.getBallsByNames(missing);
+        // Values may carry a weight ("Phaze II15"); look up both the value and the bare name.
+        const lookups = [...new Set(missing.flatMap((value) => [value, parseStoredBall(value).name]))];
+        const fetched = await this.#ballService.getBallsByNames(lookups);
         await this.rememberBalls(fetched);
         for (const name of missing) {
-          const ball = pickVariant(
-            fetched.filter((b) => b.ball_name.toLowerCase() === name.toLowerCase()),
-            preferredWeight,
-          );
+          const ball = this.findKnownBall(name, preferredWeight);
           if (ball) result.set(name.toLowerCase(), ball);
         }
       } catch (error) {

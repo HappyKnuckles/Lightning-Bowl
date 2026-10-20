@@ -32,7 +32,8 @@ export class BallStatsCalculatorService {
     > = {};
 
     gamesWithBalls.forEach((game) => {
-      const uniqueBallsInGame = new Set(game.balls);
+      // Keyed by display label, so "Phaze II15" and "Phaze II 15lbs" count as one ball.
+      const uniqueBallsInGame = new Set((game.balls ?? []).map((value) => this.ballsStore.describeStoredBall(value).label));
 
       let totalStrikesInGame = 0;
       game.frames.forEach((frame: Frame, index: number) => {
@@ -72,6 +73,7 @@ export class BallStatsCalculatorService {
     const finalStats: Record<string, HighlightItemStats> = {};
     for (const ballName in tempStats) {
       const stats = tempStats[ballName];
+      // The image belongs to the ball, whatever weight was stored with it.
       const ballImage = ballImageUrl(this.ballsStore.findKnownBall(ballName), 'ball');
       const totalPossibleStrikes = stats.gameCount * 12;
       const strikeRate = totalPossibleStrikes > 0 ? Math.round((stats.totalStrikes / totalPossibleStrikes) * 100) : 0;
