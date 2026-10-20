@@ -51,8 +51,9 @@ describe('AppFacade', () => {
     gamesStore.games.mockReturnValue([]);
     gamesStore.saveGamesToLocalStorage.mockResolvedValue(undefined);
 
-    ballsStore = createSpyObj<BallsStore>(['loadAllBalls', 'loadArsenal', 'clearArsenal']);
-    ballsStore.loadAllBalls.mockResolvedValue(undefined);
+    ballsStore = createSpyObj<BallsStore>(['loadBallCache', 'resolveBallNames', 'loadArsenal', 'clearArsenal']);
+    ballsStore.loadBallCache.mockResolvedValue(undefined);
+    ballsStore.resolveBallNames.mockResolvedValue(new Map());
     ballsStore.loadArsenal.mockResolvedValue(undefined);
 
     patternsStore = createSpyObj<PatternsStore>(['loadAllPatterns', 'loadPatternImageMap']);
@@ -89,7 +90,8 @@ describe('AppFacade', () => {
 
       expect(storageRepository.create).toHaveBeenCalled();
       expect(settingsStore.loadPinInputMode).toHaveBeenCalled();
-      expect(ballsStore.loadAllBalls).toHaveBeenCalledWith(undefined, 15);
+      expect(ballsStore.loadBallCache).toHaveBeenCalled();
+      expect(ballsStore.resolveBallNames).toHaveBeenCalledWith([], 15);
       expect(gamesStore.loadGameHistory).toHaveBeenCalled();
       expect(leaguesStore.loadLeagues).toHaveBeenCalled();
       expect(patternsStore.loadAllPatterns).toHaveBeenCalled();

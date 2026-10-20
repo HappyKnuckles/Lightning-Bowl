@@ -208,10 +208,10 @@
 <ion-modal #addBallModal [presentingElement]="presentingElement">
   <ng-template>
     <app-generic-typeahead
-      [items]="allBalls()"
+      [items]="pickerBalls()"
       [config]="ballTypeaheadConfig"
       [prevSelectedItems]="selectedBallIds()"
-      (selectedItemsChange)="onBallSelectionChange($event)">
+      (selectedObjectsChange)="onBallSelectionChange($event)">
     </app-generic-typeahead>
   </ng-template>
 </ion-modal>

@@ -45,8 +45,9 @@ export class BallFilterService {
 
   readonly filters = signal<BallFilter>(this.loadInitialFilters());
 
+  /** Offline only: filters the known balls (online, the ball API filters). */
   readonly filteredBalls = computed(() => {
-    const balls = this.ballsStore.allBalls();
+    const balls = this.ballsStore.knownBalls();
     const filters = this.filters();
     return this.filterBalls(balls, filters);
   });
@@ -67,18 +68,20 @@ export class BallFilterService {
   filterBalls(balls: Ball[], filters: BallFilter): Ball[] {
     const filteredBalls = balls.filter((ball) => {
       return (
-        (filters.brands.length === 0 || filters.brands.includes(ball.brand_name)) &&
-        (filters.cores.length === 0 || filters.cores.includes(ball.core_name)) &&
-        (filters.coverstocks.length === 0 || filters.coverstocks.includes(ball.ball_name)) &&
+        (!filters.weight || ball.core_weight === filters.weight) &&
+        (filters.brands.length === 0 || filters.brands.includes(ball.brand_name ?? '')) &&
+        (filters.cores.length === 0 || filters.cores.includes(ball.core_name ?? '')) &&
+        (filters.coverstocks.length === 0 || filters.coverstocks.includes(ball.coverstock_name ?? '')) &&
         (filters.coverstockTypes.length === 0 || filters.coverstockTypes.includes(ball.coverstock_type as CoverstockType)) &&
         (filters.market === Market.ALL || filters.market === ball.us_int) &&
         (filters.coreType === CoreType.ALL || filters.coreType === ball.core_type) &&
         (!filters.availability || ball.availability === 'Available') &&
         (filters.releaseDate === 'all' || filters.releaseDate === ball.release_date) &&
-        filters.minRg <= parseFloat(ball.core_rg) &&
-        filters.maxRg >= parseFloat(ball.core_rg) &&
-        filters.minDiff <= parseFloat(ball.core_diff) &&
-        filters.maxDiff >= parseFloat(ball.core_diff) &&
+        // Missing specs parse to NaN and fail the range checks, as before.
+        filters.minRg <= parseFloat(ball.core_rg ?? '') &&
+        filters.maxRg >= parseFloat(ball.core_rg ?? '') &&
+        filters.minDiff <= parseFloat(ball.core_diff ?? '') &&
+        filters.maxDiff >= parseFloat(ball.core_diff ?? '') &&
         (!filters.inArsenal || this.ballsStore.arsenal().some((arsenalBall) => arsenalBall.ball_id === ball.ball_id))
       );
     });

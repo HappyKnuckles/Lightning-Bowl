@@ -54,6 +54,8 @@ export class GenericTypeaheadComponent<T> implements OnInit, OnDestroy {
   config = input.required<TypeaheadConfig<T>>();
   prevSelectedItems = input<string[]>([]);
   @Output() selectedItemsChange = new EventEmitter<string[]>();
+  /** Same moment as `selectedItemsChange`, with the full items (needed for API search results that aren't in `items`). */
+  @Output() selectedObjectsChange = new EventEmitter<T[]>();
   @ViewChild(IonContent, { static: false }) content!: IonContent;
   @ViewChild('infiniteScroll') infiniteScroll!: IonInfiniteScroll;
 
@@ -253,6 +255,7 @@ export class GenericTypeaheadComponent<T> implements OnInit, OnDestroy {
 
     if (isDifferent) {
       this.selectedItemsChange.emit(selectedValues);
+      this.selectedObjectsChange.emit([...this.selectedItems]);
     }
   }
 }

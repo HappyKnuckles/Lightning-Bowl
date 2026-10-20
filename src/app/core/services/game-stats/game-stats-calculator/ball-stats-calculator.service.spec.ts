@@ -29,7 +29,12 @@ describe('BallStatsCalculatorService', () => {
   beforeEach(() => {
     allBalls.set([]);
     TestBed.configureTestingModule({
-      providers: [{ provide: BallsStore, useValue: { allBalls } }],
+      providers: [
+        {
+          provide: BallsStore,
+          useValue: { findKnownBall: (name: string) => allBalls().find((b) => b.ball_name.toLowerCase() === name.toLowerCase()) },
+        },
+      ],
     });
     calculator = TestBed.inject(BallStatsCalculatorService);
   });

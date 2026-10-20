@@ -302,16 +302,12 @@ export class GameComponent implements OnInit {
   getBallIds(names: string[] | undefined): string[] {
     if (!names) return [];
 
-    return this.ballsStore
-      .allBalls()
-      .filter((ball) => names.includes(ball.ball_name))
-      .map((ball) => ball.ball_id);
+    return names.map((name) => this.ballsStore.findKnownBall(name)?.ball_id).filter((id): id is string => !!id);
   }
 
   // --- Passthrough Event Emitters ---
-  onBallAdd(ballIds: string[]) {
-    const allBalls = this.ballsStore.allBalls();
-    const selected = ballIds.map((id) => allBalls.find((b) => b.ball_id === id)).filter((b): b is Ball => !!b);
+  onBallAdd(selected: Ball[]) {
+    void this.ballsStore.rememberBalls(selected);
     this.ballsChanged.emit(selected.map((b) => b.ball_name));
     this.saveBallToArsenal(selected);
   }

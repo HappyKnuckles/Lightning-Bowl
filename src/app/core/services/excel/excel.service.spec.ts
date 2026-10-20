@@ -18,7 +18,7 @@ describe('ExcelService', () => {
 
   beforeEach(() => {
     const gamesStoreSpy = createSpyObj(['games', 'saveGamesToLocalStorage']);
-    const ballsStoreSpy = createSpyObj(['allBalls', 'arsenal', 'saveBallToArsenal']);
+    const ballsStoreSpy = createSpyObj(['resolveBallNames', 'arsenal', 'saveBallToArsenal']);
     const leaguesStoreSpy = createSpyObj(['addLeague']);
 
     TestBed.configureTestingModule({
@@ -73,7 +73,7 @@ describe('ExcelService', () => {
 
   it('should support legacy Pattern field in transformData', async () => {
     // Mock storage service methods
-    mockBallsStore.allBalls.mockReturnValue([]);
+    mockBallsStore.resolveBallNames.mockResolvedValue(new Map());
     mockBallsStore.arsenal.mockReturnValue([]);
     mockLeaguesStore.addLeague.mockReturnValue(Promise.resolve());
     mockBallsStore.saveBallToArsenal.mockReturnValue(Promise.resolve([]));
@@ -151,7 +151,7 @@ describe('ExcelService', () => {
 
   it('should prefer new Patterns field over legacy Pattern field', async () => {
     // Mock storage service methods
-    mockBallsStore.allBalls.mockReturnValue([]);
+    mockBallsStore.resolveBallNames.mockResolvedValue(new Map());
     mockBallsStore.arsenal.mockReturnValue([]);
     mockLeaguesStore.addLeague.mockReturnValue(Promise.resolve());
     mockBallsStore.saveBallToArsenal.mockReturnValue(Promise.resolve([]));

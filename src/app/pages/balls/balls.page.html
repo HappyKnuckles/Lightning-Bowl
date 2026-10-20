@@ -15,7 +15,7 @@
       <app-sort-header
         #sortHeader
         [id]="'ball-sort-header'"
-        [sortOptions]="sortService.BALL_SORT_OPTIONS"
+        [sortOptions]="sortOptions()"
         [selectedSort]="currentSortOption()"
         [storageKey]="'balls-sort-option'"
         [favoritesFirst]="favoritesFirst()"
@@ -198,8 +198,8 @@
         </ion-card>
       }
       <!-- Infinite Scroll -->
-      @if (hasMoreData) {
-        <ion-infinite-scroll threshold="100px" (ionInfinite)="loadBalls($event)">
+      @if (hasMoreData()) {
+        <ion-infinite-scroll threshold="100px" (ionInfinite)="loadMore($event)">
           <ion-infinite-scroll-content loadingSpinner="crescent" loadingText="Loading more balls..."></ion-infinite-scroll-content>
         </ion-infinite-scroll>
       }

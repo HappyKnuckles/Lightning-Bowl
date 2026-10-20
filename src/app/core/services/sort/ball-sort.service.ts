@@ -26,6 +26,9 @@ export class BallSortService {
     { field: BallSortField.COVERSTOCK_TYPE, direction: SortDirection.DESC, label: 'Coverstock (Z-A)' },
   ];
 
+  /** Shown first in the sort menu while a search is active. */
+  readonly BEST_MATCH_OPTION: BallSortOption = { field: BallSortField.RELEVANCE, direction: SortDirection.DESC, label: 'Best Match' };
+
   sortBalls(balls: Ball[], sortOption: BallSortOption, favoritesFirst = false): Ball[] {
     if (favoritesFirst) {
       const favoriteBalls = this.favoritesService.getFavoriteBalls();
@@ -43,16 +46,19 @@ export class BallSortService {
   }
 
   private applySortToBalls(balls: Ball[], sortOption: BallSortOption): Ball[] {
+    // Relevance order comes from the search itself; keep it.
+    if (sortOption.field === BallSortField.RELEVANCE) return balls;
+    const field = sortOption.field;
     return balls.sort((a, b) => {
-      const { field, direction } = sortOption;
+      const { direction } = sortOption;
 
-      let aValue: string | number = a[field];
-      let bValue: string | number = b[field];
+      let aValue: string | number = a[field] ?? '';
+      let bValue: string | number = b[field] ?? '';
 
       // Handle numeric fields
       if (field === BallSortField.CORE_RG || field === BallSortField.CORE_DIFF || field === BallSortField.CORE_INT_DIFF) {
-        aValue = parseFloat(aValue) || 0;
-        bValue = parseFloat(bValue) || 0;
+        aValue = parseFloat(String(aValue)) || 0;
+        bValue = parseFloat(String(bValue)) || 0;
       }
       // Handle date fields
       else if (field === BallSortField.RELEASE_DATE) {
