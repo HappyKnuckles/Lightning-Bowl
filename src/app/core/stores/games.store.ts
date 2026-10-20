@@ -3,6 +3,7 @@ import { Game, ThrowBall } from 'src/app/core/models/game.model';
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import { STORAGE_PREFIX, StorageKeys } from 'src/app/core/services/storage/storage-keys';
 import { StorageRepository } from 'src/app/core/services/storage/storage.repository';
+import { getBallTracking } from '../utils/game-utils/ball.utils';
 import { sortGameHistoryByDate } from '../utils/sort-utils/sort.utils';
 
 @Injectable({ providedIn: 'root' })
@@ -71,10 +72,10 @@ export class GamesStore {
         // Tag how this game recorded its balls. Games that never had a ball picked per throw
         // stay on game-level tracking. Their throws are deliberately left empty rather than
         // backfilled, so per-throw stats never count balls the user did not actually record.
+        // The tag is derivable from the frames, so it is set in memory only and reaches storage
+        // with the game's next save, instead of rewriting the whole history on first load.
         if (!game.ballTracking) {
-          const hasThrowLevelBalls = (game.frames || []).some((frame) => (frame.throws || []).some((throwData) => throwData.ball?.name));
-          game.ballTracking = hasThrowLevelBalls ? 'throw' : 'game';
-          needsUpdate = true;
+          game.ballTracking = getBallTracking(game);
         }
       });
 

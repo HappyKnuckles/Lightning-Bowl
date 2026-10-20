@@ -104,24 +104,34 @@ export function getThrowBallKeys(frames: Frame[]): string[] {
 }
 
 /**
- * Get all unique ball keys used in a game (from throw-level data, falling back to game.balls)
+ * Number of recorded throws that carry a ball. A pending pick for an unbowled throw is not
+ * counted: nothing has been recorded with it yet.
  */
-export function getGameBalls(game: Game): string[] {
-  const keys = getThrowBallKeys(game.frames ?? []);
-  return keys.length > 0 ? keys : (game.balls ?? []);
+export function countThrowBalls(frames: Frame[]): number {
+  return frames.reduce((count, frame) => count + (frame.throws ?? []).filter((t) => t.ball?.name).length, 0);
 }
 
 /**
- * Get unique ball names used in a game for display purposes (weight is intentionally omitted).
- * Uses per-throw ball data when available, falling back to game.balls.
- * If an arsenal is provided, legacy game.balls entries (stored as "name+weight" keys) are resolved back to ball names.
+ * All unique ball keys of a game, read from wherever its tracking mode keeps them: the throws in
+ * `throw` tracking, `game.balls` in `game` tracking. Throws can still carry balls on a game that
+ * switched to `game` tracking without clearing them, and those must not outvote the selection.
+ */
+export function getGameBalls(game: Game): string[] {
+  return getBallTracking(game) === 'throw' ? getThrowBallKeys(game.frames ?? []) : (game.balls ?? []);
+}
+
+/**
+ * Get unique ball names used in a game for display purposes (weight is intentionally omitted),
+ * read from the same source as `getGameBalls`.
+ * If an arsenal is provided, game.balls entries (in any stored format) are resolved back to ball names.
  */
 export function getGameBallNames(game: Game, arsenal?: Pick<Ball, 'ball_name' | 'core_weight'>[]): string[] {
-  const seen = new Set<string>();
-  const names: string[] = [];
-  for (const frame of game.frames) {
-    for (const t of frame.throws) {
-      if (t.ball?.name) {
+  if (getBallTracking(game) === 'throw') {
+    const seen = new Set<string>();
+    const names: string[] = [];
+    for (const frame of game.frames ?? []) {
+      for (const t of frame.throws ?? []) {
+        if (!t.ball?.name) continue;
         const key = getThrowBallKey(t.ball);
         if (!seen.has(key)) {
           seen.add(key);
@@ -129,8 +139,6 @@ export function getGameBallNames(game: Game, arsenal?: Pick<Ball, 'ball_name' | 
         }
       }
     }
-  }
-  if (names.length > 0) {
     return names;
   }
 
@@ -139,10 +147,7 @@ export function getGameBallNames(game: Game, arsenal?: Pick<Ball, 'ball_name' | 
     return balls;
   }
 
-  return balls.map((key) => {
-    const match = arsenal.find((b) => getThrowBallKey({ name: b.ball_name, weight: b.core_weight }) === key);
-    return match ? match.ball_name : key;
-  });
+  return balls.map((value) => findBallInArsenal({ name: value }, arsenal)?.ball_name ?? value);
 }
 
 // Carry-over logic
@@ -203,6 +208,20 @@ export function setThrowBall(frames: Frame[], frameIndex: number, throwIndex: nu
 
   frame.pendingBall = ball ?? null;
   frame.pendingBallThrowIndex = throwIndex;
+}
+
+/**
+ * Remove every per-throw ball and pending pick (mutates). Used when a game switches to one
+ * selection for the whole game, so the throws no longer hold balls that selection replaced.
+ */
+export function clearThrowBalls(frames: Frame[]): void {
+  for (const frame of frames) {
+    for (const t of frame.throws ?? []) {
+      delete t.ball;
+    }
+    delete frame.pendingBall;
+    delete frame.pendingBallThrowIndex;
+  }
 }
 
 /**

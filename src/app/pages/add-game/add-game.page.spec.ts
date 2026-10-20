@@ -3,6 +3,7 @@ import { SegmentCustomEvent } from '@ionic/angular';
 import { vi } from 'vitest';
 
 import { GamesStore } from 'src/app/core/stores/games.store';
+import { makeFrame, makeFrames, makeGame, makeThrow } from 'src/testing/fixtures';
 
 import { AddGamePage } from './add-game.page';
 
@@ -150,6 +151,20 @@ describe('AddGamePage', () => {
       component.onSegmentChange({ detail: { value: 'Game 9' } } as SegmentCustomEvent);
 
       expect(component.activeSegmentIndex()).toBe(0);
+    });
+  });
+
+  describe('onBallsChange', () => {
+    it('switches the game to one selection and drops its per-throw balls', () => {
+      const frames = [makeFrame(0, [makeThrow(0, [], { ball: { name: 'Phaze II' } })]), ...makeFrames().slice(1)];
+      component.games.update((games) => games.map((g, i) => (i === 0 ? makeGame({ frames, ballTracking: 'throw' }) : g)));
+
+      component.onBallsChange(['Hammer15'], 0);
+
+      const game = component.games()[0];
+      expect(game).toMatchObject({ balls: ['Hammer15'], ballTracking: 'game' });
+      expect(game.frames[0].throws[0].ball).toBeUndefined();
+      expect(game.frames[0].throws[0].value).toBe(10);
     });
   });
 });

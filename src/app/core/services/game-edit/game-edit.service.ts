@@ -3,7 +3,7 @@ import { ImpactStyle } from '@capacitor/haptics';
 import { TOAST_MESSAGES } from 'src/app/core/constants/toast-messages.constants';
 import { GamesStore } from 'src/app/core/stores/games.store';
 import { Frame, Game, ThrowBall } from '../../models/game.model';
-import { setThrowBall as setThrowBallInFrames } from '../../utils/game-utils/ball.utils';
+import { clearThrowBalls as clearThrowBallsInFrames, countThrowBalls, setThrowBall as setThrowBallInFrames } from '../../utils/game-utils/ball.utils';
 import { calculateIsClean, cloneFrames, recordThrow, removeThrow } from '../../utils/game-utils/frame.utils';
 import { canUndoLastThrow, isGameValid, isValidFrameScore } from '../../utils/game-utils/game-validation.utils';
 import { applyPinModeUndo, getAvailablePins, isCellAccessible, processPinThrow } from '../../utils/game-utils/pin.utils';
@@ -155,6 +155,24 @@ export class GameEditService {
     if (!frames[frameIndex]) return;
 
     setThrowBallInFrames(frames, frameIndex, throwIndex, ball);
+
+    if (editedGame) {
+      this.editedGameStates[game.gameId] = { ...editedGame, frames };
+    } else {
+      Object.assign(game, { frames });
+    }
+  }
+
+  /** Recorded throws carrying a ball, read from the edit in progress when there is one. */
+  countThrowBalls(game: Game): number {
+    return countThrowBalls((this.editedGameStates[game.gameId] ?? game).frames);
+  }
+
+  /** Strip the per-throw balls, in the edit in progress when there is one. */
+  clearThrowBalls(game: Game): void {
+    const editedGame = this.editedGameStates[game.gameId];
+    const frames = cloneFrames((editedGame ?? game).frames);
+    clearThrowBallsInFrames(frames);
 
     if (editedGame) {
       this.editedGameStates[game.gameId] = { ...editedGame, frames };

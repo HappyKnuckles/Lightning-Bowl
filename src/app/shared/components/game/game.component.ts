@@ -16,6 +16,7 @@ import { FormsModule } from '@angular/forms';
 import { ImpactStyle } from '@capacitor/haptics';
 import { InputCustomEvent } from '@ionic/angular';
 import {
+  AlertController,
   IonAccordion,
   IonAccordionGroup,
   IonCheckbox,
@@ -48,6 +49,7 @@ import { PatternsStore } from 'src/app/core/stores/patterns.store';
 import { SettingsStore } from 'src/app/core/stores/settings.store';
 import {
   ballValueMatches,
+  countThrowBalls,
   findBallInArsenal,
   formatThrowBall,
   getGameBallNames,
@@ -324,6 +326,7 @@ export class GameComponent implements OnInit {
     private patternService: PatternService,
     private toastService: ToastService,
     private typeaheadConfigService: TypeaheadConfigService,
+    private alertController: AlertController,
   ) {
     addIcons({ bowlingBallOutline, chevronExpandOutline });
     effect(() => this.toolbarStateChanged.emit(this.toolbarState()));
@@ -422,7 +425,8 @@ export class GameComponent implements OnInit {
   }
 
   // --- Passthrough Event Emitters ---
-  onBallAdd(ballIds: string[]) {
+  async onBallAdd(ballIds: string[]) {
+    if (!(await this.confirmReplaceThrowBalls())) return;
     const allBalls = this.ballsStore.allBalls();
     const selected = ballIds.map((id) => allBalls.find((b) => b.ball_id === id)).filter((b): b is Ball => !!b);
     this.ballsChanged.emit(selected.map((b) => getThrowBallKey({ name: b.ball_name, weight: b.core_weight })));
@@ -435,8 +439,9 @@ export class GameComponent implements OnInit {
   onPatternChanged(patterns: string[]) {
     this.patternChanged.emit(patterns.length > 2 ? patterns.slice(-2) : patterns);
   }
-  onBallSelect(selectedBalls: string[], modal: IonModal) {
+  async onBallSelect(selectedBalls: string[], modal: IonModal) {
     modal.dismiss();
+    if (!(await this.confirmReplaceThrowBalls())) return;
     this.ballsChanged.emit(selectedBalls);
   }
   onNoteChange(note: string) {
@@ -456,5 +461,26 @@ export class GameComponent implements OnInit {
     if (failed.length) {
       this.toastService.showToast(`Failed to add: ${failed.map((b) => b.ball_name).join(', ')}.`, 'bug', true);
     }
+  }
+
+  /**
+   * One selection for the whole game replaces the balls recorded per throw, which the parent
+   * clears on `ballsChanged`. Asks first when there are any, so they are never dropped silently.
+   */
+  private async confirmReplaceThrowBalls(): Promise<boolean> {
+    const throwCount = countThrowBalls(this.currentGame().frames ?? []);
+    if (throwCount === 0) return true;
+
+    const alert = await this.alertController.create({
+      header: 'Use one ball selection for this game?',
+      message: `The balls picked for ${throwCount} ${throwCount === 1 ? 'throw' : 'throws'} will be removed.`,
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        { text: 'Replace', role: 'confirm' },
+      ],
+    });
+    await alert.present();
+    const { role } = await alert.onDidDismiss();
+    return role === 'confirm';
   }
 }

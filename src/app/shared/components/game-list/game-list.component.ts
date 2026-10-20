@@ -545,22 +545,26 @@ export class GameListComponent implements OnInit {
   }
 
   // BALLS / SERIES
-  onBallAdd(ballIds: string[], game: Game, modal: IonModal) {
+  async onBallAdd(ballIds: string[], game: Game, modal: IonModal) {
     const allBalls = this.ballsStore.allBalls();
     const selected = ballIds.map((id) => allBalls.find((b) => b.ball_id === id)).filter((b): b is Ball => !!b);
-    this.onBallSelect(
+    const applied = await this.onBallSelect(
       selected.map((b) => getThrowBallKey({ name: b.ball_name, weight: b.core_weight })),
       game,
       modal,
     );
-    this.saveBallToArsenal(selected);
+    if (applied) this.saveBallToArsenal(selected);
   }
 
-  onBallSelect(selectedBalls: string[], game: Game, modal: IonModal): void {
+  async onBallSelect(selectedBalls: string[], game: Game, modal: IonModal): Promise<boolean> {
     modal.dismiss();
+    if (!(await this.confirmReplaceThrowBalls(game))) return false;
+
+    this.editService.clearThrowBalls(game);
     game.balls = selectedBalls;
     game.ballTracking = 'game';
     this.ballEditVersion.update((v) => v + 1);
+    return true;
   }
 
   onThrowBallChange(event: { frameIndex: number; throwIndex: number; ball: ThrowBall | undefined }, game: Game): void {
@@ -647,6 +651,27 @@ export class GameListComponent implements OnInit {
     if (failed.length) {
       this.toastService.showToast(`Failed to add: ${failed.map((b) => b.ball_name).join(', ')}.`, 'bug', true);
     }
+  }
+
+  /**
+   * One selection for the whole game replaces the balls recorded per throw. Asks first when
+   * there are any, so they are never dropped silently.
+   */
+  private async confirmReplaceThrowBalls(game: Game): Promise<boolean> {
+    const throwCount = this.editService.countThrowBalls(game);
+    if (throwCount === 0) return true;
+
+    const alert = await this.alertController.create({
+      header: 'Use one ball selection for this game?',
+      message: `The balls picked for ${throwCount} ${throwCount === 1 ? 'throw' : 'throws'} will be removed.`,
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        { text: 'Replace', role: 'confirm' },
+      ],
+    });
+    await alert.present();
+    const { role } = await alert.onDidDismiss();
+    return role === 'confirm';
   }
 }
 

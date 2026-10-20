@@ -11,7 +11,7 @@ import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { BallsStore } from 'src/app/core/stores/balls.store';
 import { GamesStore } from 'src/app/core/stores/games.store';
 import { LeaguesStore } from 'src/app/core/stores/leagues.store';
-import { formatThrowBall, getGameBalls } from '../../utils/game-utils/ball.utils';
+import { findBallInArsenal, formatThrowBall, getGameBalls } from '../../utils/game-utils/ball.utils';
 import { isSplit } from '../../utils/game-utils/pin.utils';
 import { sortGameHistoryByDate } from '../../utils/sort-utils/sort.utils';
 import { GameFilterService } from '../game-filter/game-filter.service';
@@ -823,24 +823,9 @@ export class ExcelService {
     });
   }
 
-  private normalizeBallKey(value: string): string {
-    return value
-      .toLowerCase()
-      .trim()
-      .replace(/\s+/g, '')
-      .replace(/lbs?|#/g, '');
-  }
-
   private resolveBallReference(rawBallValue: string | undefined): Ball | undefined {
     const raw = rawBallValue?.trim();
-    if (!raw) return undefined;
-
-    const normalizedRaw = this.normalizeBallKey(raw);
-    return this.ballsStore.allBalls().find((ball) => {
-      const byName = this.normalizeBallKey(ball.ball_name);
-      const byNameAndWeight = this.normalizeBallKey(`${ball.ball_name}${ball.core_weight}`);
-      return normalizedRaw === byName || normalizedRaw === byNameAndWeight;
-    });
+    return raw ? findBallInArsenal({ name: raw }, this.ballsStore.allBalls()) : undefined;
   }
 
   /**

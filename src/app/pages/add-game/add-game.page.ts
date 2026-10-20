@@ -41,7 +41,7 @@ import { HighScoreAlertService } from 'src/app/core/services/high-score-alert/hi
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { GamesStore } from 'src/app/core/stores/games.store';
 import { SettingsStore } from 'src/app/core/stores/settings.store';
-import { getThrowBallForPosition, hasThrowLevelBalls, setThrowBall } from 'src/app/core/utils/game-utils/ball.utils';
+import { clearThrowBalls, getThrowBallForPosition, hasThrowLevelBalls, setThrowBall } from 'src/app/core/utils/game-utils/ball.utils';
 import { cloneFrames, createEmptyGame, recordThrow, removeThrow, toCompletedFramesGame } from 'src/app/core/utils/game-utils/frame.utils';
 import {
   canRecordSpare,
@@ -485,7 +485,15 @@ export class AddGamePage implements OnInit {
     this.updateSingleGameProperty('note', note, index);
   }
   onBallsChange(balls: string[], index = 0) {
-    this.games.update((games) => games.map((g, i) => (i === index ? { ...g, balls, ballTracking: 'game' as const } : g)));
+    this.games.update((games) =>
+      games.map((g, i) => {
+        if (i !== index) return g;
+        // One selection for the game replaces any per-throw balls; the game component confirmed it.
+        const frames = cloneFrames(g.frames);
+        clearThrowBalls(frames);
+        return { ...g, frames, balls, ballTracking: 'game' as const };
+      }),
+    );
   }
   onThrowBallChange(event: { frameIndex: number; throwIndex: number; ball: ThrowBall | undefined }, index = 0) {
     const { frameIndex, throwIndex, ball } = event;

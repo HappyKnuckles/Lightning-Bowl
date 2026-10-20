@@ -92,6 +92,14 @@ describe('GamesStore', () => {
       expect(store.games()[0].ballTracking).toBe('game');
     });
 
+    it('does not rewrite the history just to persist the derived tracking tag', async () => {
+      storageRepository.loadByPrefix.mockResolvedValue([makeGame({ gameId: 'g1', balls: ['Hammer15'] })]);
+
+      await store.loadGameHistory();
+
+      expect(storageRepository.set).not.toHaveBeenCalled();
+    });
+
     it('does not backfill per-throw balls from the game-level selection', async () => {
       const game = makeGame({
         gameId: 'g1',

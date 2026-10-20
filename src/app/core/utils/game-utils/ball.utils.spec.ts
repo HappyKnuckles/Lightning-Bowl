@@ -3,8 +3,12 @@ import { makeFrame, makeGame, makeThrow } from 'src/testing/fixtures';
 import {
   ballValueMatches,
   canonicalBallKey,
+  clearThrowBalls,
+  countThrowBalls,
   getBallTracking,
   getCarryOverThrowBall,
+  getGameBallNames,
+  getGameBalls,
   getPendingBall,
   getThrowBallForPosition,
   getThrowBallKeys,
@@ -131,6 +135,30 @@ describe('ball.utils', () => {
       expect(canonicalBallKey('Zen U', [])).not.toBe(canonicalBallKey('Zen Master', []));
     });
   });
+
+  describe('getGameBallNames', () => {
+    const arsenal = [{ ball_name: 'Rocket A.I.', core_weight: '15' }];
+
+    it('resolves every stored game.balls format back to the ball name', () => {
+      const game = makeGame({ balls: ['Rocket A.I.15', 'Rocket A.I. 15lbs', 'Rocket A.I.'] });
+
+      expect(getGameBallNames(game, arsenal)).toEqual(['Rocket A.I.', 'Rocket A.I.', 'Rocket A.I.']);
+    });
+
+    it('keeps a ball outside the arsenal as stored', () => {
+      expect(getGameBallNames(makeGame({ balls: ['Zen U 15lbs'] }), arsenal)).toEqual(['Zen U 15lbs']);
+    });
+
+    it('reads the selection, not leftover throw balls, on a game-tracked game', () => {
+      const game = makeGame({
+        ballTracking: 'game',
+        balls: ['Rocket A.I.15'],
+        frames: [makeFrame(0, [makeThrow(0, [], { ball: { name: 'Phaze II', weight: '15' } })])],
+      });
+
+      expect(getGameBallNames(game, arsenal)).toEqual(['Rocket A.I.']);
+    });
+  });
 });
 
 describe('getBallTracking', () => {
@@ -255,5 +283,44 @@ describe('getCarryOverThrowBall', () => {
     const frames = framesFrom([{ frameIndex: 0, throws: [{ value: 10, throwIndex: 1, ball: strikeBall }] }]);
 
     expect(getCarryOverThrowBall(frames, 0, 1)).toEqual(strikeBall);
+  });
+});
+
+describe('getGameBalls', () => {
+  const throwFrames = () => [makeFrame(0, [makeThrow(0, [], { ball: { name: 'Phaze II', weight: '15' } })])];
+
+  it('reads the throws of a throw-tracked game', () => {
+    expect(getGameBalls(makeGame({ ballTracking: 'throw', balls: ['Hammer15'], frames: throwFrames() }))).toEqual(['Phaze II15']);
+  });
+
+  it('reads the selection of a game-tracked game, ignoring balls left on its throws', () => {
+    expect(getGameBalls(makeGame({ ballTracking: 'game', balls: ['Hammer15'], frames: throwFrames() }))).toEqual(['Hammer15']);
+  });
+
+  it('derives the mode of an untagged game from its throws', () => {
+    expect(getGameBalls(makeGame({ balls: ['Hammer15'], frames: throwFrames() }))).toEqual(['Phaze II15']);
+    expect(getGameBalls(makeGame({ balls: ['Hammer15'] }))).toEqual(['Hammer15']);
+  });
+});
+
+describe('countThrowBalls / clearThrowBalls', () => {
+  const frames = (): Frame[] => [
+    makeFrame(0, [makeThrow(0, [10], { ball: { name: 'Phaze II' } }), makeThrow(1, [], { available: [10], ball: { name: 'Spare' } })]),
+    { ...makeFrame(1, [makeThrow(0, [])]), pendingBall: { name: 'Phaze II' }, pendingBallThrowIndex: 1 },
+  ];
+
+  it('counts recorded throws carrying a ball, not pending picks', () => {
+    expect(countThrowBalls(frames())).toBe(2);
+  });
+
+  it('strips every throw ball and pending pick', () => {
+    const cleared = frames();
+
+    clearThrowBalls(cleared);
+
+    expect(countThrowBalls(cleared)).toBe(0);
+    expect(cleared[1].pendingBall).toBeUndefined();
+    expect(cleared[1].pendingBallThrowIndex).toBeUndefined();
+    expect(cleared[0].throws.map((t) => t.value)).toEqual([9, 1]);
   });
 });

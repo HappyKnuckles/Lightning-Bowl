@@ -445,22 +445,41 @@ describe('leave classification', () => {
   });
 
   describe('isLightLeave / isHighLeave', () => {
-    it('reads a leave on the bowler’s side as light and the far side as high', () => {
-      expect(isLightLeave([2, 4, 5, 8])).toBe(true);
-      expect(isHighLeave([2, 4, 5, 8])).toBe(false);
-      expect(isHighLeave([3, 6, 9, 10])).toBe(true);
-      expect(isLightLeave([3, 6, 9, 10])).toBe(false);
+    it('reads the 2, 5 or 8 standing as a light hit', () => {
+      for (const leave of [[5], [8], [2, 8], [5, 7], [8, 10], [2, 4, 5, 8]]) {
+        expect(isLightLeave(leave)).toBe(true);
+        expect(isHighLeave(leave)).toBe(false);
+      }
+    });
+
+    it('reads the 4 or 7 standing as a high hit', () => {
+      for (const leave of [[4], [7], [4, 7], [4, 9], [6, 7], [7, 10], [4, 6, 7, 10]]) {
+        expect(isHighLeave(leave)).toBe(true);
+        expect(isLightLeave(leave)).toBe(false);
+      }
+    });
+
+    it('leaves the corner pin and the far side to their own stats', () => {
+      for (const leave of [[10], [6, 10], [9], [3, 6, 9, 10]]) {
+        expect(isLightLeave(leave)).toBe(false);
+        expect(isHighLeave(leave)).toBe(false);
+      }
     });
 
     it('mirrors for a left-handed bowler', () => {
-      expect(isLightLeave([3, 6, 9, 10], true)).toBe(true);
-      expect(isHighLeave([2, 4, 5, 8], true)).toBe(true);
+      expect(isLightLeave([5], true)).toBe(true);
+      expect(isLightLeave([3, 6, 5, 9], true)).toBe(true);
+      expect(isHighLeave([6], true)).toBe(true);
+      expect(isHighLeave([4, 10], true)).toBe(true);
+      expect(isHighLeave([4], true)).toBe(false);
+      expect(isLightLeave([7], true)).toBe(false);
     });
 
-    it('is neither when pins stand on both sides or the head pin is up', () => {
-      expect(isLightLeave([2, 3])).toBe(false);
-      expect(isHighLeave([2, 3])).toBe(false);
+    it('is neither when the head pin is up or nothing stands', () => {
       expect(isLightLeave([1, 2, 4])).toBe(false);
+      expect(isHighLeave([1, 4])).toBe(false);
+      expect(isLightLeave([])).toBe(false);
+      expect(isHighLeave([])).toBe(false);
     });
   });
 

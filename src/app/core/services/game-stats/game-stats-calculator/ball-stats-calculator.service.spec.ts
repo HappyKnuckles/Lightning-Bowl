@@ -84,6 +84,19 @@ describe('BallStatsCalculatorService', () => {
       expect(calculator.calculateAllBallStats(games)[0].strikeRate).toBe(17);
     });
 
+    it('credits a game-tracked game to its selection, not to balls left on its throws', () => {
+      const frames = framesWithStrikes(9, [10, 10, 10]).map((frame) => ({
+        ...frame,
+        throws: frame.throws.map((t) => ({ ...t, ball: { name: 'Phaze II' } })),
+      }));
+      const games = [makeGame({ totalScore: 300, frames, balls: ['Hammer'], ballTracking: 'game' })];
+
+      const stats = calculator.calculateAllBallStats(games);
+
+      expect(stats.map((s) => s.name)).toEqual(['Hammer']);
+      expect(stats[0].strikeRate).toBe(100);
+    });
+
     it('attaches the ball image from the store', () => {
       allBalls.set([makeBall({ ball_name: 'Hammer', ball_image: 'hammer.png' })]);
 

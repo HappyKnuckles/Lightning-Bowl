@@ -359,23 +359,35 @@ export function isWashout(pinsLeftStanding: number[]): boolean {
   return pinsLeftStanding.includes(10) || pinsLeftStanding.includes(7);
 }
 
-/**
- * Light hit: the ball came in weak on the pocket side and left pins on the bowler's side
- * of the deck (2-4-5-8 for a righty, 3-6-9 for a lefty).
- */
-export function isLightLeave(pinsLeftStanding: number[], isLeft = false): boolean {
-  if (pinsLeftStanding.length === 0 || pinsLeftStanding.includes(1)) return false;
-  const lightPins = isLeft ? [3, 6, 9, 10] : [2, 4, 5, 7, 8];
-  const highPins = isLeft ? [2, 4, 5, 7, 8] : [3, 6, 9, 10];
-  return pinsLeftStanding.some((p) => lightPins.includes(p)) && !pinsLeftStanding.some((p) => highPins.includes(p));
+/** Each pin's mirror image across the deck's centre line: 2↔3, 4↔6, 7↔10, 8↔9. */
+const MIRRORED_PIN: Record<number, number> = { 1: 1, 2: 3, 3: 2, 4: 6, 5: 5, 6: 4, 7: 10, 8: 9, 9: 8, 10: 7 };
+
+/** A leave as a right-hander would see it, so one rule classifies both hands. */
+function toRightHandedLeave(pinsLeftStanding: number[], isLeft: boolean): number[] {
+  return isLeft ? pinsLeftStanding.map((p) => MIRRORED_PIN[p] ?? p) : pinsLeftStanding;
 }
 
 /**
- * High hit: the ball crossed over the head pin's far side and left pins on the other
- * side of the deck (3-6-9-10 for a righty, 2-4-5-7-8 for a lefty).
+ * Light hit: the ball deflected off the pocket and failed to carry through the middle of the
+ * deck, leaving the 2, 5 or 8 (5, 8, 2-8, 5-7, 8-10, the 2-4-5-8 bucket). Right-handed pins;
+ * mirrored for a lefty (3, 5, 9). A lone corner pin is not counted here: that is a carry
+ * problem reported by `isCornerPinLeave`, not a sign of where the ball hit.
+ */
+export function isLightLeave(pinsLeftStanding: number[], isLeft = false): boolean {
+  const pins = toRightHandedLeave(pinsLeftStanding, isLeft);
+  if (pins.length === 0 || pins.includes(1)) return false;
+  return pins.some((p) => p === 2 || p === 5 || p === 8);
+}
+
+/**
+ * High hit: the ball drove too much into the head pin and the pins on the far side did not
+ * carry, leaving the 4 or 7 (4, 4-7, 4-9, 6-7, 7-10, 4-7-10, 4-6-7-10). Right-handed pins;
+ * mirrored for a lefty (6 or 10). Exclusive with a light leave, so the bucket stays light.
  */
 export function isHighLeave(pinsLeftStanding: number[], isLeft = false): boolean {
-  return isLightLeave(pinsLeftStanding, !isLeft);
+  const pins = toRightHandedLeave(pinsLeftStanding, isLeft);
+  if (pins.length === 0 || pins.includes(1) || isLightLeave(pins)) return false;
+  return pins.some((p) => p === 4 || p === 7);
 }
 
 /**

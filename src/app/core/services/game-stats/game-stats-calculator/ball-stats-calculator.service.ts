@@ -190,10 +190,13 @@ export class BallStatsCalculatorService {
       const throwBallStrikes = new Map<string, number>(); // ballName -> strike count in this game
       const throwBallCounts = new Map<string, number>(); // ballName -> first-ball count in this game
       let hasThrowLevelBalls = false;
+      // Balls left on the throws of a game that switched to game-level tracking were replaced
+      // by its selection, so only a throw-tracked game's throws count.
+      const isThrowTracked = getBallTracking(game) === 'throw';
 
       game.frames.forEach((frame, frameIndex) => {
         frame.throws.forEach((throwData, throwIndex) => {
-          if (!throwData.ball) return;
+          if (!isThrowTracked || !throwData.ball) return;
           hasThrowLevelBalls = true;
           const ball = this.formatBallDisplayName(formatThrowBall(throwData.ball));
           if (!ball) return;
