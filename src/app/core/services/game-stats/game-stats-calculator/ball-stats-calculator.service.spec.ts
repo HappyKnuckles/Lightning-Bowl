@@ -1,3 +1,4 @@
+import { BALL_PLACEHOLDER_IMAGE } from 'src/app/core/utils/ball-utils/ball-image.utils';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Ball } from 'src/app/core/models/ball.model';
@@ -87,18 +88,18 @@ describe('BallStatsCalculatorService', () => {
       expect(calculator.calculateAllBallStats(games)[0].strikeRate).toBe(17);
     });
 
-    it('attaches the ball image from the store', () => {
-      allBalls.set([makeBall({ ball_name: 'Hammer', ball_image: 'hammer.png' })]);
+    it('attaches the ball image from the store as an absolute URL', () => {
+      allBalls.set([makeBall({ ball_name: 'Hammer', ball_image: '/hammer.png' })]);
 
       const stats = calculator.calculateAllBallStats([makeGame({ totalScore: 200, balls: ['Hammer'] })]);
 
-      expect(stats[0].image).toBe('hammer.png');
+      expect(stats[0].image).toBe('https://bowwwl.com/hammer.png');
     });
 
-    it('falls back to an empty image for an unknown ball', () => {
+    it('falls back to the placeholder image for an unknown ball', () => {
       const stats = calculator.calculateAllBallStats([makeGame({ totalScore: 200, balls: ['Unknown'] })]);
 
-      expect(stats[0].image).toBe('');
+      expect(stats[0].image).toBe(BALL_PLACEHOLDER_IMAGE);
     });
   });
 

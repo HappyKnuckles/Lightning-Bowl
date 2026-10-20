@@ -1,3 +1,4 @@
+import { BallImagePipe } from 'src/app/shared/pipes/ball-image-pipe/ball-image.pipe';
 import { Component, ElementRef, Signal, ViewChild, computed, effect, model, signal, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ImpactStyle } from '@capacitor/haptics';
@@ -55,7 +56,7 @@ import { TypeaheadConfigService } from 'src/app/core/services/typeahead-config/t
   templateUrl: './arsenal.page.html',
   styleUrls: ['./arsenal.page.scss'],
   providers: [ModalController],
-  imports: [
+  imports: [BallImagePipe, 
     IonRippleEffect,
     IonListHeader,
     IonSegmentButton,

@@ -1,3 +1,4 @@
+import { BallImagePipe } from 'src/app/shared/pipes/ball-image-pipe/ball-image.pipe';
 import { Component, computed, effect, ElementRef, inject, model, OnDestroy, signal, ViewChild, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ModalController } from '@ionic/angular';
@@ -54,7 +55,7 @@ interface SavedEntry {
   styleUrls: ['./ball-comparison.page.scss'],
   providers: [ModalController],
   standalone: true,
-  imports: [
+  imports: [BallImagePipe, 
     IonCol,
     IonRow,
     IonGrid,
@@ -87,7 +88,6 @@ interface SavedEntry {
 })
 export class BallComparisonPage implements OnDestroy, OnInit {
   protected readonly ballsStore = inject(BallsStore);
-  protected readonly url = this.ballsStore.url;
   /** Picker list: your known balls plus the current selection (which may come from a search). */
   protected readonly pickerBalls = computed(() => {
     const selectedKeys = new Set(this.selectedBalls().map((b) => `${b.ball_id}-${b.core_weight}`));

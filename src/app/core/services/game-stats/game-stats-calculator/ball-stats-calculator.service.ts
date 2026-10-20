@@ -1,3 +1,4 @@
+import { ballImageUrl } from 'src/app/core/utils/ball-utils/ball-image.utils';
 import { Injectable } from '@angular/core';
 import { Frame, Game } from 'src/app/core/models/game.model';
 import { HighlightItemStats } from 'src/app/core/models/stats.model';
@@ -71,7 +72,7 @@ export class BallStatsCalculatorService {
     const finalStats: Record<string, HighlightItemStats> = {};
     for (const ballName in tempStats) {
       const stats = tempStats[ballName];
-      const ballImage = this.ballsStore.findKnownBall(ballName)?.ball_image || '';
+      const ballImage = ballImageUrl(this.ballsStore.findKnownBall(ballName), 'ball');
       const totalPossibleStrikes = stats.gameCount * 12;
       const strikeRate = totalPossibleStrikes > 0 ? Math.round((stats.totalStrikes / totalPossibleStrikes) * 100) : 0;
 

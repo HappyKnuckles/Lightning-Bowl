@@ -1,6 +1,6 @@
 import { Ball, Brand, Core, Coverstock } from 'src/app/core/models/ball.model';
 import { TypeaheadConfig } from '../../models/typeahead-config.model';
-import { BOWWWL_URL } from '../../constants/app.constants';
+import { ballImageUrl } from '../../utils/ball-utils/ball-image.utils';
 
 export const BALL_BRAND_TYPEAHEAD_CONFIG: TypeaheadConfig<Brand> = {
   title: 'Select Brands',
@@ -79,7 +79,7 @@ export function createBallTypeaheadConfig(searchFn: (term: string) => Promise<Ba
     searchMode: 'api',
     apiSearchFn: async (term: string) => ({ items: await searchFn(term) }),
     showImages: true,
-    imageUrlGenerator: (ball: Ball) => BOWWWL_URL + ball.thumbnail_image,
+    imageUrlGenerator: (ball: Ball) => ballImageUrl(ball),
     customDisplayFormatter: (item: Ball, fieldKey: string) => {
       if (fieldKey === 'brand_name_with_date') {
         return `${item.brand_name} (${item.release_date})`;

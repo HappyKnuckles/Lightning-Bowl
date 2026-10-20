@@ -1,3 +1,4 @@
+import { BallImagePipe } from 'src/app/shared/pipes/ball-image-pipe/ball-image.pipe';
 import { ChangeDetectionStrategy, Component, computed, OnInit, Signal, signal, untracked, ViewChild } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
@@ -65,7 +66,7 @@ import { BowlingRefresherComponent } from 'src/app/shared/components/bowling-ref
   templateUrl: './balls.page.html',
   styleUrls: ['./balls.page.scss'],
   providers: [ModalController],
-  imports: [
+  imports: [BallImagePipe, 
     IonRefresher,
     IonSkeletonText,
     BowlingRefresherComponent,
