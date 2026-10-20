@@ -234,9 +234,7 @@ export class GameComponent implements OnInit {
     this.presentingElement = document.querySelector('.ion-page')!;
   }
 
-  /** Keeps `detailsOpen` in sync when the user opens or closes "Game Details". */
   onDetailsToggle(event: AccordionGroupCustomEvent): void {
-    // ionChange bubbles, so the checkbox, selects and textarea inside the accordion fire here too
     if (event.target !== event.currentTarget) return;
     this.detailsOpen.set(event.detail.value === GameComponent.DETAILS_ACCORDION);
   }
