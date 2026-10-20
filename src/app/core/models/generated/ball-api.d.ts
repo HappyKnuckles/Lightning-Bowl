@@ -205,11 +205,11 @@ export interface components {
       us_int: string | null;
       /** @description Release date (YYYY-MM-DD), null if unknown. */
       release_date: string | null;
-      /** @description Image URL. */
+      /** @description Absolute image URL, null if bowwwl.com has none. */
       ball_image: string | null;
-      /** @description Image URL. */
+      /** @description Absolute image URL, null if bowwwl.com has none. */
       core_image: string | null;
-      /** @description Image URL. */
+      /** @description Absolute image URL, null if bowwwl.com has none. */
       thumbnail_image: string | null;
       /** @description When bowwwl.com last changed the ball, as it reports it. */
       last_update: string | null;
@@ -235,7 +235,7 @@ export interface components {
     Brand: {
       id: string;
       brand_name: string;
-      /** @description Logo URL. */
+      /** @description Absolute logo URL, null if there is none. */
       logo: string | null;
     };
     BrandPage: {
