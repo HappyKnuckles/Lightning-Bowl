@@ -29,20 +29,14 @@ export class BallSortService {
   /** Shown first in the sort menu while a search is active. */
   readonly BEST_MATCH_OPTION: BallSortOption = { field: BallSortField.RELEVANCE, direction: SortDirection.DESC, label: 'Best Match' };
 
+  /** Sorts the given balls; with `favoritesFirst`, the favorites among them come first. */
   sortBalls(balls: Ball[], sortOption: BallSortOption, favoritesFirst = false): Ball[] {
-    if (favoritesFirst) {
-      const favoriteBalls = this.favoritesService.getFavoriteBalls();
-      const favoriteKeys = new Set(favoriteBalls.map((b) => `${b.ball_id}-${b.core_weight}`));
+    const sorted = this.applySortToBalls([...balls], sortOption);
+    if (!favoritesFirst) return sorted;
 
-      const nonFavoriteBalls = balls.filter((b) => !favoriteKeys.has(`${b.ball_id}-${b.core_weight}`));
-
-      const sortedFavorites = this.applySortToBalls([...favoriteBalls], sortOption);
-      const sortedNonFavorites = this.applySortToBalls([...nonFavoriteBalls], sortOption);
-
-      return [...sortedFavorites, ...sortedNonFavorites];
-    }
-
-    return this.applySortToBalls([...balls], sortOption);
+    const favoriteKeys = new Set(this.favoritesService.getFavoriteBalls().map((b) => `${b.ball_id}-${b.core_weight}`));
+    const isFavorite = (b: Ball) => favoriteKeys.has(`${b.ball_id}-${b.core_weight}`);
+    return [...sorted.filter(isFavorite), ...sorted.filter((b) => !isFavorite(b))];
   }
 
   private applySortToBalls(balls: Ball[], sortOption: BallSortOption): Ball[] {
@@ -57,8 +51,8 @@ export class BallSortService {
 
       // Handle numeric fields
       if (field === BallSortField.CORE_RG || field === BallSortField.CORE_DIFF || field === BallSortField.CORE_INT_DIFF) {
-        aValue = parseFloat(String(aValue)) || 0;
-        bValue = parseFloat(String(bValue)) || 0;
+        aValue = a[field] ?? 0;
+        bValue = b[field] ?? 0;
       }
       // Handle date fields
       else if (field === BallSortField.RELEASE_DATE) {

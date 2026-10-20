@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, OnInit, Signal, signal, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, OnInit, Signal, signal, untracked, ViewChild } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -159,6 +159,9 @@ export class BallsPage implements OnInit {
     // Only matters for the "only arsenal balls" filter; otherwise adding a ball
     // to the arsenal would reload the list.
     arsenal: this.ballFilterService.filters().inArsenal ? this.ballsStore.arsenal() : null,
+    // The favorites themselves are read when the request is made, so that
+    // (un)favoriting a ball doesn't reload the list.
+    favoritesFirst: this.favoritesFirst(),
     online: this.isOnline(),
   }));
 
@@ -195,20 +198,16 @@ export class BallsPage implements OnInit {
     return this.searchTerm().trim() === '' && this.offlineDisplayCount() < this.offlineResult().length;
   });
 
-  // Online, the API already searched and sorted (Best Match = relevance order);
-  // re-sorting locally only pulls favorites to the top. Offline, the known
-  // balls are sorted here.
+  // Online, the API already searched, sorted (Best Match = relevance order)
+  // and put favorites first. Offline, the known balls are sorted here.
   displayedBalls: Signal<Ball[]> = computed(() => {
-    const bestMatch = this.currentSortOption().field === BallSortField.RELEVANCE;
-
     if (this.isOnline()) {
-      const balls = this.balls();
-      return !bestMatch && this.favoritesFirst() ? this.sortService.sortBalls(balls, this.currentSortOption(), true) : balls;
+      return this.balls();
     }
 
     const result = this.offlineResult();
     const visible = this.searchTerm().trim() !== '' ? result : result.slice(0, this.offlineDisplayCount());
-    return bestMatch ? visible : this.sortService.sortBalls(visible, this.currentSortOption(), this.favoritesFirst());
+    return this.sortService.sortBalls(visible, this.currentSortOption(), this.favoritesFirst());
   });
 
   constructor(
@@ -564,6 +563,7 @@ export class BallsPage implements OnInit {
       search: this.searchTerm(),
       sort: this.currentSortOption(),
       arsenalIds: this.ballsStore.arsenal().map((ball) => ball.ball_id),
+      favorites: this.favoritesFirst() ? [...untracked(() => this.favoritesService.favoriteBalls()).keys()] : [],
       page,
       size: BALL_PAGE_SIZE,
     });

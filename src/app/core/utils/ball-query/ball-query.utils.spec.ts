@@ -29,6 +29,7 @@ const build = (overrides: Partial<BallQueryInput> = {}, filters: Partial<BallFil
     search: '',
     sort: newestFirst,
     arsenalIds: [],
+    favorites: [],
     page: 0,
     size: 50,
     ...overrides,
@@ -86,6 +87,11 @@ describe('buildBallQueryParams', () => {
 
   it('matches nothing when the arsenal filter is on and the arsenal is empty', () => {
     expect(build({}, { inArsenal: true })['id']).toEqual(['__none__']);
+  });
+
+  it('sends favorites so the API lists them first, and nothing without them', () => {
+    expect(build({ favorites: ['1-15', '2-14'] })['favorite']).toEqual(['1-15', '2-14']);
+    expect(build()['favorite']).toBeUndefined();
   });
 
   it('sends no sort for Best Match, so search results come back by relevance', () => {

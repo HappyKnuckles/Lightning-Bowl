@@ -6,6 +6,8 @@ export interface BallQueryInput {
   /** Ball ids in the user's arsenal, used for the "only arsenal balls" filter. */
   arsenalIds: string[];
   defaultFilters: BallFilter;
+  /** `ballId-coreWeight` keys of favorites to list first; empty for the regular order. */
+  favorites: string[];
   filters: BallFilter;
   page: number;
   search: string;
@@ -19,6 +21,7 @@ export interface BallQueryInput {
  * - The weight filter always applies, so the list matches the offline catalog.
  * - Spec ranges are only sent when changed from their defaults, so balls with
  *   missing specs aren't hidden by an untouched slider.
+ * - Favorites are sent as `favorite`, so the API lists them first.
  * - "Best Match" sends no sort, so the API orders search results by
  *   relevance; any other sort is sent and orders all matches.
  */
@@ -54,6 +57,9 @@ export function buildBallQueryParams(input: BallQueryInput): BallQueryParams {
     // An empty arsenal must match nothing, not everything.
     set('id', input.arsenalIds.length > 0 ? [...new Set(input.arsenalIds)] : ['__none__']);
   }
+
+  // Favorites first is ranked by the API, so it holds across pages.
+  set('favorite', input.favorites);
 
   const search = input.search.trim();
   if (search) set('search', search);

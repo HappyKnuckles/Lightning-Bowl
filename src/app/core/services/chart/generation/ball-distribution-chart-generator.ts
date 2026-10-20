@@ -33,9 +33,9 @@ export function generateBallDistributionChart(
     const dataPoints: (ScatterDataPoint & { name: string; imageUrl: string; cover: string })[] = [];
     const pointImages: HTMLImageElement[] = [];
     for (const ball of balls) {
-      const xRaw = parseFloat(ball.core_diff ?? '');
-      const yRaw = parseFloat(ball.core_rg ?? '');
-      if (isNaN(xRaw) || isNaN(yRaw)) {
+      const xRaw = ball.core_diff;
+      const yRaw = ball.core_rg;
+      if (xRaw === null || yRaw === null) {
         console.warn(`Skipping invalid RG/Diff for ${ball.ball_name}`);
         continue;
       }

@@ -176,39 +176,50 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
-    /** @description A ball in one weight, as bowwwl.com describes it, plus catalog metadata. */
+    /** @description A ball in one weight. */
     Ball: {
       ball_id: string;
       ball_name: string;
-      /** @description Weight in lbs, e.g. "15". A ball exists once per weight. */
+      /** @description Weight in lbs as bowwwl.com spells it, e.g. "15". A ball exists once per weight; `ball_id` + `core_weight` identify it. */
       core_weight: string;
-      /** @description "Available" or a discontinued state. */
-      availability: string | null;
-      ball_image: string | null;
       brand_id: string | null;
       brand_name: string | null;
-      core_diff: string | null;
       core_id: string | null;
-      core_image: string | null;
-      core_int_diff: string | null;
       core_name: string | null;
-      core_rg: string | null;
+      /** @description "Symmetric" or "Asymmetric". */
       core_type: string | null;
+      /** @description Core RG, null if unknown. */
+      core_rg: number | null;
+      /** @description Core differential, null if unknown. */
+      core_diff: number | null;
+      /** @description Intermediate differential, null if unknown. */
+      core_int_diff: number | null;
       coverstock_id: string | null;
       coverstock_name: string | null;
+      /** @description E.g. "Solid Reactive". */
       coverstock_type: string | null;
       factory_finish: string | null;
-      last_update: string | null;
-      release_date: string | null;
-      thumbnail_image: string | null;
+      /** @description "Available" or a discontinued state. */
+      availability: string | null;
       /** @description "US" or "Overseas". */
       us_int: string | null;
-      /** @description When this ball first appeared in the catalog (ISO timestamp). */
+      /** @description Release date (YYYY-MM-DD), null if unknown. */
+      release_date: string | null;
+      /** @description Image URL. */
+      ball_image: string | null;
+      /** @description Image URL. */
+      core_image: string | null;
+      /** @description Image URL. */
+      thumbnail_image: string | null;
+      /** @description When bowwwl.com last changed the ball, as it reports it. */
+      last_update: string | null;
+      /**
+       * Format: date-time
+       * @description When this ball first appeared in the catalog.
+       */
       first_seen_at: string;
       /** @description Only on `GET /balls/{id}`: when the ball disappeared upstream, or null. */
       removed_at?: string | null;
-    } & {
-      [key: string]: unknown;
     };
     /** @description One page of balls (Spring `PagedModel` shape). */
     BallPage: {
@@ -224,9 +235,8 @@ export interface components {
     Brand: {
       id: string;
       brand_name: string;
-      logo?: string | null;
-    } & {
-      [key: string]: unknown;
+      /** @description Logo URL. */
+      logo: string | null;
     };
     BrandPage: {
       content: components['schemas']['Brand'][];
@@ -235,10 +245,8 @@ export interface components {
     Core: {
       id: string;
       core_name: string;
+      /** @description Brand name. */
       brand: string | null;
-      api_filter_url?: string | null;
-    } & {
-      [key: string]: unknown;
     };
     CorePage: {
       content: components['schemas']['Core'][];
@@ -247,10 +255,8 @@ export interface components {
     Coverstock: {
       id: string;
       coverstock_name: string;
+      /** @description Brand name. */
       brand: string | null;
-      api_filter_url?: string | null;
-    } & {
-      [key: string]: unknown;
     };
     CoverstockPage: {
       content: components['schemas']['Coverstock'][];
@@ -336,7 +342,7 @@ export interface operations {
         coreType?: 'Symmetric' | 'Asymmetric';
         /** @description `true`: only available balls, `false`: only discontinued ones. */
         available?: '0' | '1' | 'true' | 'false';
-        /** @description Exact release date as the API returns it. */
+        /** @description Released on exactly this date (YYYY-MM-DD) */
         releaseDate?: string;
         /** @description Released on or after this date (YYYY-MM-DD) */
         releasedAfter?: string;
@@ -356,6 +362,8 @@ export interface operations {
         minIntDiff?: number;
         /** @description Maximum intermediate differential. */
         maxIntDiff?: number;
+        /** @description Favorites to list first: ball ids (every weight) or `id-weight` keys such as `1234-15`. Does not filter; within favorites and within the rest, `sort` (or relevance) applies. Repeat the parameter for several values. */
+        favorite?: string[];
         /** @description Sort order as `field` or `field,asc|desc`. Repeat for tie-breakers. Fields: ball_name, brand_name, release_date, first_seen_at, core_rg, core_diff, core_int_diff, core_type, coverstock_type, factory_finish, weight. */
         sort?: string[];
         /** @description Zero-based page number. */

@@ -77,11 +77,11 @@ export class BallFilterService {
         (filters.coreType === CoreType.ALL || filters.coreType === ball.core_type) &&
         (!filters.availability || ball.availability === 'Available') &&
         (filters.releaseDate === 'all' || filters.releaseDate === ball.release_date) &&
-        // Missing specs parse to NaN and fail the range checks, as before.
-        filters.minRg <= parseFloat(ball.core_rg ?? '') &&
-        filters.maxRg >= parseFloat(ball.core_rg ?? '') &&
-        filters.minDiff <= parseFloat(ball.core_diff ?? '') &&
-        filters.maxDiff >= parseFloat(ball.core_diff ?? '') &&
+        // Missing specs become NaN and fail the range checks, as before.
+        filters.minRg <= (ball.core_rg ?? NaN) &&
+        filters.maxRg >= (ball.core_rg ?? NaN) &&
+        filters.minDiff <= (ball.core_diff ?? NaN) &&
+        filters.maxDiff >= (ball.core_diff ?? NaN) &&
         (!filters.inArsenal || this.ballsStore.arsenal().some((arsenalBall) => arsenalBall.ball_id === ball.ball_id))
       );
     });
