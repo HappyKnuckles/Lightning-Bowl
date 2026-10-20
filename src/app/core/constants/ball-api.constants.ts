@@ -1,11 +1,16 @@
-/** Paths on the ball API (relative to `environment.ballApiEndpoint`). */
+/**
+ * Paths on the ball API (relative to `environment.ballApiEndpoint`).
+ *
+ * Points at the bowwwl proxy's query API (lightningbowl-bowwwl-proxy#27), which
+ * names two endpoints differently from the standalone ball API.
+ */
 export const BALL_API = {
   /** Searchable, filterable, sortable, paged list. */
   balls: 'balls',
   /** One ball in all its weights (or one weight with `weight`). */
-  ball: (ballId: string) => ({ path: `balls/${encodeURIComponent(ballId)}`, params: {} as Record<string, string> }),
+  ball: (ballId: string) => ({ path: 'ball', params: { id: ballId } as Record<string, string> }),
   /** Balls with a similar expected reaction to the given ball. */
-  similar: (ballId: string) => ({ path: `balls/${encodeURIComponent(ballId)}/similar`, params: {} as Record<string, string> }),
+  similar: (ballId: string) => ({ path: 'similar-balls', params: { ballId } as Record<string, string> }),
   brands: 'brands',
   cores: 'cores',
   coverstocks: 'coverstocks',
