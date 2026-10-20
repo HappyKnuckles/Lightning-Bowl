@@ -1,7 +1,11 @@
-import { computed, Injectable, Signal, signal } from '@angular/core';
+import { computed, inject, Injectable, Signal, signal } from '@angular/core';
 import { Ball } from 'src/app/core/models/ball.model';
 import { BallFilter, CoreType, CoverstockType, Market } from 'src/app/core/models/filter.model';
+import { BallSortField, SortDirection } from 'src/app/core/models/sort.model';
 import { BallsStore } from 'src/app/core/stores/balls.store';
+import { buildBallQueryParams } from 'src/app/core/utils/ball-query/ball-query.utils';
+import { BallService } from '../ball/ball.service';
+import { NetworkService } from '../network/network.service';
 import { UtilsService } from '../../utils/utils.service';
 
 @Injectable({
@@ -52,10 +56,41 @@ export class BallFilterService {
     return this.filterBalls(balls, filters);
   });
 
+  readonly #ballService = inject(BallService);
+  readonly #networkService = inject(NetworkService);
+
   constructor(
     private utilsService: UtilsService,
     private ballsStore: BallsStore,
   ) {}
+
+  /**
+   * How many balls match the filters: the whole catalog via the ball API when
+   * online (one-ball page, only `totalElements` is used), the known balls
+   * offline or when the request fails.
+   */
+  async countMatches(filters: BallFilter): Promise<number> {
+    if (this.#networkService.isOnline) {
+      try {
+        const params = buildBallQueryParams({
+          filters,
+          defaultFilters: this.defaultFilters,
+          favorites: [],
+          search: '',
+          // The order doesn't change the count; relevance sends no sort.
+          sort: { field: BallSortField.RELEVANCE, direction: SortDirection.DESC, label: '' },
+          arsenalIds: this.ballsStore.arsenal().map((ball) => ball.ball_id),
+          page: 0,
+          size: 1,
+        });
+        const page = await this.#ballService.searchBalls(params);
+        return page.page.totalElements;
+      } catch (error) {
+        console.error('Error counting balls:', error);
+      }
+    }
+    return this.filterBalls(this.ballsStore.knownBalls(), filters).length;
+  }
 
   saveFilters(): void {
     localStorage.setItem('ball-filter', JSON.stringify(this.filters()));

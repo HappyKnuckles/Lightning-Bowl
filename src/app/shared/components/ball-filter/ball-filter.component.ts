@@ -1,4 +1,5 @@
-import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit } from '@angular/core';
+import { Component, CUSTOM_ELEMENTS_SCHEMA, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import {
   IonButton,
@@ -26,6 +27,7 @@ import { BallService } from 'src/app/core/services/ball/ball.service';
 import { GenericTypeaheadComponent } from '../generic-typeahead/generic-typeahead.component';
 import { TypeaheadConfig } from 'src/app/core/models/typeahead-config.model';
 import { TypeaheadConfigService } from 'src/app/core/services/typeahead-config/typeahead-config.service';
+import { debounceTime, switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-ball-filter',
@@ -64,6 +66,8 @@ export class BallFilterComponent implements OnInit {
   brandTypeaheadConfig: TypeaheadConfig<Brand> = this.typeaheadConfigService.brand;
   coreTypeaheadConfig: TypeaheadConfig<Core> = this.typeaheadConfigService.core;
   coverstockTypeaheadConfig: TypeaheadConfig<Coverstock> = this.typeaheadConfigService.coverstock;
+  /** Balls matching the current filters, shown on the confirm button; null until the first count. */
+  readonly matchCount = signal<number | null>(null);
 
   constructor(
     public ballFilterService: BallFilterService,
@@ -71,7 +75,17 @@ export class BallFilterComponent implements OnInit {
     public ballService: BallService,
     private analyticsService: AnalyticsService,
     private typeaheadConfigService: TypeaheadConfigService,
-  ) {}
+  ) {
+    // Online the count comes from the ball API, so changes are debounced and
+    // only the latest request counts.
+    toObservable(this.ballFilterService.filters)
+      .pipe(
+        debounceTime(250),
+        switchMap((filters) => this.ballFilterService.countMatches(filters)),
+        takeUntilDestroyed(),
+      )
+      .subscribe((count) => this.matchCount.set(count));
+  }
 
   ngOnInit() {
     this.presentingElement = document.querySelector('.ion-page');
