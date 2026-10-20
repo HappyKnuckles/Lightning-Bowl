@@ -19,15 +19,17 @@ import {
   IonToolbar,
   ModalController,
 } from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import { chevronExpandOutline } from 'ionicons/icons';
+import { debounceTime, switchMap } from 'rxjs';
 import { Brand, Core, Coverstock } from 'src/app/core/models/ball.model';
 import { BallFilter, CoreType, CoverstockType, Market } from 'src/app/core/models/filter.model';
+import { TypeaheadConfig } from 'src/app/core/models/typeahead-config.model';
 import { AnalyticsService } from 'src/app/core/services/analytics/analytics.service';
 import { BallFilterService } from 'src/app/core/services/ball-filter/ball-filter.service';
 import { BallService } from 'src/app/core/services/ball/ball.service';
-import { GenericTypeaheadComponent } from '../generic-typeahead/generic-typeahead.component';
-import { TypeaheadConfig } from 'src/app/core/models/typeahead-config.model';
 import { TypeaheadConfigService } from 'src/app/core/services/typeahead-config/typeahead-config.service';
-import { debounceTime, switchMap } from 'rxjs';
+import { GenericTypeaheadComponent } from '../generic-typeahead/generic-typeahead.component';
 
 @Component({
   selector: 'app-ball-filter',
@@ -76,8 +78,7 @@ export class BallFilterComponent implements OnInit {
     private analyticsService: AnalyticsService,
     private typeaheadConfigService: TypeaheadConfigService,
   ) {
-    // Online the count comes from the ball API, so changes are debounced and
-    // only the latest request counts.
+    addIcons({ chevronExpandOutline });
     toObservable(this.ballFilterService.filters)
       .pipe(
         debounceTime(250),

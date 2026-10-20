@@ -26,6 +26,7 @@ import {
 import { addIcons } from 'ionicons';
 import {
   bowlingBallOutline,
+  chevronExpandOutline,
   cloudDownloadOutline,
   cloudUploadOutline,
   createOutline,
@@ -296,6 +297,7 @@ export class GameListComponent implements OnInit {
       cloudDownloadOutline,
       filterOutline,
       layersOutline,
+      chevronExpandOutline,
     });
   }
 
