@@ -241,6 +241,13 @@ export class ArsenalPage implements OnInit {
     this.openBallKey.set(ball.ball_id + ball.core_weight);
   }
 
+  // The segment's initial value doesn't move the segment view, so jump it to the selected tab once the modal is shown.
+  async syncDetailSegmentView(event: Event): Promise<void> {
+    const view = (event.target as HTMLElement).querySelector('ion-segment-view');
+    const contentId = this.detailSegment() === 'drilling' ? 'ball-drilling' : 'ball-detail';
+    await view?.setContent(contentId, false);
+  }
+
   closeBallDetail(): void {
     this.openBallKey.set(null);
   }
