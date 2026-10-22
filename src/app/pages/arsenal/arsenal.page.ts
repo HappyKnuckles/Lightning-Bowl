@@ -50,7 +50,7 @@ import {
   parseInches,
   parsePapVertical,
 } from 'src/app/core/utils/drill-utils/drill.utils';
-import { InchesPipe, LayoutPipe } from 'src/app/shared/pipes/drill-pipes/drill.pipes';
+import { HoleSizesPipe, InchesPipe, LayoutPipe } from 'src/app/shared/pipes/drill-pipes/drill.pipes';
 import { BallService } from 'src/app/core/services/ball/ball.service';
 import { ChartGenerationService } from 'src/app/core/services/chart/chart-generation.service';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
@@ -105,6 +105,7 @@ import { TypeaheadConfigService } from 'src/app/core/services/typeahead-config/t
     IonInput,
     InchesPipe,
     LayoutPipe,
+    HoleSizesPipe,
   ],
 })
 export class ArsenalPage implements OnInit {
@@ -128,6 +129,8 @@ export class ArsenalPage implements OnInit {
   readonly layoutSystems = Object.entries(LAYOUT_SYSTEM_LABELS) as [LayoutSystem, string][];
   readonly gripStyles = Object.entries(GRIP_STYLE_LABELS) as [GripStyle, string][];
   readonly detailSegment = signal<'ball' | 'drilling'>('ball');
+  // key (ball_id + core_weight) of the ball whose detail modal is open
+  readonly openBallKey = signal<string | null>(null);
   readonly isFitModalOpen = signal(false);
   readonly fitForm = signal<FitForm>(emptyFitForm());
   // two-handers don't use a thumb hole, so the ball drilling hides thumb fields
@@ -228,6 +231,36 @@ export class ArsenalPage implements OnInit {
     if (failed.length) {
       this.toastService.showToast(`Failed to add: ${failed.map((b) => b.ball_name).join(', ')}.`, 'bug', true);
     }
+    if (saved.length) {
+      await this.promptForDrilling(saved);
+    }
+  }
+
+  openBallDetail(ball: Ball, segment: 'ball' | 'drilling' = 'ball'): void {
+    this.detailSegment.set(segment);
+    this.openBallKey.set(ball.ball_id + ball.core_weight);
+  }
+
+  closeBallDetail(): void {
+    this.openBallKey.set(null);
+  }
+
+  // Right after adding is when the bowler has the drill sheet at hand, so offer to fill it in.
+  private async promptForDrilling(added: Ball[]): Promise<void> {
+    const [first] = added;
+    const others = added.length - 1;
+    const alert = await this.alertController.create({
+      header: 'Add drilling?',
+      message:
+        others > 0
+          ? `Add the layout and hole sizes for ${first.ball_name} now? The other ${others === 1 ? 'ball' : `${others} balls`} can be filled in from their Drilling tab later.`
+          : `Add the layout and hole sizes for ${first.ball_name} now? You can also do this later from the ball's Drilling tab.`,
+      buttons: [
+        { text: 'Later', role: 'cancel' },
+        { text: 'Add Drilling', handler: () => this.openBallDetail(first, 'drilling') },
+      ],
+    });
+    await alert.present();
   }
 
   onBallSelectionChange(ballIds: string[]): void {

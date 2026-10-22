@@ -1,6 +1,7 @@
 import {
   compact,
   formatBowlerFit,
+  formatHoleSizes,
   formatInches,
   formatLayout,
   formatPap,
@@ -150,6 +151,19 @@ describe('drill utils', () => {
 
     it('keeps zero', () => {
       expect(compact({ papVertical: 0 })).toEqual({ papVertical: 0 });
+    });
+  });
+
+  describe('formatHoleSizes', () => {
+    it('lists the set holes as a compact tag', () => {
+      expect(formatHoleSizes({ thumbSize: 63 / 64, middleFingerSize: 41 / 64, ringFingerSize: 39 / 64 })).toBe('T 63/64 · M 41/64 · R 39/64');
+      expect(formatHoleSizes({ middleFingerSize: 41 / 64 })).toBe('M 41/64');
+    });
+
+    it('leaves out the thumb for two-handers and is empty when nothing is set', () => {
+      expect(formatHoleSizes({ thumbSize: 1, middleFingerSize: 0.625 }, true)).toBe('M 5/8');
+      expect(formatHoleSizes({ layout: { system: 'vls', pinToPap: 5 } })).toBe('');
+      expect(formatHoleSizes(undefined)).toBe('');
     });
   });
 });

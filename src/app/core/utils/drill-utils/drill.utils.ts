@@ -1,4 +1,4 @@
-import { BallLayout, LayoutSystem } from '../../models/ball.model';
+import { BallDrilling, BallLayout, LayoutSystem } from '../../models/ball.model';
 import { BowlerFit, GripStyle } from '../../models/fit.model';
 
 const UNICODE_FRACTIONS: Record<string, string> = {
@@ -142,6 +142,22 @@ export function formatLayout(layout: BallLayout | undefined): string {
     return '';
   }
   return `${inch(pinToPap)} × ${inch(psaToPap)} × ${inch(pinBuffer)}`;
+}
+
+/** Hole sizes as a compact tag: "T 63/64 · M 41/64 · R 39/64"; the thumb is left out for two-handers. */
+export function formatHoleSizes(drilling: BallDrilling | undefined, twoHanded = false): string {
+  if (!drilling) {
+    return '';
+  }
+  const holes: [string, number | undefined][] = [
+    ['T', twoHanded ? undefined : drilling.thumbSize],
+    ['M', drilling.middleFingerSize],
+    ['R', drilling.ringFingerSize],
+  ];
+  return holes
+    .filter(([, size]) => size !== undefined)
+    .map(([label, size]) => `${label} ${formatInches(size)}`)
+    .join(' · ');
 }
 
 /** '5 1/4" over, 3/4" up'; a vertical of 0 is written as 0" (PAP on the midline). */

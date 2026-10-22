@@ -1,7 +1,7 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { BallLayout } from 'src/app/core/models/ball.model';
+import { BallDrilling, BallLayout } from 'src/app/core/models/ball.model';
 import { BowlerFit } from 'src/app/core/models/fit.model';
-import { formatBowlerFit, formatInches, formatLayout, LAYOUT_SYSTEM_LABELS } from 'src/app/core/utils/drill-utils/drill.utils';
+import { formatBowlerFit, formatHoleSizes, formatInches, formatLayout, LAYOUT_SYSTEM_LABELS } from 'src/app/core/utils/drill-utils/drill.utils';
 
 /** 4.5 → '4 1/2"' */
 @Pipe({ name: 'inches', standalone: true })
@@ -29,5 +29,13 @@ export class LayoutPipe implements PipeTransform {
 export class BowlerFitPipe implements PipeTransform {
   transform(fit: BowlerFit | undefined): string {
     return formatBowlerFit(fit);
+  }
+}
+
+/** 'T 63/64 · M 41/64 · R 39/64' */
+@Pipe({ name: 'holeSizes', standalone: true })
+export class HoleSizesPipe implements PipeTransform {
+  transform(drilling: BallDrilling | undefined, twoHanded = false): string {
+    return formatHoleSizes(drilling, twoHanded);
   }
 }

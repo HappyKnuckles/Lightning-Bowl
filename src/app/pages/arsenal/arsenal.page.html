@@ -43,7 +43,7 @@
                     <ion-icon class="title" style="transform: translateY(-2px)" name="trash-outline"></ion-icon>
                   </ion-item-option>
                 </ion-item-options>
-                <ion-item button [id]="ball.ball_id + ball.core_weight">
+                <ion-item button (click)="openBallDetail(ball)">
                   <ion-reorder slot="start">
                     <ion-thumbnail>
                       <ion-img [src]="ballsStore.url + ball.thumbnail_image"></ion-img>
@@ -70,6 +70,9 @@
                       <ion-chip>{{ ball.coverstock_type }}</ion-chip>
                       @if (ball.drilling?.layout | layout; as layoutText) {
                         <ion-chip>{{ layoutText }}</ion-chip>
+                      }
+                      @if (ball.drilling | holeSizes: isTwoHanded(); as holesText) {
+                        <ion-chip>{{ holesText }}</ion-chip>
                       }
                     </div>
                   </ion-label>
@@ -128,7 +131,7 @@
 
 <!-- tracked by key so saving drilling (which replaces the ball object) keeps the open modal alive -->
 @for (ball of ballsStore.arsenal(); track ball.ball_id + ball.core_weight) {
-  <ion-modal [trigger]="ball.ball_id + ball.core_weight" (willPresent)="detailSegment.set('ball')" #modal>
+  <ion-modal [isOpen]="openBallKey() === ball.ball_id + ball.core_weight" (didDismiss)="closeBallDetail()" #modal>
     <ng-template>
       <ion-header [translucent]="true">
         <ion-toolbar>
@@ -329,7 +332,9 @@
             </ion-item>
           </ion-list>
           <ion-text color="medium">
-            <p class="drilling-hint">Sizes in inches, e.g. 4 1/2, 4.5 or 41/64. Your span and PAP are under Ball Fit (hand icon on the arsenal page).</p>
+            <p class="drilling-hint">
+              Sizes in inches, e.g. 4 1/2, 4.5 or 41/64. Your span and PAP are under Ball Fit (hand icon on the arsenal page).
+            </p>
           </ion-text>
         }
       </ion-content>
