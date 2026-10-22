@@ -144,199 +144,202 @@
         </ion-toolbar>
         <ion-toolbar>
           <ion-segment [value]="detailSegment()" (ionChange)="detailSegment.set($event.detail.value === 'drilling' ? 'drilling' : 'ball')">
-            <ion-segment-button value="ball">Ball</ion-segment-button>
-            <ion-segment-button value="drilling">Drilling</ion-segment-button>
+            <ion-segment-button value="ball" contentId="ball-detail">Ball</ion-segment-button>
+            <ion-segment-button value="drilling" contentId="ball-drilling">Drilling</ion-segment-button>
           </ion-segment>
         </ion-toolbar>
       </ion-header>
       <ion-content [fullscreen]="true">
-        @if (detailSegment() === "ball") {
-          <ion-list-header style="margin-bottom: 4px">Coverstock - {{ ball.coverstock_name }}</ion-list-header>
-          <ion-card
-            class="ion-activatable ion-ripple-parent"
-            button
-            (click)="getSameCoverstockBalls(ball)"
-            (keydown.enter)="getSameCoverstockBalls(ball)"
-            (keydown.space)="getSameCoverstockBalls(ball)"
-            tabindex="0"
-            role="button"
-            aria-label="View coverstock balls">
-            <ion-card-content>
-              <div class="coverstock-container">
-                <div class="coverstock-image">
-                  <ion-img [src]="ballsStore.url + ball.thumbnail_image"></ion-img>
-                </div>
-                <div class="info-container">
-                  <ion-text
-                    >Type:&nbsp;
-                    <p class="info">{{ ball.coverstock_type }}</p></ion-text
-                  >
-                  <ion-text
-                    >Factory Finish:&nbsp;
-                    <p class="info">{{ ball.factory_finish }}</p></ion-text
-                  >
-                </div>
-              </div>
-            </ion-card-content>
-            <ion-ripple-effect></ion-ripple-effect>
-          </ion-card>
-          <ion-list-header style="margin-bottom: 4px">Core - {{ ball.core_name }}</ion-list-header>
-          <ion-card
-            class="ion-activatable ion-ripple-parent"
-            button
-            (click)="getSameCoreBalls(ball)"
-            (keydown.enter)="getSameCoreBalls(ball)"
-            (keydown.space)="getSameCoreBalls(ball)"
-            tabindex="0"
-            role="button"
-            aria-label="View core balls">
-            <ion-card-content>
-              <div class="core-container">
-                <div class="core-image">
-                  <ion-img [src]="ballsStore.url + ball.core_image"></ion-img>
-                </div>
-                <div class="info-container">
-                  <ion-text
-                    >Type:&nbsp;
-                    <p class="info">{{ ball.core_type }}</p></ion-text
-                  >
-                  <ion-text
-                    >RG:&nbsp;
-                    <p class="info">{{ ball.core_rg }}</p></ion-text
-                  >
-                  <ion-text
-                    >Diff:&nbsp;
-                    <p class="info">{{ ball.core_diff }}</p></ion-text
-                  >
-                  @if (ball.core_int_diff) {
+        <ion-segment-view>
+          <ion-segment-content id="ball-detail">
+            <ion-list-header style="margin-bottom: 4px">Coverstock - {{ ball.coverstock_name }}</ion-list-header>
+            <ion-card
+              class="ion-activatable ion-ripple-parent"
+              button
+              (click)="getSameCoverstockBalls(ball)"
+              (keydown.enter)="getSameCoverstockBalls(ball)"
+              (keydown.space)="getSameCoverstockBalls(ball)"
+              tabindex="0"
+              role="button"
+              aria-label="View coverstock balls">
+              <ion-card-content>
+                <div class="coverstock-container">
+                  <div class="coverstock-image">
+                    <ion-img [src]="ballsStore.url + ball.thumbnail_image"></ion-img>
+                  </div>
+                  <div class="info-container">
                     <ion-text
-                      >Int. Diff:&nbsp;
-                      <p class="info">{{ ball.core_int_diff }}</p></ion-text
+                      >Type:&nbsp;
+                      <p class="info">{{ ball.coverstock_type }}</p></ion-text
                     >
-                  }
+                    <ion-text
+                      >Factory Finish:&nbsp;
+                      <p class="info">{{ ball.factory_finish }}</p></ion-text
+                    >
+                  </div>
                 </div>
-              </div>
-            </ion-card-content>
-            <ion-ripple-effect></ion-ripple-effect>
-          </ion-card>
-        } @else {
-          <ion-list inset class="drilling-list">
-            <ion-item>
-              <ion-select
-                label="Layout"
-                interface="popover"
-                [value]="ball.drilling?.layout?.system ?? ''"
-                (ionChange)="onLayoutSystemChange(ball, $event.detail.value)">
-                <ion-select-option value="">None</ion-select-option>
-                @for (system of layoutSystems; track system[0]) {
-                  <ion-select-option [value]="system[0]">{{ system[1] }}</ion-select-option>
+              </ion-card-content>
+              <ion-ripple-effect></ion-ripple-effect>
+            </ion-card>
+            <ion-list-header style="margin-bottom: 4px">Core - {{ ball.core_name }}</ion-list-header>
+            <ion-card
+              class="ion-activatable ion-ripple-parent"
+              button
+              (click)="getSameCoreBalls(ball)"
+              (keydown.enter)="getSameCoreBalls(ball)"
+              (keydown.space)="getSameCoreBalls(ball)"
+              tabindex="0"
+              role="button"
+              aria-label="View core balls">
+              <ion-card-content>
+                <div class="core-container">
+                  <div class="core-image">
+                    <ion-img [src]="ballsStore.url + ball.core_image"></ion-img>
+                  </div>
+                  <div class="info-container">
+                    <ion-text
+                      >Type:&nbsp;
+                      <p class="info">{{ ball.core_type }}</p></ion-text
+                    >
+                    <ion-text
+                      >RG:&nbsp;
+                      <p class="info">{{ ball.core_rg }}</p></ion-text
+                    >
+                    <ion-text
+                      >Diff:&nbsp;
+                      <p class="info">{{ ball.core_diff }}</p></ion-text
+                    >
+                    @if (ball.core_int_diff) {
+                      <ion-text
+                        >Int. Diff:&nbsp;
+                        <p class="info">{{ ball.core_int_diff }}</p></ion-text
+                      >
+                    }
+                  </div>
+                </div>
+              </ion-card-content>
+              <ion-ripple-effect></ion-ripple-effect>
+            </ion-card>
+          </ion-segment-content>
+          <ion-segment-content id="ball-drilling">
+            <ion-list inset class="drilling-list">
+              <ion-item>
+                <ion-select
+                  label="Layout"
+                  interface="popover"
+                  [value]="ball.drilling?.layout?.system ?? ''"
+                  (ionChange)="onLayoutSystemChange(ball, $event.detail.value)">
+                  <ion-select-option value="">None</ion-select-option>
+                  @for (system of layoutSystems; track system[0]) {
+                    <ion-select-option [value]="system[0]">{{ system[1] }}</ion-select-option>
+                  }
+                </ion-select>
+              </ion-item>
+              @if (ball.drilling?.layout; as layout) {
+                @if (layout.system === "dual-angle") {
+                  <ion-item>
+                    <ion-input
+                      class="ion-text-right"
+                      label="Drilling Angle"
+                      placeholder="45°"
+                      [value]="layout.drillingAngle"
+                      (ionChange)="onLayoutValueChange(ball, 'drillingAngle', $event.detail.value)"></ion-input>
+                  </ion-item>
+                  <ion-item>
+                    <ion-input
+                      class="ion-text-right"
+                      label="Pin to PAP"
+                      placeholder='4 1/2"'
+                      [value]="layout.pinToPap | inches"
+                      (ionChange)="onLayoutValueChange(ball, 'pinToPap', $event.detail.value)"></ion-input>
+                  </ion-item>
+                  <ion-item>
+                    <ion-input
+                      class="ion-text-right"
+                      label="VAL Angle"
+                      placeholder="30°"
+                      [value]="layout.valAngle"
+                      (ionChange)="onLayoutValueChange(ball, 'valAngle', $event.detail.value)"></ion-input>
+                  </ion-item>
+                } @else {
+                  <ion-item>
+                    <ion-input
+                      class="ion-text-right"
+                      label="Pin to PAP"
+                      placeholder='5"'
+                      [value]="layout.pinToPap | inches"
+                      (ionChange)="onLayoutValueChange(ball, 'pinToPap', $event.detail.value)"></ion-input>
+                  </ion-item>
+                  <ion-item>
+                    <ion-input
+                      class="ion-text-right"
+                      label="PSA to PAP"
+                      placeholder='4"'
+                      [value]="layout.psaToPap | inches"
+                      (ionChange)="onLayoutValueChange(ball, 'psaToPap', $event.detail.value)"></ion-input>
+                  </ion-item>
+                  <ion-item>
+                    <ion-input
+                      class="ion-text-right"
+                      label="Pin Buffer"
+                      placeholder='2"'
+                      [value]="layout.pinBuffer | inches"
+                      (ionChange)="onLayoutValueChange(ball, 'pinBuffer', $event.detail.value)"></ion-input>
+                  </ion-item>
                 }
-              </ion-select>
-            </ion-item>
-            @if (ball.drilling?.layout; as layout) {
-              @if (layout.system === "dual-angle") {
+              }
+              @if (!isTwoHanded()) {
                 <ion-item>
                   <ion-input
                     class="ion-text-right"
-                    label="Drilling Angle"
-                    placeholder="45°"
-                    [value]="layout.drillingAngle"
-                    (ionChange)="onLayoutValueChange(ball, 'drillingAngle', $event.detail.value)"></ion-input>
-                </ion-item>
-                <ion-item>
-                  <ion-input
-                    class="ion-text-right"
-                    label="Pin to PAP"
-                    placeholder='4 1/2"'
-                    [value]="layout.pinToPap | inches"
-                    (ionChange)="onLayoutValueChange(ball, 'pinToPap', $event.detail.value)"></ion-input>
-                </ion-item>
-                <ion-item>
-                  <ion-input
-                    class="ion-text-right"
-                    label="VAL Angle"
-                    placeholder="30°"
-                    [value]="layout.valAngle"
-                    (ionChange)="onLayoutValueChange(ball, 'valAngle', $event.detail.value)"></ion-input>
-                </ion-item>
-              } @else {
-                <ion-item>
-                  <ion-input
-                    class="ion-text-right"
-                    label="Pin to PAP"
-                    placeholder='5"'
-                    [value]="layout.pinToPap | inches"
-                    (ionChange)="onLayoutValueChange(ball, 'pinToPap', $event.detail.value)"></ion-input>
-                </ion-item>
-                <ion-item>
-                  <ion-input
-                    class="ion-text-right"
-                    label="PSA to PAP"
-                    placeholder='4"'
-                    [value]="layout.psaToPap | inches"
-                    (ionChange)="onLayoutValueChange(ball, 'psaToPap', $event.detail.value)"></ion-input>
-                </ion-item>
-                <ion-item>
-                  <ion-input
-                    class="ion-text-right"
-                    label="Pin Buffer"
-                    placeholder='2"'
-                    [value]="layout.pinBuffer | inches"
-                    (ionChange)="onLayoutValueChange(ball, 'pinBuffer', $event.detail.value)"></ion-input>
+                    label="Thumb"
+                    placeholder='63/64"'
+                    [value]="ball.drilling?.thumbSize | inches"
+                    (ionChange)="onHoleSizeChange(ball, 'thumbSize', $event.detail.value)"></ion-input>
                 </ion-item>
               }
-            }
-            @if (!isTwoHanded()) {
               <ion-item>
                 <ion-input
                   class="ion-text-right"
-                  label="Thumb"
-                  placeholder='63/64"'
-                  [value]="ball.drilling?.thumbSize | inches"
-                  (ionChange)="onHoleSizeChange(ball, 'thumbSize', $event.detail.value)"></ion-input>
+                  label="Middle Finger"
+                  placeholder='41/64"'
+                  [value]="ball.drilling?.middleFingerSize | inches"
+                  (ionChange)="onHoleSizeChange(ball, 'middleFingerSize', $event.detail.value)"></ion-input>
               </ion-item>
-            }
-            <ion-item>
-              <ion-input
-                class="ion-text-right"
-                label="Middle Finger"
-                placeholder='41/64"'
-                [value]="ball.drilling?.middleFingerSize | inches"
-                (ionChange)="onHoleSizeChange(ball, 'middleFingerSize', $event.detail.value)"></ion-input>
-            </ion-item>
-            <ion-item>
-              <ion-input
-                class="ion-text-right"
-                label="Ring Finger"
-                placeholder='39/64"'
-                [value]="ball.drilling?.ringFingerSize | inches"
-                (ionChange)="onHoleSizeChange(ball, 'ringFingerSize', $event.detail.value)"></ion-input>
-            </ion-item>
-            @if (!isTwoHanded()) {
               <ion-item>
                 <ion-input
                   class="ion-text-right"
-                  label="Thumb Insert"
-                  placeholder="Thumb Solution"
-                  [value]="ball.drilling?.thumbInsert ?? ''"
-                  (ionChange)="onInsertChange(ball, 'thumbInsert', $event.detail.value)"></ion-input>
+                  label="Ring Finger"
+                  placeholder='39/64"'
+                  [value]="ball.drilling?.ringFingerSize | inches"
+                  (ionChange)="onHoleSizeChange(ball, 'ringFingerSize', $event.detail.value)"></ion-input>
               </ion-item>
-            }
-            <ion-item lines="none">
-              <ion-input
-                class="ion-text-right"
-                label="Finger Inserts"
-                placeholder="Vise Pro #1"
-                [value]="ball.drilling?.fingerInserts ?? ''"
-                (ionChange)="onInsertChange(ball, 'fingerInserts', $event.detail.value)"></ion-input>
-            </ion-item>
-          </ion-list>
-          <ion-text color="medium">
-            <p class="drilling-hint">
-              Sizes in inches, e.g. 4 1/2, 4.5 or 41/64. Your span and PAP are under Ball Fit (hand icon on the arsenal page).
-            </p>
-          </ion-text>
-        }
+              @if (!isTwoHanded()) {
+                <ion-item>
+                  <ion-input
+                    class="ion-text-right"
+                    label="Thumb Insert"
+                    placeholder="Thumb Solution"
+                    [value]="ball.drilling?.thumbInsert ?? ''"
+                    (ionChange)="onInsertChange(ball, 'thumbInsert', $event.detail.value)"></ion-input>
+                </ion-item>
+              }
+              <ion-item lines="none">
+                <ion-input
+                  class="ion-text-right"
+                  label="Finger Inserts"
+                  placeholder="Vise Pro #1"
+                  [value]="ball.drilling?.fingerInserts ?? ''"
+                  (ionChange)="onInsertChange(ball, 'fingerInserts', $event.detail.value)"></ion-input>
+              </ion-item>
+            </ion-list>
+            <ion-text color="medium">
+              <p class="drilling-hint">
+                Sizes in inches, e.g. 4 1/2, 4.5 or 41/64. Your span and PAP are under Ball Fit (hand icon on the arsenal page).
+              </p>
+            </ion-text>
+          </ion-segment-content>
+        </ion-segment-view>
       </ion-content>
     </ng-template>
   </ion-modal>
