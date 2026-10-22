@@ -54,10 +54,13 @@ export const BALL_COVERSTOCK_TYPEAHEAD_CONFIG: TypeaheadConfig<Coverstock> = {
 };
 
 /**
- * Ball picker. `items` (the balls you already have) are listed first; typing
- * searches the whole catalog on the ball API.
+ * Ball picker. `items` (the balls you already have) are listed first, then the catalog
+ * page by page (newest first); typing searches the whole catalog on the ball API, also paged.
  */
-export function createBallTypeaheadConfig(searchFn: (term: string) => Promise<Ball[]>): TypeaheadConfig<Ball> {
+export function createBallTypeaheadConfig(
+  searchFn: (term: string) => Promise<Ball[]>,
+  pageFn?: (term: string, page: number) => Promise<{ items: Ball[]; hasMore: boolean }>,
+): TypeaheadConfig<Ball> {
   return {
     title: 'New Ball',
     searchPlaceholder: 'Search for balls',
@@ -78,6 +81,7 @@ export function createBallTypeaheadConfig(searchFn: (term: string) => Promise<Ba
     valueKey: 'ball_id',
     searchMode: 'api',
     apiSearchFn: async (term: string) => ({ items: await searchFn(term) }),
+    apiPageFn: pageFn,
     showImages: true,
     imageUrlGenerator: (ball: Ball) => ballImageUrl(ball),
     customDisplayFormatter: (item: Ball, fieldKey: string) => {

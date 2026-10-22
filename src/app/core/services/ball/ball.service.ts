@@ -33,6 +33,18 @@ export class BallService {
     return page.content;
   }
 
+  /** One page for pickers: newest balls first when browsing, best matches when `term` is set. */
+  async findBallsPage(term: string, page: number, weight?: string, size = 50): Promise<{ items: Ball[]; hasMore: boolean }> {
+    const params: BallQueryParams = { page: String(page), size: String(size), ...(weight ? { weight } : {}) };
+    if (term) {
+      params['search'] = term;
+    } else {
+      params['sort'] = 'release_date,desc';
+    }
+    const response = await this.searchBalls(params);
+    return { items: response.content, hasMore: response.page.number + 1 < response.page.totalPages };
+  }
+
   /** All weight variants of the given ball ids. */
   async getBallsByIds(ballIds: string[]): Promise<Ball[]> {
     return this.lookup('id', ballIds);

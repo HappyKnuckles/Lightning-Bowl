@@ -66,6 +66,11 @@ export class GenericTypeaheadComponent<T> implements OnInit, OnDestroy {
   private batchSize = 100;
   public loadedCount = signal(0);
   private initialSelectedValues: string[] = [];
+  // API paging state (only used when config().apiPageFn is set)
+  private apiTerm = '';
+  private apiNextPage = 0;
+  private apiHasMore = false;
+  private apiRequestId = 0;
 
   constructor(
     private modalCtrl: ModalController,
@@ -102,16 +107,30 @@ export class GenericTypeaheadComponent<T> implements OnInit, OnDestroy {
 
     // Store initial selected state for comparison in ngOnDestroy
     this.initialSelectedValues = this.selectedItems.map((item) => this.getItemValue(item));
+
+    if (this.usesApiPaging()) {
+      void this.loadApiPage('', true);
+    }
   }
 
-  loadData(event: InfiniteScrollCustomEvent): void {
+  async loadData(event: InfiniteScrollCustomEvent): Promise<void> {
+    // Everything loaded is shown: fetch the next API page instead of revealing the next local batch
+    if (this.usesApiPaging() && this.loadedCount() >= this.filteredItems().length) {
+      if (this.apiHasMore) {
+        await this.loadApiPage(this.apiTerm, false);
+      }
+      event.target.complete();
+      event.target.disabled = !this.apiHasMore && this.loadedCount() >= this.filteredItems().length;
+      return;
+    }
+
     setTimeout(() => {
       if (this.loadedCount() < this.filteredItems().length) {
         this.loadedCount.update((count) => Math.min(count + this.batchSize, this.filteredItems().length));
       }
       event.target.complete();
 
-      if (this.loadedCount() >= this.filteredItems().length) {
+      if (this.loadedCount() >= this.filteredItems().length && !(this.usesApiPaging() && this.apiHasMore)) {
         event.target.disabled = true;
       }
     }, 50);
@@ -119,6 +138,19 @@ export class GenericTypeaheadComponent<T> implements OnInit, OnDestroy {
 
   async searchItems(event: CustomEvent) {
     const searchTerm = event.detail.value?.toLowerCase() ?? '';
+
+    if (this.usesApiPaging()) {
+      this.loadingService.setLoading(true);
+      try {
+        await this.loadApiPage(searchTerm, true);
+      } finally {
+        this.loadingService.setLoading(false);
+      }
+      setTimeout(() => {
+        this.content.scrollToTop(300);
+      }, 300);
+      return;
+    }
 
     if (this.config().searchMode === 'api' && this.config().apiSearchFn) {
       try {
@@ -230,6 +262,54 @@ export class GenericTypeaheadComponent<T> implements OnInit, OnDestroy {
 
   getCustomDisplayLogic(item: T): { cssClass?: string; disabled?: boolean } {
     return this.config().customDisplayLogic?.(item) || {};
+  }
+
+  private usesApiPaging(): boolean {
+    return this.config().searchMode === 'api' && !!this.config().apiPageFn;
+  }
+
+  /**
+   * Loads one API page. `reset` starts a new list: the passed-in `items` when browsing, nothing when
+   * searching. Responses of an outdated term (the user kept typing) are dropped.
+   */
+  private async loadApiPage(term: string, reset: boolean): Promise<void> {
+    const apiPageFn = this.config().apiPageFn;
+    if (!apiPageFn) {
+      return;
+    }
+    const requestId = ++this.apiRequestId;
+    if (reset) {
+      this.apiTerm = term;
+      this.apiNextPage = 0;
+      this.apiHasMore = false;
+      this.filteredItems.set(term ? [] : [...this.items()]);
+      if (this.selectedItems.length > 0) {
+        this.reorderItemsForSelected();
+      }
+      this.loadedCount.set(Math.min(this.batchSize, this.filteredItems().length));
+    }
+
+    try {
+      const response = await apiPageFn(term, this.apiNextPage);
+      if (requestId !== this.apiRequestId) {
+        return;
+      }
+      const known = new Set(this.filteredItems().map((item) => this.getItemIdentifier(item)));
+      const fresh = response.items.filter((item) => !known.has(this.getItemIdentifier(item)));
+      this.filteredItems.update((items) => [...items, ...fresh]);
+      this.apiNextPage++;
+      this.apiHasMore = response.hasMore;
+      this.loadedCount.update((count) => Math.min(count + fresh.length, this.filteredItems().length));
+    } catch (error) {
+      console.error('Error loading items:', error);
+      if (requestId === this.apiRequestId) {
+        this.apiHasMore = false;
+      }
+    }
+
+    if (this.infiniteScroll && requestId === this.apiRequestId) {
+      this.infiniteScroll.disabled = !this.apiHasMore && this.loadedCount() >= this.filteredItems().length;
+    }
   }
 
   private reorderItemsForSelected(): void {
