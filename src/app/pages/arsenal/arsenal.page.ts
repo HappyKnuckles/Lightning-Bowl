@@ -1,3 +1,4 @@
+import { BallImagePipe } from 'src/app/shared/pipes/ball-image-pipe/ball-image.pipe';
 import { Component, ElementRef, Signal, ViewChild, computed, effect, model, signal, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ImpactStyle } from '@capacitor/haptics';
@@ -56,6 +57,7 @@ import { TypeaheadConfigService } from 'src/app/core/services/typeahead-config/t
   styleUrls: ['./arsenal.page.scss'],
   providers: [ModalController],
   imports: [
+    BallImagePipe,
     IonRippleEffect,
     IonListHeader,
     IonSegmentButton,
@@ -101,7 +103,7 @@ export class ArsenalPage implements OnInit {
   ballTypeaheadConfig: TypeaheadConfig<Ball> = this.typeaheadConfigService.ball;
   ballsWithoutArsenal: Signal<Ball[]> = computed(() =>
     this.ballsStore
-      .allBalls()
+      .myBalls()
       .filter((ball) => !this.ballsStore.arsenal().some((b) => b.ball_id === ball.ball_id && b.core_weight === ball.core_weight)),
   );
   selectedSegment = model('arsenal');
@@ -206,9 +208,9 @@ export class ArsenalPage implements OnInit {
     }
   }
 
-  onBallSelectionChange(ballIds: string[]): void {
-    const selectedBalls = this.ballsWithoutArsenal().filter((ball) => ballIds.includes(ball.ball_id));
-    this.saveBallToArsenal(selectedBalls);
+  onBallSelectionChange(selected: Ball[]): void {
+    const inArsenal = (ball: Ball) => this.ballsStore.arsenal().some((b) => b.ball_id === ball.ball_id && b.core_weight === ball.core_weight);
+    this.saveBallToArsenal(selected.filter((ball) => !inArsenal(ball)));
   }
 
   async getSameCoreBalls(ball: Ball): Promise<void> {
@@ -259,8 +261,7 @@ export class ArsenalPage implements OnInit {
     this.loadingWeightBallIds.update((s) => new Set([...s, key]));
 
     try {
-      const ballsAtWeight = await this.ballService.getBallsByWeight(selectedWeight);
-      const replacementBall = ballsAtWeight.find((c) => c.ball_id === ball.ball_id);
+      const replacementBall = await this.ballService.getBallVariant(ball.ball_id, selectedWeight);
 
       if (!replacementBall) {
         selectEl.value = ball.core_weight;

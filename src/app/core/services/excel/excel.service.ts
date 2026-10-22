@@ -243,8 +243,10 @@ export class ExcelService {
         await this.leaguesStore.addLeague(league);
       }
 
+      // Resolves names via known balls or the ball API (exact name match).
+      const resolved = await this.ballsStore.resolveBallNames([...ballMap.values()]);
       for (const ball of ballMap.values()) {
-        const ballToAdd = this.ballsStore.allBalls().find((b) => b.ball_name === ball);
+        const ballToAdd = resolved.get(ball.toLowerCase());
         if (ballToAdd !== undefined && !this.ballsStore.arsenal().some((b) => b.ball_name === ball)) {
           await this.ballsStore.saveBallToArsenal(ballToAdd);
         }
