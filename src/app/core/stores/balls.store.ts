@@ -48,6 +48,12 @@ export class BallsStore {
   readonly arsenal = signal<Ball[]>([]);
   readonly #cachedBalls = signal<Ball[]>([]);
 
+  /**
+   * The bowler's own balls for pickers: arsenal first, then favorites. Unlike `knownBalls` this leaves out
+   * the cache, so a ball removed from the arsenal (which stays cached for old games) disappears here.
+   */
+  readonly myBalls = computed(() => uniqueBalls([...this.arsenal(), ...this.#favoritesService.favoriteBalls().values()]));
+
   /** Arsenal, favorites and cached balls, one entry per ball and weight. */
   readonly knownBalls = computed(() => uniqueBalls([...this.arsenal(), ...this.#favoritesService.favoriteBalls().values(), ...this.#cachedBalls()]));
 

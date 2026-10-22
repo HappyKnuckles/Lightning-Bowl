@@ -55,7 +55,8 @@ interface SavedEntry {
   styleUrls: ['./ball-comparison.page.scss'],
   providers: [ModalController],
   standalone: true,
-  imports: [BallImagePipe, 
+  imports: [
+    BallImagePipe,
     IonCol,
     IonRow,
     IonGrid,
@@ -88,10 +89,10 @@ interface SavedEntry {
 })
 export class BallComparisonPage implements OnDestroy, OnInit {
   protected readonly ballsStore = inject(BallsStore);
-  /** Picker list: your known balls plus the current selection (which may come from a search). */
+  /** Picker list: the current selection (which may come from a search), then your arsenal and favorites. */
   protected readonly pickerBalls = computed(() => {
     const selectedKeys = new Set(this.selectedBalls().map((b) => `${b.ball_id}-${b.core_weight}`));
-    return [...this.selectedBalls(), ...this.ballsStore.knownBalls().filter((b) => !selectedKeys.has(`${b.ball_id}-${b.core_weight}`))];
+    return [...this.selectedBalls(), ...this.ballsStore.myBalls().filter((b) => !selectedKeys.has(`${b.ball_id}-${b.core_weight}`))];
   });
   private readonly ballService = inject(BallService);
   private readonly chartGenerationService = inject(ChartGenerationService);

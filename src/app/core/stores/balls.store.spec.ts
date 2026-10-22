@@ -275,6 +275,22 @@ describe('BallsStore', () => {
     });
   });
 
+  describe('myBalls', () => {
+    it('lists the arsenal first, then favorites, without duplicates', async () => {
+      const owned = makeBall({ ball_id: 'b1', core_weight: '15' });
+      const favorite = makeBall({ ball_id: 'b2', core_weight: '15' });
+      await store.saveBallToArsenal(owned);
+      favoriteBalls.set(
+        new Map([
+          ['b2-15', favorite],
+          ['b1-15', owned],
+        ]),
+      );
+
+      expect(store.myBalls()).toEqual([owned, favorite]);
+    });
+  });
+
   describe('removeFromArsenal', () => {
     it('removes the ball from storage and memory', async () => {
       const ball = makeBall({ ball_id: 'b1', core_weight: '15' });
@@ -284,6 +300,17 @@ describe('BallsStore', () => {
 
       expect(storageRepository.remove).toHaveBeenCalledWith('arsenal_b1_15');
       expect(store.arsenal()).toEqual([]);
+    });
+
+    it('drops the ball from myBalls but keeps it resolvable in knownBalls', async () => {
+      const ball = makeBall({ ball_id: 'b1', core_weight: '15' });
+      await store.saveBallToArsenal(ball);
+      expect(store.myBalls()).toEqual([ball]);
+
+      await store.removeFromArsenal(ball);
+
+      expect(store.myBalls()).toEqual([]);
+      expect(store.knownBalls().map((b) => b.ball_id)).toContain('b1');
     });
 
     it('keeps the same ball in another weight', async () => {

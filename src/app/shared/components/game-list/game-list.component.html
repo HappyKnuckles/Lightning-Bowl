@@ -226,7 +226,7 @@
                   <ng-template>
                     <app-generic-typeahead
                       [config]="ballTypeaheadConfig"
-                      [items]="ballsStore.knownBalls()"
+                      [items]="ballsStore.arsenal()"
                       [prevSelectedItems]="getBallIds(game.balls)"
                       (selectedObjectsChange)="onBallAdd($event, game, allBallsModal)">
                     </app-generic-typeahead>

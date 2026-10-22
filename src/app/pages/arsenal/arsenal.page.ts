@@ -56,7 +56,8 @@ import { TypeaheadConfigService } from 'src/app/core/services/typeahead-config/t
   templateUrl: './arsenal.page.html',
   styleUrls: ['./arsenal.page.scss'],
   providers: [ModalController],
-  imports: [BallImagePipe, 
+  imports: [
+    BallImagePipe,
     IonRippleEffect,
     IonListHeader,
     IonSegmentButton,
@@ -102,7 +103,7 @@ export class ArsenalPage implements OnInit {
   ballTypeaheadConfig: TypeaheadConfig<Ball> = this.typeaheadConfigService.ball;
   ballsWithoutArsenal: Signal<Ball[]> = computed(() =>
     this.ballsStore
-      .knownBalls()
+      .myBalls()
       .filter((ball) => !this.ballsStore.arsenal().some((b) => b.ball_id === ball.ball_id && b.core_weight === ball.core_weight)),
   );
   selectedSegment = model('arsenal');
