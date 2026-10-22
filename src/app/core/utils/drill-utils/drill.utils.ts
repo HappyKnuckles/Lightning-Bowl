@@ -171,18 +171,22 @@ export function formatSpan(fit: BowlerFit | undefined): string {
   return `${formatInches(fit.middleSpan ?? fit.ringSpan)}"`;
 }
 
-/** One-line fit summary for lists: 'Fingertip · Span 4 1/8" / 4 1/4" · PAP 5 1/4" over, 3/4" up'. */
+/** One-line fit summary: 'Fingertip · Span 4 1/8" / 4 1/4" · PAP 5 1/4" over, 3/4" up', or 'Two-Handed · PAP …'. */
 export function formatBowlerFit(fit: BowlerFit | undefined): string {
   if (!fit) {
     return '';
   }
   const parts: string[] = [];
-  if (fit.grip) {
-    parts.push(GRIP_STYLE_LABELS[fit.grip]);
-  }
-  const span = formatSpan(fit);
-  if (span) {
-    parts.push(`Span ${span}`);
+  if (fit.style === 'two-handed') {
+    parts.push('Two-Handed');
+  } else {
+    if (fit.grip) {
+      parts.push(GRIP_STYLE_LABELS[fit.grip]);
+    }
+    const span = formatSpan(fit);
+    if (span) {
+      parts.push(`Span ${span}`);
+    }
   }
   const pap = formatPap(fit);
   if (pap) {

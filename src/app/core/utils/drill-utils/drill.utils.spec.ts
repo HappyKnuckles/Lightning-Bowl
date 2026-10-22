@@ -134,6 +134,12 @@ describe('drill utils', () => {
       );
       expect(formatBowlerFit(undefined)).toBe('');
     });
+
+    it('leaves out grip and span for two-handers', () => {
+      expect(formatBowlerFit({ style: 'two-handed', grip: 'fingertip', middleSpan: 4, papOver: 5, papVertical: 0.5 })).toBe(
+        'Two-Handed · PAP 5" over, 1/2" up',
+      );
+    });
   });
 
   describe('compact', () => {

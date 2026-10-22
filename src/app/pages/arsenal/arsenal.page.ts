@@ -37,10 +37,19 @@ import {
 } from '@ionic/angular/standalone';
 import { Chart } from 'chart.js';
 import { addIcons } from 'ionicons';
-import { add, chevronBack, chevronDownOutline, ellipsisVerticalOutline, openOutline, trashOutline } from 'ionicons/icons';
+import { add, chevronBack, chevronDownOutline, ellipsisVerticalOutline, handLeftOutline, openOutline, trashOutline } from 'ionicons/icons';
 import { TOAST_MESSAGES } from 'src/app/core/constants/toast-messages.constants';
 import { Ball, BallDrilling, BallLayout, LayoutSystem } from 'src/app/core/models/ball.model';
-import { compact, LAYOUT_SYSTEM_LABELS, parseDegrees, parseInches } from 'src/app/core/utils/drill-utils/drill.utils';
+import { BowlerFit, BowlingStyle, GripStyle } from 'src/app/core/models/fit.model';
+import {
+  compact,
+  formatInches,
+  GRIP_STYLE_LABELS,
+  LAYOUT_SYSTEM_LABELS,
+  parseDegrees,
+  parseInches,
+  parsePapVertical,
+} from 'src/app/core/utils/drill-utils/drill.utils';
 import { InchesPipe, LayoutPipe } from 'src/app/shared/pipes/drill-pipes/drill.pipes';
 import { BallService } from 'src/app/core/services/ball/ball.service';
 import { ChartGenerationService } from 'src/app/core/services/chart/chart-generation.service';
@@ -48,6 +57,7 @@ import { HapticService } from 'src/app/core/services/haptic/haptic.service';
 import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { BallsStore } from 'src/app/core/stores/balls.store';
+import { SettingsStore } from 'src/app/core/stores/settings.store';
 import { BallListComponent } from 'src/app/shared/components/ball-list/ball-list.component';
 import { GenericTypeaheadComponent } from 'src/app/shared/components/generic-typeahead/generic-typeahead.component';
 import { TypeaheadConfig } from 'src/app/core/models/typeahead-config.model';
@@ -116,6 +126,12 @@ export class ArsenalPage implements OnInit {
   readonly loadingWeightBallIds = signal<Set<string>>(new Set());
   readonly availableWeights = ['12', '13', '14', '15', '16'];
   readonly layoutSystems = Object.entries(LAYOUT_SYSTEM_LABELS) as [LayoutSystem, string][];
+  readonly gripStyles = Object.entries(GRIP_STYLE_LABELS) as [GripStyle, string][];
+  readonly detailSegment = signal<'ball' | 'drilling'>('ball');
+  readonly isFitModalOpen = signal(false);
+  readonly fitForm = signal<FitForm>(emptyFitForm());
+  // two-handers don't use a thumb hole, so the ball drilling hides thumb fields
+  readonly isTwoHanded = computed(() => this.settingsStore.fit()?.style === 'two-handed');
 
   constructor(
     public ballsStore: BallsStore,
@@ -127,8 +143,9 @@ export class ArsenalPage implements OnInit {
     private ballService: BallService,
     private chartGenerationService: ChartGenerationService,
     private typeaheadConfigService: TypeaheadConfigService,
+    private settingsStore: SettingsStore,
   ) {
-    addIcons({ add, ellipsisVerticalOutline, trashOutline, chevronBack, openOutline, chevronDownOutline });
+    addIcons({ add, ellipsisVerticalOutline, trashOutline, chevronBack, openOutline, chevronDownOutline, handLeftOutline });
     effect(() => {
       if (this.selectedSegment() === 'compare') {
         this.generateBallDistributionChart();
@@ -358,4 +375,69 @@ export class ArsenalPage implements OnInit {
       this.toastService.showToast(TOAST_MESSAGES.drillingSaveError, 'bug', true);
     }
   }
+
+  openFitModal(): void {
+    const fit = this.settingsStore.fit();
+    const vertical = fit?.papVertical;
+    this.fitForm.set({
+      style: fit?.style ?? 'one-handed',
+      grip: fit?.grip ?? '',
+      middleSpan: formatInches(fit?.middleSpan),
+      ringSpan: formatInches(fit?.ringSpan),
+      papOver: formatInches(fit?.papOver),
+      papVertical: vertical === undefined ? '' : vertical === 0 ? '0' : `${formatInches(Math.abs(vertical))} ${vertical > 0 ? 'up' : 'down'}`,
+    });
+    this.isFitModalOpen.set(true);
+  }
+
+  closeFitModal(): void {
+    this.isFitModalOpen.set(false);
+  }
+
+  updateFitForm(field: keyof FitForm, value: string | number | null | undefined): void {
+    this.fitForm.update((form) => ({ ...form, [field]: value?.toString() ?? '' }));
+  }
+
+  async saveFit(): Promise<void> {
+    const form = this.fitForm();
+    const twoHanded = form.style === 'two-handed';
+    // grip and span are hidden for two-handers, so leftover values there are dropped rather than validated
+    const measurements = {
+      middleSpan: twoHanded ? undefined : parseInches(form.middleSpan),
+      ringSpan: twoHanded ? undefined : parseInches(form.ringSpan),
+      papOver: parseInches(form.papOver),
+      papVertical: parsePapVertical(form.papVertical),
+    };
+    const invalid = Object.entries(measurements).some(
+      ([field, value]) => value !== undefined && (Number.isNaN(value) || (field !== 'papVertical' && value < 0)),
+    );
+    if (invalid) {
+      this.toastService.showToast(TOAST_MESSAGES.invalidMeasurement, 'bug', true);
+      return;
+    }
+
+    try {
+      const fit: BowlerFit = twoHanded ? { style: 'two-handed', ...measurements } : { grip: form.grip || undefined, ...measurements };
+      await this.settingsStore.saveFit(compact<BowlerFit>(fit));
+      this.toastService.showToast(TOAST_MESSAGES.fitSaveSuccess, 'checkmark-outline');
+      this.closeFitModal();
+    } catch (error) {
+      console.error('Error saving fit:', error);
+      this.toastService.showToast(TOAST_MESSAGES.fitSaveError, 'bug', true);
+    }
+  }
+}
+
+/** Raw text of the fit form; measurements are parsed on save so fractions like "4 1/8" can be typed freely. */
+interface FitForm {
+  style: BowlingStyle;
+  grip: GripStyle | '';
+  middleSpan: string;
+  ringSpan: string;
+  papOver: string;
+  papVertical: string;
+}
+
+function emptyFitForm(): FitForm {
+  return { style: 'one-handed', grip: '', middleSpan: '', ringSpan: '', papOver: '', papVertical: '' };
 }

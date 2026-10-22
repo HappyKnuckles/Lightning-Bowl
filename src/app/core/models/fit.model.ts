@@ -1,3 +1,6 @@
+export type BowlingStyle = 'one-handed' | 'two-handed';
+
+/** Only relevant for one-handers; two-handers don't use a thumb hole. */
 export type GripStyle = 'fingertip' | 'semi-fingertip' | 'conventional';
 
 /**
@@ -6,6 +9,8 @@ export type GripStyle = 'fingertip' | 'semi-fingertip' | 'conventional';
  * measured from the center of the grip.
  */
 export interface BowlerFit {
+  /** Unset means one-handed. Two-handers have no thumb hole, so grip and span don't apply. */
+  style?: BowlingStyle;
   grip?: GripStyle;
   middleSpan?: number;
   ringSpan?: number;
