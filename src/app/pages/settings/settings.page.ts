@@ -1,5 +1,5 @@
 import { DatePipe, NgClass } from '@angular/common';
-import { AfterViewInit, Component, DestroyRef, inject, OnInit } from '@angular/core';
+import { AfterViewInit, Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule, NgForm, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -36,6 +36,7 @@ import {
   chevronBackOutline,
   cloudUploadOutline,
   colorPaletteOutline,
+  handLeftOutline,
   logoGithub,
   mailOutline,
   personCircleOutline,
@@ -50,6 +51,9 @@ import { LoadingService } from 'src/app/core/services/loader/loading.service';
 import { ThemeChangerService } from 'src/app/core/services/theme-changer/theme-changer.service';
 import { ToastService } from 'src/app/core/services/toast/toast.service';
 import { SettingsStore } from 'src/app/core/stores/settings.store';
+import { BowlerFit, GripStyle } from 'src/app/core/models/fit.model';
+import { compact, formatInches, GRIP_STYLE_LABELS, parseInches, parsePapVertical } from 'src/app/core/utils/drill-utils/drill.utils';
+import { BowlerFitPipe } from 'src/app/shared/pipes/drill-pipes/drill.pipes';
 import { CloudSyncSettingsComponent } from 'src/app/shared/components/cloud-sync-settings/cloud-sync-settings.component';
 import { GithubIssuesModalComponent } from 'src/app/shared/components/github-issues-modal/github-issues-modal.component';
 import { SpareNamesComponent } from 'src/app/shared/components/spare-names/spare-names.component';
@@ -87,6 +91,7 @@ import { environment } from 'src/environments/environment';
     FormsModule,
     ReactiveFormsModule,
     SpareNamesComponent,
+    BowlerFitPipe,
   ],
 })
 export class SettingsPage implements OnInit, AfterViewInit {
@@ -107,6 +112,9 @@ export class SettingsPage implements OnInit, AfterViewInit {
   userEmail = '';
   feedbackMessage = '';
   updateAvailable = false;
+  readonly fitForm = signal<FitForm>(emptyFitForm());
+  readonly isFitModalOpen = signal(false);
+  readonly gripStyles = Object.entries(GRIP_STYLE_LABELS) as [GripStyle, string][];
   constructor(
     private toastService: ToastService,
     private loadingService: LoadingService,
@@ -121,6 +129,7 @@ export class SettingsPage implements OnInit, AfterViewInit {
     addIcons({
       personCircleOutline,
       colorPaletteOutline,
+      handLeftOutline,
       logoGithub,
       mailOutline,
       refreshCircleOutline,
@@ -162,6 +171,53 @@ export class SettingsPage implements OnInit, AfterViewInit {
         });
       }
     });
+  }
+
+  openFitModal(): void {
+    const fit = this.settingsStore.fit();
+    const vertical = fit?.papVertical;
+    this.fitForm.set({
+      grip: fit?.grip ?? '',
+      middleSpan: formatInches(fit?.middleSpan),
+      ringSpan: formatInches(fit?.ringSpan),
+      papOver: formatInches(fit?.papOver),
+      papVertical: vertical === undefined ? '' : vertical === 0 ? '0' : `${formatInches(Math.abs(vertical))} ${vertical > 0 ? 'up' : 'down'}`,
+    });
+    this.isFitModalOpen.set(true);
+  }
+
+  closeFitModal(): void {
+    this.isFitModalOpen.set(false);
+  }
+
+  updateFitForm(field: keyof FitForm, value: string | number | null | undefined): void {
+    this.fitForm.update((form) => ({ ...form, [field]: value?.toString() ?? '' }));
+  }
+
+  async saveFit(): Promise<void> {
+    const form = this.fitForm();
+    const measurements = {
+      middleSpan: parseInches(form.middleSpan),
+      ringSpan: parseInches(form.ringSpan),
+      papOver: parseInches(form.papOver),
+      papVertical: parsePapVertical(form.papVertical),
+    };
+    const invalid = Object.entries(measurements).some(
+      ([field, value]) => value !== undefined && (Number.isNaN(value) || (field !== 'papVertical' && value < 0)),
+    );
+    if (invalid) {
+      this.toastService.showToast(TOAST_MESSAGES.invalidMeasurement, 'bug', true);
+      return;
+    }
+
+    try {
+      await this.settingsStore.saveFit(compact<BowlerFit>({ grip: form.grip || undefined, ...measurements }));
+      this.toastService.showToast(TOAST_MESSAGES.fitSaveSuccess, 'checkmark-outline');
+      this.closeFitModal();
+    } catch (error) {
+      console.error('Error saving fit:', error);
+      this.toastService.showToast(TOAST_MESSAGES.fitSaveError, 'bug', true);
+    }
   }
 
   async openSyncModal() {
@@ -251,4 +307,17 @@ export class SettingsPage implements OnInit, AfterViewInit {
       alert('Please fill out all fields correctly.');
     }
   }
+}
+
+/** Raw text of the fit form; measurements are parsed on save so fractions like "4 1/8" can be typed freely. */
+interface FitForm {
+  grip: GripStyle | '';
+  middleSpan: string;
+  ringSpan: string;
+  papOver: string;
+  papVertical: string;
+}
+
+function emptyFitForm(): FitForm {
+  return { grip: '', middleSpan: '', ringSpan: '', papOver: '', papVertical: '' };
 }

@@ -65,6 +65,9 @@
                       </ion-chip>
                       <ion-chip>{{ ball.core_type }}</ion-chip>
                       <ion-chip>{{ ball.coverstock_type }}</ion-chip>
+                      @if (ball.drilling?.layout | layout; as layoutText) {
+                        <ion-chip>{{ layoutText }}</ion-chip>
+                      }
                     </div>
                   </ion-label>
                 </ion-item>
@@ -120,7 +123,8 @@
 </ng-template> -->
 </ion-content>
 
-@for (ball of ballsStore.arsenal(); track ball) {
+<!-- tracked by key so saving drilling (which replaces the ball object) keeps the open modal alive -->
+@for (ball of ballsStore.arsenal(); track ball.ball_id + ball.core_weight) {
   <ion-modal [trigger]="ball.ball_id + ball.core_weight" #modal>
     <ng-template>
       <ion-header [translucent]="true">
@@ -202,6 +206,118 @@
           </ion-card-content>
           <ion-ripple-effect></ion-ripple-effect>
         </ion-card>
+
+        <ion-list-header style="margin-bottom: 4px">Drilling</ion-list-header>
+        <ion-list inset class="drilling-list">
+          <ion-item>
+            <ion-select
+              label="Layout"
+              interface="popover"
+              [value]="ball.drilling?.layout?.system ?? ''"
+              (ionChange)="onLayoutSystemChange(ball, $event.detail.value)">
+              <ion-select-option value="">None</ion-select-option>
+              @for (system of layoutSystems; track system[0]) {
+                <ion-select-option [value]="system[0]">{{ system[1] }}</ion-select-option>
+              }
+            </ion-select>
+          </ion-item>
+          @if (ball.drilling?.layout; as layout) {
+            @if (layout.system === "dual-angle") {
+              <ion-item>
+                <ion-input
+                  class="ion-text-right"
+                  label="Drilling Angle"
+                  placeholder="45°"
+                  [value]="layout.drillingAngle"
+                  (ionChange)="onLayoutValueChange(ball, 'drillingAngle', $event.detail.value)"></ion-input>
+              </ion-item>
+              <ion-item>
+                <ion-input
+                  class="ion-text-right"
+                  label="Pin to PAP"
+                  placeholder='4 1/2"'
+                  [value]="layout.pinToPap | inches"
+                  (ionChange)="onLayoutValueChange(ball, 'pinToPap', $event.detail.value)"></ion-input>
+              </ion-item>
+              <ion-item>
+                <ion-input
+                  class="ion-text-right"
+                  label="VAL Angle"
+                  placeholder="30°"
+                  [value]="layout.valAngle"
+                  (ionChange)="onLayoutValueChange(ball, 'valAngle', $event.detail.value)"></ion-input>
+              </ion-item>
+            } @else {
+              <ion-item>
+                <ion-input
+                  class="ion-text-right"
+                  label="Pin to PAP"
+                  placeholder='5"'
+                  [value]="layout.pinToPap | inches"
+                  (ionChange)="onLayoutValueChange(ball, 'pinToPap', $event.detail.value)"></ion-input>
+              </ion-item>
+              <ion-item>
+                <ion-input
+                  class="ion-text-right"
+                  label="PSA to PAP"
+                  placeholder='4"'
+                  [value]="layout.psaToPap | inches"
+                  (ionChange)="onLayoutValueChange(ball, 'psaToPap', $event.detail.value)"></ion-input>
+              </ion-item>
+              <ion-item>
+                <ion-input
+                  class="ion-text-right"
+                  label="Pin Buffer"
+                  placeholder='2"'
+                  [value]="layout.pinBuffer | inches"
+                  (ionChange)="onLayoutValueChange(ball, 'pinBuffer', $event.detail.value)"></ion-input>
+              </ion-item>
+            }
+          }
+          <ion-item>
+            <ion-input
+              class="ion-text-right"
+              label="Thumb"
+              placeholder='63/64"'
+              [value]="ball.drilling?.thumbSize | inches"
+              (ionChange)="onHoleSizeChange(ball, 'thumbSize', $event.detail.value)"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-input
+              class="ion-text-right"
+              label="Middle Finger"
+              placeholder='41/64"'
+              [value]="ball.drilling?.middleFingerSize | inches"
+              (ionChange)="onHoleSizeChange(ball, 'middleFingerSize', $event.detail.value)"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-input
+              class="ion-text-right"
+              label="Ring Finger"
+              placeholder='39/64"'
+              [value]="ball.drilling?.ringFingerSize | inches"
+              (ionChange)="onHoleSizeChange(ball, 'ringFingerSize', $event.detail.value)"></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-input
+              class="ion-text-right"
+              label="Thumb Insert"
+              placeholder="Thumb Solution"
+              [value]="ball.drilling?.thumbInsert ?? ''"
+              (ionChange)="onInsertChange(ball, 'thumbInsert', $event.detail.value)"></ion-input>
+          </ion-item>
+          <ion-item lines="none">
+            <ion-input
+              class="ion-text-right"
+              label="Finger Inserts"
+              placeholder="Vise Pro #1"
+              [value]="ball.drilling?.fingerInserts ?? ''"
+              (ionChange)="onInsertChange(ball, 'fingerInserts', $event.detail.value)"></ion-input>
+          </ion-item>
+        </ion-list>
+        <ion-text color="medium">
+          <p class="drilling-hint">Sizes in inches, e.g. 4 1/2, 4.5 or 41/64. Your span and PAP are set in Settings under Ball Fit.</p>
+        </ion-text>
       </ion-content>
     </ng-template>
   </ion-modal>

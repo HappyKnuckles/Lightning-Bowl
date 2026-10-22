@@ -30,6 +30,80 @@
       <ion-label>Spare Names</ion-label>
     </ion-item>
 
+    <ion-item button (click)="openFitModal()">
+      <ion-icon name="hand-left-outline" slot="start"></ion-icon>
+      <ion-label>
+        Ball Fit
+        @if (settingsStore.fit() | bowlerFit; as fitText) {
+          <p>{{ fitText }}</p>
+        }
+      </ion-label>
+    </ion-item>
+
+    <ion-modal [isOpen]="isFitModalOpen()" (didDismiss)="closeFitModal()" [initialBreakpoint]="0.75" [breakpoints]="[0, 0.75, 1]">
+      <ng-template>
+        <ion-header>
+          <ion-toolbar>
+            <ion-buttons slot="start">
+              <ion-button (click)="closeFitModal()">Cancel</ion-button>
+            </ion-buttons>
+            <ion-title>Ball Fit</ion-title>
+            <ion-buttons slot="end">
+              <ion-button [strong]="true" (click)="saveFit()">Save</ion-button>
+            </ion-buttons>
+          </ion-toolbar>
+        </ion-header>
+        <ion-content>
+          <ion-list>
+            <ion-item>
+              <ion-select label="Grip" interface="popover" [value]="fitForm().grip" (ionChange)="updateFitForm('grip', $event.detail.value)">
+                <ion-select-option value="">Not set</ion-select-option>
+                @for (grip of gripStyles; track grip[0]) {
+                  <ion-select-option [value]="grip[0]">{{ grip[1] }}</ion-select-option>
+                }
+              </ion-select>
+            </ion-item>
+            <ion-item>
+              <ion-input
+                class="ion-text-right"
+                label="Span Middle"
+                placeholder='4 1/8"'
+                [value]="fitForm().middleSpan"
+                (ionInput)="updateFitForm('middleSpan', $event.detail.value)"></ion-input>
+            </ion-item>
+            <ion-item>
+              <ion-input
+                class="ion-text-right"
+                label="Span Ring"
+                placeholder='4 1/4"'
+                [value]="fitForm().ringSpan"
+                (ionInput)="updateFitForm('ringSpan', $event.detail.value)"></ion-input>
+            </ion-item>
+            <ion-item>
+              <ion-input
+                class="ion-text-right"
+                label="PAP Over"
+                placeholder='5 1/4"'
+                [value]="fitForm().papOver"
+                (ionInput)="updateFitForm('papOver', $event.detail.value)"></ion-input>
+            </ion-item>
+            <ion-item lines="none">
+              <ion-input
+                class="ion-text-right"
+                label="PAP Up/Down"
+                placeholder="3/4 up"
+                [value]="fitForm().papVertical"
+                (ionInput)="updateFitForm('papVertical', $event.detail.value)"></ion-input>
+            </ion-item>
+          </ion-list>
+          <p class="fit-hint">
+            Inches, e.g. 4 1/8, 4.125 or 4⅛. PAP is measured from the center of the grip; write up or down, or 0 for the midline. Layouts and hole
+            sizes are set per ball in the arsenal.
+          </p>
+        </ion-content>
+      </ng-template>
+    </ion-modal>
+
     <ion-item>
       <ion-icon src="/assets/svg/target-82-svgrepo-com.svg" slot="start"></ion-icon>
       <ion-input

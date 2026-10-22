@@ -6,6 +6,8 @@ import { vi } from 'vitest';
 const mockSettingsStore = {
   pinInputMode: vi.fn().mockReturnValue(true),
   savePinInputMode: vi.fn(),
+  fit: vi.fn().mockReturnValue(undefined),
+  saveFit: vi.fn(),
 };
 
 describe('SettingsPage', () => {

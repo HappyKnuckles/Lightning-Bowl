@@ -67,6 +67,7 @@ export class AppFacade {
         this.leaguesStore.loadLeagues(),
         this.gamesStore.loadGameHistory(),
         this.ballsStore.loadArsenal(),
+        this.settingsStore.loadFit(),
         this.ballService.getBrands(),
         this.ballService.getCores(),
         this.ballService.getCoverstocks(),

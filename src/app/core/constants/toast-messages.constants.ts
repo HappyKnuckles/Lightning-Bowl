@@ -44,4 +44,8 @@ export const TOAST_MESSAGES = {
   leagueEditMode: 'Select leagues to hide or show.',
   pinpalImportSuccess: 'PinPal backup imported successfully.',
   pinpalImportError: 'Error importing PinPal backup.',
+  fitSaveSuccess: 'Fit saved successfully.',
+  fitSaveError: 'Error saving fit.',
+  drillingSaveError: 'Error saving drilling.',
+  invalidMeasurement: 'Invalid measurement. Use inches like 4 1/2, 4.5 or 41/64.',
 };

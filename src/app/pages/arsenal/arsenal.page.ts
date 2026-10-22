@@ -12,6 +12,7 @@ import {
   IonHeader,
   IonIcon,
   IonImg,
+  IonInput,
   IonItem,
   IonItemOption,
   IonItemOptions,
@@ -38,7 +39,9 @@ import { Chart } from 'chart.js';
 import { addIcons } from 'ionicons';
 import { add, chevronBack, chevronDownOutline, ellipsisVerticalOutline, openOutline, trashOutline } from 'ionicons/icons';
 import { TOAST_MESSAGES } from 'src/app/core/constants/toast-messages.constants';
-import { Ball } from 'src/app/core/models/ball.model';
+import { Ball, BallDrilling, BallLayout, LayoutSystem } from 'src/app/core/models/ball.model';
+import { compact, LAYOUT_SYSTEM_LABELS, parseDegrees, parseInches } from 'src/app/core/utils/drill-utils/drill.utils';
+import { InchesPipe, LayoutPipe } from 'src/app/shared/pipes/drill-pipes/drill.pipes';
 import { BallService } from 'src/app/core/services/ball/ball.service';
 import { ChartGenerationService } from 'src/app/core/services/chart/chart-generation.service';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
@@ -89,6 +92,9 @@ import { TypeaheadConfigService } from 'src/app/core/services/typeahead-config/t
     IonCardContent,
     IonSelect,
     IonSelectOption,
+    IonInput,
+    InchesPipe,
+    LayoutPipe,
   ],
 })
 export class ArsenalPage implements OnInit {
@@ -109,6 +115,7 @@ export class ArsenalPage implements OnInit {
   private ballsChartInstance: Chart | null = null;
   readonly loadingWeightBallIds = signal<Set<string>>(new Set());
   readonly availableWeights = ['12', '13', '14', '15', '16'];
+  readonly layoutSystems = Object.entries(LAYOUT_SYSTEM_LABELS) as [LayoutSystem, string][];
 
   constructor(
     public ballsStore: BallsStore,
@@ -288,6 +295,67 @@ export class ArsenalPage implements OnInit {
         next.delete(key);
         return next;
       });
+    }
+  }
+
+  async onLayoutSystemChange(ball: Ball, system: LayoutSystem | ''): Promise<void> {
+    const current = ball.drilling?.layout;
+    if ((current?.system ?? '') === system) {
+      return;
+    }
+    // pin to PAP means the same in both systems, so it survives a switch
+    const layout: BallLayout | undefined = system ? { system, pinToPap: current?.pinToPap } : undefined;
+    await this.saveDrilling(ball, { ...ball.drilling, layout });
+  }
+
+  async onLayoutValueChange(
+    ball: Ball,
+    field: 'drillingAngle' | 'valAngle' | 'pinToPap' | 'psaToPap' | 'pinBuffer',
+    raw: string | number | null | undefined,
+  ): Promise<void> {
+    const layout = ball.drilling?.layout;
+    if (!layout) {
+      return;
+    }
+    const value = field === 'drillingAngle' || field === 'valAngle' ? parseDegrees(raw) : parseInches(raw);
+    if (!this.isValidMeasurement(value)) {
+      return;
+    }
+    await this.saveDrilling(ball, { ...ball.drilling, layout: { ...layout, [field]: value } as BallLayout });
+  }
+
+  async onHoleSizeChange(
+    ball: Ball,
+    field: 'thumbSize' | 'middleFingerSize' | 'ringFingerSize',
+    raw: string | number | null | undefined,
+  ): Promise<void> {
+    const value = parseInches(raw);
+    if (!this.isValidMeasurement(value)) {
+      return;
+    }
+    await this.saveDrilling(ball, { ...ball.drilling, [field]: value });
+  }
+
+  async onInsertChange(ball: Ball, field: 'thumbInsert' | 'fingerInserts', raw: string | number | null | undefined): Promise<void> {
+    const value = raw?.toString().trim() || undefined;
+    await this.saveDrilling(ball, { ...ball.drilling, [field]: value });
+  }
+
+  private isValidMeasurement(value: number | undefined): boolean {
+    if (value !== undefined && (Number.isNaN(value) || value < 0)) {
+      this.toastService.showToast(TOAST_MESSAGES.invalidMeasurement, 'bug', true);
+      return false;
+    }
+    return true;
+  }
+
+  private async saveDrilling(ball: Ball, drilling: BallDrilling): Promise<void> {
+    const layout = drilling.layout ? (compact(drilling.layout) as BallLayout) : undefined;
+    try {
+      await this.ballsStore.updateBallDrilling(ball, compact({ ...drilling, layout }));
+    } catch (error) {
+      console.error('Error saving drilling:', error);
+      this.toastService.showToast(TOAST_MESSAGES.drillingSaveError, 'bug', true);
     }
   }
 }

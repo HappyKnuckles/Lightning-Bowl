@@ -1,13 +1,22 @@
+import { vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 
+import { BowlerFit } from 'src/app/core/models/fit.model';
+import { StorageRepository } from 'src/app/core/services/storage/storage.repository';
+import { createSpyObj, SpyObj } from 'src/testing/spy-obj';
 import { SettingsStore } from './settings.store';
 
 describe('SettingsStore', () => {
   let store: SettingsStore;
+  let storageRepository: SpyObj<StorageRepository>;
 
   beforeEach(() => {
     localStorage.removeItem('pin-input-mode');
-    TestBed.configureTestingModule({});
+    storageRepository = createSpyObj<StorageRepository>(['get', 'set', 'remove']);
+    storageRepository.get.mockResolvedValue(null);
+    storageRepository.set.mockResolvedValue(undefined);
+    storageRepository.remove.mockResolvedValue(undefined);
+    TestBed.configureTestingModule({ providers: [{ provide: StorageRepository, useValue: storageRepository }] });
     store = TestBed.inject(SettingsStore);
   });
 
@@ -52,6 +61,44 @@ describe('SettingsStore', () => {
 
       expect(store.pinInputMode()).toBe(false);
       expect(localStorage.getItem('pin-input-mode')).toBe('missing');
+    });
+  });
+
+  describe('fit', () => {
+    const fit: BowlerFit = { grip: 'fingertip', middleSpan: 4.125, ringSpan: 4.25, papOver: 5.25, papVertical: 0.75 };
+
+    it('loads the stored fit', async () => {
+      storageRepository.get.mockResolvedValue(fit);
+
+      await store.loadFit();
+
+      expect(storageRepository.get).toHaveBeenCalledWith('bowler_fit');
+      expect(store.fit()).toEqual(fit);
+    });
+
+    it('stays empty when nothing was stored or loading fails', async () => {
+      await store.loadFit();
+      expect(store.fit()).toBeUndefined();
+
+      vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      storageRepository.get.mockRejectedValue(new Error('storage down'));
+      await store.loadFit();
+      expect(store.fit()).toBeUndefined();
+    });
+
+    it('saves the fit', async () => {
+      await store.saveFit(fit);
+
+      expect(storageRepository.set).toHaveBeenCalledWith('bowler_fit', fit);
+      expect(store.fit()).toEqual(fit);
+    });
+
+    it('removes the record when the fit is cleared', async () => {
+      await store.saveFit(fit);
+      await store.saveFit(undefined);
+
+      expect(storageRepository.remove).toHaveBeenCalledWith('bowler_fit');
+      expect(store.fit()).toBeUndefined();
     });
   });
 });
