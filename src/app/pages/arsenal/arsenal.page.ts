@@ -64,7 +64,7 @@ import {
   parseInches,
   parsePapVertical,
 } from 'src/app/core/utils/drill-utils/drill.utils';
-import { HoleSizesPipe, InchesPipe, LayoutPipe } from 'src/app/shared/pipes/drill-pipes/drill.pipes';
+import { BowlerFitPipe, HoleSizesPipe, InchesPipe, LayoutPipe } from 'src/app/shared/pipes/drill-pipes/drill.pipes';
 import { BallService } from 'src/app/core/services/ball/ball.service';
 import { ChartGenerationService } from 'src/app/core/services/chart/chart-generation.service';
 import { HapticService } from 'src/app/core/services/haptic/haptic.service';
@@ -120,6 +120,7 @@ import { TypeaheadConfigService } from 'src/app/core/services/typeahead-config/t
     InchesPipe,
     LayoutPipe,
     HoleSizesPipe,
+    BowlerFitPipe,
   ],
 })
 export class ArsenalPage implements OnInit {
@@ -153,6 +154,7 @@ export class ArsenalPage implements OnInit {
   readonly openBallKey = signal<string | null>(null);
   readonly isFitModalOpen = signal(false);
   readonly fitForm = signal<FitForm>(emptyFitForm());
+  readonly fit = computed(() => this.settingsStore.fit());
   // two-handers don't use a thumb hole, so the ball drilling hides thumb fields
   readonly isTwoHanded = computed(() => this.settingsStore.fit()?.style === 'two-handed');
 
