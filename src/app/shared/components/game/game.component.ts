@@ -10,11 +10,12 @@ import {
   effect,
   inject,
   input,
+  model,
   output,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ImpactStyle } from '@capacitor/haptics';
-import { InputCustomEvent } from '@ionic/angular';
+import { AccordionGroupCustomEvent, InputCustomEvent } from '@ionic/angular';
 import {
   AlertController,
   IonAccordion,
@@ -118,6 +119,8 @@ interface FrameView {
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class GameComponent implements OnInit {
+  private static readonly DETAILS_ACCORDION = 'details';
+
   // --- Inputs ---
   ballSelectorId = input<string>();
   showMetadata = input<boolean>(true);
@@ -157,6 +160,8 @@ export class GameComponent implements OnInit {
   seriesStatsClick = output<void>();
   showStatsButton = input<boolean>(false);
   statsEnabled = input<boolean>(true);
+  /** Whether "Game Details" is open. Bound two-way by the page so every game in a series shares it. */
+  detailsOpen = model<boolean>(false);
   // Pin mode edit - score cell clicked
   scoreCellClick = output<{ frameIndex: number; throwIndex: number }>();
 
@@ -229,6 +234,7 @@ export class GameComponent implements OnInit {
     });
   });
 
+  detailsAccordionValue = computed(() => (this.detailsOpen() ? GameComponent.DETAILS_ACCORDION : undefined));
   ballsText = computed(() => getGameBallNames(this.currentGame(), this.ballsStore.arsenal()).join(', '));
 
   /**
@@ -334,6 +340,11 @@ export class GameComponent implements OnInit {
 
   async ngOnInit(): Promise<void> {
     this.presentingElement = document.querySelector('.ion-page')!;
+  }
+
+  onDetailsToggle(event: AccordionGroupCustomEvent): void {
+    if (event.target !== event.currentTarget) return;
+    this.detailsOpen.set(event.detail.value === GameComponent.DETAILS_ACCORDION);
   }
 
   // PIN INPUT MODE - PASS-THROUGH HANDLERS

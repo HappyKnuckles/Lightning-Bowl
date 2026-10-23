@@ -219,6 +219,13 @@ export class AddGamePage implements OnInit {
    */
   readonly pinSheetOpen = signal(false);
 
+  /**
+   * Whether "Game Details" is open, shared by every game in the series. The games sit
+   * side by side in one segment view, so if only one game had it open, that game would
+   * stretch the others and push the content below them down (#687).
+   */
+  readonly detailsOpen = signal(false);
+
   constructor(
     private actionSheetCtrl: ActionSheetController,
     private alertController: AlertController,

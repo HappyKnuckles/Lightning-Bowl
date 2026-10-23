@@ -93,7 +93,8 @@
           (throwBallChanged)="onThrowBallChange($event, i)"
           (inputFocused)="onInputFocused($event, i)"
           (seriesStatsClick)="onSeriesStatsClick()"
-          [statsEnabled]="hasLiveStats()">
+          [statsEnabled]="hasLiveStats()"
+          [(detailsOpen)]="detailsOpen">
         </app-game>
         @if (selectedMode() !== "Single") {
           <ion-grid>
