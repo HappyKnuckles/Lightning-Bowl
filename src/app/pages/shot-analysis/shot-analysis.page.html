@@ -1,0 +1,186 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button menu="main-menu"></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Shot Analysis</ion-title>
+    @if (step() !== "pick") {
+      <ion-buttons slot="end">
+        <ion-button aria-label="New video" (click)="startOver()">
+          <ion-icon name="refresh-outline" slot="icon-only"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+    }
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <input #recordInput accept="video/*" capture="environment" hidden type="file" (change)="onVideoSelected($event)" />
+  <input #pickInput accept="video/*" hidden type="file" (change)="onVideoSelected($event)" />
+
+  @switch (step()) {
+    @case ("pick") {
+      <div class="empty-state">
+        <ion-icon class="empty-icon" name="videocam-outline"></ion-icon>
+        <ion-text>
+          <h2>Analyze a Shot</h2>
+          <p>Film a shot from behind the approach, mark the lane, and get the ball's path, speed, rev rate and angles.</p>
+        </ion-text>
+        <div class="pick-buttons">
+          <ion-button (click)="recordInput.click()">
+            <ion-icon name="videocam-outline" slot="start"></ion-icon>
+            Record Shot
+          </ion-button>
+          <ion-button fill="outline" (click)="pickInput.click()">
+            <ion-icon name="folder-open-outline" slot="start"></ion-icon>
+            Choose Video
+          </ion-button>
+        </div>
+      </div>
+      <ion-card class="tips">
+        <ion-card-content>
+          <ion-text><h3>For the best results</h3></ion-text>
+          <ul>
+            <li>Keep the foul line and the pins in the picture.</li>
+            <li>Stand to the side of the bowler so they don't block the lane after the release.</li>
+            <li>Start recording before the release; 60 fps works best.</li>
+            <li>Trim the video to the shot: shorter clips upload and analyze much faster.</li>
+          </ul>
+        </ion-card-content>
+      </ion-card>
+    }
+
+    @case ("calibrate") {
+      <div class="frame" [class.dragging]="loupeVisible()">
+        @if (videoUrl(); as url) {
+          <video #video muted playsinline preload="auto" [src]="url" (error)="onVideoError()" (loadedmetadata)="onMetadataLoaded()"></video>
+        }
+        <svg
+          #overlay
+          class="overlay"
+          preserveAspectRatio="xMidYMid meet"
+          [attr.viewBox]="viewBox()"
+          (pointercancel)="onPointerUp()"
+          (pointerdown)="onPointerDown($event)"
+          (pointermove)="onPointerMove($event)"
+          (pointerup)="onPointerUp()">
+          @for (line of outline(); track line.key) {
+            <line class="outline" [attr.x1]="line.x1" [attr.x2]="line.x2" [attr.y1]="line.y1" [attr.y2]="line.y2" />
+          }
+          @for (point of overlayPoints(); track point.index) {
+            <circle class="corner" [attr.cx]="point.x" [attr.cy]="point.y" [attr.r]="markerRadius()" />
+          }
+        </svg>
+        <canvas
+          #loupe
+          class="loupe"
+          [class.right]="loupeOnRight()"
+          [class.visible]="loupeVisible()"
+          [style.height.px]="loupeCssPx"
+          [style.width.px]="loupeCssPx"></canvas>
+      </div>
+
+      <div class="calibrate-panel">
+        <div class="instruction">
+          <span class="step-count">{{ overlayPoints().length }}/{{ totalSteps }}</span>
+          <ion-text [color]="calibrationError() ? 'danger' : undefined">
+            <p>{{ calibrationError() ?? instruction() }}</p>
+          </ion-text>
+        </div>
+
+        @if (duration() > 0) {
+          <ion-item class="scrub" lines="none">
+            <ion-label>Frame</ion-label>
+            <ion-range
+              aria-label="Frame"
+              [disabled]="overlayPoints().length > 0"
+              [max]="duration()"
+              [min]="0"
+              [step]="0.02"
+              [value]="frameTime()"
+              (ionInput)="onScrub($event)"></ion-range>
+          </ion-item>
+          @if (overlayPoints().length > 0) {
+            <ion-note class="hint">Reset the corners to pick another frame.</ion-note>
+          }
+        }
+
+        <ion-segment [value]="handedness()" (ionChange)="setHandedness($event.detail.value === 'left' ? 'left' : 'right')">
+          <ion-segment-button value="right">Right-handed</ion-segment-button>
+          <ion-segment-button value="left">Left-handed</ion-segment-button>
+        </ion-segment>
+
+        <div class="actions">
+          <ion-button fill="clear" [disabled]="overlayPoints().length === 0" (click)="undoPoint()">
+            <ion-icon name="arrow-undo-outline" slot="start"></ion-icon>
+            Undo
+          </ion-button>
+          <ion-button fill="clear" [disabled]="overlayPoints().length === 0" (click)="resetPoints()">Reset</ion-button>
+          <ion-button [disabled]="!canAnalyze()" (click)="analyze()">
+            <ion-icon name="sparkles-outline" slot="start"></ion-icon>
+            Analyze
+          </ion-button>
+        </div>
+      </div>
+    }
+
+    @case ("analyzing") {
+      <div class="empty-state">
+        <ion-icon class="empty-icon" name="sparkles-outline"></ion-icon>
+        <ion-text>
+          @if (processing()) {
+            <h2>Analyzing shot…</h2>
+            <p>Tracking the ball frame by frame. This can take a minute or two for long videos.</p>
+          } @else {
+            <h2>Uploading video…</h2>
+            <p>{{ uploadPercent() }}%</p>
+          }
+        </ion-text>
+        <ion-progress-bar class="progress" [type]="processing() ? 'indeterminate' : 'determinate'" [value]="uploadProgress()"></ion-progress-bar>
+        <ion-button fill="clear" (click)="cancelAnalysis()">Cancel</ion-button>
+      </div>
+    }
+
+    @case ("result") {
+      @if (result(); as shot) {
+        <div class="result">
+          <app-shot-lane class="lane" [result]="shot"></app-shot-lane>
+          <ion-list class="metrics" lines="full">
+            @for (row of metricRows(); track row.label) {
+              <ion-item>
+                <ion-label>
+                  <p>{{ row.label }}</p>
+                  <h2>{{ row.value }}</h2>
+                  @if (row.detail) {
+                    <p class="detail">{{ row.detail }}</p>
+                  }
+                </ion-label>
+              </ion-item>
+            } @empty {
+              <ion-item>
+                <ion-label>No metrics could be measured for this shot.</ion-label>
+              </ion-item>
+            }
+            <ion-item lines="none">
+              <ion-note>{{ trackedRange() }}</ion-note>
+            </ion-item>
+          </ion-list>
+        </div>
+
+        @if (videoUrl(); as url) {
+          <ion-card class="replay">
+            <video controls muted playsinline preload="metadata" [src]="url"></video>
+          </ion-card>
+        }
+
+        <div class="result-actions">
+          <ion-button fill="outline" (click)="remark()">Mark Lane Again</ion-button>
+          <ion-button (click)="startOver()">
+            <ion-icon name="videocam-outline" slot="start"></ion-icon>
+            Analyze Another Shot
+          </ion-button>
+        </div>
+      }
+    }
+  }
+</ion-content>

@@ -8,6 +8,7 @@ export const environment = {
   patternEndpoint: 'https://pattern.lightningbowl.de/api/',
   analyticsEndpoint: 'https://analytics.nicolas-hoffmann.dev/api/',
   imagesUrl: 'https://images.lightningbowl.de/',
+  trackerEndpoint: 'https://track.lightningbowl.de/',
   branch: 'master',
   authBackendUrl: 'https://auth.lightningbowl.de/api',
 };
