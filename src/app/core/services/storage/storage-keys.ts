@@ -15,4 +15,5 @@ export const StorageKeys = {
 // Single-record keys.
 export const SETTINGS_KEYS = {
   bowlerFit: 'bowler_fit',
+  layoutPresets: 'layout_presets',
 } as const;

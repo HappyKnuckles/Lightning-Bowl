@@ -16,6 +16,30 @@ export const LAYOUT_SYSTEM_LABELS: Record<LayoutSystem, string> = {
   vls: 'VLS / 2LS',
 };
 
+/** Frequently used starting layouts, offered as quick picks before fine-tuning the numbers. */
+export const LAYOUT_PRESETS: BallLayout[] = [
+  { system: 'dual-angle', drillingAngle: 45, pinToPap: 4.5, valAngle: 30 },
+  { system: 'dual-angle', drillingAngle: 50, pinToPap: 4.5, valAngle: 40 },
+  { system: 'dual-angle', drillingAngle: 55, pinToPap: 4, valAngle: 45 },
+  { system: 'dual-angle', drillingAngle: 70, pinToPap: 4.5, valAngle: 60 },
+  { system: 'vls', pinToPap: 5, psaToPap: 3, pinBuffer: 2 },
+  { system: 'vls', pinToPap: 5, psaToPap: 4, pinBuffer: 2 },
+  { system: 'vls', pinToPap: 4, psaToPap: 4, pinBuffer: 2 },
+  { system: 'vls', pinToPap: 4, psaToPap: 5, pinBuffer: 3 },
+];
+
+/** True when every value of the layout's system is set. */
+export function isCompleteLayout(layout: BallLayout): boolean {
+  const values =
+    layout.system === 'dual-angle' ? [layout.drillingAngle, layout.pinToPap, layout.valAngle] : [layout.pinToPap, layout.psaToPap, layout.pinBuffer];
+  return values.every((value) => value !== undefined);
+}
+
+/** Same system and the same values as written on a drill sheet (rounded to the nearest 64th / 0.1°). */
+export function isSameLayout(a: BallLayout, b: BallLayout): boolean {
+  return a.system === b.system && formatLayout(a) === formatLayout(b);
+}
+
 export const GRIP_STYLE_LABELS: Record<GripStyle, string> = {
   fingertip: 'Fingertip',
   'semi-fingertip': 'Semi-Fingertip',

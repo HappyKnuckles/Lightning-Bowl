@@ -37,14 +37,28 @@ import {
 } from '@ionic/angular/standalone';
 import { Chart } from 'chart.js';
 import { addIcons } from 'ionicons';
-import { add, chevronBack, chevronDownOutline, ellipsisVerticalOutline, handLeftOutline, openOutline, trashOutline } from 'ionicons/icons';
+import {
+  add,
+  arrowUndoOutline,
+  chevronBack,
+  chevronDownOutline,
+  closeCircle,
+  ellipsisVerticalOutline,
+  handLeftOutline,
+  openOutline,
+  trashOutline,
+} from 'ionicons/icons';
 import { TOAST_MESSAGES } from 'src/app/core/constants/toast-messages.constants';
 import { Ball, BallDrilling, BallLayout, LayoutSystem } from 'src/app/core/models/ball.model';
 import { BowlerFit, BowlingStyle, GripStyle } from 'src/app/core/models/fit.model';
 import {
   compact,
   formatInches,
+  formatLayout,
+  isCompleteLayout,
+  isSameLayout,
   GRIP_STYLE_LABELS,
+  LAYOUT_PRESETS,
   LAYOUT_SYSTEM_LABELS,
   parseDegrees,
   parseInches,
@@ -127,6 +141,12 @@ export class ArsenalPage implements OnInit {
   readonly loadingWeightBallIds = signal<Set<string>>(new Set());
   readonly availableWeights = ['12', '13', '14', '15', '16'];
   readonly layoutSystems = Object.entries(LAYOUT_SYSTEM_LABELS) as [LayoutSystem, string][];
+  readonly layoutPresets = LAYOUT_PRESETS;
+  readonly customLayoutPresets = computed(() => this.settingsStore.layoutPresets());
+  // the bowler's own layout before quick picks replaced it, so the open ball detail can offer an undo
+  readonly layoutBeforePreset = signal<BallLayout | null>(null);
+  // the open ball's layout per system, so switching systems back and forth doesn't lose the values
+  private readonly layoutsBySystem = new Map<LayoutSystem, BallLayout>();
   readonly gripStyles = Object.entries(GRIP_STYLE_LABELS) as [GripStyle, string][];
   readonly detailSegment = signal<'ball' | 'drilling'>('ball');
   // key (ball_id + core_weight) of the ball whose detail modal is open
@@ -148,7 +168,17 @@ export class ArsenalPage implements OnInit {
     private typeaheadConfigService: TypeaheadConfigService,
     private settingsStore: SettingsStore,
   ) {
-    addIcons({ add, ellipsisVerticalOutline, trashOutline, chevronBack, openOutline, chevronDownOutline, handLeftOutline });
+    addIcons({
+      add,
+      ellipsisVerticalOutline,
+      trashOutline,
+      chevronBack,
+      openOutline,
+      chevronDownOutline,
+      handLeftOutline,
+      closeCircle,
+      arrowUndoOutline,
+    });
     effect(() => {
       if (this.selectedSegment() === 'compare') {
         this.generateBallDistributionChart();
@@ -250,6 +280,8 @@ export class ArsenalPage implements OnInit {
 
   closeBallDetail(): void {
     this.openBallKey.set(null);
+    this.layoutBeforePreset.set(null);
+    this.layoutsBySystem.clear();
   }
 
   // Right after adding is when the bowler has the drill sheet at hand, so offer to fill it in.
@@ -360,9 +392,73 @@ export class ArsenalPage implements OnInit {
     if ((current?.system ?? '') === system) {
       return;
     }
-    // pin to PAP means the same in both systems, so it survives a switch
-    const layout: BallLayout | undefined = system ? { system, pinToPap: current?.pinToPap } : undefined;
+    if (current) {
+      this.layoutsBySystem.set(current.system, current);
+    }
+    // pin to PAP means the same in both systems, so it carries over to a system without remembered values
+    const layout: BallLayout | undefined = system ? (this.layoutsBySystem.get(system) ?? { system, pinToPap: current?.pinToPap }) : undefined;
+    this.layoutBeforePreset.set(null);
     await this.saveDrilling(ball, { ...ball.drilling, layout });
+  }
+
+  async onLayoutPresetSelect(ball: Ball, preset: BallLayout): Promise<void> {
+    const current = ball.drilling?.layout;
+    if (current && formatLayout(current) && !this.layoutBeforePreset() && !isSameLayout(current, preset)) {
+      this.layoutBeforePreset.set(current);
+    }
+    await this.saveDrilling(ball, { ...ball.drilling, layout: { ...preset } });
+  }
+
+  async undoLayoutPreset(ball: Ball): Promise<void> {
+    const layout = this.layoutBeforePreset();
+    if (!layout) {
+      return;
+    }
+    this.layoutBeforePreset.set(null);
+    await this.saveDrilling(ball, { ...ball.drilling, layout });
+  }
+
+  async saveLayoutPreset(layout: BallLayout): Promise<void> {
+    if (!isCompleteLayout(layout)) {
+      this.toastService.showToast(TOAST_MESSAGES.layoutPresetIncomplete, 'bug', true);
+      return;
+    }
+    const custom = this.settingsStore.layoutPresets();
+    if ([...LAYOUT_PRESETS, ...custom].some((preset) => isSameLayout(preset, layout))) {
+      this.toastService.showToast(TOAST_MESSAGES.layoutPresetExists, 'bug', true);
+      return;
+    }
+    try {
+      await this.settingsStore.saveLayoutPresets([...custom, { ...layout }]);
+      this.toastService.showToast(TOAST_MESSAGES.layoutPresetSaveSuccess, 'checkmark-outline');
+    } catch (error) {
+      console.error('Error saving layout preset:', error);
+      this.toastService.showToast(TOAST_MESSAGES.layoutPresetSaveError, 'bug', true);
+    }
+  }
+
+  async removeLayoutPreset(preset: BallLayout, event: Event): Promise<void> {
+    event.stopPropagation();
+    const alert = await this.alertController.create({
+      header: 'Remove preset?',
+      message: `Remove ${formatLayout(preset)} from your layout presets?`,
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        {
+          text: 'Remove',
+          handler: async () => {
+            try {
+              await this.settingsStore.saveLayoutPresets(this.settingsStore.layoutPresets().filter((p) => p !== preset));
+              this.toastService.showToast(TOAST_MESSAGES.layoutPresetRemoveSuccess, 'checkmark-outline');
+            } catch (error) {
+              console.error('Error removing layout preset:', error);
+              this.toastService.showToast(TOAST_MESSAGES.layoutPresetSaveError, 'bug', true);
+            }
+          },
+        },
+      ],
+    });
+    await alert.present();
   }
 
   async onLayoutValueChange(
@@ -378,6 +474,8 @@ export class ArsenalPage implements OnInit {
     if (!this.isValidMeasurement(value)) {
       return;
     }
+    // a typed change makes the layout the bowler's own again, so there's nothing left to undo
+    this.layoutBeforePreset.set(null);
     await this.saveDrilling(ball, { ...ball.drilling, layout: { ...layout, [field]: value } as BallLayout });
   }
 

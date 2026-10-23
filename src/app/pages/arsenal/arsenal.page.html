@@ -239,6 +239,35 @@
                   }
                 </ion-select>
               </ion-item>
+              <ion-item>
+                <div class="layout-presets">
+                  @if (layoutBeforePreset(); as previous) {
+                    <ion-chip color="medium" (click)="undoLayoutPreset(ball)">
+                      <ion-icon name="arrow-undo-outline"></ion-icon>
+                      <ion-label>Undo · {{ previous | layout }}</ion-label>
+                    </ion-chip>
+                  }
+                  @for (preset of layoutPresets; track $index) {
+                    @if (!ball.drilling?.layout || ball.drilling?.layout?.system === preset.system) {
+                      <ion-chip (click)="onLayoutPresetSelect(ball, preset)">{{ preset | layout: !ball.drilling?.layout }}</ion-chip>
+                    }
+                  }
+                  @for (preset of customLayoutPresets(); track $index) {
+                    @if (!ball.drilling?.layout || ball.drilling?.layout?.system === preset.system) {
+                      <ion-chip color="primary" (click)="onLayoutPresetSelect(ball, preset)">
+                        <ion-label>{{ preset | layout: !ball.drilling?.layout }}</ion-label>
+                        <ion-icon name="close-circle" aria-label="Remove preset" (click)="removeLayoutPreset(preset, $event)"></ion-icon>
+                      </ion-chip>
+                    }
+                  }
+                  @if (ball.drilling?.layout; as layout) {
+                    <ion-chip [outline]="true" (click)="saveLayoutPreset(layout)">
+                      <ion-icon name="add"></ion-icon>
+                      <ion-label>Save as preset</ion-label>
+                    </ion-chip>
+                  }
+                </div>
+              </ion-item>
               @if (ball.drilling?.layout; as layout) {
                 @if (layout.system === "dual-angle") {
                   <ion-item>

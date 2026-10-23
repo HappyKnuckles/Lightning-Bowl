@@ -1,4 +1,5 @@
 import { inject, Injectable, signal } from '@angular/core';
+import { BallLayout } from 'src/app/core/models/ball.model';
 import { BowlerFit } from 'src/app/core/models/fit.model';
 import { SETTINGS_KEYS } from 'src/app/core/services/storage/storage-keys';
 import { StorageRepository } from 'src/app/core/services/storage/storage.repository';
@@ -7,9 +8,12 @@ import { StorageRepository } from 'src/app/core/services/storage/storage.reposit
 export class SettingsStore {
   readonly #storageRepository = inject(StorageRepository);
   readonly #fit = signal<BowlerFit | undefined>(undefined);
+  readonly #layoutPresets = signal<BallLayout[]>([]);
 
   readonly pinInputMode = signal<boolean>(true);
   readonly fit = this.#fit.asReadonly();
+  /** Layouts the bowler saved as quick picks, on top of the built-in LAYOUT_PRESETS. */
+  readonly layoutPresets = this.#layoutPresets.asReadonly();
 
   loadPinInputMode(): void {
     const mode = localStorage.getItem('pin-input-mode');
@@ -38,5 +42,18 @@ export class SettingsStore {
       await this.#storageRepository.remove(SETTINGS_KEYS.bowlerFit);
     }
     this.#fit.set(fit);
+  }
+
+  async loadLayoutPresets(): Promise<void> {
+    try {
+      this.#layoutPresets.set((await this.#storageRepository.get<BallLayout[]>(SETTINGS_KEYS.layoutPresets)) ?? []);
+    } catch (error) {
+      console.error('Error loading layout presets:', error);
+    }
+  }
+
+  async saveLayoutPresets(presets: BallLayout[]): Promise<void> {
+    await this.#storageRepository.set(SETTINGS_KEYS.layoutPresets, presets);
+    this.#layoutPresets.set(presets);
   }
 }

@@ -98,6 +98,13 @@ ion-card {
   margin: 0;
 }
 
+.layout-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 8px 0;
+}
+
 .drilling-hint {
   margin: 0 16px 16px;
   font-size: 0.875rem;

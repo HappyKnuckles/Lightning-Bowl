@@ -1,6 +1,7 @@
 import { vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 
+import { BallLayout } from 'src/app/core/models/ball.model';
 import { BowlerFit } from 'src/app/core/models/fit.model';
 import { StorageRepository } from 'src/app/core/services/storage/storage.repository';
 import { createSpyObj, SpyObj } from 'src/testing/spy-obj';
@@ -99,6 +100,28 @@ describe('SettingsStore', () => {
 
       expect(storageRepository.remove).toHaveBeenCalledWith('bowler_fit');
       expect(store.fit()).toBeUndefined();
+    });
+  });
+
+  describe('layout presets', () => {
+    const presets: BallLayout[] = [{ system: 'dual-angle', drillingAngle: 60, pinToPap: 5, valAngle: 45 }];
+
+    it('loads the stored presets, empty when nothing was stored', async () => {
+      await store.loadLayoutPresets();
+      expect(store.layoutPresets()).toEqual([]);
+
+      storageRepository.get.mockResolvedValue(presets);
+      await store.loadLayoutPresets();
+
+      expect(storageRepository.get).toHaveBeenCalledWith('layout_presets');
+      expect(store.layoutPresets()).toEqual(presets);
+    });
+
+    it('saves the presets', async () => {
+      await store.saveLayoutPresets(presets);
+
+      expect(storageRepository.set).toHaveBeenCalledWith('layout_presets', presets);
+      expect(store.layoutPresets()).toEqual(presets);
     });
   });
 });

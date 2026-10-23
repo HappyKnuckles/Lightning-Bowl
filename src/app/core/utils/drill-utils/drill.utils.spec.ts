@@ -6,12 +6,44 @@ import {
   formatLayout,
   formatPap,
   formatSpan,
+  isCompleteLayout,
+  isSameLayout,
+  LAYOUT_PRESETS,
   parseDegrees,
   parseInches,
   parsePapVertical,
 } from './drill.utils';
 
 describe('drill utils', () => {
+  describe('isCompleteLayout', () => {
+    it('needs every value of the layout system', () => {
+      expect(isCompleteLayout({ system: 'dual-angle', drillingAngle: 45, pinToPap: 4.5, valAngle: 30 })).toBe(true);
+      expect(isCompleteLayout({ system: 'dual-angle', drillingAngle: 45, pinToPap: 4.5 })).toBe(false);
+      expect(isCompleteLayout({ system: 'vls', pinToPap: 5, psaToPap: 4, pinBuffer: 2 })).toBe(true);
+      expect(isCompleteLayout({ system: 'vls', pinToPap: 5 })).toBe(false);
+    });
+  });
+
+  describe('isSameLayout', () => {
+    it('compares system and values as written on a drill sheet', () => {
+      expect(
+        isSameLayout({ system: 'vls', pinToPap: 5, psaToPap: 4, pinBuffer: 2 }, { system: 'vls', pinToPap: 5.001, psaToPap: 4, pinBuffer: 2 }),
+      ).toBe(true);
+      expect(isSameLayout({ system: 'vls', pinToPap: 5, psaToPap: 4, pinBuffer: 2 }, { system: 'vls', pinToPap: 4, psaToPap: 4, pinBuffer: 2 })).toBe(
+        false,
+      );
+      expect(isSameLayout({ system: 'vls', pinToPap: 4.5 }, { system: 'dual-angle', pinToPap: 4.5 })).toBe(false);
+    });
+  });
+
+  describe('LAYOUT_PRESETS', () => {
+    it('are fully specified for their system', () => {
+      for (const preset of LAYOUT_PRESETS) {
+        expect(formatLayout(preset)).not.toContain('?');
+      }
+    });
+  });
+
   describe('parseInches', () => {
     it('returns undefined for empty input', () => {
       expect(parseInches('')).toBeUndefined();
