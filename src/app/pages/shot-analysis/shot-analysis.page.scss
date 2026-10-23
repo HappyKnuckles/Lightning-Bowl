@@ -1,0 +1,201 @@
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 50dvh;
+  padding: 24px;
+  text-align: center;
+
+  .empty-icon {
+    font-size: 72px;
+    color: var(--ion-color-medium);
+    margin-bottom: 16px;
+  }
+
+  h2 {
+    font-size: 1.375rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  p {
+    color: var(--ion-color-medium);
+    font-size: 0.875rem;
+    line-height: 1.5;
+    max-width: 280px;
+  }
+
+  .progress {
+    max-width: 280px;
+    margin: 16px 0 8px;
+  }
+}
+
+.pick-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.tips {
+  h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  ul {
+    margin: 0;
+    padding-left: 20px;
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+}
+
+.frame {
+  position: relative;
+  height: 60dvh;
+  background: #000;
+  overflow: hidden;
+
+  video,
+  .overlay {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  video {
+    object-fit: contain;
+  }
+
+  .overlay {
+    touch-action: none;
+    cursor: crosshair;
+  }
+}
+
+.outline {
+  stroke: var(--ion-color-warning);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.corner {
+  fill: rgba(var(--ion-color-warning-rgb), 0.35);
+  stroke: var(--ion-color-warning);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.loupe {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  border: 2px solid var(--ion-color-warning);
+  border-radius: 50%;
+  background: #000;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.1s;
+
+  &.right {
+    left: auto;
+    right: 8px;
+  }
+
+  &.visible {
+    opacity: 1;
+  }
+}
+
+.calibrate-panel {
+  padding: 8px 16px 16px;
+
+  .instruction {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 48px;
+
+    p {
+      margin: 0;
+      font-size: 0.875rem;
+    }
+  }
+
+  .step-count {
+    flex: none;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 12px;
+    background: var(--ion-color-light);
+  }
+
+  .scrub {
+    --padding-start: 0;
+    --inner-padding-end: 0;
+  }
+
+  .hint {
+    display: block;
+    font-size: 0.75rem;
+    margin-bottom: 8px;
+  }
+
+  ion-segment {
+    margin: 8px 0;
+  }
+
+  .actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+  }
+}
+
+.result {
+  display: grid;
+  grid-template-columns: minmax(144px, 45%) 1fr;
+  gap: 8px;
+  padding: 8px;
+
+  .lane {
+    height: 64dvh;
+    max-height: 640px;
+  }
+
+  .metrics {
+    align-self: start;
+
+    h2 {
+      font-size: 1.125rem;
+      font-weight: 600;
+    }
+
+    .detail {
+      font-size: 0.75rem;
+    }
+  }
+}
+
+.replay video {
+  display: block;
+  width: 100%;
+  max-height: 60dvh;
+  background: #000;
+}
+
+.result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px 24px;
+}

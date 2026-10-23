@@ -12,6 +12,7 @@ import {
   gameControllerOutline,
   scaleOutline,
   trophyOutline,
+  videocamOutline,
 } from 'ionicons/icons';
 import { BehaviorSubject } from 'rxjs';
 import { NavigationEnd, Router, RouterModule } from '@angular/router';
@@ -49,6 +50,11 @@ export class TabsPage {
       icon: 'scale-outline',
     },
     {
+      path: '/tabs/shot-analysis',
+      label: 'Shot Analysis',
+      icon: 'videocam-outline',
+    },
+    {
       path: '/tabs/pattern',
       label: 'Pattern Library',
       src: 'assets/svg/lane.svg',
@@ -84,6 +90,7 @@ export class TabsPage {
       bagAddOutline,
       gameControllerOutline,
       scaleOutline,
+      videocamOutline,
     });
 
     this.router.events.pipe(filter((event) => event instanceof NavigationEnd)).subscribe(() => {

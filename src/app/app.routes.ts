@@ -51,6 +51,10 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/ball-comparison/ball-comparison.page').then((m) => m.BallComparisonPage),
       },
       {
+        path: 'shot-analysis',
+        loadComponent: () => import('./pages/shot-analysis/shot-analysis.page').then((m) => m.ShotAnalysisPage),
+      },
+      {
         path: '',
         redirectTo: '/tabs/add',
         pathMatch: 'full',
